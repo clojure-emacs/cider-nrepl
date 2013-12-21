@@ -1,4 +1,4 @@
-(defproject cider-nrepl "0.1.0-SNAPSHOT"
+(defproject cider/cider-nrepl "0.1.0-SNAPSHOT"
   :description "nREPL middleware for CIDER"
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
