@@ -8,6 +8,10 @@
                  [cljs-tooling "0.1.2-SNAPSHOT"]
                  [org.clojure/tools.nrepl "0.2.3"]]
 
-  :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.1.2"]]
-                   :repl-options {:nrepl-middleware [cider.nrepl.middleware.complete/wrap-complete]}
-                   :plugins [[com.cemerick/austin "0.1.3"]]}})
+  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.complete/wrap-complete
+                                                     cider.nrepl.middleware.info/wrap-info
+                                                     ]}}}
+
+  :plugins [[com.cemerick/austin "0.1.3"]]
+
+  )
