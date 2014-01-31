@@ -13,7 +13,8 @@ in your `project.clj` file, or in the `:user` profile in
 :dependencies [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
 :repl-options {:nrepl-middleware
                 [cider.nrepl.middleware.doc/wrap-doc
-                 cider.nrepl.middleware.complete/wrap-complete]}
+                 cider.nrepl.middleware.complete/wrap-complete
+                 cider.nrepl.middleware.info/wrap-info]}
 ```
 
 ## Supported nREPL ops
@@ -21,6 +22,8 @@ in your `project.clj` file, or in the `:user` profile in
 "doc" : Returns the doc string for the specified symbol.
 
 "complete" : Simple completion.
+
+"info" : File/line, arglists, docstrings and other metadata for symbols.
 
 ## License
 
