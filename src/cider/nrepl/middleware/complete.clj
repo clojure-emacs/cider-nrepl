@@ -4,7 +4,7 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [complete.core :as jvm-complete]
-            [cljs-complete.core :as cljs-complete]))
+            [cljs-tooling.complete :as cljs-complete]))
 
 (defn grab-cljs-env
   [msg]
