@@ -32,7 +32,7 @@
   [ns sym]
   (cond
    ;; sym is an alias for another ns
-   ((ns-aliases ns) sym) (ns-meta ((ns-aliases ns) sym))
+   (get (ns-aliases ns) sym) (ns-meta (get (ns-aliases ns) sym))
    ;; it's simply a full ns
    (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a var
@@ -45,12 +45,20 @@
       (cljs-info/info cljs-env symbol ns)
       (info-clj ns symbol))))
 
+(defn resource-path
+  [x]
+  (if (seq x)
+    (let [f (io/file x)]
+      (if (.exists f)
+        (str f)
+        (io/resource x)))))
+
 (defn format-response
   [info]
-  (-> info
-      (update-in [:ns] str)
-      (update-in [:file] (comp str io/resource))
-      u/transform-value))
+  (some-> info
+          (update-in [:ns] str)
+          (update-in [:file] resource-path)
+          u/transform-value))
 
 (defn info-reply
   [{:keys [transport] :as msg}]
