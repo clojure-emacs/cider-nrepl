@@ -4,10 +4,13 @@ A collection of nREPL middleware designed to enhance CIDER.
 
 ## Usage
 
-Add `cider-nrepl` to your `:dev :dependencies` vector, and add the
-middleware to `:nrepl-middleware` under `:repl-options`. You can do this
-in your `project.clj` file, or in the `:user` profile in
-`~/.lein/profiles.clj`.
+Use the convenient plugin for defaults, either in your project's `project.clj` file or in the `:user` profile in `~/.lein/profiles.clj`.
+
+```clojure
+:plugins [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
+```
+
+Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middleware to to `:nrepl-middleware` under `:repl-options`.
 
 ```clojure
 :dependencies [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
@@ -16,6 +19,7 @@ in your `project.clj` file, or in the `:user` profile in
                  cider.nrepl.middleware.complete/wrap-complete
                  cider.nrepl.middleware.info/wrap-info]}
 ```
+
 
 ## Supported nREPL ops
 
