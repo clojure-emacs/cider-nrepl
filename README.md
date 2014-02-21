@@ -29,6 +29,8 @@ Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middlewar
 
 "info" : File/line, arglists, docstrings and other metadata for symbols.
 
+"inspect-start"/"inspect-refresh"/"inspect-pop"/"inspect-push"/"inspect-reset" : Inspect a Clojure expression
+
 ## License
 
 Copyright © 2013 Bozhidar Batsov
