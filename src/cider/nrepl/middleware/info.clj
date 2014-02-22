@@ -59,8 +59,11 @@
   (if (seq x)
     (let [f (io/file x)]
       (if (.exists f)
-        (str f)
-        (io/resource x)))))
+        f
+        (or (io/resource x)
+            (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
+              (io/resource relative))
+            x)))))
 
 (defn format-response
   [info]
