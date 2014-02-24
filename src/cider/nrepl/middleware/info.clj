@@ -9,6 +9,17 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]))
 
+(defn maybe-protocol
+  [info]
+  (if-let [prot-meta (meta (:protocol info))]
+    (merge info {:file (:file prot-meta)
+                 :line (:line prot-meta)})
+    info))
+
+(defn var-meta
+  [v]
+  (-> v meta maybe-protocol))
+
 (defn ns-meta
   [ns]
   (merge
@@ -17,16 +28,9 @@
     :file (-> (ns-publics ns)
               first
               second
-              meta
+              var-meta
               :file)
     :line 1}))
-
-(defn maybe-protocol
-  [info]
-  (if-let [prot-meta (meta (:protocol info))]
-    (merge info {:file (:file prot-meta)
-                 :line (:line prot-meta)})
-    info))
 
 (defn info-clj
   [ns sym]
@@ -36,13 +40,18 @@
    ;; it's simply a full ns
    (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a var
-   (ns-resolve ns sym) (-> (ns-resolve ns sym) meta maybe-protocol)))
+   (ns-resolve ns sym) (var-meta (ns-resolve ns sym))))
+
+(defn info-cljs
+  [env symbol ns]
+  (let [x (cljs-info/info env symbol ns)]
+    (select-keys x [:file :line :ns :doc :column :name :arglists])))
 
 (defn info
   [{:keys [ns symbol] :as msg}]
   (let [[ns symbol] (map u/as-sym [ns symbol])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
-      (cljs-info/info cljs-env symbol ns)
+      (info-cljs cljs-env symbol ns)
       (info-clj ns symbol))))
 
 (defn resource-path
@@ -50,8 +59,11 @@
   (if (seq x)
     (let [f (io/file x)]
       (if (.exists f)
-        (str f)
-        (io/resource x)))))
+        f
+        (or (io/resource x)
+            (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
+              (io/resource relative))
+            x)))))
 
 (defn format-response
   [info]
