@@ -14,8 +14,11 @@
                                                      cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
-                                                     ]}}}
-
-  :plugins [[com.cemerick/austin "0.1.3"]]
+                                                     ]}
+                   ;; Wait til 1.5 comes out for a fix to cljs dep
+                   ;:plugins [[com.cemerick/austin "0.1.5"]]
+                   }}
+  
+  
 
   )
