@@ -21,4 +21,5 @@
                  (fnil into [])
                  '[cider.nrepl.middleware.doc/wrap-doc
                    cider.nrepl.middleware.complete/wrap-complete
-                   cider.nrepl.middleware.info/wrap-info])))
+                   cider.nrepl.middleware.info/wrap-info
+                   cider.nrepl.middleware.inspect/wrap-inspect])))
