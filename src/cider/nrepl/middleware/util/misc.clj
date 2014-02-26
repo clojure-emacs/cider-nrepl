@@ -16,6 +16,10 @@
   [v]
   (if v "true" "false"))
 
+(defmethod transform-value java.io.File
+  [v]
+  (.getAbsolutePath v))
+
 (defmethod transform-value java.util.regex.Pattern
   [v]
   (str v))
