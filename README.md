@@ -17,7 +17,8 @@ Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middlewar
 :repl-options {:nrepl-middleware
                 [cider.nrepl.middleware.doc/wrap-doc
                  cider.nrepl.middleware.complete/wrap-complete
-                 cider.nrepl.middleware.info/wrap-info]}
+                 cider.nrepl.middleware.info/wrap-info
+                 cider.nrepl.middleware.inspector/wrap-inspect]}
 ```
 
 
