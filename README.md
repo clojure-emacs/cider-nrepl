@@ -34,6 +34,6 @@ Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middlewar
 
 ## License
 
-Copyright © 2013 Bozhidar Batsov
+Copyright © 2013-2014 Bozhidar Batsov
 
 Distributed under the Eclipse Public License, the same as Clojure.
