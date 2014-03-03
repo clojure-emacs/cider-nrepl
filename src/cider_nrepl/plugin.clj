@@ -19,7 +19,6 @@
                  [['cider/cider-nrepl version]])
       (update-in [:repl-options :nrepl-middleware]
                  (fnil into [])
-                 '[cider.nrepl.middleware.doc/wrap-doc
-                   cider.nrepl.middleware.complete/wrap-complete
+                 '[cider.nrepl.middleware.complete/wrap-complete
                    cider.nrepl.middleware.info/wrap-info
                    cider.nrepl.middleware.inspect/wrap-inspect])))

@@ -15,7 +15,6 @@ Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middlewar
 ```clojure
 :dependencies [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
 :repl-options {:nrepl-middleware
-                [cider.nrepl.middleware.doc/wrap-doc
                  cider.nrepl.middleware.complete/wrap-complete
                  cider.nrepl.middleware.info/wrap-info
                  cider.nrepl.middleware.inspector/wrap-inspect]}
@@ -23,8 +22,6 @@ Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific middlewar
 
 
 ## Supported nREPL ops
-
-"doc" : Returns the doc string for the specified symbol.
 
 "complete" : Simple completion.
 
