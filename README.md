@@ -23,14 +23,13 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
                  cider.nrepl.middleware.inspector/wrap-inspect]}
 ```
 
-## Supported nREPL ops
+## Supplied nREPL middleware
 
-"complete" : Simple completion.
-
-"info" : File/line, arglists, docstrings and other metadata for symbols.
-
-"inspect-start"/"inspect-refresh"/"inspect-pop"/"inspect-push"/"inspect-reset" :
-Inspect a Clojure expression.
+Middleware        | Op(s)      | Description
+------------------|------------|---------------------------------------------------------
+`wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
+`wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
+`wrap-inspect`    |`inspect-(start|refresh|pop|push|reset)` | Inspect a Clojure expression.
 
 ## License
 
