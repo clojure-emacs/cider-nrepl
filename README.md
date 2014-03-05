@@ -18,9 +18,9 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 ```clojure
 :dependencies [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
 :repl-options {:nrepl-middleware
-                 cider.nrepl.middleware.complete/wrap-complete
-                 cider.nrepl.middleware.info/wrap-info
-                 cider.nrepl.middleware.inspector/wrap-inspect]}
+                 [cider.nrepl.middleware.complete/wrap-complete
+                  cider.nrepl.middleware.info/wrap-info
+                  cider.nrepl.middleware.inspector/wrap-inspect]}
 ```
 
 ## Supplied nREPL middleware
