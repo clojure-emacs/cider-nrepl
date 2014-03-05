@@ -10,15 +10,11 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.3"]]
 
-  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.doc/wrap-doc
-                                                     cider.nrepl.middleware.complete/wrap-complete
+  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      ]}
                    ;; Wait til 1.5 comes out for a fix to cljs dep
                    ;:plugins [[com.cemerick/austin "0.1.5"]]
                    }}
-  
-  
-
   )
