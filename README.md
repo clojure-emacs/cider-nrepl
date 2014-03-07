@@ -20,7 +20,7 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.complete/wrap-complete
                   cider.nrepl.middleware.info/wrap-info
-                  cider.nrepl.middleware.inspector/wrap-inspect]}
+                  cider.nrepl.middleware.inspect/wrap-inspect]}
 ```
 
 ## Supplied nREPL middleware
