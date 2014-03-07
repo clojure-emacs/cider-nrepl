@@ -29,7 +29,7 @@ Middleware        | Op(s)      | Description
 ------------------|------------|---------------------------------------------------------
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
-`wrap-inspect`    |`inspect-(start|refresh|pop|push|reset)` | Inspect a Clojure expression.
+`wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
 
 ## License
 
