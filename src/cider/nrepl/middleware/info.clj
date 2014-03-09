@@ -63,6 +63,9 @@
         (or (io/resource x)
             (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
               (io/resource relative))
+            ;; handles load-file on jar resources from a cider buffer
+            (if-let [[_ relative] (re-find #".*jar:(.*)" x)]
+              (io/resource relative))
             x)))))
 
 (defn format-response

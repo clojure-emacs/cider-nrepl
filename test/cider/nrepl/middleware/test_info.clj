@@ -9,6 +9,8 @@
          java.net.URL))
   (is (= (class (info/resource-path "clojure/core.clj"))
          java.net.URL))
+  (is (= (class (info/resource-path "clojure-1.5.1.jar:clojure/core.clj"))
+         java.net.URL))
   (is (= (class (info/resource-path "test/cider/nrepl/middleware/test_info.clj"))
          java.io.File)))
 
