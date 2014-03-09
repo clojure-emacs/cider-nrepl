@@ -8,45 +8,22 @@
 
 (defmethod transform-value :default [v] (str v))
 
-(defmethod transform-value Number
-  [v]
-  v)
+(defmethod transform-value Number [v] v)
 
-(defmethod transform-value java.lang.Boolean
-  [v]
-  (if v "true" "false"))
+(defmethod transform-value nil [v] nil)
 
 (defmethod transform-value java.io.File
   [v]
   (.getAbsolutePath v))
 
-(defmethod transform-value java.util.regex.Pattern
-  [v]
-  (str v))
-
-(defmethod transform-value clojure.lang.PersistentVector
+(defmethod transform-value clojure.lang.Sequential
   [v]
   (list* (map transform-value v)))
 
-(defmethod transform-value clojure.lang.LazySeq
-  [v]
-  (list* (map transform-value v)))
-
-(defmethod transform-value clojure.lang.PersistentHashMap
+(defmethod transform-value clojure.lang.Associative
   [m]
   (list* (mapcat #(vector (name (key %)) (transform-value (val %))) m)))
 
-(defmethod transform-value clojure.lang.PersistentArrayMap
-  [m]
-  (list* (mapcat #(vector (name (key %)) (transform-value (val %))) m)))
-
-(defn args-for-map
-  "Return a value list based on a map. The keys are converted to strings."
-  [m]
-  (transform-value m))
-
-(defn read-when
-  "Read from the string passed if it is not nil"
-  [s]
-  (when s (read-string s)))
+;; handles vectors
+(prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
 
