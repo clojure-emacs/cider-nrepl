@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/clojure-emacs/cider-nrepl.png?branch=master)](https://travis-ci.org/clojure-emacs/cider-nrepl)
+
 # CIDER nREPL
 
 A collection of nREPL middleware designed to enhance CIDER.
