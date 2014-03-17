@@ -22,5 +22,7 @@
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
   
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
+  ;; used to crash
+  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'incanter.core))))
 )
 
