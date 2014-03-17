@@ -34,16 +34,22 @@
 
 (defn resolve-var
   [ns sym]
-  (try (ns-resolve ns sym)
-       ;; Impl might try to resolve it as a class, which may fail
-       (catch ClassNotFoundException _
-         nil)))
+  (if-let [ns (find-ns ns)]
+    (try (ns-resolve ns sym)
+         ;; Impl might try to resolve it as a class, which may fail
+         (catch ClassNotFoundException _
+           nil))))
+
+(defn resolve-aliases
+  [ns]
+  (if-let [ns (find-ns ns)]
+    (ns-aliases ns)))
 
 (defn info-clj
   [ns sym]
   (cond
    ;; sym is an alias for another ns
-   (get (ns-aliases ns) sym) (ns-meta (get (ns-aliases ns) sym))
+   (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
    ;; it's simply a full ns
    (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a var
