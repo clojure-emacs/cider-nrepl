@@ -83,10 +83,11 @@
 
 (defn format-response
   [info]
-  (some-> info
-          (update-in [:ns] str)
-          (update-in [:file] resource-path)
-          u/transform-value))
+  (and info
+       (-> info
+           (update-in [:ns] str)
+           (update-in [:file] resource-path)
+           u/transform-value)))
 
 (defn info-reply
   [{:keys [transport] :as msg}]
