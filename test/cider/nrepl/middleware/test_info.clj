@@ -22,7 +22,9 @@
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
   
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
-  ;; used to crash
-  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'incanter.core))))
+  ;; used to crash, sym is parsed as a class name
+  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'notincanter.core))))
+  ;; unfound nses should fall through
+  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.nonexistent-namespace 'a-var))))
 )
 
