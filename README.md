@@ -22,7 +22,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.complete/wrap-complete
                   cider.nrepl.middleware.info/wrap-info
-                  cider.nrepl.middleware.inspect/wrap-inspect]}
+                  cider.nrepl.middleware.inspect/wrap-inspect
+                  cider.nrepl.middleware.stacktrace/wrap-stacktrace]}
 ```
 
 ## Supplied nREPL middleware
@@ -32,6 +33,7 @@ Middleware        | Op(s)      | Description
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
+`wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 
 ## License
 
