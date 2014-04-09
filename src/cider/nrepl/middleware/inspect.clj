@@ -78,9 +78,11 @@
 
 (set-descriptor! #'wrap-inspect
   {:requires #{#'session}
-   :handles {"inspect" {:doc "Print the results of inspector.inspect/inspect-print to stdout."
-                        :requires {"sym" "Inspect the value bound to this symbol."
-                                   "ns" "Resolve the symbol in this namespace."}}}})
+   :handles {"inspect-reset" {}
+             "inspect-refresh" {}
+             "inspect-push" {}
+             "inspect-pop" {}
+             "inspect-start" {}}})
 
 
 ;; Preliminary support for loading of extension namespaces
