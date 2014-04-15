@@ -3,16 +3,25 @@
             [clojure.java.io :as io]
             [cider.nrepl.middleware.info :as info]))
 
+(defn file
+  [x]
+  (:file (info/file-info x)))
+
+(defn relative
+  [x]
+  (:resource (info/file-info x)))
 
 (deftest test-resource-path
-  (is (= (class (info/resource-path (subs (str (clojure.java.io/resource "clojure/core.clj")) 4)))
+  (is (= (class (file (subs (str (clojure.java.io/resource "clojure/core.clj")) 4)))
          java.net.URL))
-  (is (= (class (info/resource-path "clojure/core.clj"))
+  (is (= (class (file "clojure/core.clj"))
          java.net.URL))
-  (is (= (class (info/resource-path "clojure-1.5.1.jar:clojure/core.clj"))
+  (is (= (class (file "clojure-1.5.1.jar:clojure/core.clj"))
          java.net.URL))
-  (is (= (class (info/resource-path "test/cider/nrepl/middleware/test_info.clj"))
-         java.io.File)))
+  (is (= (class (file "test/cider/nrepl/middleware/test_info.clj"))
+         java.io.File))
+  (is (relative "clojure/core.clj"))
+  (is (nil? (relative "notclojure/core.clj"))))
 
 (deftest test-info
   (is (info/info-clj 'cider.nrepl.middleware.info 'io))
@@ -37,5 +46,6 @@
            :static "true",
            :doc "assoc[iate]. When applied to a map, returns a new map of the\n    same (hashed/sorted) type, that contains the mapping of key(s) to\n    val(s). When applied to a vector, returns a new vector that\n    contains val at index. Note - index must be <= (count vector).",
            :line 177,
+           :resource "clojure/core.clj"
            })))
 
