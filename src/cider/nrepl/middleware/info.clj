@@ -2,6 +2,7 @@
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.java :as java]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.repl]
             [cljs-tooling.info :as cljs-info]
@@ -63,12 +64,18 @@
   (let [x (cljs-info/info env symbol ns)]
     (select-keys x [:file :line :ns :doc :column :name :arglists])))
 
+(defn info-java
+  [class member]
+  (apply java/method-info (map str [class member])))
+
 (defn info
-  [{:keys [ns symbol] :as msg}]
+  [{:keys [ns symbol class member] :as msg}]
   (let [[ns symbol] (map u/as-sym [ns symbol])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (info-cljs cljs-env symbol ns)
-      (info-clj ns symbol))))
+      (if ns
+        (info-clj ns symbol)
+        (info-java class member)))))
 
 (defn resource-path
   "If it's a resource, return a tuple of the relative path and the full resource path."

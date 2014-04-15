@@ -1,4 +1,5 @@
 language: clojure
+script: lein2 with-profile dev test
 jdk:
   - openjdk6
   - openjdk7

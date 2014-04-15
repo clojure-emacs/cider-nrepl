@@ -6,6 +6,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compliment "0.0.3"]
                  [cljs-tooling "0.1.2"]
+                 [org.ow2.asm/asm "5.0.2"]
+                 [org.ow2.asm/asm-commons "5.0.2"]
+                 [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.3"]]
@@ -15,7 +18,18 @@
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      ]}
+
+                   ;; The "sources" jar should be the same version as Clojure,
+                   ;; but bad sources jars were deployed to the Maven Central
+                   ;; "releases" repo, so for the moment, use sources from
+                   ;; "snapshot" builds to run tests.
+                   ;; See http://dev.clojure.org/jira/browse/CLJ-1161.
+                   :repositories [["snapshots"
+                                   "http://oss.sonatype.org/content/repositories/snapshots"]]
+                   :dependencies [[org.clojure/clojure "1.5.2-SNAPSHOT"
+                                   :classifier "sources"]]
+
                    ;; Wait til 1.5 comes out for a fix to cljs dep
-                   ;:plugins [[com.cemerick/austin "0.1.5"]]
+                   ;; :plugins [[com.cemerick/austin "0.1.5"]]
                    }}
   )
