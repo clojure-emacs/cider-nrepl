@@ -84,10 +84,11 @@
 (defn format-response
   [info]
   (and info
-       (-> info
-           (update-in [:ns] str)
-           (update-in [:file] resource-path)
-           u/transform-value)))
+       (let [info (-> info
+                      (update-in [:ns] str)
+                      (update-in [:file] resource-path))
+             info (assoc info :arglists-str (pr-str (:arglists info)))]
+         (u/transform-value info))))
 
 (defn info-reply
   [{:keys [transport] :as msg}]
