@@ -5,7 +5,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as u]
-            [complete.core :as jvm-complete]
+            [compliment.core :as jvm-complete]
             [cljs-tooling.complete :as cljs-complete]))
 
 (defn complete
@@ -14,7 +14,7 @@
         prefix (str symbol)]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (cljs-complete/completions cljs-env prefix ns)
-      (jvm-complete/completions prefix ns))))
+      (jvm-complete/completions prefix ns nil))))
 
 (defn complete-reply
   [{:keys [transport] :as msg}]
@@ -39,4 +39,3 @@
      :requires {"symbol" "The symbol to lookup"
                 "ns" "The current namespace"}
      :returns {"status" "done"}}}}))
-
