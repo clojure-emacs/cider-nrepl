@@ -22,7 +22,9 @@
 
 (defmethod transform-value clojure.lang.Associative
   [m]
-  (list* (mapcat #(vector (name (key %)) (transform-value (val %))) m)))
+  (->> (for [[k v] m]
+         [k (transform-value v)])
+       (into {})))
 
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)

@@ -10,9 +10,9 @@
                                 :f [:g :h :i]
                                 :j 4
                                 :k nil))
-         '("a" "b" "c" ":d" "e" "false" "f" (":g" ":h" ":i") "j" 4 "k" nil)))
+         '{:a "b", "c" ":d", :e "false", :f (":g" ":h" ":i"), :j 4, :k nil}))
   (is (-> (misc/transform-value {:k (java.io.File. ".")})
-          second
+          :k
           java.io.File.
           .isAbsolute)))
 

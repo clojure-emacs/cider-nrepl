@@ -68,26 +68,40 @@
       (info-clj ns symbol))))
 
 (defn resource-path
+  "If it's a resource, return a tuple of the relative path and the full resource path."
+  [x]
+  (or (if-let [full (io/resource x)]
+        [x full])
+      (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
+        (if-let [full (io/resource relative)]
+          [relative full]))
+      ;; handles load-file on jar resources from a cider buffer
+      (if-let [[_ relative] (re-find #".*jar:(.*)" x)]
+        (if-let [full (io/resource relative)]
+          [relative full]))))
+
+(defn file-path
   [x]
   (if (seq x)
     (let [f (io/file x)]
       (if (.exists f)
-        f
-        (or (io/resource x)
-            (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
-              (io/resource relative))
-            ;; handles load-file on jar resources from a cider buffer
-            (if-let [[_ relative] (re-find #".*jar:(.*)" x)]
-              (io/resource relative))
-            x)))))
+        f))))
+
+(defn file-info
+  [path]
+  (let [[resource-relative resource-full] (resource-path path)]
+    (merge {:file (or (file-path path) resource-full path)}
+           ;; Classpath-relative path if possible
+           (if resource-relative
+             {:resource resource-relative}))))
 
 (defn format-response
   [info]
-  (and info
-       (-> info
-           (update-in [:ns] str)
-           (update-in [:file] resource-path)
-           u/transform-value)))
+  (if info
+    (-> (update-in info [:ns] str)
+        (merge {:arglists-str (pr-str (:arglists info))}
+               (file-info (:file info)))
+        u/transform-value)))
 
 (defn info-reply
   [{:keys [transport] :as msg}]
