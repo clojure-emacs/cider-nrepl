@@ -20,7 +20,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 ```clojure
 :dependencies [[cider/cider-nrepl "0.1.0-SNAPSHOT"]]
 :repl-options {:nrepl-middleware
-                 [cider.nrepl.middleware.complete/wrap-complete
+                 [cider.nrepl.middleware.classpath/wrap-classpath
+                  cider.nrepl.middleware.complete/wrap-complete
                   cider.nrepl.middleware.info/wrap-info
                   cider.nrepl.middleware.inspect/wrap-inspect
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace]}
@@ -30,6 +31,7 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 
 Middleware        | Op(s)      | Description
 ------------------|------------|---------------------------------------------------------
+`wrap-classpath`  | `classpath` | Java classpath.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
