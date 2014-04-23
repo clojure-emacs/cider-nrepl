@@ -100,10 +100,11 @@
 
 (defn format-response
   [info]
-  (if info
+  (when info
     (-> (update-in info [:ns] str)
         (merge {:arglists-str (pr-str (:arglists info))}
-               (file-info (:file info)))
+               (when-let [file (:file info)]
+                (file-info file)))
         u/transform-value)))
 
 (defn info-reply

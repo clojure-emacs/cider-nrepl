@@ -29,6 +29,10 @@
   (is (info/info-clj 'cider.nrepl.middleware.info 'info-clj))
   
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
+
+  (is (-> (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)
+          (dissoc :file)
+          (info/format-response)))
   
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
   ;; used to crash, sym is parsed as a class name
