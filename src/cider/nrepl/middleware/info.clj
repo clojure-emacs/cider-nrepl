@@ -38,6 +38,9 @@
     (try (ns-resolve ns sym)
          ;; Impl might try to resolve it as a class, which may fail
          (catch ClassNotFoundException _
+           nil)
+         ;; TODO: Preserve and display the exception info
+         (catch Exception _
            nil))))
 
 (defn resolve-aliases
@@ -125,5 +128,3 @@
      :requires {"symbol" "The symbol to lookup"
                 "ns" "The current namespace"}
      :returns {"status" "done"}}}}))
-
-
