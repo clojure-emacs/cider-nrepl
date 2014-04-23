@@ -9,7 +9,7 @@
             [cljs-tooling.complete :as cljs-complete]))
 
 (defn complete
-  [{:keys [symbol ns public-only? case-sensitive? prefer-ns] :as msg}]
+  [{:keys [symbol ns] :as msg}]
   (let [ns (u/as-sym ns)
         prefix (str symbol)]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
