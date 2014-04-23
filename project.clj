@@ -10,7 +10,8 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.3"]]
 
-  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.complete/wrap-complete
+  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.classpath/wrap-classpath
+                                                     cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      ]}
