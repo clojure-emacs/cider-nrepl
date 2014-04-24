@@ -14,16 +14,26 @@
 
 (defmethod transform-value java.io.File
   [v]
-  (.getAbsolutePath v))
+  (.getAbsolutePath ^java.io.File v))
 
 (defmethod transform-value clojure.lang.Sequential
   [v]
   (list* (map transform-value v)))
 
+(defmethod transform-value clojure.lang.Symbol
+  [v]
+  (let [[the-ns the-name] [(namespace v) (name v)]]
+    (or (and the-ns (str the-ns "/" the-name))
+        the-name)) )
+
+(defmethod transform-value clojure.lang.Keyword
+  [v]
+  (transform-value (.sym ^clojure.lang.Keyword v)))
+
 (defmethod transform-value clojure.lang.Associative
   [m]
   (->> (for [[k v] m]
-         [k (transform-value v)])
+         [(transform-value k) (transform-value v)])
        (into {})))
 
 ;; handles vectors
