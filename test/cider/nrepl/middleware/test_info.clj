@@ -27,7 +27,9 @@
   (is (info/info-clj 'cider.nrepl.middleware.info 'io))
 
   (is (info/info-clj 'cider.nrepl.middleware.info 'info-clj))
-  
+
+  (is (info/info-java "clojure.lang.Atom" "swap"))
+
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
 
   (is (-> (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)
