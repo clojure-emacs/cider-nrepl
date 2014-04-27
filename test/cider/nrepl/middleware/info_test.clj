@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.test-info
+(ns cider.nrepl.middleware.info-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
             [cider.nrepl.middleware.info :as info]))
@@ -18,7 +18,7 @@
          java.net.URL))
   (is (= (class (file "clojure-1.5.1.jar:clojure/core.clj"))
          java.net.URL))
-  (is (= (class (file "test/cider/nrepl/middleware/test_info.clj"))
+  (is (= (class (file "test/cider/nrepl/middleware/info_test.clj"))
          java.io.File))
   (is (relative "clojure/core.clj"))
   (is (nil? (relative "notclojure/core.clj"))))
@@ -39,13 +39,13 @@
   (is (-> (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)
           (dissoc :file)
           (info/format-response)))
-  
+
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
   ;; used to crash, sym is parsed as a class name
   (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'notincanter.core))))
   ;; unfound nses should fall through
   (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.nonexistent-namespace 'a-var))))
-)
+  )
 
 (deftest test-response
   (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
@@ -60,4 +60,3 @@
            "line" 177,
            "resource" "clojure/core.clj"
            })))
-

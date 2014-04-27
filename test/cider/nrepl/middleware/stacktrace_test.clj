@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.test-stacktrace
+(ns cider.nrepl.middleware.stacktrace-test
   (:require [cider.nrepl.middleware.stacktrace :refer :all]
             [clojure.test :refer :all]))
 
