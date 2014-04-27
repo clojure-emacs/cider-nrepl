@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.util.test-misc
+(ns cider.nrepl.middleware.util.misc-test
   (:require [clojure.test :refer :all]
             [cider.nrepl.middleware.util.misc :as misc]))
 
@@ -19,4 +19,3 @@
 (deftest test-as-sym
   (is (= nil (misc/as-sym nil)))
   (is (= 'WAT (misc/as-sym "WAT"))))
-

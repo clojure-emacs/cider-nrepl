@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.test-classpath
+(ns cider.nrepl.middleware.classpath-test
   (:use clojure.test
         cider.nrepl.middleware.test-transport
         cider.nrepl.middleware.classpath))
