@@ -21,7 +21,7 @@
 
 ;; ## Test fixtures
 
-(def form1 '(throw (ex-info "oops" {:x 1})))
+(def form1 '(throw (ex-info "oops" {:x 1} (ex-info "cause" {:y 2}))))
 (def form2 '(do (defn oops [] (+ 1 "2"))
                 (oops)))
 
@@ -85,10 +85,9 @@
                 (filter (comp :dup :flags val) ixd2))))))
 
 (deftest test-exception-causes
-  (testing "Exception unwrapping"
-    ;; The outermost compiler exception just wraps the useful ones.
-    (is (not (instance? clojure.lang.Compiler$CompilerException (first causes1))))
-    (is (not (instance? clojure.lang.Compiler$CompilerException (first causes2)))))
+  (testing "Exception cause unrolling"
+    (is (= 2 (count causes1)))
+    (is (= 1 (count causes2))))
   (testing "Exception data"
     ;; If ex-data is present, the cause should have a :data attribute.
     (is (:data (first causes1)))

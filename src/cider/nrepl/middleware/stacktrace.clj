@@ -101,19 +101,14 @@
   thrown exception is a wrapping compiler exception, its immediate cause.
   If `ex-data` exists for any item, a `:data` key is appended."
   [e]
-  (loop [e (if (and (instance? Compiler$CompilerException e) (.getCause e))
-             (.getCause e)
-             e)
-         chain []]
-    (if e
-      (recur (.getCause e)
-             (conj chain
-                   (let [m {:class (.getName (class e))
-                            :message (.getMessage e)}]
-                     (if-let [data (ex-data e)]
-                       (assoc m :data (with-out-str (pp/pprint data)))
-                       m))))
-      chain)))
+  (->> e
+       (iterate #(.getCause %))
+       (take-while identity)
+       (map #(let [m {:class (.getName (class %))
+                      :message (.getMessage %)}]
+               (if-let [data (ex-data %)]
+                 (assoc m :data (with-out-str (pp/pprint data)))
+                 m)))))
 
 
 ;;; ## Middleware
