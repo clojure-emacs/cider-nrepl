@@ -61,11 +61,16 @@
 (defn class-info
   "For the named class, return Java source and member info, including line
   numbers. Methods are indexed first by name, and then by argument types to
-  list all overloads."
+  list all overloads. Parent (super) class info is appended recursively."
   [class]
   (let [methods (atom {})
+        parent  (atom nil)
         typesym #(-> % .getClassName symbol)
         visitor (proxy [ClassVisitor] [Opcodes/ASM4]
+                  (visit [version access name signature super interfaces]
+                    (when super
+                      (let [super (str/replace super "/" ".")]
+                        (reset! parent (class-info super)))))
                   (visitMethod [access name desc signature exceptions]
                     (let [m (Method. name desc)
                           ret (typesym (.getReturnType m))
@@ -78,6 +83,7 @@
     (try (-> (ClassReader. class)
              (.accept visitor 0))
          {:class class
+          :super @parent
           :methods @methods
           :file (java-source class)}
          (catch Exception _))))
@@ -85,12 +91,72 @@
 (defn method-info
   "Return Java member info, including argument (type) lists and source
   file/line. If the member is an overloaded method, line number is that of the
-  first overload."
+  first overload. If the method's implementation is in a superclass of the
+  specified class, source file/line is that of the implemention."
   [class method]
-  (let [c (class-info class)]
+  (let [c (->> (class-info class)
+               (iterate :super)
+               (take-while identity)
+               (filter #(get-in % [:methods method]))
+               (first))]
     (when-let [m (get-in c [:methods method])]
-      (-> (dissoc c :methods)
-          (assoc :method method
+      (-> (dissoc c :methods :super)
+          (assoc :class class
+                 :method method
                  :line (->> (vals m) (map :line) sort first)
                  :arglists (keys m)
                  :doc nil)))))
+
+(defn constructor-info
+  "Return contructor method info for the named class."
+  [class]
+  (method-info class "<init>"))
+
+
+;;; ## Class/Method Resolution
+;; A namespace provides a search context for resolving a symbol to a Java class
+;; or member. Classes, constructors, and static members can be resolved
+;; unambiguously. With instance methods, more than one imported class may have
+;; a member that matches the searched symbol. In such cases, the result will be
+;; a list of resolved candidate methods. (Note that this list could be narrowed
+;; by considering arity, and narrowed further *if* we could consider argument
+;; types...)
+
+(defn resolve-class
+  "Given a namespace name and class, search the imported classes and return
+  class info."
+  [ns sym]
+  (when-let [ns (find-ns (symbol ns))]
+    (let [c (try (ns-resolve ns (symbol sym))
+                 (catch ClassNotFoundException _))]
+      (when (class? c)
+        (class-info (.getName c))))))
+
+(defn resolve-method
+  "Given a namespace name and method, search the imported classes and return
+  a list of each matching method's info."
+  [ns sym]
+  (when-let [ns (find-ns (symbol ns))]
+    (->> (vals (ns-imports ns))
+         (map #(method-info (.getName %) (str sym)))
+         (filter identity)
+         (distinct))))
+
+(defn resolve-symbol
+  "Given a namespace name and a class or method, resolve the class/method from
+  the imported classes. For a class symbol, constructor info is returned. Class,
+  constructor, and static calls are resolved unambiguously. Instance methods are
+  resolved unambiguously if defined by only one imported class. If multiple
+  imported classes have a method by that name, a map of class names to method
+  info is returned as `:candidates`."
+  [ns sym]
+  (let [sym (str/replace sym #"^\.|\.$" "") ; strip leading/trailing dot
+        [class static-member] (str/split sym #"/" 2)]
+    (if-let [c (resolve-class ns class)]
+      (if static-member
+        (method-info (:class c) static-member)
+        (constructor-info (:class c)))
+      (when-let [ms (seq (resolve-method ns sym))]
+        (if (= 1 (count ms))
+          (first ms)
+          {:candidates (zipmap (map :class ms) ms)})))))
