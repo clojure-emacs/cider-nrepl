@@ -57,7 +57,9 @@
    ;; it's simply a full ns
    (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a var
-   (resolve-var ns sym) (var-meta (resolve-var ns sym))))
+   (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
+   ;; it's a Java class/method symbol...or nil
+   :else (java/resolve-symbol ns sym)))
 
 (defn info-cljs
   [env symbol ns]
@@ -105,13 +107,25 @@
            (if resource-relative
              {:resource resource-relative}))))
 
+(declare format-response)
+
+(defn format-nested
+  "Apply response formatting to nested `:candidates` info for Java members."
+  [info]
+  (if-let [candidates (:candidates info)]
+    (assoc info :candidates
+           (into {} (for [[k v] candidates]
+                      [k (format-response v)])))
+    info))
+
 (defn format-response
   [info]
   (when info
     (-> (update-in info [:ns] str)
         (merge {:arglists-str (pr-str (:arglists info))}
                (when-let [file (:file info)]
-                (file-info file)))
+                 (file-info file)))
+        format-nested
         u/transform-value)))
 
 (defn info-reply

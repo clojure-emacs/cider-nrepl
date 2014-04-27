@@ -28,6 +28,10 @@
 
   (is (info/info-clj 'cider.nrepl.middleware.info 'info-clj))
 
+  (is (info/info-clj 'cider.nrepl.middleware.info 'java.lang.Class))
+  (is (info/info-clj 'cider.nrepl.middleware.info 'Class/forName))
+  (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
+
   (is (info/info-java "clojure.lang.Atom" "swap"))
 
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
