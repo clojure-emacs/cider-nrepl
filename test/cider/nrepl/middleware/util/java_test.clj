@@ -64,6 +64,40 @@
       (testing "that is static"
         (is m6)))))
 
+(deftest test-javadoc-urls
+  (testing "Javadoc URL"
+    (testing "for a class"
+      (is (= (:javadoc (class-info "java.lang.String"))
+             "java/lang/String.html")))
+
+    (testing "for a nested class"
+      (is (= (:javadoc (class-info "java.util.AbstractMap$SimpleEntry"))
+             "java/util/AbstractMap.SimpleEntry.html")))
+
+    (testing "for an interface"
+      (is (= (:javadoc (class-info "java.io.Closeable"))
+             "java/io/Closeable.html")))
+
+    (testing "for a method"
+      (testing "with no args"
+        (is (= (:javadoc (method-info "java.util.Random" "nextInt"))
+               "java/util/Random.html#nextInt()")))
+      (testing "with primitive args"
+        (is (= (:javadoc (method-info "java.util.Random" "setSeed"))
+               "java/util/Random.html#setSeed(long)")))
+      (testing "with object args"
+        (is (= (:javadoc (method-info "java.lang.String" "contains"))
+               "java/lang/String.html#contains(java.lang.CharSequence)")))
+      (testing "with array args"
+        (is (= (:javadoc (method-info "java.lang.Thread" "enumerate"))
+               "java/lang/Thread.html#enumerate(java.lang.Thread[])")))
+      (testing "with multiple args"
+        (is (= (:javadoc (method-info "java.util.ArrayList" "subList"))
+               "java/util/ArrayList.html#subList(int, int)")))
+      (testing "with generic type erasure"
+        (is (= (:javadoc (method-info "java.util.Hashtable" "putAll"))
+               "java/util/Hashtable.html#putAll(java.util.Map)"))))))
+
 (deftest test-class-resolution
   (let [ns (ns-name *ns*)]
     (testing "Class resolution"

@@ -45,6 +45,13 @@
       (str/replace "." "/")
       (str ".java")))
 
+(defn java-doc
+  "Return the relative .html javadoc path for the class name."
+  [class]
+  (-> (str/replace class "." "/")
+      (str/replace "$" ".")
+      (str ".html")))
+
 
 ;;; ## Class/Method Info
 
@@ -105,14 +112,21 @@
          {:class class
           :super @parent
           :methods @methods
-          :file (java-source class)}
+          :file (java-source class)
+          :javadoc (java-doc class)}
          (catch Exception _))))
 
+;; N.b. Where a method's bytecode signature differs from its declared signature
+;; (other than collection generics), the javadoc method URL can't be inferred as
+;; done below. (Specifically, this applies to varargs and non-collection
+;; generics, e.g. `java/util/Arrays.html#asList(T...)`.) Since the method is
+;; just a URL fragment, the javadoc link will simply navigate to the parent
+;; class in these cases.
 (defn method-info
-  "Return Java member info, including argument (type) lists and source
-  file/line. If the member is an overloaded method, line number is that of the
-  first overload. If the method's implementation is in a superclass of the
-  specified class, source file/line is that of the implemention."
+  "Return Java member info, including argument (type) lists, javadoc, and source
+  file/line. If the member is an overloaded method, line number and javadoc
+  signature are that of the first overload. If the method's implementation is in
+  a superclass, source file/line and javadoc are that of the implemention."
   [class method]
   (let [c (->> (class-info class)
                (iterate :super)
@@ -120,12 +134,15 @@
                (filter #(get-in % [:methods method]))
                (first))]
     (when-let [m (get-in c [:methods method])]
-      (-> (dissoc c :methods :super)
-          (assoc :class class
-                 :method method
-                 :line (->> (vals m) (map :line) sort first)
-                 :arglists (keys m)
-                 :doc nil)))))
+      (let [m* (first (sort-by :line (vals m)))]
+        (-> (dissoc c :methods :super)
+            (assoc :class class
+                   :method method
+                   :line (:line m*)
+                   :arglists (keys m)
+                   :javadoc (format "%s#%s(%s)" (:javadoc c) method
+                                    (str/join ", " (:args m*)))
+                   :doc nil))))))
 
 (defn constructor-info
   "Return contructor method info for the named class."

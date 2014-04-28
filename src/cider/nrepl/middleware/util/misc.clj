@@ -1,4 +1,9 @@
-(ns cider.nrepl.middleware.util.misc)
+(ns cider.nrepl.middleware.util.misc
+  (:require [clojure.string :as str]))
+
+(def java-api-version
+  (try (-> (System/getProperty "java.version") (str/split #"\.") second)
+       (catch Exception _ "7")))
 
 (defn as-sym
   [x]
@@ -38,4 +43,3 @@
 
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
-
