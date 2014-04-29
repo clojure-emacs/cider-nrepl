@@ -6,15 +6,16 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compliment "0.0.3"]
                  [cljs-tooling "0.1.2"]
-                 [org.ow2.asm/asm "5.0.2"]
-                 [org.ow2.asm/asm-commons "5.0.2"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.4"]
                  [org.clojure/tools.trace "0.7.8"]]
 
-  :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.classpath/wrap-classpath
+  :profiles {:1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
+             :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.classpath/wrap-classpath
                                                      cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
