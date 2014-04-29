@@ -11,13 +11,15 @@
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.clojure/java.classpath "0.2.0"]
-                 [org.clojure/tools.namespace "0.2.4"]]
+                 [org.clojure/tools.namespace "0.2.4"]
+                 [org.clojure/tools.trace "0.7.8"]]
 
   :profiles {:dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.classpath/wrap-classpath
                                                      cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
+                                                     cider.nrepl.middleware.trace/wrap-trace
                                                      ]}
 
                    ;; The "sources" jar should be the same version as Clojure,
