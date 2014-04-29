@@ -34,6 +34,11 @@
 
   (is (info/info-java "clojure.lang.Atom" "swap"))
 
+  (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online
+               (-> (info/info-java "java.lang.Object" "toString")
+                   (info/format-response)
+                   (get "javadoc"))))
+
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
 
   (is (-> (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)

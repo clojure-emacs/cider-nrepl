@@ -31,7 +31,9 @@
                    :repositories [["snapshots"
                                    "http://oss.sonatype.org/content/repositories/snapshots"]]
                    :dependencies [[org.clojure/clojure "1.5.2-SNAPSHOT"
-                                   :classifier "sources"]]
+                                   :classifier "sources"]
+                                  [org.clojure/clojure "1.5.1"
+                                   :classifier "javadoc"]]
 
                    ;; Wait til 1.5 comes out for a fix to cljs dep
                    ;; :plugins [[com.cemerick/austin "0.1.5"]]

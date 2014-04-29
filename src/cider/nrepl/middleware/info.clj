@@ -107,6 +107,18 @@
            (if resource-relative
              {:resource resource-relative}))))
 
+(defn javadoc-info
+  "Resolve a relative javadoc path to a URL and return as a map. Prefer javadoc
+  resources on the classpath; then use online javadoc content for core API
+  classes. If no source is available, return the relative path as is."
+  [path]
+  {:javadoc
+   (or (io/resource path)
+       (when (re-find #"^(java|javax|org.omg|org.w3c.dom|org.xml.sax)/" path)
+         (format "http://docs.oracle.com/javase/%s/docs/api/%s"
+                 u/java-api-version path))
+       path)})
+
 (declare format-response)
 
 (defn format-nested
@@ -124,7 +136,9 @@
     (-> (update-in info [:ns] str)
         (merge {:arglists-str (pr-str (:arglists info))}
                (when-let [file (:file info)]
-                 (file-info file)))
+                 (file-info file))
+               (when-let [path (:javadoc info)]
+                 (javadoc-info path)))
         format-nested
         u/transform-value)))
 
