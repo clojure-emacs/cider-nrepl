@@ -4,8 +4,8 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [dynapath.util :as dp])
-  (:import (org.objectweb.asm ClassReader ClassVisitor MethodVisitor Opcodes)
-           (org.objectweb.asm.commons Method)))
+  (:import (clojure.asm ClassReader ClassVisitor MethodVisitor Opcodes)
+           (clojure.asm.commons Method)))
 
 ;;; ## Source Files
 ;; Java source files are resolved from the classpath. For library dependencies,
@@ -58,6 +58,26 @@
 ;; executable line of the method, rather than its declaration. (Constructors are
 ;; an exception to this.)
 
+;; ASM Workaround: Clojure <=1.5 bundles ASM 3.3; Clojure 1.6 upgraded to ASM
+;; 4.1, which had breaking API changes. Declaring our own ASM dependency causes
+;; headaches (see issue #44), so we'll work around the API changes.
+(def asm
+  "The ASM API version"
+  (try (import (clojure.asm.commons EmptyVisitor)) 3
+       (catch Exception _ 4)))
+
+;; In the ASM4 API, visitors are abstract classes with stub methods whose
+;; constructrors require the API version as an argument. In ASM3, visitor were
+;; interfaces, and stubs were provided by the `EmptyVisitor` class, which has
+;; only a nullary constructor.
+(defmacro proxy-asm
+  "Like `proxy`, but provides a shim to support both ASM3 and ASM4 visitors."
+  [supers args & fs]
+  (let [[supers args] (if (< asm 4)
+                        [`[EmptyVisitor] []]
+                        [supers `[Opcodes/ASM4]])]
+    `(proxy ~supers ~args ~@fs)))
+
 (defn class-info
   "For the named class, return Java source and member info, including line
   numbers. Methods are indexed first by name, and then by argument types to
@@ -66,7 +86,7 @@
   (let [methods (atom {})
         parent  (atom nil)
         typesym #(-> % .getClassName symbol)
-        visitor (proxy [ClassVisitor] [Opcodes/ASM4]
+        visitor (proxy-asm [ClassVisitor] []
                   (visit [version access name signature super interfaces]
                     (when super
                       (let [super (str/replace super "/" ".")]
@@ -75,7 +95,7 @@
                     (let [m (Method. name desc)
                           ret (typesym (.getReturnType m))
                           args (mapv typesym (.getArgumentTypes m))]
-                      (proxy [MethodVisitor] [Opcodes/ASM4]
+                      (proxy-asm [MethodVisitor] []
                         (visitLineNumber [line label]
                           (when-not (get-in @methods [name args])
                             (swap! methods assoc-in [name args]
