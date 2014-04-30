@@ -168,4 +168,5 @@
         (is (nil? (resolve-symbol ns '.random.bunch/of$junk)))
         (is (nil? (resolve-symbol ns :wrong-type)))
         (is (nil? (resolve-symbol ns 12345)))
-        (is (nil? (resolve-symbol ns true)))))))
+        (is (nil? (resolve-symbol ns true)))
+        (is (nil? (resolve-symbol ns "")))))))
