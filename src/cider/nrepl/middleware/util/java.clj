@@ -165,7 +165,7 @@
   [ns sym]
   (when-let [ns (find-ns (symbol ns))]
     (let [c (try (ns-resolve ns (symbol sym))
-                 (catch ClassNotFoundException _))]
+                 (catch Exception _))]
       (when (class? c)
         (class-info (.getName c))))))
 
