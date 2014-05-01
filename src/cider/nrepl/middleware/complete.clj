@@ -9,12 +9,12 @@
             [cljs-tooling.complete :as cljs-complete]))
 
 (defn complete
-  [{:keys [symbol ns] :as msg}]
+  [{:keys [symbol ns context] :as msg}]
   (let [ns (u/as-sym ns)
         prefix (str symbol)]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (cljs-complete/completions cljs-env prefix ns)
-      (jvm-complete/completions prefix ns nil))))
+      (jvm-complete/completions prefix ns context))))
 
 (defn complete-reply
   [{:keys [transport] :as msg}]
