@@ -1,9 +1,9 @@
 language: clojure
 script:
-  - lein2 with-profile dev test
-  - lein2 with-profile dev,1.5 test
-  - lein2 with-profile dev,1.6 test
-  - lein2 with-profile dev,1.7 test
+  - lein2 test
+  - lein2 with-profile +1.5 test
+  - lein2 with-profile +1.6 test
+  - lein2 with-profile +1.7 test
 jdk:
   - openjdk6
   - openjdk7
