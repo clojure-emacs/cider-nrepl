@@ -4,7 +4,7 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.java :as java]
             [cider.nrepl.middleware.util.misc :as u]
-            [clojure.repl]
+            [clojure.repl :as repl]
             [cljs-tooling.info :as cljs-info]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -49,6 +49,27 @@
   (if-let [ns (find-ns ns)]
     (ns-aliases ns)))
 
+;; This reproduces the behavior of the canonical `clojure.repl/doc` using its
+;; internals, but returns the metadata rather than just printing. Oddly, the
+;; only place in the Clojure API that special form metadata is available *as
+;; data* is a private function. Lame. Just call through the var.
+(defn resolve-special
+  "Return info for the symbol if it's a special form, or nil otherwise. Adds
+  `:url` unless that value is explicitly set to `nil` -- the same behavior
+  used by `clojure.repl/doc`."
+  [sym]
+  (try
+    (let [sym (get '{& fn, catch try, finally try} sym sym)
+          v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
+      (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
+                         (:special-form v) v)]
+        (assoc m
+          :url (if (contains? m :url)
+                 (when (:url m)
+                   (str "http://clojure.org/" (:url m)))
+                 (str "http://clojure.org/special_forms#" (:name m))))))
+    (catch Exception _)))
+
 (defn info-clj
   [ns sym]
   (cond
@@ -56,6 +77,8 @@
    (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
    ;; it's simply a full ns
    (find-ns sym) (ns-meta (find-ns sym))
+   ;; it's a special (special-symbol? or :special-form)
+   (resolve-special sym) (resolve-special sym)
    ;; it's a var
    (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
    ;; it's a Java class/method symbol...or nil
@@ -133,8 +156,14 @@
 (defn format-response
   [info]
   (when info
-    (-> (update-in info [:ns] str)
-        (merge {:arglists-str (pr-str (:arglists info))}
+    (-> info
+        (merge (when-let [ns (:ns info)]
+                 (:ns (str ns)))
+               (when-let [args (:arglists info)]
+                 {:arglists-str (pr-str args)})
+               (when-let [forms (:forms info)]
+                 {:forms-str (->> (map #(str "  " (pr-str %)) forms)
+                                  (s/join \newline))})
                (when-let [file (:file info)]
                  (file-info file))
                (when-let [path (:javadoc info)]

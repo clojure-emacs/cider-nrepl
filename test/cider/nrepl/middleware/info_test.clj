@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.info-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
+            [clojure.repl :as repl]
             [cider.nrepl.middleware.info :as info]))
 
 (defn file
@@ -32,6 +33,16 @@
   (is (info/info-clj 'cider.nrepl.middleware.info 'Class/forName))
   (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
 
+  ;; special forms are marked as such and nothing else is (for all syms in ns)
+  (let [ns 'cider.nrepl.middleware.info
+        spec-forms (into '#{letfn fn let loop} (keys @#'repl/special-doc-map))
+        infos (->> (into spec-forms (keys (ns-map ns)))
+                   (map (partial info/info-clj ns)))]
+    (is (= spec-forms (->> (-> (group-by :special-form infos)
+                               (get true))
+                           (map :name)
+                           (set)))))
+
   (is (info/info-java "clojure.lang.Atom" "swap"))
 
   (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online
@@ -50,6 +61,10 @@
   (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'notincanter.core))))
   ;; unfound nses should fall through
   (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.nonexistent-namespace 'a-var))))
+
+  ;; handle zero-lenth input
+  (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
+  (is (nil? (info/info {:ns "" :symbol ""})))
   )
 
 (deftest test-response
