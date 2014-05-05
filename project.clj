@@ -1,4 +1,10 @@
-(defproject cider/cider-nrepl "0.7.0-SNAPSHOT"
+(def VERSION "0.7.0-SNAPSHOT")
+
+(def VERSION-FORM `(do (require 'cider-nrepl.plugin)
+                       (alter-var-root #'cider-nrepl.plugin/version
+                                       (constantly (constantly ~VERSION)))))
+
+(defproject cider/cider-nrepl VERSION
   :description "nREPL middleware for CIDER"
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
@@ -33,7 +39,7 @@
                                    :classifier "sources"]
                                   [org.clojure/clojure "1.5.1"
                                    :classifier "javadoc"]]
-
+                   :injections [~VERSION-FORM]
                    ;; Wait til 1.5 comes out for a fix to cljs dep
                    ;; :plugins [[com.cemerick/austin "0.1.5"]]
                    }
