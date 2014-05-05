@@ -19,7 +19,11 @@
 (defn complete-reply
   [{:keys [transport] :as msg}]
   (let [results (complete msg)]
-    (transport/send transport (response-for msg :value results))
+    (try
+      (transport/send transport (response-for msg :value results))
+      (catch Exception e
+        (transport/send
+         transport (response-for msg :exception (.getMessage e)))))
     (transport/send transport (response-for msg :status :done))))
 
 (defn wrap-complete

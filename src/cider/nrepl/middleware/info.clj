@@ -144,7 +144,12 @@
 
 (defn info-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :value (format-response (info msg))))
+  (try
+    (transport/send
+     transport (response-for msg :value (format-response (info msg))))
+    (catch Exception e
+      (transport/send
+       transport (response-for msg :exception (.getMessage e)))))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-info
