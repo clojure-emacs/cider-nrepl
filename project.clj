@@ -3,15 +3,14 @@
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [compliment "0.0.4"]
+  :dependencies [[compliment "0.0.4"]
                  [cljs-tooling "0.1.2"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.4"]
                  [org.clojure/tools.trace "0.7.8"]]
-
+  :exclusions [org.clojure/clojure]
   :profiles {:1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
@@ -37,5 +36,6 @@
 
                    ;; Wait til 1.5 comes out for a fix to cljs dep
                    ;; :plugins [[com.cemerick/austin "0.1.5"]]
-                   }}
+                   }
+             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}}
   )
