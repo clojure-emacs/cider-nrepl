@@ -29,8 +29,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 ```
 
 Note that you should use a `cider-nrepl` version compatible with your CIDER. Generally, if you're
-using CIDER 0.6 you should be using `cider-nrepl` 0.6, if you're using CIDER 0.7-snapshot, you should be
-using `cider-nrepl` 0.7-snapshot, etc.
+using CIDER 0.x.y you should be using `cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should be
+using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
 
 
 ## Supplied nREPL middleware
