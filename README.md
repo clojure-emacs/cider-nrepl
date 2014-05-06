@@ -11,14 +11,14 @@ Use the convenient plugin for defaults, either in your project's
 `~/.lein/profiles.clj`.
 
 ```clojure
-:plugins [[cider/cider-nrepl "0.6.1-SNAPSHOT"]]
+:plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]]
 ```
 
-Or add `cider-nrepl` to your `:dev :dependencies` vector plus specific
+Or (if you know what you're doing) add `cider-nrepl` to your `:dev :dependencies` vector plus specific
 middleware to to `:nrepl-middleware` under `:repl-options`.
 
 ```clojure
-:dependencies [[cider/cider-nrepl "0.6.1-SNAPSHOT"]]
+:dependencies [[cider/cider-nrepl "0.7.0-SNAPSHOT"]]
 :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.classpath/wrap-classpath
                   cider.nrepl.middleware.complete/wrap-complete
