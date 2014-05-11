@@ -9,7 +9,7 @@
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[compliment "0.0.4"]
+  :dependencies [[compliment "0.1.0"]
                  [cljs-tooling "0.1.2"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
