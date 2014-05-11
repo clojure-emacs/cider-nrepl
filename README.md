@@ -44,6 +44,29 @@ Middleware        | Op(s)      | Description
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-trace`      | `trace` | Toggle tracing of a given var.
 
+## Contributing
+
+### Discussion
+
+For questions, suggestions and support refer to our [official mailing list](https://groups.google.com/forum/#!forum/cider-emacs)
+or the Freenode channel `#clojure-emacs`.
+Please, don't report issues there, as this makes them harder to track.
+
+### Issues
+
+Report issues and suggest features and improvements on the
+[GitHub issue tracker](https://github.com/clojure-emacs/cider-nrepl/issues). Don't ask
+questions on the issue tracker - the mailing list and the IRC channel are the
+places for questions.
+
+### Patches
+
+Patches under any form are always welcome! GitHub pull requests are even better! :-)
+
+Before submitting a patch or a pull request make sure all tests are
+passing and that your patch is in line with the [contribution
+guidelines](CONTRIBUTING.md).
+
 ## License
 
 Copyright © 2013-2014 Bozhidar Batsov
