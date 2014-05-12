@@ -81,7 +81,7 @@
    (resolve-special sym) (resolve-special sym)
    ;; it's a var
    (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
-   ;; it's a Java class/method symbol...or nil
+   ;; it's a Java class/member symbol...or nil
    :else (java/resolve-symbol ns sym)))
 
 (defn info-cljs
@@ -91,7 +91,7 @@
 
 (defn info-java
   [class member]
-  (apply java/method-info (map str [class member])))
+  (java/member-info class member))
 
 (defn info
   [{:keys [ns symbol class member] :as msg}]
