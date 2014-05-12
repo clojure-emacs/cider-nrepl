@@ -2,7 +2,8 @@
 
 # CIDER nREPL
 
-A collection of nREPL middleware designed to enhance CIDER.
+A collection of [nREPL](https://github.com/clojure/tools.nrepl) middleware designed to enhance
+[CIDER](https://github.com/clojure-emacs/cider).
 
 ## Usage
 
