@@ -10,7 +10,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[compliment "0.1.0"]
-                 [cljs-tooling "0.1.2"]
+                 [cljs-tooling "0.1.3-SNAPSHOT"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.clojure/java.classpath "0.2.0"]
