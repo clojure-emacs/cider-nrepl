@@ -69,8 +69,7 @@
 
 (deftest test-response
   (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
-         '{"arglists" (("map" "key" "val") ("map" "key" "val" "&" "kvs")),
-           "ns" "clojure.core",
+         '{"ns" "clojure.core",
            "name" "assoc",
            "arglists-str" "([map key val] [map key val & kvs])",
            "column" 1,
