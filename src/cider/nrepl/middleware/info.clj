@@ -153,6 +153,12 @@
                       [k (format-response v)])))
     info))
 
+(defn blacklist
+  "Remove anything that might contain arbitrary EDN, metadata can hold anything"
+  [info]
+  (let [blacklisted #{:arglists :forms}]
+    (apply dissoc info blacklisted)))
+
 (defn format-response
   [info]
   (when info
@@ -169,6 +175,7 @@
                (when-let [path (:javadoc info)]
                  (javadoc-info path)))
         format-nested
+        blacklist
         u/transform-value)))
 
 (defn info-reply
