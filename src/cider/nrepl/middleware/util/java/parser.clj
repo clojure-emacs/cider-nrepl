@@ -4,7 +4,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
   (:import (com.sun.javadoc ClassDoc ConstructorDoc FieldDoc MethodDoc)
-           (com.sun.tools.javac.tree JCTree)
+           (com.sun.source.tree ClassTree)
            (com.sun.tools.javac.util Context List Options)
            (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool
                                   Messager ModifierFilter RootDocImpl)
@@ -70,7 +70,7 @@
                      (getCharContent [_] (slurp res)))
           tree     (.parse compiler source)
           classes  (->> (.defs tree)
-                        (filter #(= (.getTag %) JCTree/CLASSDEF))
+                        (filter #(= (-> % .getKind .asInterface) ClassTree))
                         (into-array)
                         (List/from))]
       (.main enter (List/of tree))

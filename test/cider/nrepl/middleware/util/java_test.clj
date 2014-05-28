@@ -16,6 +16,14 @@
             (is (resolve-src 'java.util.regex.Matcher))))
         (testing "for non-existent classes"
           (is (not (resolve-src 'not.actually.AClass)))))
+      (testing "Parse tree kinds"
+        ;; classes, nested, interfaces, enums
+        (is (-> (source-info 'clojure.lang.IFn) :line)) ; interface
+        (is (-> (source-info 'clojure.lang.AFn) :line)) ; abstract class
+        (is (-> (source-info 'clojure.lang.IFn$LODDO) :line)) ; nested interface
+        (is (-> (source-info 'clojure.lang.Numbers$Category) :line)) ; enum
+        (when jdk-sources
+          (is (-> (source-info 'java.sql.ClientInfoStatus) :line)))) ; top-level enum
       (testing "Source parsing"
         (is (-> (source-info 'clojure.lang.ExceptionInfo) :doc))
         (is (-> (get-in (source-info 'clojure.lang.Compiler)
@@ -87,13 +95,10 @@
         (is m4))
       (testing "that is static"
         (is m5))
-      (when (and jdk-tools jdk-sources)
-        (testing "implemented on immediate superclass"
-          (is (not= 'java.lang.Object (:class m6)))
-          (is (= "java/lang/Object.java" (:file m6))))
-        (testing "implemented on ancestor superclass"
-          (is (not= 'java.lang.Object (:class m7)))
-          (is (= "java/lang/Object.java" (:file m7))))))))
+      (testing "implemented on immediate superclass"
+        (is (not= 'java.lang.Object (:class m6))))
+      (testing "implemented on ancestor superclass"
+        (is (not= 'java.lang.Object (:class m7)))))))
 
 (deftest test-arglists
   (let [+this (comp #{'this} first)]
