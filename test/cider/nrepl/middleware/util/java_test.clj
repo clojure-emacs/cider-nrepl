@@ -3,23 +3,50 @@
             [clojure.test :refer :all]
             [clojure.java.io :as io]))
 
-(deftest test-sources
-  (let [resolve-src (comp io/resource java-source)]
-    (testing "Source file resolution"
-      (testing "from Clojure"
-        (is (resolve-src "clojure.lang.Compiler"))
-        (is (resolve-src "clojure.lang.PersistentHashSet")))
-      (testing "from JDK"
-        (when jdk-sources ; system dependent; not managed by project.clj
-          (is (resolve-src "java.lang.String"))
-          (is (resolve-src "java.util.regex.Matcher"))))
-      (testing "for non-existent classes"
-        (is (not (resolve-src "not.actually.AClass")))))))
+(deftest test-source-info
+  (let [resolve-src (comp (fnil io/resource "-none-") :file source-info)]
+    (when jdk-tools
+      (testing "Source file resolution"
+        (testing "from Clojure"
+          (is (resolve-src 'clojure.lang.Compiler))
+          (is (resolve-src 'clojure.lang.PersistentHashSet)))
+        (testing "from JDK"
+          (when jdk-sources ; system dependent; not managed by project.clj
+            (is (resolve-src 'java.lang.String))
+            (is (resolve-src 'java.util.regex.Matcher))))
+        (testing "for non-existent classes"
+          (is (not (resolve-src 'not.actually.AClass)))))
+      (testing "Source parsing"
+        (is (-> (source-info 'clojure.lang.ExceptionInfo) :doc))
+        (is (-> (get-in (source-info 'clojure.lang.Compiler)
+                        [:members 'compile])
+                first val :line))))))
+
+(deftest test-map-structure
+  (when jdk-tools
+    (testing "Parsed map structure = reflected map structure"
+      (let [cols #{:file :line :column :doc :argnames :argtypes}
+            keys= #(= (set (keys (apply dissoc %1 cols)))
+                      (set (keys %2)))
+            c1 (class-info* 'java.lang.String)
+            c2 (with-redefs [source-info (constantly nil)]
+                 (class-info* 'java.lang.String))]
+        ;; Class info
+        (is (keys= c1 c2))
+        ;; Members
+        (is (keys (:members c1)))
+        (is (= (keys (:members c1))
+               (keys (:members c2))))
+        ;; Member info
+        (is (->> (map keys=
+                      (vals (:members c1))
+                      (vals (:members c2)))
+                 (every? true?)))))))
 
 (deftest test-class-info
-  (let [c1 (class-info "clojure.lang.PersistentHashMap")
-        c2 (class-info "clojure.lang.PersistentHashMap$ArrayNode")
-        c3 (class-info "not.actually.AClass")]
+  (let [c1 (class-info 'clojure.lang.PersistentHashMap)
+        c2 (class-info 'clojure.lang.PersistentHashMap$ArrayNode)
+        c3 (class-info 'not.actually.AClass)]
     (testing "Class"
       (testing "source file"
         (is (string? (:file c1)))
@@ -27,22 +54,23 @@
       (testing "source file for nested class"
         (is (string? (:file c2)))
         (is (io/resource (:file c2))))
-      (testing "method info"
-        (is (map? (:methods c1)))
-        (is (every? map? (vals (:methods c1))))
-        (is (apply (every-pred :ret :args :line)
-                   (mapcat vals (vals (:methods c1))))))
+      (testing "member info"
+        (is (map? (:members c1)))
+        (is (every? map? (vals (:members c1))))
+        (is (apply (every-pred :name :modifiers)
+                   (mapcat vals (vals (:members c1))))))
       (testing "that doesn't exist"
         (is (nil? c3))))))
 
-(deftest test-method-info
-  (let [m1 (method-info "clojure.lang.PersistentHashMap" "assoc")
-        m2 (method-info "clojure.lang.PersistentHashMap" "nothing")
-        m3 (method-info "not.actually.AClass" "nada")
-        m4 (method-info "java.util.AbstractMap" "finalize")
-        m5 (method-info "java.util.HashMap" "finalize")
-        m6 (method-info "java.lang.Class" "forName")]
-    (testing "Method"
+(deftest test-member-info
+  (let [m1 (member-info 'clojure.lang.PersistentHashMap 'assoc)
+        m2 (member-info 'clojure.lang.PersistentHashMap 'nothing)
+        m3 (member-info 'not.actually.AClass 'nada)
+        m4 (member-info 'java.awt.Point 'x)
+        m5 (member-info 'java.lang.Class 'forName)
+        m6 (member-info 'java.util.AbstractMap 'finalize)
+        m7 (member-info 'java.util.HashMap 'finalize)]
+    (testing "Member"
       (testing "source file"
         (is (string? (:file m1)))
         (is (io/resource (:file m1))))
@@ -55,55 +83,71 @@
         (is (nil? m2)))
       (testing "in a class that doesn't exist"
         (is (nil? m3)))
-      (testing "implemented on immediate superclass"
-        (is (not= "java.lang.Object" (:class m4)))
-        (is (= "java/lang/Object.java" (:file m4))))
-      (testing "implemented on ancestor superclass"
-        (is (not= "java.lang.Object" (:class m5)))
-        (is (= "java/lang/Object.java" (:file m5))))
+      (testing "that is a field"
+        (is m4))
       (testing "that is static"
-        (is m6)))))
+        (is m5))
+      (when (and jdk-tools jdk-sources)
+        (testing "implemented on immediate superclass"
+          (is (not= 'java.lang.Object (:class m6)))
+          (is (= "java/lang/Object.java" (:file m6))))
+        (testing "implemented on ancestor superclass"
+          (is (not= 'java.lang.Object (:class m7)))
+          (is (= "java/lang/Object.java" (:file m7))))))))
+
+(deftest test-arglists
+  (let [+this (comp #{'this} first)]
+    (testing "Arglist prepending of 'this'"
+      (testing "for instance methods"
+        (every? +this (:arglists (member-info 'java.lang.StringWriter 'write))))
+      (testing "for instance fields"
+        (every? +this (:arglists (member-info 'java.awt.Point 'x))))
+      (testing "for static members"
+        (not-any? +this (:arglists (member-info 'java.lang.Class 'forName))))
+      (testing "for constructors"
+        (not-any? +this (:arglists (member-info 'java.lang.String
+                                                'java.lang.String)))))))
 
 (deftest test-javadoc-urls
   (testing "Javadoc URL"
     (testing "for a class"
-      (is (= (:javadoc (class-info "java.lang.String"))
+      (is (= (:javadoc (class-info 'java.lang.String))
              "java/lang/String.html")))
 
     (testing "for a nested class"
-      (is (= (:javadoc (class-info "java.util.AbstractMap$SimpleEntry"))
+      (is (= (:javadoc (class-info 'java.util.AbstractMap$SimpleEntry))
              "java/util/AbstractMap.SimpleEntry.html")))
 
     (testing "for an interface"
-      (is (= (:javadoc (class-info "java.io.Closeable"))
+      (is (= (:javadoc (class-info 'java.io.Closeable))
              "java/io/Closeable.html")))
 
-    (testing "for a method"
+    (testing "for a member"
       (testing "with no args"
-        (is (= (:javadoc (method-info "java.util.Random" "nextInt"))
-               "java/util/Random.html#nextInt()")))
+        (is (= (:javadoc (member-info 'java.util.Random 'nextLong))
+               "java/util/Random.html#nextLong()")))
       (testing "with primitive args"
-        (is (= (:javadoc (method-info "java.util.Random" "setSeed"))
+        (is (= (:javadoc (member-info 'java.util.Random 'setSeed))
                "java/util/Random.html#setSeed(long)")))
       (testing "with object args"
-        (is (= (:javadoc (method-info "java.lang.String" "contains"))
+        (is (= (:javadoc (member-info 'java.lang.String 'contains))
                "java/lang/String.html#contains(java.lang.CharSequence)")))
       (testing "with array args"
-        (is (= (:javadoc (method-info "java.lang.Thread" "enumerate"))
+        (is (= (:javadoc (member-info 'java.lang.Thread 'enumerate))
                "java/lang/Thread.html#enumerate(java.lang.Thread[])")))
       (testing "with multiple args"
-        (is (= (:javadoc (method-info "java.util.ArrayList" "subList"))
+        (is (= (:javadoc (member-info 'java.util.ArrayList 'subList))
                "java/util/ArrayList.html#subList(int, int)")))
       (testing "with generic type erasure"
-        (is (= (:javadoc (method-info "java.util.Hashtable" "putAll"))
+        (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
                "java/util/Hashtable.html#putAll(java.util.Map)"))))))
 
 (deftest test-class-resolution
   (let [ns (ns-name *ns*)]
     (testing "Class resolution"
       (testing "of resolvable classes"
-        (is (= "java.lang.String" (:class (resolve-class ns 'String))))
-        (is (= "java.lang.String" (:class (resolve-class ns 'java.lang.String)))))
+        (is (= 'java.lang.String (:class (resolve-class ns 'String))))
+        (is (= 'java.lang.String (:class (resolve-class ns 'java.lang.String)))))
       (testing "of non-resolvable 'classes'"
         (is (nil? (resolve-class ns 'NothingHere)))
         (is (nil? (resolve-class ns 'not.actually.AClass))))
@@ -111,28 +155,30 @@
         (is (nil? (resolve-class ns 'assoc)))
         (is (nil? (resolve-class ns 'clojure.core)))))))
 
-(deftest test-method-resolution
+(deftest test-member-resolution
   (let [ns (ns-name *ns*)]
-    (testing "Method resolution"
-      (testing "of instance methods"
-        (is (every? #(= "toString" (:method %))
-                    (resolve-method ns 'toString))))
-      (testing "of non-methods"
-        (is (empty? (resolve-method ns 'notAMethod)))))))
+    (testing "Member resolution"
+      (testing "of instance members"
+        (is (every? #(= 'toString (:member %))
+                    (resolve-member ns 'toString))))
+      (testing "of non-members"
+        (is (empty? (resolve-member ns 'notAMember)))))))
 
 (deftest test-symbol-resolution
   (let [ns (ns-name *ns*)]
     (testing "Symbol resolution"
       (testing "of classes/constructors"
-        (is (= "<init>" (:method (resolve-symbol ns 'String)))))
-      (testing "of unambiguous instance methods"
-        (is (= "java.lang.SecurityManager"
+        (is (= 'java.lang.String (:class (resolve-symbol ns 'String)))))
+      (testing "of unambiguous instance members"
+        (is (= 'java.lang.SecurityManager
                (:class (resolve-symbol ns 'checkSystemClipboardAccess)))))
-      (testing "of candidate instance methods"
-        (is (every? #(= "toString" (:method %))
+      (testing "of candidate instance members"
+        (is (every? #(= 'toString (:member %))
                     (vals (:candidates (resolve-symbol ns 'toString))))))
       (testing "of static methods"
-        (is (= "forName" (:method (resolve-symbol ns 'Class/forName)))))
+        (is (= 'forName (:member (resolve-symbol ns 'Class/forName)))))
+      (testing "of static fields"
+        (is (= 'TYPE (:member (resolve-symbol ns 'Void/TYPE)))))
 
       (testing "equality of qualified vs unqualified"
         (testing "classes"
@@ -165,8 +211,4 @@
         (is (nil? (resolve-symbol ns 'missing.Qualified/staticMethod)))
         (is (nil? (resolve-symbol ns 'missingMethod)))
         (is (nil? (resolve-symbol ns '.missingDottedMethod)))
-        (is (nil? (resolve-symbol ns '.random.bunch/of$junk)))
-        (is (nil? (resolve-symbol ns :wrong-type)))
-        (is (nil? (resolve-symbol ns 12345)))
-        (is (nil? (resolve-symbol ns true)))
-        (is (nil? (resolve-symbol ns "")))))))
+        (is (nil? (resolve-symbol ns '.random.bunch/of$junk)))))))

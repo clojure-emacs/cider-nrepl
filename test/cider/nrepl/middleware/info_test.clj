@@ -43,10 +43,10 @@
                            (map :name)
                            (set)))))
 
-  (is (info/info-java "clojure.lang.Atom" "swap"))
+  (is (info/info-java 'clojure.lang.Atom 'swap))
 
   (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online
-               (-> (info/info-java "java.lang.Object" "toString")
+               (-> (info/info-java 'java.lang.Object 'toString)
                    (info/format-response)
                    (get "javadoc"))))
 
