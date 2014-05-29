@@ -1,4 +1,4 @@
-(ns cider.nrepl.core.inspect
+(ns cider.nrepl.middleware.util.inspect
   "Adapted from swank-clojure and javert"
   (:require [clojure.string :as s])
   (:import (java.lang.reflect Field)

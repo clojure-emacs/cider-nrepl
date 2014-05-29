@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.inspect
-  (:require [cider.nrepl.core.inspect :as inspect]
+  (:require [cider.nrepl.middleware.util.inspect :as inspect]
             [clojure.tools.namespace.find :as nsf]
             [clojure.java.classpath :as cp]
             [clojure.tools.nrepl.transport :as transport]
