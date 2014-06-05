@@ -43,7 +43,7 @@ Middleware        | Op(s)      | Description
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
-`wrap-trace`      | `trace` | Toggle tracing of a given var.
+`wrap-trace`      | `toggle-trace` | Toggle tracing of a given var.
 
 ## Contributing
 
