@@ -66,7 +66,19 @@ Patches under any form are always welcome! GitHub pull requests are even better!
 
 Before submitting a patch or a pull request make sure all tests are
 passing and that your patch is in line with the [contribution
-guidelines](CONTRIBUTING.md).
+guidelines](CONTRIBUTING.md)
+
+## Hall of Fame
+
+Special credit goes to the following people for their contributions:
+
+- Gary Trakhman ([@gtrak](https://github.com/gtrak))
+- Jeff Valk [@jeffvalk](https://github.com/jeffvalk)
+- Hugo Duncan [@hugoduncan](https://github.com/hugoduncan)
+
+And the a big thanks to
+[all other contributors](https://github.com/clojure-emacs/cider-nrepl/graphs/contributors)
+who have helped so far.
 
 ## License
 
