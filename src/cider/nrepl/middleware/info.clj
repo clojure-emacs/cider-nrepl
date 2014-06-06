@@ -17,9 +17,17 @@
                  :line (:line prot-meta)})
     info))
 
+(def var-meta-whitelist
+  [:ns :name :doc :file :arglists :macro :protocol :line :column :static :added :resource])
+
+(defn- map-seq [x]
+  (if (seq x)
+    x
+    nil))
+
 (defn var-meta
   [v]
-  (-> v meta maybe-protocol))
+  (-> v meta maybe-protocol (select-keys var-meta-whitelist) map-seq))
 
 (defn ns-meta
   [ns]
