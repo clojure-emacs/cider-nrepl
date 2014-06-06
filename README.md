@@ -73,8 +73,8 @@ guidelines](CONTRIBUTING.md)
 Special credit goes to the following people for their contributions:
 
 - Gary Trakhman ([@gtrak](https://github.com/gtrak))
-- Jeff Valk [@jeffvalk](https://github.com/jeffvalk)
-- Hugo Duncan [@hugoduncan](https://github.com/hugoduncan)
+- Jeff Valk ([@jeffvalk](https://github.com/jeffvalk))
+- Hugo Duncan ([@hugoduncan](https://github.com/hugoduncan))
 
 And the a big thanks to
 [all other contributors](https://github.com/clojure-emacs/cider-nrepl/graphs/contributors)
