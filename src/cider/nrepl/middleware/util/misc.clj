@@ -46,8 +46,8 @@
 
 (defmethod transform-value clojure.lang.Associative
   [m]
-  (->> (for [[k v] m]
-         [(transform-value k) (transform-value v)])
+  (->> (for [[k v] m] ; bencode keys must be strings
+         [(str (transform-value k)) (transform-value v)])
        (into {})))
 
 ;; handles vectors
