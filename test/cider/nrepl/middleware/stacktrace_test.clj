@@ -65,12 +65,12 @@
       (is (= 1 (count (filter (comp :repl :flags) frames1))))
       (is (= 1 (count (filter (comp :repl :flags) frames2)))))
     (testing "for tooling"
-      ;; Tooling frames are in classes named with 'clojure' or 'nrepl',
-      ;; or are java thread runners.
-      (is (every? #(re-find #"(clojure|nrepl|run)" (:name %))
-                  (filter (comp :tooling :flags) frames1)))
-      (is (every? #(re-find #"(clojure|nrepl|run)" (:name %))
-                  (filter (comp :tooling :flags) frames2))))
+      ;; Tooling frames are classes named with 'clojure' or 'nrepl',
+      ;; or are java thread runners...or calls made from these.
+      (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
+                (filter (comp :tooling :flags) frames1)))
+      (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
+                (filter (comp :tooling :flags) frames2))))
     (testing "for duplicate frames"
       ;; Index frames. For all frames flagged as :dup, the frame above it in
       ;; the stack (index i - 1) should be substantially the same source info.
