@@ -28,8 +28,9 @@
   function."
   [{:keys [file type class] :as frame}]
   (if (= :clj type)
-    (let [[ns fn & anons] (-> (repl/demunge class) (str/split #"/"))
-          anons (map #(str/replace % #"--\d{4,}" "") anons)]
+    (let [[ns fn & anons] (-> (repl/demunge class)
+                              (str/replace #"--\d+" "")
+                              (str/split #"/"))]
       (assoc frame
         :ns  ns
         :fn  (str/join "/" (cons fn anons))
@@ -59,17 +60,14 @@
     frame))
 
 (defn flag-tooling
-  "Walk the call stack from bottom to top, flagging frames below the *lowest*
-  call to `clojure.lang.Compiler/eval` as `:tooling` to distinguish compilation
-  and nREPL middleware frames from user code."
+  "Walk the call stack from top to bottom, flagging frames below the first call
+  to `clojure.lang.Compiler` or `clojure.tools.nrepl.*` as `:tooling` to
+  distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [eval? #(= (:name %) "clojure.lang.Compiler/eval")
+  (let [tool? #(re-find #"clojure.lang.Compiler|clojure.tools.nrepl" (:name %))
         flag  #(update-in % [:flags] (comp set conj) :tooling)
-        [tools evals & user] (partition-by eval? (reverse frames))]
-    (reverse (apply concat
-                    (map flag tools)
-                    (map flag evals)
-                    user))))
+        [user & tools] (partition-by (complement tool?) frames)]
+    (concat user (map flag (apply concat tools)))))
 
 (defn flag-duplicates
   "Where a parent and child frame represent substantially the same source

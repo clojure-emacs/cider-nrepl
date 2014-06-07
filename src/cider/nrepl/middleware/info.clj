@@ -103,7 +103,7 @@
 
 (defn info
   [{:keys [ns symbol class member] :as msg}]
-  (let [[ns symbol] (map u/as-sym [ns symbol])]
+  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (info-cljs cljs-env symbol ns)
       (if ns
