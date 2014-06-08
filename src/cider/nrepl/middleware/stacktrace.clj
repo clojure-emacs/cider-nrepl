@@ -95,15 +95,15 @@
 ;;; ## Causes
 
 (defn analyze-causes
-  "Return the cause chain, beginning with the thrown exception, or, if the
-  thrown exception is a wrapping compiler exception, its immediate cause.
-  If `ex-data` exists for any item, a `:data` key is appended."
+  "Return the cause chain beginning with the thrown exception, with stack frames
+  for each. If `ex-data` exists for any exception, a `:data` key is appended."
   [e]
   (->> e
        (iterate #(.getCause %))
        (take-while identity)
        (map #(let [m {:class (.getName (class %))
-                      :message (.getMessage %)}]
+                      :message (.getMessage %)
+                      :stacktrace (analyze-stacktrace %)}]
                (if-let [data (ex-data %)]
                  (assoc m :data (with-out-str (pp/pprint data)))
                  m)))))
@@ -120,8 +120,6 @@
       (try (if-let [e (@session #'*e)]
              (do (doseq [cause (analyze-causes e)]
                    (t/send transport (response-for msg cause)))
-                 (doseq [frame (analyze-stacktrace e)]
-                   (t/send transport (response-for msg frame)))
                  (t/send transport (response-for msg :status :done)))
              (t/send transport (response-for msg :status :no-error)))
            (catch Throwable t
