@@ -94,19 +94,34 @@
 
 ;;; ## Causes
 
+(defn extract-location
+  "If the cause is a compiler exception, extract the useful location information
+  from its message and discard the string representation of its inner cause."
+  [{:keys [class] :as cause}]
+  (if (= class "clojure.lang.Compiler$CompilerException")
+    (update-in cause [:message] str/replace
+               #".* (compiling:)\((.*)\)" "Error $1 $2")
+    cause))
+
+(defn analyze-cause
+  "Return a map describing the exception cause. If `ex-data` exists, a `:data`
+  key is appended."
+  [e]
+  (let [m {:class (.getName (class e))
+           :message (.getMessage e)
+           :stacktrace (analyze-stacktrace e)}]
+    (if-let [data (ex-data e)]
+      (assoc m :data (with-out-str (pp/pprint data)))
+      m)))
+
 (defn analyze-causes
   "Return the cause chain beginning with the thrown exception, with stack frames
-  for each. If `ex-data` exists for any exception, a `:data` key is appended."
+  for each."
   [e]
   (->> e
        (iterate #(.getCause %))
        (take-while identity)
-       (map #(let [m {:class (.getName (class %))
-                      :message (.getMessage %)
-                      :stacktrace (analyze-stacktrace %)}]
-               (if-let [data (ex-data %)]
-                 (assoc m :data (with-out-str (pp/pprint data)))
-                 m)))))
+       (map (comp extract-location analyze-cause))))
 
 
 ;;; ## Middleware
