@@ -26,11 +26,12 @@
 (defn analyze-fn
   "Add namespace, fn, and var to the frame map when the source is a Clojure
   function."
-  [{:keys [file type class] :as frame}]
+  [{:keys [file type class method] :as frame}]
   (if (= :clj type)
     (let [[ns fn & anons] (-> (repl/demunge class)
                               (str/replace #"--\d+" "")
-                              (str/split #"/"))]
+                              (str/split #"/"))
+          fn (or fn method)] ; protocol functions are not munged
       (assoc frame
         :ns  ns
         :fn  (str/join "/" (cons fn anons))
