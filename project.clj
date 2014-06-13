@@ -24,6 +24,7 @@
                                                      cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
+                                                     cider.nrepl.middleware.macroexpand/wrap-macroexpand
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
                                                      cider.nrepl.middleware.trace/wrap-trace
                                                      ]}

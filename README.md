@@ -25,6 +25,7 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.complete/wrap-complete
                   cider.nrepl.middleware.info/wrap-info
                   cider.nrepl.middleware.inspect/wrap-inspect
+                  cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
                   cider.nrepl.middleware.trace/wrap-trace]}
 ```
@@ -42,6 +43,7 @@ Middleware        | Op(s)      | Description
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
+`wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-trace`      | `toggle-trace` | Toggle tracing of a given var.
 
