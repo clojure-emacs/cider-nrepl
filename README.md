@@ -15,6 +15,12 @@ Use the convenient plugin for defaults, either in your project's
 :plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]]
 ```
 
+A minimal `profiles.clj` for CIDER would be:
+
+```clojure
+{:user {:plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]]}}
+```
+
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev :dependencies` vector plus specific
 middleware to to `:nrepl-middleware` under `:repl-options`.
 
