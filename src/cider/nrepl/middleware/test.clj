@@ -135,10 +135,10 @@
   (let [[ns var] (map u/as-sym [ns var])]
     (with-bindings @session
       (if-let [e (get-in @results [ns var index :error])]
-        (do (doseq [cause (st/analyze-causes e)]
-              (t/send transport (response-for msg cause)))
-            (t/send transport (response-for msg :status :done)))
-        (t/send transport (response-for msg :status :no-error))))))
+        (doseq [cause (st/analyze-causes e)]
+          (t/send transport (response-for msg cause)))
+        (t/send transport (response-for msg :status :no-error)))
+      (t/send transport (response-for msg :status :done)))))
 
 (defn handle-retest
   "Rerun tests in the specified namespace that did not pass when last run. This
