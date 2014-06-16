@@ -21,8 +21,8 @@
       (handler msg))))
 
 (set-descriptor!
-  #'wrap-classpath
-  {:handles
-   {"classpath"
-    {:doc "Return a list of entries in the java classpath"
-     :returns {"status" "done"}}}})
+ #'wrap-classpath
+ {:handles
+  {"classpath"
+   {:doc "Return a list of entries in the Java classpath."
+    :returns {"status" "done"}}}})
