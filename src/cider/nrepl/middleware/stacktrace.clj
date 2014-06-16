@@ -133,23 +133,11 @@
   [handler]
   (fn [{:keys [op session transport] :as msg}]
     (if (= "stacktrace" op)
-      (try (if-let [e (@session #'*e)]
-             (do (doseq [cause (analyze-causes e)]
-                   (t/send transport (response-for msg cause)))
-                 (t/send transport (response-for msg :status :done)))
-             (t/send transport (response-for msg :status :no-error)))
-           (catch Throwable t
-             (.printStackTrace t)
-             (let [f (first (.getStackTrace t))]
-               (->> {:status :eval-error
-                     :error (str t)
-                     :debug (format
-                             (str "Error caught in stacktrace.clj, thrown at "
-                                  "%s:%d. See server's stderr for trace.")
-                             (.getFileName f)
-                             (.getLineNumber f))}
-                    (response-for msg)
-                    (t/send transport)))))
+      (do (if-let [e (@session #'*e)]
+            (doseq [cause (analyze-causes e)]
+              (t/send transport (response-for msg cause)))
+            (t/send transport (response-for msg :status :no-error)))
+          (t/send transport (response-for msg :status :done)))
       (handler msg))))
 
 ;; nREPL middleware descriptor info
