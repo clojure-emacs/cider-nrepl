@@ -22,7 +22,8 @@
     cider.nrepl.middleware.test/wrap-test
     cider.nrepl.middleware.trace/wrap-trace])
 
-(defn cider-nrepl-handler []
+(def cider-nrepl-handler
+  "CIDER's nREPL handler."
   (apply nrepl-server/default-handler (map resolve cider-middleware)))
 
 (def version

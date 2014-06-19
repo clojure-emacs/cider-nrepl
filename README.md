@@ -54,7 +54,7 @@ server with CIDER's own nREPL handler.
 
 (defn -main
   []
-  (nrepl-server/start-server :port 7888 :handler (cider-nrepl-handler)))
+  (nrepl-server/start-server :port 7888 :handler cider-nrepl-handler))
 ```
 
 ## Supplied nREPL middleware
