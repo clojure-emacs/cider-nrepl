@@ -79,8 +79,8 @@
   "Call `clojure.test/test-var` on each var, with the fixtures defined for
   namespace object `ns`."
   [ns vars]
-  (let [once-fixture-fn (test/join-fixtures (::once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::each-fixtures (meta ns)))]
+  (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
+        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
     (once-fixture-fn
      (fn []
        (doseq [v vars]
@@ -117,15 +117,15 @@
   of `tests` to be run; if nil, runs all tests. Results are cached for exception
   retrieval and to enable re-running of failed/erring tests."
   [{:keys [ns tests session transport] :as msg}]
-  (if-let [ns (try (doto (symbol ns) require) (catch Exception _))]
-    (let [report (->> (map #(ns-resolve ns (symbol %)) tests)
-                      (filter identity)
-                      (test-ns (the-ns ns)))]
-      (with-bindings @session
-        (swap! results update-in [ns] merge (:results report)))
-      (t/send transport (response-for msg (u/transform-value report))))
-    (t/send transport (response-for msg :status :namespace-not-found)))
-  (t/send transport (response-for msg :status :done)))
+  (with-bindings @session
+    (if-let [ns (try (doto (symbol ns) require) (catch Exception _))]
+      (let [report (->> (map #(ns-resolve ns (symbol %)) tests)
+                        (filter identity)
+                        (test-ns (the-ns ns)))]
+        (swap! results update-in [ns] merge (:results report))
+        (t/send transport (response-for msg (u/transform-value report))))
+      (t/send transport (response-for msg :status :namespace-not-found)))
+    (t/send transport (response-for msg :status :done))))
 
 (defn handle-stacktrace
   "Return exception cause and stack frame info for an erring test via the
