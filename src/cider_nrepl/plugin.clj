@@ -1,5 +1,6 @@
 (ns cider-nrepl.plugin
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [cider.nrepl :refer (cider-middleware)]))
 
 ;; Keep in sync with VERSION-FORM in project.clj
 (defn- version
@@ -21,12 +22,4 @@
                  [['cider/cider-nrepl (version)]])
       (update-in [:repl-options :nrepl-middleware]
                  (fnil into [])
-                 '[cider.nrepl.middleware.classpath/wrap-classpath
-                   cider.nrepl.middleware.complete/wrap-complete
-                   cider.nrepl.middleware.info/wrap-info
-                   cider.nrepl.middleware.inspect/wrap-inspect
-                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
-                   cider.nrepl.middleware.resource/wrap-resource
-                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
-                   cider.nrepl.middleware.test/wrap-test
-                   cider.nrepl.middleware.trace/wrap-trace])))
+                 cider-middleware)))

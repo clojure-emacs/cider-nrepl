@@ -7,6 +7,8 @@ A collection of [nREPL](https://github.com/clojure/tools.nrepl) middleware desig
 
 ## Usage
 
+### Via Leiningen
+
 Use the convenient plugin for defaults, either in your project's
 `project.clj` file or in the `:user` profile in
 `~/.lein/profiles.clj`.
@@ -40,6 +42,20 @@ Note that you should use a `cider-nrepl` version compatible with your CIDER. Gen
 using CIDER 0.x.y you should be using `cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should be
 using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
 
+### Via embedding nREPL in your app
+
+If you're embedding nREPL in your application you'll have to start the
+server with CIDER's own nREPL handler.
+
+```clojure
+(ns my-app
+  (:require [clojure.tools.nrepl.server :as nrepl-server]
+            [cider.nrepl :refer (cider-nrepl-handler)]))
+
+(defn -main
+  []
+  (nrepl-server/start-server :port 7888 :handler (cider-nrepl-handler)))
+```
 
 ## Supplied nREPL middleware
 
