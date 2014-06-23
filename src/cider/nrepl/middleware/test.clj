@@ -132,8 +132,8 @@
   `stacktrace` middleware. The error to be retrieved is referenced by namespace,
   var name, and assertion index within the var."
   [{:keys [ns var index session transport] :as msg}]
-  (let [[ns var] (map u/as-sym [ns var])]
-    (with-bindings @session
+  (with-bindings @session
+    (let [[ns var] (map u/as-sym [ns var])]
       (if-let [e (get-in @results [ns var index :error])]
         (doseq [cause (st/analyze-causes e)]
           (t/send transport (response-for msg cause)))
