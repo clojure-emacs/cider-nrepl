@@ -68,6 +68,7 @@ Middleware        | Op(s)      | Description
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
 `wrap-resource`   | `resource` | Return resource path.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
+`wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
 `wrap-trace`      | `toggle-trace` | Toggle tracing of a given var.
 
 ## Contributing
