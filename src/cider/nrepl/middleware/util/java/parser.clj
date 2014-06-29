@@ -11,7 +11,7 @@
            (java.io StringReader)
            (java.net URI)
            (javax.swing.text.html HTMLEditorKit$ParserCallback HTML$Tag)
-           (javax.swing.text.html.parser ParserDelegator)
+           (javax.swing.text.html.parser DTD DocumentParser)
            (javax.tools JavaFileObject$Kind SimpleJavaFileObject)))
 
 ;;; ## Java Source Analysis
@@ -126,7 +126,7 @@
   [html]
   (let [sb (StringBuilder.)
         sr (StringReader. html)
-        parser (ParserDelegator.)
+        parser (DocumentParser. (DTD/getDTD "html32"))
         stack (atom nil)
         flags (atom #{})
         handler (proxy [HTMLEditorKit$ParserCallback] []
