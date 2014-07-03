@@ -33,6 +33,8 @@
   (is (info/info-clj 'cider.nrepl.middleware.info 'Class/forName))
   (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
 
+  (is (= (the-ns 'clojure.core) (:ns (info/info-clj 'cider.nrepl.middleware.info 'str))))
+
   ;; special forms are marked as such and nothing else is (for all syms in ns)
   (let [ns 'cider.nrepl.middleware.info
         spec-forms (into '#{letfn fn let loop} (keys @#'repl/special-doc-map))
