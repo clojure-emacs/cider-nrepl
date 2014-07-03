@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.info
-  (:require [clojure.string :as s]
+  (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.java :as java]
@@ -81,14 +81,14 @@
 (defn info-clj
   [ns sym]
   (cond
-   ;; sym is an alias for another ns
-   (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
-   ;; it's simply a full ns
-   (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a special (special-symbol? or :special-form)
    (resolve-special sym) (resolve-special sym)
    ;; it's a var
    (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
+   ;; sym is an alias for another ns
+   (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
+   ;; it's simply a full ns
+   (find-ns sym) (ns-meta (find-ns sym))
    ;; it's a Java class/member symbol...or nil
    :else (java/resolve-symbol ns sym)))
 
@@ -177,7 +177,7 @@
                  {:arglists-str (pr-str args)})
                (when-let [forms (:forms info)]
                  {:forms-str (->> (map #(str "  " (pr-str %)) forms)
-                                  (s/join \newline))})
+                                  (str/join \newline))})
                (when-let [file (:file info)]
                  (file-info file))
                (when-let [path (:javadoc info)]
