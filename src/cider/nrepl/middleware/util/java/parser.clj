@@ -8,7 +8,7 @@
            (com.sun.tools.javac.util Context List Options)
            (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool
                                   Messager ModifierFilter RootDocImpl)
-           (java.io StringReader)
+           (java.io DataInputStream StringReader)
            (java.net URI)
            (javax.swing.text.html HTMLEditorKit$ParserCallback HTML$Tag)
            (javax.swing.text.html.parser DTD DocumentParser)
@@ -112,6 +112,17 @@
                 {} tags)
         (with-meta chars))))
 
+;; Normally, the DTD and HTML parser would be set up by a `ParserDelegator`;
+;; however, we avoid this due to an apparent JVM platform bug on Mac OS X
+;; that causes a stray GUI window to pop up whenever the `AppContext` class is
+;; referenced. Instead, we populate the DTD here and pass it to a new
+;; `DocumentParser` below, sidestepping references to `AppContext`.
+(def dtd
+  (doto (proxy [DTD] ["html32"])
+    (.read (-> (io/resource "javax/swing/text/html/parser/html32.bdtd")
+               (io/input-stream)
+               (DataInputStream.)))))
+
 ;; We parse html and emit text in a single pass -- there's no need to build a
 ;; tree. The syntax map defines most of the output format, but a few stateful
 ;; rules are applied:
@@ -126,7 +137,7 @@
   [html]
   (let [sb (StringBuilder.)
         sr (StringReader. html)
-        parser (DocumentParser. (DTD/getDTD "html32"))
+        parser (DocumentParser. dtd)
         stack (atom nil)
         flags (atom #{})
         handler (proxy [HTMLEditorKit$ParserCallback] []
