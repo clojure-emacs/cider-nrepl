@@ -124,11 +124,14 @@
           [relative full]))))
 
 (defn file-path
+  "For a file path, return a URL to the file if it exists and does not
+  represent a form evaluated at the REPL."
   [x]
-  (if (seq x)
+  (when (seq x)
     (let [f (io/file x)]
-      (if (.exists f)
-        f))))
+      (when (and (.exists f)
+                 (not (-> f .getName (.startsWith "form-init"))))
+        (io/as-url f)))))
 
 (defn file-info
   [path]

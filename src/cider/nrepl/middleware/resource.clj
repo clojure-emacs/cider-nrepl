@@ -6,7 +6,7 @@
 
 (defn resource-path [name]
   (when-let [resource (io/resource name)]
-    (.getPath resource)))
+    (str resource)))
 
 (defn resource-reply
   [{:keys [name transport] :as msg}]
