@@ -1,5 +1,6 @@
 (ns cider.nrepl
   (:require [clojure.tools.nrepl.server :as nrepl-server]
+            [cider.nrepl.middleware.apropos]
             [cider.nrepl.middleware.classpath]
             [cider.nrepl.middleware.complete]
             [cider.nrepl.middleware.info]
@@ -12,7 +13,8 @@
 
 (def cider-middleware
   "A vector containing all CIDER middleware."
-  '[cider.nrepl.middleware.classpath/wrap-classpath
+  '[cider.nrepl.middleware.apropos/wrap-apropos
+    cider.nrepl.middleware.classpath/wrap-classpath
     cider.nrepl.middleware.complete/wrap-complete
     cider.nrepl.middleware.info/wrap-info
     cider.nrepl.middleware.inspect/wrap-inspect
