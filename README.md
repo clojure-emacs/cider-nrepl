@@ -79,6 +79,7 @@ must execute prior to loading the `cider-nrepl` middleware.
 
 Middleware        | Op(s)      | Description
 ------------------|------------|---------------------------------------------------------
+`wrap-apropos`    | `apropos`  | Pattern search for symbols and documentation.
 `wrap-classpath`  | `classpath` | Java classpath.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-info`       | `info`     | File/line, arglists, docstrings and other metadata for vars.
