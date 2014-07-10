@@ -15,8 +15,8 @@
 
 ;;; ## Metadata
 ;; Var metadata provides the search targets. In the case of docstrings, an
-;; abbreviated version (i.e. first sentence only) is used for symbol-only
-;; searches.
+;; abbreviated version (i.e. first sentence only) may be returned for
+;; symbol-only searches.
 
 (defn var-name
   "Return a var's namespace-qualified name as a string."
@@ -25,7 +25,7 @@
                  (meta v))))
 
 (defn var-doc
-  "Return a var's doc string, optionally limiting the number of sentences
+  "Return a var's docstring, optionally limiting the number of sentences
   returned."
   ([v]
      (or (:doc (meta v)) "(not documented)"))
@@ -46,7 +46,7 @@
   namespace."
   [ns search-ns]
   (let [clojure-ns? #(.startsWith (str (ns-name %)) "clojure.")
-        current-ns (find-ns (symbol ns))]
+        current-ns (find-ns (symbol (or ns "")))]
     (if search-ns
       (list (find-ns (symbol search-ns)))
       (sort (fn [x y]
@@ -82,7 +82,7 @@
 
 (defn handle-apropos
   "Return a sequence of vars whose name matches the query pattern, or if
-  specified, having the pattern in their doc string."
+  specified, having the pattern in their docstring."
   [{:keys [ns query search-ns docs? privates? case-sensitve? transport] :as msg}]
   (let [results (find-symbols ns query search-ns docs? privates? case-sensitve?)]
     (t/send transport (response-for msg :value results))
