@@ -63,11 +63,11 @@
   and may be case senstive. Types returned correspond to Apropos types.
   Docstring search returns the full doc; symbol search returns an abbreviated
   version."
-  [ns query search-ns docs? privates? case-sensitve?]
+  [ns query search-ns docs? privates? case-sensitive?]
   (let [ns-vars     (if privates? ns-interns ns-publics)
         var-doc*    (if docs? var-doc (partial var-doc 1))
         search-prop (if docs? var-doc var-name)
-        regex   (-> (if case-sensitve? query (format "(?i:%s)" query)) re-pattern)]
+        regex   (-> (if case-sensitive? query (format "(?i:%s)" query)) re-pattern)]
     (->> (namespaces ns search-ns)
          (mapcat (comp (partial sort-by var-name) vals ns-vars))
          (filter (comp (partial re-find regex) search-prop))
@@ -83,8 +83,8 @@
 (defn handle-apropos
   "Return a sequence of vars whose name matches the query pattern, or if
   specified, having the pattern in their docstring."
-  [{:keys [ns query search-ns docs? privates? case-sensitve? transport] :as msg}]
-  (let [results (find-symbols ns query search-ns docs? privates? case-sensitve?)]
+  [{:keys [ns query search-ns docs? privates? case-sensitive? transport] :as msg}]
+  (let [results (find-symbols ns query search-ns docs? privates? case-sensitive?)]
     (t/send transport (response-for msg :value results))
     (t/send transport (response-for msg :status :done))))
 
