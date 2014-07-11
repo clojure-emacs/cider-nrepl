@@ -45,12 +45,14 @@
   [ns v m]
   (let [c (when test/*testing-contexts* (test/testing-contexts-str))
         e (when (= :error (:type m)) (:actual m))
-        i (count (-> @current-report :results v))]
+        i (count (-> @current-report :results v))
+        line (last (test/file-position 4))] ; line from stack frame
     (merge {:ns ns, :var v, :index i, :context c}
            (if (#{:fail :error} (:type m))
              (-> (assoc m :error e)
                  (update-in [:expected] #(with-out-str (pp/pprint %)))
-                 (update-in [:actual]   #(with-out-str (pp/pprint %))))
+                 (update-in [:actual]   #(with-out-str (pp/pprint %)))
+                 (assoc-in  [:line] (if (= :fail (:type m)) (:line m) line)))
              (dissoc m :expected :actual)))))
 
 (defn report
