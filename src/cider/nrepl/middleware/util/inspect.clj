@@ -98,9 +98,9 @@
            (safe-pr-seq (take 5 value) "( %s ... )")
 
            (and (set? value) (< (count value) 5))
-           (safe-pr-seq "#{ %s }")
+           (safe-pr-seq value "#{ %s }")
 
-           (and (set? value))
+           (set? value)
            (safe-pr-seq (take 5 value) "#{ %s ... }")
 
            :default
