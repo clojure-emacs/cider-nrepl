@@ -160,11 +160,12 @@
 ;; Inspector multimethod
 (defn known-types [ins obj]
   (cond
-   (map? obj) :map
-   (vector? obj) :vector
+   (map? obj) :seq
+   (vector? obj) :seq
+   (seq? obj) :seq
+   (set? obj) :seq
    (var? obj) :var
    (string? obj) :string
-   (seq? obj) :seq
    (instance? Class obj) :class
    (instance? clojure.lang.Namespace obj) :namespace
    (instance? clojure.lang.ARef obj) :aref
@@ -174,18 +175,9 @@
 
 (defmulti inspect #'known-types)
 
-(defmethod inspect :map [inspector obj]
+(defmethod inspect :seq [inspector obj]
   (-> inspector
       (render-labeled-value "Class" (class obj))
-      (render-labeled-value "Count" (count obj))
-      (render-meta-information obj)
-      (render-ln "Contents: ")
-      (render-map-values obj)))
-
-(defmethod inspect :vector [inspector obj]
-  (-> inspector
-      (render-labeled-value "Class" (class obj))
-      (render-labeled-value "Count" (count obj))
       (render-meta-information obj)
       (render-ln "Contents: ")
       (render-indexed-values obj)))
@@ -213,13 +205,6 @@
   (-> inspector
       (render-labeled-value "Class" (class obj))
       (render "Value: " (pr-str obj))))
-
-(defmethod inspect :seq [inspector obj]
-  (-> inspector
-      (render-labeled-value "Class" (class obj))
-      (render-meta-information obj)
-      (render-ln "Contents: ")
-      (render-indexed-values obj)))
 
 (defmethod inspect :default [inspector obj]
   (let [^"[Ljava.lang.reflect.Field;" fields (. (class obj) getDeclaredFields)
