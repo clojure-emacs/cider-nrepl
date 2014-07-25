@@ -117,6 +117,7 @@
 ;; that causes a stray GUI window to pop up whenever the `AppContext` class is
 ;; referenced. Instead, we populate the DTD here and pass it to a new
 ;; `DocumentParser` below, sidestepping references to `AppContext`.
+(System/setProperty "apple.awt.UIElement" "true")
 (def dtd
   (doto (proxy [DTD] ["html32"])
     (.read (-> (io/resource "javax/swing/text/html/parser/html32.bdtd")
