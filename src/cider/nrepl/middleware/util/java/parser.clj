@@ -8,10 +8,10 @@
            (com.sun.tools.javac.util Context List Options)
            (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool
                                   Messager ModifierFilter RootDocImpl)
-           (java.io DataInputStream StringReader)
+           (java.io StringReader)
            (java.net URI)
            (javax.swing.text.html HTMLEditorKit$ParserCallback HTML$Tag)
-           (javax.swing.text.html.parser DTD DocumentParser)
+           (javax.swing.text.html.parser ParserDelegator)
            (javax.tools JavaFileObject$Kind SimpleJavaFileObject)))
 
 ;;; ## Java Source Analysis
@@ -112,17 +112,11 @@
                 {} tags)
         (with-meta chars))))
 
-;; Normally, the DTD and HTML parser would be set up by a `ParserDelegator`;
-;; however, we avoid this due to an apparent JVM platform bug on Mac OS X
-;; that causes a stray GUI window to pop up whenever the `AppContext` class is
-;; referenced. Instead, we populate the DTD here and pass it to a new
-;; `DocumentParser` below, sidestepping references to `AppContext`.
+;; The HTML parser and DTD classes are in the `javax.swing` package, and have
+;; internal references to the `sun.awt.AppContext` class. On Mac OS X, any use
+;; of this class causes a stray GUI window to pop up. Setting the system
+;; property below prevents this.
 (System/setProperty "apple.awt.UIElement" "true")
-(def dtd
-  (doto (proxy [DTD] ["html32"])
-    (.read (-> (io/resource "javax/swing/text/html/parser/html32.bdtd")
-               (io/input-stream)
-               (DataInputStream.)))))
 
 ;; We parse html and emit text in a single pass -- there's no need to build a
 ;; tree. The syntax map defines most of the output format, but a few stateful
@@ -138,7 +132,7 @@
   [html]
   (let [sb (StringBuilder.)
         sr (StringReader. html)
-        parser (DocumentParser. dtd)
+        parser (ParserDelegator.)
         stack (atom nil)
         flags (atom #{})
         handler (proxy [HTMLEditorKit$ParserCallback] []
