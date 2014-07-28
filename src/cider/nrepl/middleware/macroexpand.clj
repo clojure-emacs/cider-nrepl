@@ -12,17 +12,20 @@
      (ns-resolve 'clojure.walk sym)
      (resolve sym))))
 
-(defn macroexpansion [op code suppress-namespaces]
+(defn macroexpansion [op code ns-name suppress-namespaces]
   (let [expansion-fn (resolve-op op)
-        expansion (expansion-fn (read-string code))]
+        ns (find-ns (symbol ns-name))
+        ;; we have to do the macroexpansion in the proper ns context
+        expansion (binding [*ns* ns] (expansion-fn (read-string code)))
+        suppress-namespaces (boolean suppress-namespaces)]
     (with-out-str
       (pp/write expansion
                 :suppress-namespaces suppress-namespaces
                 :dispatch clojure.pprint/code-dispatch))))
 
 (defn macroexpansion-reply
-  [{:keys [transport op code suppress-namespaces] :as msg}]
-  (transport/send transport (response-for msg :value (macroexpansion op code suppress-namespaces)))
+  [{:keys [transport op code ns suppress-namespaces] :as msg}]
+  (transport/send transport (response-for msg :value (macroexpansion op code ns suppress-namespaces)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-macroexpand

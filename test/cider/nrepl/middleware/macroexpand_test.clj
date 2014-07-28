@@ -14,6 +14,7 @@
     (macroexpansion-reply {:transport transport
                            :op "macroexpand-1"
                            :code (:expr code)
+                           :ns "clojure.core"
                            :suppress-namespaces true})
     (is (= (messages transport)
            [{:value (:expanded-1 code)} {:status #{:done}}]))))
@@ -23,6 +24,7 @@
     (macroexpansion-reply {:transport transport
                            :op "macroexpand"
                            :code (:expr code)
+                           :ns "clojure.core"
                            :suppress-namespaces true})
     (is (= (messages transport)
            [{:value (:expanded code)} {:status #{:done}}]))))
@@ -32,6 +34,7 @@
     (macroexpansion-reply {:transport transport
                            :op "macroexpand-all"
                            :code (:expr code)
+                           :ns "clojure.core"
                            :suppress-namespaces true})
     (is (= (messages transport)
            [{:value (:expanded-all code)} {:status #{:done}}]))))
