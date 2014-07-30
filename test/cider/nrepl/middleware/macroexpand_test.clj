@@ -61,7 +61,11 @@
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
       (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
-             "(clojure.test/deftest test-foo (clojure.test/is (clojure.string/blank? \"\")) (clojure.test/is (clojure.core/= cider.nrepl.middleware.macroexpand-test/my-set (clojure.set/intersection #{1 2 3} #{2 3 4}))))")))))
+             ;; format the set literals instead of hard-coding them in the
+             ;; string because with different clojure versions, the set #{1 2
+             ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
+             (format "(clojure.test/deftest test-foo (clojure.test/is (clojure.string/blank? \"\")) (clojure.test/is (clojure.core/= cider.nrepl.middleware.macroexpand-test/my-set (clojure.set/intersection %s %s))))"
+                     #{1 2 3} #{2 3 4}))))))
 
 (deftest test-macroexpand-1-op-suppress-namespaces-true
   ;; Tests that no var is qualified with its namespace
@@ -74,7 +78,11 @@
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
       (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
-             "(deftest test-foo (is (blank? \"\")) (is (= my-set (intersection #{1 2 3} #{2 3 4}))))")))))
+             ;; format the set literals instead of hard-coding them in the
+             ;; string because with different clojure versions, the set #{1 2
+             ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
+             (format "(deftest test-foo (is (blank? \"\")) (is (= my-set (intersection %s %s))))"
+                     #{1 2 3} #{2 3 4}))))))
 
 (deftest test-macroexpand-1-op-suppress-namespaces-tidy
   ;; Tests that refered vars (deftest, is) and vars of the current ns (my-set)
@@ -90,4 +98,8 @@
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
       (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
-             "(deftest test-foo (is (clojure.string/blank? \"\")) (is (= my-set (set/intersection #{1 2 3} #{2 3 4}))))")))))
+             ;; format the set literals instead of hard-coding them in the
+             ;; string because with different clojure versions, the set #{1 2
+             ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
+             (format "(deftest test-foo (is (clojure.string/blank? \"\")) (is (= my-set (set/intersection %s %s))))"
+                     #{1 2 3} #{2 3 4}))))))
