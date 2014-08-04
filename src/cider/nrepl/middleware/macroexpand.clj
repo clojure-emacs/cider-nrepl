@@ -34,7 +34,7 @@
             alias (symbol (str alias "/" symb-name))
             ;; That var is defined in the current namespace
             (= symb-ns (ns-name ns)) symb-name
-            ;; The var is refered to
+            ;; The var is referred to
             ((ns-refers ns) symb-name) symb-name
             ;; No alias and from a different namespace
             :else x))
