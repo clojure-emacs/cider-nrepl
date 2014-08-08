@@ -5,7 +5,7 @@
                                        (constantly (constantly ~VERSION)))))
 
 (defproject cider/cider-nrepl VERSION
-  :description "nREPL middleware for CIDER"
+  :description "nREPL middlewares for CIDER"
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
