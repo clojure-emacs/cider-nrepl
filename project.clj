@@ -1,4 +1,4 @@
-(def VERSION "0.7.0")
+(def VERSION "0.8.0-SNAPSHOT")
 
 (def VERSION-FORM `(do (require 'cider-nrepl.plugin)
                        (alter-var-root #'cider-nrepl.plugin/version
