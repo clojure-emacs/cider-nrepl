@@ -9,7 +9,8 @@
             [cider.nrepl.middleware.resource]
             [cider.nrepl.middleware.stacktrace]
             [cider.nrepl.middleware.test]
-            [cider.nrepl.middleware.trace]))
+            [cider.nrepl.middleware.trace]
+            [cider.nrepl.middleware.undef]))
 
 (def cider-middleware
   "A vector containing all CIDER middleware."
@@ -22,7 +23,8 @@
     cider.nrepl.middleware.resource/wrap-resource
     cider.nrepl.middleware.stacktrace/wrap-stacktrace
     cider.nrepl.middleware.test/wrap-test
-    cider.nrepl.middleware.trace/wrap-trace])
+    cider.nrepl.middleware.trace/wrap-trace
+    cider.nrepl.middleware.undef/wrap-undef])
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."

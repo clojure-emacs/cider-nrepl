@@ -89,6 +89,7 @@ Middleware        | Op(s)      | Description
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
 `wrap-trace`      | `toggle-trace` | Toggle tracing of a given var.
+`wrap-undef`      | `undef`    | Undefine a var.
 
 ## Contributing
 
