@@ -41,24 +41,19 @@
          x))
      form)))
 
-(defn macroexpansion [op code ns-name suppress-namespaces]
-  ;; suppress-namespaces can either be
-  ;;    "tidy" => print aliases instead of qnames, simple names if
-  ;;              var is refered to or defined in the same ns
-  ;;    falsy  => print qnames
-  ;;    truthy => print simple names
-  (let [;; FIXME: If cider-macroexpansion-suppress-namespaces is nil,
-        ;; suppress-namespaces is [] which is truthy.  That's the cause of bug
-        ;; https://github.com/clojure-emacs/cider/issues/684.  It's fixed
-        ;; below, but there is probably a more general way.
-        suppress-namespaces (if (coll? suppress-namespaces)
-                              (seq suppress-namespaces)
-                              suppress-namespaces)
+(defn macroexpansion [op code ns-name display-namespaces]
+  ;; display-namespaces can either be
+  ;;    "tidy"      => print aliases instead of qnames, simple names if
+  ;;                  var is refered to or defined in the same ns
+  ;;    "qualified" => print qnames
+  ;;    "node"      => print simple names
+  (let [suppress-namespaces (= display-namespaces "none")
         expansion-fn (resolve-op op)
         ns (find-ns (symbol ns-name))
         ;; we have to do the macroexpansion in the proper ns context
         expansion (binding [*ns* ns] (expansion-fn (read-string code)))
-        [expansion suppress-namespaces] (if (= suppress-namespaces "tidy")
+        ;; post-process expansions if display namespaces is "tidy"
+        [expansion suppress-namespaces] (if (= display-namespaces "tidy")
                                           [(tidy-qualified-var-refs expansion ns) false]
                                           [expansion suppress-namespaces])
         suppress-namespaces (boolean suppress-namespaces)]
@@ -68,8 +63,8 @@
                 :dispatch clojure.pprint/code-dispatch))))
 
 (defn macroexpansion-reply
-  [{:keys [transport op code ns suppress-namespaces] :as msg}]
-  (transport/send transport (response-for msg :value (macroexpansion op code ns suppress-namespaces)))
+  [{:keys [transport op code ns display-namespaces] :as msg}]
+  (transport/send transport (response-for msg :value (macroexpansion op code ns display-namespaces)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-macroexpand
