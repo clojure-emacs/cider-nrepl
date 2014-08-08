@@ -76,17 +76,18 @@
   )
 
 (deftest test-response
-  (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
-         '{"ns" "clojure.core",
-           "name" "assoc",
-           "arglists-str" "([map key val] [map key val & kvs])",
-           "column" 1,
-           "added" "1.0",
-           "static" "true",
-           "doc" "assoc[iate]. When applied to a map, returns a new map of the\n    same (hashed/sorted) type, that contains the mapping of key(s) to\n    val(s). When applied to a vector, returns a new vector that\n    contains val at index. Note - index must be <= (count vector).",
-           "line" 177,
-           "resource" "clojure/core.clj"
-           })))
+  (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
+        {:keys [arglists column line added static doc]} (meta v)]
+    (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
+           {"ns" "clojure.core"
+            "name" "assoc"
+            "arglists-str" (pr-str arglists)
+            "column" column
+            "added" added
+            "static" (str static)
+            "doc" doc
+            "line" line
+            "resource" "clojure/core.clj"}))))
 
 ;; Following comment is a fake. It mimics CLJX generated files.
 
