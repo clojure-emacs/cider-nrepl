@@ -46,7 +46,7 @@
   ;;    "tidy"      => print aliases instead of qnames, simple names if
   ;;                  var is refered to or defined in the same ns
   ;;    "qualified" => print qnames
-  ;;    "node"      => print simple names
+  ;;    "none"      => print simple names
   (let [suppress-namespaces (= display-namespaces "none")
         expansion-fn (resolve-op op)
         ns (find-ns (symbol ns-name))
