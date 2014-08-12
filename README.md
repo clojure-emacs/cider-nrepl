@@ -36,7 +36,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
                   cider.nrepl.middleware.test/wrap-test
-                  cider.nrepl.middleware.trace/wrap-trace]}
+                  cider.nrepl.middleware.trace/wrap-trace
+                  cider.nrepl.middleware.undef/wrap-undef]}
 
 ```
 

@@ -30,6 +30,7 @@
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
                                                      cider.nrepl.middleware.test/wrap-test
                                                      cider.nrepl.middleware.trace/wrap-trace
+                                                     cider.nrepl.middleware.undef/wrap-undef
                                                      ]}
 
                    ;; The "sources" jar should be the same version as Clojure,
