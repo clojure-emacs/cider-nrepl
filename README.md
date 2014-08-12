@@ -35,7 +35,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.inspect/wrap-inspect
                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
-                  cider.nrepl.middleware.trace/wrap-trace]}
+                  cider.nrepl.middleware.trace/wrap-trace
+                  cider.nrepl.middleware.test/wrap-test]}
 ```
 
 Note that you should use a `cider-nrepl` version compatible with your CIDER. Generally, if you're
