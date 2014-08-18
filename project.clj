@@ -39,7 +39,7 @@
                    ;; "snapshot" builds to run tests.
                    ;; See http://dev.clojure.org/jira/browse/CLJ-1161.
                    :repositories [["snapshots"
-                                   "http://oss.sonatype.org/content/repositories/snapshots"]]
+                                   "https://oss.sonatype.org/content/repositories/snapshots"]]
                    :dependencies [[org.clojure/clojure "1.5.2-SNAPSHOT"
                                    :classifier "sources"]
                                   [org.clojure/clojure "1.5.1"
