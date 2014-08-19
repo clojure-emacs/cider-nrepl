@@ -84,11 +84,15 @@
              (rest frames)
              frames)))
 
+(defn analyze-frame
+  "Return the stacktrace as a sequence of maps, each describing a stack frame."
+  [frame]
+  ((comp flag-repl analyze-fn analyze-file stack-frame) frame))
+
 (defn analyze-stacktrace
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
   [e]
-  (-> (map (comp flag-repl analyze-fn analyze-file stack-frame)
-           (.getStackTrace e))
+  (-> (map analyze-frame (.getStackTrace e))
       (flag-duplicates)
       (flag-tooling)))
 

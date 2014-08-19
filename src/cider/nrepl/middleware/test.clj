@@ -39,20 +39,33 @@
   (reset! current-report {:summary {:var 0 :test 0 :pass 0 :fail 0 :error 0}
                           :results {} :ns nil}))
 
+;; This searches the stacktrace using the var's `:test` metadata (which holds
+;; the actual test fn). This is similar to the `clojure.test/file-position`
+;; approach, but resolves the correct frame when the error occurs outside of an
+;; `is` form.
+(defn error-line
+  "Given metadata for a test var and an exception thrown while running the test,
+  return the line number of the erring assertion."
+  [v e]
+  (let [c (-> v :test class .getName)]
+    (->> (map st/analyze-frame (.getStackTrace e))
+         (filter #(= c (:class %)))
+         (first)
+         :line)))
+
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
-   and 'testing' context. Retain any exception. Pretty-print expected/actual."
+  and 'testing' context. Retain any exception. Pretty-print expected/actual."
   [ns v m]
   (let [c (when test/*testing-contexts* (test/testing-contexts-str))
-        e (when (= :error (:type m)) (:actual m))
-        i (count (-> @current-report :results v))
-        line (last (test/file-position 4))] ; line from stack frame
-    (merge {:ns ns, :var v, :index i, :context c}
+        i (count (-> @current-report :results (:name v)))]
+    (merge {:ns ns, :var (:name v), :index i, :context c}
            (if (#{:fail :error} (:type m))
-             (-> (assoc m :error e)
+             (-> (if-let [e (when (= :error (:type m)) (:actual m))]
+                   (assoc m :error e, :line (error-line v e))
+                   m)
                  (update-in [:expected] #(with-out-str (pp/pprint %)))
-                 (update-in [:actual]   #(with-out-str (pp/pprint %)))
-                 (assoc-in  [:line] (if (= :fail (:type m)) (:line m) line)))
+                 (update-in [:actual]   #(with-out-str (pp/pprint %))))
              (dissoc m :expected :actual)))))
 
 (defn report
@@ -61,15 +74,15 @@
   statistics."
   [m]
   (let [ns (:ns @current-report)
-        v  (-> test/*testing-vars* last meta :name)
+        v  (-> test/*testing-vars* last meta)
         update! (partial swap! current-report update-in)]
     (condp get (:type m)
       #{:begin-test-ns}     (do (update! [:ns] (constantly (ns-name (:ns m)))))
       #{:begin-test-var}    (do (update! [:summary :var] inc))
       #{:pass :fail :error} (do (update! [:summary :test] inc)
                                 (update! [:summary (:type m)] inc)
-                                (update! [:results v] (fnil conj [])
-                                         (test-result ns v m)))
+                                (update! [:results (:name v)]
+                                         (fnil conj []) (test-result ns v m)))
       nil)))
 
 
