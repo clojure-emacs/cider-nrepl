@@ -42,7 +42,7 @@
 ;; In the case of test errors, line number is obtained by searching the
 ;; stacktrace for the originating function. The search target will be the
 ;; current test var's `:test` metadata (which holds the actual test function) if
-;; present, or the deref'ed var function otherwise (i.e. test fixtures errors).
+;; present, or the deref'ed var function otherwise (i.e. test fixture errors).
 ;;
 ;; This approach is similar in use to `clojure.test/file-position`, but doesn't
 ;; assume a fixed position in the stacktrace, and therefore resolves the correct
