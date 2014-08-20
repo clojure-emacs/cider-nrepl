@@ -12,7 +12,7 @@
   :dependencies [[compliment "0.1.3"]
                  [cljs-tooling "0.1.3"]
                  [org.tcrawley/dynapath "0.2.3"]
-                 [org.clojure/tools.nrepl "0.2.3"]
+                 [org.clojure/tools.nrepl "0.2.4"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.5"]
                  [org.clojure/tools.trace "0.7.8"]]
