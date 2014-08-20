@@ -39,30 +39,34 @@
   (reset! current-report {:summary {:var 0 :test 0 :pass 0 :fail 0 :error 0}
                           :results {} :ns nil}))
 
-;; This searches the stacktrace using the var's `:test` metadata (which holds
-;; the actual test fn). This is similar to the `clojure.test/file-position`
-;; approach, but resolves the correct frame when the error occurs outside of an
-;; `is` form.
-(defn error-line
-  "Given metadata for a test var and an exception thrown while running the test,
-  return the line number of the erring assertion."
-  [v e]
-  (let [c (-> v :test class .getName)]
-    (->> (map st/analyze-frame (.getStackTrace e))
-         (filter #(= c (:class %)))
-         (first)
-         :line)))
+;; In the case of test errors, line number is obtained by searching the
+;; stacktrace for the originating function. The search target will be the
+;; current test var's `:test` metadata (which holds the actual test function) if
+;; present, or the deref'ed var function otherwise (i.e. test fixtures errors).
+;;
+;; This approach is similar in use to `clojure.test/file-position`, but doesn't
+;; assume a fixed position in the stacktrace, and therefore resolves the correct
+;; frame when the error occurs outside of an `is` form.
+
+(defn stack-frame
+  "Search the stacktrace of exception `e` for the function `f` and return info
+  describing the stack frame, including var, class, and line."
+  [e f]
+  (->> (map st/analyze-frame (.getStackTrace e))
+       (filter #(= (:class %) (.getName (class f))))
+       (first)))
 
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
   and 'testing' context. Retain any exception. Pretty-print expected/actual."
   [ns v m]
-  (let [c (when test/*testing-contexts* (test/testing-contexts-str))
-        i (count (-> @current-report :results (:name v)))]
-    (merge {:ns ns, :var (:name v), :index i, :context c}
+  (let [c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
+        i (count (get (@current-report :results) (:name (meta v))))
+        f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
+    (merge {:ns ns, :var (:name (meta v)), :index i, :context c}
            (if (#{:fail :error} (:type m))
              (-> (if-let [e (when (= :error (:type m)) (:actual m))]
-                   (assoc m :error e, :line (error-line v e))
+                   (assoc m :error e, :line (:line (stack-frame e f)))
                    m)
                  (update-in [:expected] #(with-out-str (pp/pprint %)))
                  (update-in [:actual]   #(with-out-str (pp/pprint %))))
@@ -74,16 +78,32 @@
   statistics."
   [m]
   (let [ns (:ns @current-report)
-        v  (-> test/*testing-vars* last meta)
+        v  (last test/*testing-vars*)
         update! (partial swap! current-report update-in)]
     (condp get (:type m)
       #{:begin-test-ns}     (do (update! [:ns] (constantly (ns-name (:ns m)))))
       #{:begin-test-var}    (do (update! [:summary :var] inc))
       #{:pass :fail :error} (do (update! [:summary :test] inc)
                                 (update! [:summary (:type m)] inc)
-                                (update! [:results (:name v)]
+                                (update! [:results (:name (meta v))]
                                          (fnil conj []) (test-result ns v m)))
       nil)))
+
+(defn report-fixture-error
+  "Delegate reporting for test fixture errors to the `report` function. This
+  finds the erring test fixture in the stacktrace and binds it as the current
+  test var. Test count is decremented to indicate that no tests were run."
+  [ns e]
+  (let [frame (->> (concat (::clojure.test/once-fixtures (meta ns))
+                           (::clojure.test/each-fixtures (meta ns)))
+                   (map (partial stack-frame e))
+                   (filter identity)
+                   (first))
+        fixture (resolve (symbol (:var frame)))]
+    (swap! current-report update-in [:summary :test] dec)
+    (binding [test/*testing-vars* (list fixture)]
+      (report {:type :error, :expected nil, :actual e
+               :message "Unhandled exception in test fixture"}))))
 
 
 ;;; ## Test Execution
@@ -96,11 +116,13 @@
   [ns vars]
   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
         each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
-    (once-fixture-fn
-     (fn []
-       (doseq [v vars]
-         (when (:test (meta v))
-           (each-fixture-fn (fn [] (test/test-var v)))))))))
+    (try (once-fixture-fn
+          (fn []
+            (doseq [v vars]
+              (when (:test (meta v))
+                (each-fixture-fn (fn [] (test/test-var v)))))))
+         (catch Throwable e
+           (report-fixture-error ns e)))))
 
 (defn test-ns
   "If the namespace object defines a function named `test-ns-hook`, call that.
