@@ -9,7 +9,8 @@
   (analyze-causes
    (try (eval form)
         (catch Exception e
-          e))))
+          e))
+   nil))
 
 (defn stack-frames
   [form]
