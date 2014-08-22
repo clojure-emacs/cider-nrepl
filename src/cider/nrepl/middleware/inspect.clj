@@ -1,7 +1,5 @@
 (ns cider.nrepl.middleware.inspect
   (:require [cider.nrepl.middleware.util.inspect :as inspect]
-            [clojure.tools.namespace.find :as nsf]
-            [clojure.java.classpath :as cp]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -83,15 +81,3 @@
              "inspect-push" {}
              "inspect-pop" {}
              "inspect-start" {}}})
-
-
-;; Preliminary support for loading of extension namespaces
-
-(def inspector-prefix-regex #"inspector\.ext\..*")
-
-(defn extension-nspaces []
-  (filter #(re-matches inspector-prefix-regex (name %))
-          (nsf/find-namespaces (cp/classpath))))
-
-(defn load-extensions []
-  (map require (extension-nspaces)))
