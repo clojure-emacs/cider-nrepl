@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [dynapath.util :as dp])
   (:import (clojure.lang IPersistentMap)
-           (clojure.reflect Constructor Field Method)))
+           (clojure.reflect Constructor Field JavaReflector Method)))
 
 ;;; ## Java Class/Member Info
 ;; Getting class and member info (i.e. type hierarchy, method names,
@@ -140,14 +140,15 @@
   [class]
   (when-let [c (try (Class/forName (str class))
                     (catch Exception _))]
-    (util/deep-merge (reflect-info (r/reflect c))
-                     (source-info class)
-                     {:name       (-> c .getSimpleName symbol)
-                      :class      (-> c .getName symbol)
-                      :package    (-> c .getPackage .getName symbol)
-                      :super      (-> c .getSuperclass typesym)
-                      :interfaces (map typesym (.getInterfaces c))
-                      :javadoc    (javadoc-url class)})))
+    (let [r (JavaReflector. (.getClassLoader c))] ; for dynamically loaded classes
+      (util/deep-merge (reflect-info (r/reflect c :reflector r))
+                       (source-info class)
+                       {:name       (-> c .getSimpleName symbol)
+                        :class      (-> c .getName symbol)
+                        :package    (-> c .getPackage .getName symbol)
+                        :super      (-> c .getSuperclass typesym)
+                        :interfaces (map typesym (.getInterfaces c))
+                        :javadoc    (javadoc-url class)}))))
 
 
 ;;; ## Class Metadata Caching
