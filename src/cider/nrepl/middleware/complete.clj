@@ -23,13 +23,12 @@
 
 (defn complete-reply
   [{:keys [transport] :as msg}]
-  (let [results (complete msg)]
-    (try
-      (transport/send transport (response-for msg :value results))
-      (catch Exception e
-        (transport/send
-         transport (response-for msg :exception (.getMessage e)))))
-    (transport/send transport (response-for msg :status :done))))
+  (try
+    (transport/send transport (response-for msg :value (complete msg)))
+    (catch Exception e
+      (transport/send
+       transport (response-for msg :exception (.getMessage e)))))
+  (transport/send transport (response-for msg :status :done)))
 
 (defn doc-reply
   [{:keys [transport] :as msg}]
