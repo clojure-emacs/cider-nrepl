@@ -168,11 +168,11 @@
   "Return exception cause and stack frame info for an erring test via the
   `stacktrace` middleware. The error to be retrieved is referenced by namespace,
   var name, and assertion index within the var."
-  [{:keys [ns var index session transport] :as msg}]
+  [{:keys [ns var index session transport print-level] :as msg}]
   (with-bindings @session
     (let [[ns var] (map u/as-sym [ns var])]
       (if-let [e (get-in @results [ns var index :error])]
-        (doseq [cause (st/analyze-causes e)]
+        (doseq [cause (st/analyze-causes e print-level)]
           (t/send transport (response-for msg cause)))
         (t/send transport (response-for msg :status :no-error)))
       (t/send transport (response-for msg :status :done)))))
