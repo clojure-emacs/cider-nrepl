@@ -26,6 +26,7 @@
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      cider.nrepl.middleware.macroexpand/wrap-macroexpand
+                                                     cider.nrepl.middleware.ns/wrap-ns
                                                      cider.nrepl.middleware.resource/wrap-resource
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
                                                      cider.nrepl.middleware.test/wrap-test
