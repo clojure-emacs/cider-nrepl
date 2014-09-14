@@ -40,4 +40,7 @@
  {:handles
   {"ns-list"
    {:doc "Return a sorted list of all namespaces."
+    :returns {"status" "done"}}
+   "ns-vars"
+   {:doc "Return a sorted list of all vars in a namespace."
     :returns {"status" "done"}}}})
