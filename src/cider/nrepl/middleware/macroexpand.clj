@@ -7,8 +7,8 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]))
 
-(defn- resolve-op [op]
-  (let [sym (symbol op)]
+(defn- resolve-expander [expander]
+  (let [sym (symbol expander)]
     (if (= sym 'macroexpand-all)
      (ns-resolve 'clojure.walk sym)
      (resolve sym))))
@@ -41,14 +41,14 @@
          x))
      form)))
 
-(defn macroexpansion [op code ns-name display-namespaces]
+(defn macroexpansion [expander code ns-name display-namespaces]
   ;; display-namespaces can either be
   ;;    "tidy"      => print aliases instead of qnames, simple names if
   ;;                  var is refered to or defined in the same ns
   ;;    "qualified" => print qnames
   ;;    "none"      => print simple names
   (let [suppress-namespaces (= display-namespaces "none")
-        expansion-fn (resolve-op op)
+        expansion-fn (resolve-expander expander)
         ns (find-ns (symbol ns-name))
         ;; we have to do the macroexpansion in the proper ns context
         expansion (binding [*ns* ns] (expansion-fn (read-string code)))
@@ -63,15 +63,15 @@
                 :dispatch clojure.pprint/code-dispatch))))
 
 (defn macroexpansion-reply
-  [{:keys [transport op code ns display-namespaces] :as msg}]
-  (transport/send transport (response-for msg :value (macroexpansion op code ns display-namespaces)))
+  [{:keys [transport expander code ns display-namespaces] :as msg}]
+  (transport/send transport (response-for msg :expansion (macroexpansion expander code ns display-namespaces)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-macroexpand
   "Middleware that provides macroexpansion ops."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (contains? #{"macroexpand" "macroexpand-1" "macroexpand-all"} op)
+    (if (= op "macroexpand")
       (macroexpansion-reply msg)
       (handler msg))))
 
@@ -80,10 +80,4 @@
  {:handles
   {"macroexpand"
    {:doc "Produces macroexpansion using macroexpand"
-    :returns {"status" "done"}}
-   "macroexpand-1"
-   {:doc "Produces macroexpansion using macroexpand-1"
-    :returns {"status" "done"}}
-   "macroexpand-all"
-   {:doc "Produces macroexpansion using macroexpand-all"
     :returns {"status" "done"}}}})
