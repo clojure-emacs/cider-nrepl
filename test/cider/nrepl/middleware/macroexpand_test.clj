@@ -14,32 +14,35 @@
 (deftest test-macroexpand-1-op
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
-                           :op "macroexpand-1"
+                           :op "macroexpand"
+                           :expander "macroexpand-1"
                            :code (:expr code)
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:value (:expanded-1 code)} {:status #{:done}}]))))
+           [{:expansion (:expanded-1 code)} {:status #{:done}}]))))
 
 (deftest test-macroexpand-op
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
                            :op "macroexpand"
+                           :expander "macroexpand"
                            :code (:expr code)
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:value (:expanded code)} {:status #{:done}}]))))
+           [{:expansion (:expanded code)} {:status #{:done}}]))))
 
 (deftest test-macroexpand-all-op
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
-                           :op "macroexpand-all"
+                           :op "macroexpand"
+                           :expander "macroexpand-all"
                            :code (:expr code)
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:value (:expanded-all code)} {:status #{:done}}]))))
+           [{:expansion (:expanded-all code)} {:status #{:done}}]))))
 
 ;; Tests for the three different cider-macroexpansion-display-namespaces
 ;; values: nil, t, and 'tidy
@@ -54,13 +57,14 @@
   ;; Tests that every var is properly qualified
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
-                           :op "macroexpand-1"
+                           :op "macroexpand"
+                           :expander "macroexpand-1"
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "qualified"})
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
-      (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
+      (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2
              ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
@@ -71,13 +75,14 @@
   ;; Tests that no var is qualified with its namespace
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
-                           :op "macroexpand-1"
+                           :op "macroexpand"
+                           :expander "macroexpand-1"
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "none"})
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
-      (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
+      (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2
              ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
@@ -91,13 +96,14 @@
   ;; qualified (clojure.string/blank?).
   (let [transport (test-transport)]
     (macroexpansion-reply {:transport transport
-                           :op "macroexpand-1"
+                           :op "macroexpand"
+                           :expander "macroexpand-1"
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "tidy"})
     (let [[val stat] (messages transport)]
       (is (= (:status stat) #{:done}))
-      (is (= (clojure.string/replace (:value val) #"[ \t\n]+" " ")
+      (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2
              ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
