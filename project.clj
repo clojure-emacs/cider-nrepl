@@ -32,8 +32,7 @@
                                                      cider.nrepl.middleware.test/wrap-test
                                                      cider.nrepl.middleware.trace/wrap-trace
                                                      cider.nrepl.middleware.undef/wrap-undef
-                                                     ]}
-
+                                                     ]}                   
                    ;; The "sources" jar should be the same version as Clojure,
                    ;; but bad sources jars were deployed to the Maven Central
                    ;; "releases" repo, so for the moment, use sources from
@@ -49,5 +48,6 @@
                    ;; Wait til 1.5 comes out for a fix to cljs dep
                    ;; :plugins [[com.cemerick/austin "0.1.5"]]
                    }
+             :test {:resource-paths ["test/resources"]}
              :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}}
   )
