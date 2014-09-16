@@ -6,4 +6,4 @@
 (deftest test-classpath-op
   (let [transport (test-transport)]
     (classpath-reply {:transport transport})
-    (is (= (messages transport) [{:value (classpath)} {:status #{:done}}]))))
+    (is (= (messages transport) [{:classpath (classpath) :status #{:done}}]))))

@@ -10,8 +10,11 @@
 
 (defn classpath-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :value (classpath)))
-  (transport/send transport (response-for msg :status :done)))
+  (transport/send
+   transport
+   (response-for msg
+                 :classpath (classpath)
+                 :status :done)))
 
 (defn wrap-classpath
   "Middleware that provides the java classpath."
@@ -25,5 +28,5 @@
  #'wrap-classpath
  {:handles
   {"classpath"
-   {:doc "Return a list of entries in the Java classpath."
-    :returns {"status" "done"}}}})
+   {:doc "Obtain a list of entries in the Java classpath."
+    :returns {"classpath" "A list of the Java classpath entries."}}}})
