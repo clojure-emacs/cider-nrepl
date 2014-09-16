@@ -20,7 +20,7 @@
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:expansion (:expanded-1 code)} {:status #{:done}}]))))
+           [{:expansion (:expanded-1 code) :status #{:done}}]))))
 
 (deftest test-macroexpand-op
   (let [transport (test-transport)]
@@ -31,7 +31,7 @@
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:expansion (:expanded code)} {:status #{:done}}]))))
+           [{:expansion (:expanded code) :status #{:done}}]))))
 
 (deftest test-macroexpand-all-op
   (let [transport (test-transport)]
@@ -42,7 +42,7 @@
                            :ns "clojure.core"
                            :display-namespaces "none"})
     (is (= (messages transport)
-           [{:expansion (:expanded-all code)} {:status #{:done}}]))))
+           [{:expansion (:expanded-all code) :status #{:done}}]))))
 
 ;; Tests for the three different cider-macroexpansion-display-namespaces
 ;; values: nil, t, and 'tidy
@@ -62,8 +62,8 @@
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "qualified"})
-    (let [[val stat] (messages transport)]
-      (is (= (:status stat) #{:done}))
+    (let [[val] (messages transport)]
+      (is (= (:status val) #{:done}))
       (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2
@@ -80,8 +80,8 @@
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "none"})
-    (let [[val stat] (messages transport)]
-      (is (= (:status stat) #{:done}))
+    (let [[val] (messages transport)]
+      (is (= (:status val) #{:done}))
       (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2
@@ -101,8 +101,8 @@
                            :code "(tidy-test-macro)"
                            :ns "cider.nrepl.middleware.macroexpand-test"
                            :display-namespaces "tidy"})
-    (let [[val stat] (messages transport)]
-      (is (= (:status stat) #{:done}))
+    (let [[val] (messages transport)]
+      (is (= (:status val) #{:done}))
       (is (= (clojure.string/replace (:expansion val) #"[ \t\n]+" " ")
              ;; format the set literals instead of hard-coding them in the
              ;; string because with different clojure versions, the set #{1 2

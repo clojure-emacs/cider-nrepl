@@ -64,8 +64,11 @@
 
 (defn macroexpansion-reply
   [{:keys [transport expander code ns display-namespaces] :as msg}]
-  (transport/send transport (response-for msg :expansion (macroexpansion expander code ns display-namespaces)))
-  (transport/send transport (response-for msg :status :done)))
+  (transport/send
+   transport
+   (response-for msg
+                 :expansion (macroexpansion expander code ns display-namespaces)
+                 :status :done)))
 
 (defn wrap-macroexpand
   "Middleware that provides macroexpansion ops."
@@ -79,5 +82,8 @@
  #'wrap-macroexpand
  {:handles
   {"macroexpand"
-   {:doc "Produces macroexpansion using macroexpand"
-    :returns {"status" "done"}}}})
+   {:doc "Produces macroexpansion of some form using macroexpand."
+    :requires {"code" "The form to macroexpand."
+               "expander" "The macroexpansion function which to use."
+               "ns" "The namespace in which to perform the macroexpansion."}
+    :returns {"expansion" "The macroexpanded form."}}}})
