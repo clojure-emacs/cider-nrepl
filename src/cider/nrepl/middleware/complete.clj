@@ -24,17 +24,17 @@
 (defn complete-reply
   [{:keys [transport] :as msg}]
   (try
-    (transport/send transport (response-for msg :value (complete msg)))
+    (transport/send
+     transport
+     (response-for msg :completions (complete msg) :status :done))
     (catch Exception e
       (transport/send
-       transport (response-for msg :exception (.getMessage e)))))
-  (transport/send transport (response-for msg :status :done)))
+       transport (response-for msg :exception (.getMessage e))))))
 
 (defn doc-reply
   [{:keys [transport] :as msg}]
   (let [results (completion-doc msg)]
-    (transport/send transport (response-for msg :value results))
-    (transport/send transport (response-for msg :status :done))))
+    (transport/send transport (response-for msg :completion-doc results :status :done))))
 
 (defn wrap-complete
   "Middleware that looks up possible functions for the given (partial) symbol."
@@ -52,5 +52,12 @@
    {"complete"
     {:doc "Return a list of symbols matching the specified (partial) symbol."
      :requires {"symbol" "The symbol to lookup"
-                "ns" "The current namespace"}
-     :returns {"status" "done"}}}}))
+                "ns" "The symbol's namespace"
+                "session" "The current session"}
+     :optional {"context" "Completion context for compliment."}
+     :returns {"completions" "A list of possible completions"}}
+    "complete-doc"
+    {:doc "Retrieve documentation suitable for display in completion popup"
+     :requires {"symbol" "The symbol to lookup"
+                "ns" "The symbol's namespace"}
+     :returns {"completion-doc" "Symbol's documentation"}}}}))
