@@ -37,8 +37,9 @@
 (defmethod transform-value clojure.lang.Symbol
   [v]
   (let [[the-ns the-name] [(namespace v) (name v)]]
-    (or (and the-ns (str the-ns "/" the-name))
-        the-name)) )
+    (if the-ns
+      (str the-ns "/" the-name)
+      the-name)))
 
 (defmethod transform-value clojure.lang.Keyword
   [v]
