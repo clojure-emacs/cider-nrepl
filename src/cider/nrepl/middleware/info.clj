@@ -215,11 +215,10 @@
   [{:keys [transport] :as msg}]
   (try
     (transport/send
-     transport (response-for msg :value (format-response (info msg))))
+     transport (response-for msg (format-response (info msg)) {:status :done}))
     (catch Exception e
       (transport/send
-       transport (response-for msg :exception (.getMessage e)))))
-  (transport/send transport (response-for msg :status :done)))
+       transport (response-for msg :exception (.getMessage e))))))
 
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
