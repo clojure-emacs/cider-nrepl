@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.util.misc
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.stacktrace :as stacktrace]))
 
 (def java-api-version
   (try (-> (System/getProperty "java.version") (str/split #"\.") second)
@@ -53,3 +54,9 @@
 
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
+
+(defn err-info
+  [ex status]
+  {:ex (str (class ex))
+   :err (with-out-str (stacktrace/print-cause-trace ex))
+   :status #{status :done}})
