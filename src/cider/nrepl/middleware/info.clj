@@ -218,7 +218,7 @@
      transport (response-for msg (format-response (info msg)) {:status :done}))
     (catch Exception e
       (transport/send
-       transport (response-for msg :exception (.getMessage e))))))
+       transport (response-for msg (u/err-info e :info-error))))))
 
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
