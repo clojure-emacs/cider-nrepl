@@ -214,8 +214,11 @@
 (defn info-reply
   [{:keys [transport] :as msg}]
   (try
-    (transport/send
-     transport (response-for msg (format-response (info msg)) {:status :done}))
+    (if-let [var-info (format-response (info msg))]
+      (transport/send
+       transport (response-for msg var-info {:status :done}))
+      (transport/send
+       transport (response-for msg {:status #{:no-info :done}})))
     (catch Exception e
       (transport/send
        transport (response-for msg (u/err-info e :info-error))))))
