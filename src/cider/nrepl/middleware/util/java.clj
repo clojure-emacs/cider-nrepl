@@ -145,7 +145,7 @@
                        (source-info class)
                        {:name       (-> c .getSimpleName symbol)
                         :class      (-> c .getName symbol)
-                        :package    (-> c .getPackage .getName symbol)
+                        :package    (if-let [p (.getPackage c)] (-> p .getName symbol))
                         :super      (-> c .getSuperclass typesym)
                         :interfaces (map typesym (.getInterfaces c))
                         :javadoc    (javadoc-url class)}))))
