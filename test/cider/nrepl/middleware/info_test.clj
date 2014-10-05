@@ -24,6 +24,8 @@
   (is (relative "clojure/core.clj"))
   (is (nil? (relative "notclojure/core.clj"))))
 
+(deftype T [])
+
 (deftest test-info
   (is (info/info-clj 'cider.nrepl.middleware.info 'io))
 
@@ -32,6 +34,10 @@
   (is (info/info-clj 'cider.nrepl.middleware.info 'java.lang.Class))
   (is (info/info-clj 'cider.nrepl.middleware.info 'Class/forName))
   (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
+
+  (is (not (info/info-clj 'clojure.core (gensym "non-existing"))))
+  (is (not (info/info-clj 'cider.nrepl.middleware.info-test (gensym "non-existing")))
+      "Check that deftype T (which returns nil for .getPackage), doesn't throw")
 
   (is (= (the-ns 'clojure.core) (:ns (info/info-clj 'cider.nrepl.middleware.info 'str))))
 
