@@ -4,7 +4,8 @@
   (:require [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as t]))
+            [clojure.tools.nrepl.transport :as t]
+            [cider.nrepl.middleware.util.misc :as u]))
 
 ;;; ## Overview
 ;; This middleware provides regular expression search across namespaces for
@@ -84,9 +85,13 @@
   "Return a sequence of vars whose name matches the query pattern, or if
   specified, having the pattern in their docstring."
   [{:keys [ns query search-ns docs? privates? case-sensitive? transport] :as msg}]
-  (let [results (find-symbols ns query search-ns docs? privates? case-sensitive?)]
-    (t/send transport (response-for msg :value results))
-    (t/send transport (response-for msg :status :done))))
+  (try
+    (let [results (find-symbols ns query search-ns docs? privates? case-sensitive?)]
+      (t/send transport (response-for msg :apropos-matches results :status :done)))
+    (catch Exception e
+      (t/send
+       transport
+       (response-for msg (u/err-info e :apropos-error))))))
 
 (defn wrap-apropos
   "Middleware that handles apropos requests"
@@ -102,4 +107,5 @@
  {:handles
   {"apropos"
    {:doc (:doc (meta #'handle-apropos))
-    :returns {"status" "done"}}}})
+    :requires {"query" "The search query."}
+    :returns {"apropos-matches" "A list of matching symbols."}}}})
