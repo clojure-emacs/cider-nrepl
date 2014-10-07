@@ -145,6 +145,8 @@
                        (source-info class)
                        {:name       (-> c .getSimpleName symbol)
                         :class      (-> c .getName symbol)
+                        ;; Classes defined by deftype and defrecord don't have a package
+                        ;; this is probably a Clojure bug
                         :package    (if-let [p (.getPackage c)] (-> p .getName symbol))
                         :super      (-> c .getSuperclass typesym)
                         :interfaces (map typesym (.getInterfaces c))
