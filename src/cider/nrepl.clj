@@ -3,6 +3,7 @@
             [cider.nrepl.middleware.apropos]
             [cider.nrepl.middleware.classpath]
             [cider.nrepl.middleware.complete]
+            [cider.nrepl.middleware.eldoc]
             [cider.nrepl.middleware.info]
             [cider.nrepl.middleware.inspect]
             [cider.nrepl.middleware.macroexpand]
@@ -18,6 +19,7 @@
   '[cider.nrepl.middleware.apropos/wrap-apropos
     cider.nrepl.middleware.classpath/wrap-classpath
     cider.nrepl.middleware.complete/wrap-complete
+    cider.nrepl.middleware.eldoc/wrap-eldoc
     cider.nrepl.middleware.info/wrap-info
     cider.nrepl.middleware.inspect/wrap-inspect
     cider.nrepl.middleware.macroexpand/wrap-macroexpand
