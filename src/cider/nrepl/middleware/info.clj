@@ -223,19 +223,55 @@
       (transport/send
        transport (response-for msg (u/err-info e :info-error))))))
 
+(defn extract-eldoc [info]
+  (if (contains? info :candidates)
+    (->> (:candidates info)
+         vals
+         (mapcat :arglists)
+         distinct
+         (sort-by count))
+    (:arglists info)))
+
+(defn format-eldoc [raw-eldoc]
+  (map #(mapv str %) raw-eldoc))
+
+(defn eldoc
+  [{:keys [ns symbol class member] :as msg}]
+  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
+    (if-let [raw-eldoc (extract-eldoc (info msg))]
+      (format-eldoc raw-eldoc))))
+
+(defn eldoc-reply
+  [{:keys [transport] :as msg}]
+  (try
+    (if-let [var-eldoc (eldoc msg)]
+      (transport/send
+       transport (response-for msg {:eldoc var-eldoc :status :done}))
+      (transport/send
+       transport (response-for msg {:status #{:no-eldoc :done}})))
+    (catch Exception e
+      (transport/send
+       transport (response-for msg (u/err-info e :eldoc-error))))))
+
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (= "info" op)
-      (info-reply msg)
-      (handler msg))))
+    (cond
+     (= "info" op) (info-reply msg)
+     (= "eldoc" op) (eldoc-reply msg)
+     :else (handler msg))))
 
 (set-descriptor!
  #'wrap-info
  (cljs/maybe-piggieback
   {:handles
    {"info"
+    {:doc "Return a map of information about the specified symbol."
+     :requires {"symbol" "The symbol to lookup"
+                "ns" "The current namespace"}
+     :returns {"status" "done"}}
+    "eldoc"
     {:doc "Return a map of information about the specified symbol."
      :requires {"symbol" "The symbol to lookup"
                 "ns" "The current namespace"}
