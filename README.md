@@ -29,7 +29,8 @@ middleware to to `:nrepl-middleware` under `:repl-options`.
 ```clojure
 :dependencies [[cider/cider-nrepl "0.7.0"]]
 :repl-options {:nrepl-middleware
-                 [cider.nrepl.middleware.classpath/wrap-classpath
+                 [cider.nrepl.middleware.apropos/wrap-apropos
+                  cider.nrepl.middleware.classpath/wrap-classpath
                   cider.nrepl.middleware.complete/wrap-complete
                   cider.nrepl.middleware.eldoc/wrap-eldoc
                   cider.nrepl.middleware.info/wrap-info
