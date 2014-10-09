@@ -236,10 +236,9 @@
   (map #(mapv str %) raw-eldoc))
 
 (defn eldoc
-  [{:keys [ns symbol class member] :as msg}]
-  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
-    (if-let [raw-eldoc (extract-eldoc (info msg))]
-      (format-eldoc raw-eldoc))))
+  [msg]
+  (if-let [raw-eldoc (extract-eldoc (info msg))]
+    (format-eldoc raw-eldoc)))
 
 (defn eldoc-reply
   [{:keys [transport] :as msg}]
