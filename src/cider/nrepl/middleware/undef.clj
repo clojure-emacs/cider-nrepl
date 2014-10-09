@@ -16,10 +16,10 @@
   [{:keys [transport] :as msg}]
   (try
     (undef msg)
+    (transport/send transport (response-for msg :status :done))
     (catch Exception e
       (transport/send
-       transport (response-for msg :exception (.getMessage e)))))
-  (transport/send transport (response-for msg :status :done)))
+       transport (response-for msg (u/err-info e :undef-error))))))
 
 (defn wrap-undef
   "Middleware to undefine a symbol in a namespace."
