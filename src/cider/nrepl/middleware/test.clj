@@ -51,7 +51,7 @@
 (defn stack-frame
   "Search the stacktrace of exception `e` for the function `f` and return info
   describing the stack frame, including var, class, and line."
-  [e f]
+  [^Exception e f]
   (->> (map st/analyze-frame (.getStackTrace e))
        (filter #(= (:class %) (.getName (class f))))
        (first)))

@@ -3,14 +3,15 @@
   {:author "Jeff Valk"}
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import (com.sun.javadoc ClassDoc ConstructorDoc FieldDoc MethodDoc)
+  (:import (com.sun.javadoc ClassDoc ConstructorDoc Doc FieldDoc MethodDoc
+                            Parameter Tag Type)
            (com.sun.source.tree ClassTree)
            (com.sun.tools.javac.util Context List Options)
-           (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool
-                                  Messager ModifierFilter RootDocImpl)
+           (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool Messager
+                                  ModifierFilter RootDocImpl)
            (java.io StringReader)
            (java.net URI)
-           (javax.swing.text.html HTMLEditorKit$ParserCallback HTML$Tag)
+           (javax.swing.text.html HTML$Tag HTMLEditorKit$ParserCallback)
            (javax.swing.text.html.parser ParserDelegator)
            (javax.tools JavaFileObject$Kind SimpleJavaFileObject)))
 
@@ -136,7 +137,7 @@
         stack (atom nil)
         flags (atom #{})
         handler (proxy [HTMLEditorKit$ParserCallback] []
-                  (handleText [chars _]
+                  (handleText [^chars chars _]
                     (.append sb (String. chars)))
 
                   (handleStartTag [tag _ _]
@@ -173,13 +174,13 @@
 ;; Note that @link and @linkplain are also of 'kind' @see.
 (defn docstring
   "Given a Java parse tree `Doc` instance, return its parsed docstring text."
-  [doc]
+  [^Doc doc]
   (->> (.inlineTags doc)
-       (map (fn [t]
+       (map (fn [^Tag t]
               (case (.kind t)
                 "@see"     (format " `%s` " (.text t)) ; TODO use .referencedClassName ...?
-                "@code"    (format " `%s` " (-> t .inlineTags first .text))
-                "@literal" (format " `%s` " (-> t .inlineTags first .text))
+                "@code"    (format " `%s` " (-> t .inlineTags ^Tag first .text))
+                "@literal" (format " `%s` " (-> t .inlineTags ^Tag first .text))
                 (parse-html (.text t)))))
        (apply str)))
 
@@ -192,7 +193,7 @@
 (defn typesym
   "Using parse tree info, return the type's name equivalently to the `typesym`
   function in `cider.nrepl.middleware.util.java`."
-  [t]
+  [^Type t]
   (symbol
    (str (when-let [c (.asClassDoc t)] ; when not a primitive
           (str (-> c .containingPackage .name) "."))
@@ -206,13 +207,13 @@
   ConstructorDoc
   (parse-info [c]
     {:name (-> c .qualifiedName symbol)
-     :argtypes (mapv #(-> % .type typesym) (.parameters c))
-     :argnames (mapv #(-> % .name symbol) (.parameters c))})
+     :argtypes (mapv #(-> ^Parameter % .type typesym) (.parameters c))
+     :argnames (mapv #(-> ^Parameter % .name symbol) (.parameters c))})
 
   MethodDoc
   (parse-info [m]
-    {:argtypes (mapv #(-> % .type typesym) (.parameters m))
-     :argnames (mapv #(-> % .name symbol) (.parameters m))})
+    {:argtypes (mapv #(-> ^Parameter % .type typesym) (.parameters m))
+     :argnames (mapv #(-> ^Parameter % .name symbol) (.parameters m))})
 
   FieldDoc
   (parse-info [f])
@@ -225,7 +226,7 @@
      :column  (-> c .position .column)
      :members (->> (concat (.constructors c) (.methods c) (.fields c))
                    ;; Merge type-specific attributes with common ones.
-                   (map (fn [m]
+                   (map (fn [^Doc m]
                           (merge {:name   (-> m .name symbol)
                                   :line   (-> m .position .line)
                                   :column (-> m .position .column)

@@ -32,7 +32,7 @@
   classpath and returns it if successful, or nil otherwise."
   [url]
   (let [classloader (->> (.. Thread currentThread getContextClassLoader)
-                         (iterate #(.getParent %))
+                         (iterate #(.getParent ^ClassLoader %))
                          (take-while identity)
                          (filter dp/addable-classpath?)
                          (last))]
@@ -138,8 +138,8 @@
   "For the class symbol, return Java class and member info. Members are indexed
   first by name, and then by argument types to list all overloads."
   [class]
-  (when-let [c (try (Class/forName (str class))
-                    (catch Exception _))]
+  (when-let [^Class c (try (Class/forName (str class))
+                           (catch Exception _))]
     (let [r (JavaReflector. (.getClassLoader c))] ; for dynamically loaded classes
       (util/deep-merge (reflect-info (r/reflect c :reflector r))
                        (source-info class)
@@ -249,7 +249,7 @@
     (let [c (try (ns-resolve ns sym)
                  (catch Exception _))]
       (if (class? c)
-        (class-info (-> c .getName symbol))
+        (class-info (-> ^Class c .getName symbol))
         (class-info sym)))))
 
 (defn resolve-member
@@ -258,7 +258,7 @@
   [ns sym]
   (when-let [ns (find-ns ns)]
     (->> (vals (ns-imports ns))
-         (map #(member-info (-> % .getName symbol) sym))
+         (map #(member-info (-> ^Class % .getName symbol) sym))
          (filter identity)
          (distinct))))
 
@@ -289,5 +289,5 @@
 ;; On startup, cache info for the most commonly referenced classes.
 (future
   (doseq [class (->> (ns-imports 'clojure.core)
-                     (map #(-> % val .getName symbol)))]
+                     (map #(-> % ^Class val .getName symbol)))]
     (class-info class)))
