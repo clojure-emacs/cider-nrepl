@@ -45,8 +45,8 @@
   (let [type (keyword
               (cond (nil? file)                "unknown"
                     (= file "NO_SOURCE_FILE")  "clj"
-                    (neg? (.indexOf file ".")) "unknown"
-                    :else (last (.split file "\\."))))]
+                    (neg? (.indexOf ^String file ".")) "unknown"
+                    :else (last (.split ^String file "\\."))))]
     (-> frame
         (assoc :type type)
         (update-in [:flags] (comp set conj) type))))
@@ -56,7 +56,7 @@
   [{:keys [file] :as frame}]
   (if (and file
            (or (= file "NO_SOURCE_FILE")
-               (.startsWith file "form-init")))
+               (.startsWith ^String file "form-init")))
     (update-in frame [:flags] (comp set conj) :repl)
     frame))
 
@@ -91,7 +91,7 @@
 
 (defn analyze-stacktrace
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
-  [e]
+  [^Exception e]
   (-> (map analyze-frame (.getStackTrace e))
       (flag-duplicates)
       (flag-tooling)))
@@ -111,7 +111,7 @@
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
-  [e print-level]
+  [^Exception e print-level]
   (let [m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
@@ -125,7 +125,7 @@
   for each."
   [e print-level]
   (->> e
-       (iterate #(.getCause %))
+       (iterate #(.getCause ^Exception %))
        (take-while identity)
        (map (comp extract-location #(analyze-cause % print-level)))))
 
