@@ -31,12 +31,3 @@
 (def cider-nrepl-handler
   "CIDER's nREPL handler."
   (apply nrepl-server/default-handler (map resolve cider-middleware)))
-
-(def version
-  "Current version of CIDER nREPL, map of :major, :minor, :incremental, and :qualifier."
-  (let [version-string "0.8.0-snapshot"]
-    (assoc (->> version-string
-                (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
-                rest
-                (zipmap [:major :minor :incremental :qualifier]))
-      :version-string version-string)))
