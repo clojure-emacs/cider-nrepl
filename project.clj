@@ -45,9 +45,10 @@
                                   [org.clojure/clojure "1.5.1"
                                    :classifier "javadoc"]]
                    :injections [~VERSION-FORM]
-                   ;; Wait til 1.5 comes out for a fix to cljs dep
-                   ;; :plugins [[com.cemerick/austin "0.1.5"]]
-                   }
+                   :plugins [[jonase/eastwood "0.1.4"]
+                             ;; Wait til 1.5 comes out for a fix to cljs dep
+                             ;; [com.cemerick/austin "0.1.5"]
+                             ]}
              :test {:resource-paths ["test/resources"]}
              :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}}
   )
