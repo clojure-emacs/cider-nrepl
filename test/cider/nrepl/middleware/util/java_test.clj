@@ -104,14 +104,14 @@
   (let [+this (comp #{'this} first)]
     (testing "Arglist prepending of 'this'"
       (testing "for instance methods"
-        (every? +this (:arglists (member-info 'java.lang.StringWriter 'write))))
+        (is (every? +this (:arglists (member-info 'java.lang.StringWriter 'write)))))
       (testing "for instance fields"
-        (every? +this (:arglists (member-info 'java.awt.Point 'x))))
+        (is (every? +this (:arglists (member-info 'java.awt.Point 'x)))))
       (testing "for static members"
-        (not-any? +this (:arglists (member-info 'java.lang.Class 'forName))))
+        (is (not-any? +this (:arglists (member-info 'java.lang.Class 'forName)))))
       (testing "for constructors"
-        (not-any? +this (:arglists (member-info 'java.lang.String
-                                                'java.lang.String)))))))
+        (is (not-any? +this (:arglists (member-info 'java.lang.String
+                                                    'java.lang.String))))))))
 
 (deftest test-javadoc-urls
   (testing "Javadoc URL"
