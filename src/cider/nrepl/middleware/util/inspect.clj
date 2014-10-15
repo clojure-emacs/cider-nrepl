@@ -103,6 +103,9 @@
            (set? value)
            (safe-pr-seq (take 5 value) "#{ %s ... }")
 
+           (instance? java.lang.Class value)
+           (pr-str value)
+
            :default
            (str value))))
 
