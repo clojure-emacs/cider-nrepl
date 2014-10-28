@@ -3,7 +3,8 @@
             [clojure.tools.trace :as trace]
             [clojure.tools.nrepl.transport :as t]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]))
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [cider.nrepl.middleware.util.misc :as u]))
 
 (defn toggle-trace
   [{:keys [ns sym transport] :as msg}]
@@ -19,12 +20,10 @@
                                             :status :done
                                             :value (str v " traced.")))))
       (t/send transport (response-for msg
-                                      :status #{:error :done}
+                                      :status #{:toggle-trace-error :done}
                                       :value "no such var")))
     (catch Exception e
-      (t/send transport (response-for msg
-                                      :status #{:error :done}
-                                      :value (.getMessage e))))))
+      (t/send transport (response-for msg (u/err-info :toggle-trace-error))))))
 
 (defn wrap-trace
   "Middleware that toggles tracing of a given var."
