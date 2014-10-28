@@ -13,11 +13,11 @@
         (do (trace/untrace-var* v)
             (t/send transport (response-for msg
                                             :status :done
-                                            :value (str sym " untraced."))))
+                                            :value (str v " untraced."))))
         (do (trace/trace-var* v)
             (t/send transport (response-for msg
                                             :status :done
-                                            :value (str sym " traced.")))))
+                                            :value (str v " traced.")))))
       (t/send transport (response-for msg
                                       :status #{:error :done}
                                       :value "no such var")))
