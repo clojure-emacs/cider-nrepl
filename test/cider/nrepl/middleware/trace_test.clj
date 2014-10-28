@@ -5,8 +5,8 @@
 
 (deftest test-toogle-trace-op
   (let [transport (test-transport)]
-    (toggle-trace {:transport transport :ns "clojure.core" :var "map"})
+    (toggle-trace {:transport transport :ns "clojure.core" :sym "map"})
     (is (= (messages transport) [{:value "map traced." :status #{:done}}]))
-    (toggle-trace {:transport transport :ns "clojure.core" :var "map"})
+    (toggle-trace {:transport transport :ns "clojure.core" :sym "map"})
     (is (= (messages transport) [{:value "map traced." :status #{:done}}
                                  {:value "map untraced." :status #{:done}}]))))
