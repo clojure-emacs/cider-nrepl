@@ -26,7 +26,8 @@
   [{:keys [transport] :as msg}]
   (try
     (t/send transport
-            (response-for msg :status :done
+            (response-for msg
+                          :status :done
                           :err (with-out-str (binding [*err* *out*] (p/print-summary)))))
     (catch Exception e
       (t/send transport
