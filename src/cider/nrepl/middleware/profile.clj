@@ -13,11 +13,14 @@
       (let [profiled? (p/toggle-profile-var* v)]
         (t/send transport
                 (response-for
-                 msg :status :done
-                 :value (str v (format " %sprofiled." (if profiled? "" "un"))))))
-      (t/send transport (response-for msg
-                                      :status #{:toggle-profile-error :done}
-                                      :value "no such var.")))
+                 msg
+                 :status :done
+                 :value (if profiled? "profiled" "unprofiled"))))
+      (t/send transport
+              (response-for
+               msg
+               :status #{:toggle-profile-not-such-var :done}
+               :value "unbound")))
     (catch Exception e
       (t/send transport
               (response-for msg (u/err-info e :toggle-profile-error))))))
@@ -28,7 +31,8 @@
     (t/send transport
             (response-for msg
                           :status :done
-                          :err (with-out-str (binding [*err* *out*] (p/print-summary)))))
+                          :err (with-out-str
+                                 (binding [*err* *out*] (p/print-summary)))))
     (catch Exception e
       (t/send transport
               (response-for msg (u/err-info e :profile-summary-error))))))
@@ -38,7 +42,9 @@
   (try
     (p/clear-profile-data)
     (t/send transport
-            (response-for msg :status :done :value "profile data cleared."))
+            (response-for msg
+                          :status :done
+                          :value "cleared"))
     (catch Exception e
       (t/send transport
               (response-for msg (u/err-info e :clear-profile-error))))))
@@ -63,12 +69,14 @@
    {:doc "Toggle profiling of a given var."
     :requires {"sym" "The symbol to profile"
                "ns" "The current namespace"}
-    :returns {"status" "value"}}
+    :returns {"status" "Done"
+              "value" "'profiled' if profiling enabled, 'unprofiled' if disabled, 'unbound' if ns/sym not bound"}}
    "profile-summary"
    {:doc "Return profiling data summary."
     :requires {}
-    :returns {"status" "err"}}
+    :returns {"status" "Done"
+              "err" "Content of profile summary report"}}
    "clear-profile"
    {:doc "Clears profile of samples."
     :requires {}
-    :returns {"status" "value"}}}})
+    :returns {"status" "Done"}}}})
