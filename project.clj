@@ -11,6 +11,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[compliment "0.2.0-SNAPSHOT"]
                  [cljs-tooling "0.1.3"]
+                 [thunknyc/profile "0.3.7"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.6"]
                  [org.clojure/java.classpath "0.2.0"]
@@ -27,6 +28,7 @@
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      cider.nrepl.middleware.macroexpand/wrap-macroexpand
                                                      cider.nrepl.middleware.ns/wrap-ns
+                                                     cider.nrepl.middleware.profile/wrap-profile
                                                      cider.nrepl.middleware.resource/wrap-resource
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
                                                      cider.nrepl.middleware.test/wrap-test
