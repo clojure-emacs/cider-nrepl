@@ -23,7 +23,7 @@
                                       :status #{:toggle-trace-error :done}
                                       :value "no such var")))
     (catch Exception e
-      (t/send transport (response-for msg (u/err-info :toggle-trace-error))))))
+      (t/send transport (response-for msg (u/err-info e :toggle-trace-error))))))
 
 (defn wrap-trace
   "Middleware that toggles tracing of a given var."
