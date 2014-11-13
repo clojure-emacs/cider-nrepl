@@ -15,3 +15,8 @@
   (let [transport (test-transport)]
     (toggle-trace {:transport transport :ns "clojure.core" :sym "mappp"})
     (is (= (messages transport) [{:var-status "not-found" :status #{:toggle-trace-error :done}}]))))
+
+(deftest test-toogle-trace-op-not-traceable-var
+  (let [transport (test-transport)]
+    (toggle-trace {:transport transport :ns "clojure.core" :sym "and"})
+    (is (= (messages transport) [{:var-name "#'clojure.core/and" :var-status "not-traceable" :status #{:done}}]))))

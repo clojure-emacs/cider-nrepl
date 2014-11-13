@@ -10,17 +10,22 @@
   [{:keys [ns sym transport] :as msg}]
   (try
     (if-let [v (ns-resolve (symbol ns) (symbol sym))]
-      (if (trace/traced? v)
-        (do (trace/untrace-var* v)
-            (t/send transport (response-for msg
-                                            :status :done
-                                            :var-name (str v)
-                                            :var-status "untraced")))
-        (do (trace/trace-var* v)
-            (t/send transport (response-for msg
-                                            :status :done
-                                            :var-name (str v)
-                                            :var-status "traced"))))
+      (if (trace/traceable? v)
+        (if (trace/traced? v)
+          (do (trace/untrace-var* v)
+              (t/send transport (response-for msg
+                                              :status :done
+                                              :var-name (str v)
+                                              :var-status "untraced")))
+          (do (trace/trace-var* v)
+              (t/send transport (response-for msg
+                                              :status :done
+                                              :var-name (str v)
+                                              :var-status "traced"))))
+        (t/send transport (response-for msg
+                                        :status :done
+                                        :var-name (str v)
+                                        :var-status "not-traceable")))
       (t/send transport (response-for msg
                                       :status #{:toggle-trace-error :done}
                                       :var-status "not-found")))
