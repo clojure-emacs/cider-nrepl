@@ -14,14 +14,16 @@
         (do (trace/untrace-var* v)
             (t/send transport (response-for msg
                                             :status :done
-                                            :value (str v " untraced."))))
+                                            :var-name (str v)
+                                            :var-status "untraced")))
         (do (trace/trace-var* v)
             (t/send transport (response-for msg
                                             :status :done
-                                            :value (str v " traced.")))))
+                                            :var-name (str v)
+                                            :var-status "traced"))))
       (t/send transport (response-for msg
                                       :status #{:toggle-trace-error :done}
-                                      :value "no such var")))
+                                      :var-status "not-found")))
     (catch Exception e
       (t/send transport (response-for msg (u/err-info e :toggle-trace-error))))))
 
@@ -40,4 +42,5 @@
    {:doc "Toggle tracing of a given var."
     :requires {"sym" "The symbol to trace"
                "ns" "The current namespace"}
-    :returns {"status" "done"}}}})
+    :returns {"var-status" "The result of tracing operation"
+              "var-name" "The fully-qualified name of the traced/untraced var"}}}})

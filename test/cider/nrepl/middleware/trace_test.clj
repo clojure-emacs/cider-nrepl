@@ -6,12 +6,12 @@
 (deftest test-toogle-trace-op
   (let [transport (test-transport)]
     (toggle-trace {:transport transport :ns "clojure.core" :sym "map"})
-    (is (= (messages transport) [{:value "#'clojure.core/map traced." :status #{:done}}]))
+    (is (= (messages transport) [{:var-name "#'clojure.core/map" :var-status "traced" :status #{:done}}]))
     (toggle-trace {:transport transport :ns "clojure.core" :sym "map"})
-    (is (= (messages transport) [{:value "#'clojure.core/map traced." :status #{:done}}
-                                 {:value "#'clojure.core/map untraced." :status #{:done}}]))))
+    (is (= (messages transport) [{:var-name "#'clojure.core/map" :var-status "traced" :status #{:done}}
+                                 {:var-name "#'clojure.core/map" :var-status "untraced" :status #{:done}}]))))
 
 (deftest test-toogle-trace-op-missing-var
   (let [transport (test-transport)]
     (toggle-trace {:transport transport :ns "clojure.core" :sym "mappp"})
-    (is (= (messages transport) [{:value "no such var" :status #{:toggle-trace-error :done}}]))))
+    (is (= (messages transport) [{:var-status "not-found" :status #{:toggle-trace-error :done}}]))))
