@@ -18,7 +18,7 @@
     info))
 
 (def var-meta-whitelist
-  [:ns :name :doc :file :arglists :macro :protocol :line :column :static :added :deprecated :resource])
+  [:ns :name :doc :file :arglists :forms :macro :protocol :line :column :static :added :deprecated :resource])
 
 (defn- map-seq [x]
   (if (seq x)
