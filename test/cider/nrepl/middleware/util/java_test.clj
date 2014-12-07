@@ -142,7 +142,7 @@
                "java/lang/Thread.html#enumerate(java.lang.Thread[])")))
       (testing "with multiple args"
         (is (= (:javadoc (member-info 'java.util.ArrayList 'subList))
-               "java/util/ArrayList.html#subList(int, int)")))
+               "java/util/ArrayList.html#subList(int,%20int)")))
       (testing "with generic type erasure"
         (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
                "java/util/Hashtable.html#putAll(java.util.Map)"))))))

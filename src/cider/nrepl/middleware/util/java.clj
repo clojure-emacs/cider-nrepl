@@ -76,7 +76,7 @@
   ([class member argtypes]
      (str (javadoc-url class) "#" member
           (when argtypes
-            (str "(" (str/join ", " argtypes) ")")))))
+            (str "(" (str/join ",%20" argtypes) ")")))))
 
 
 ;;; ## Class Metadata Assembly
