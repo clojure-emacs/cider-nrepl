@@ -14,9 +14,16 @@
     (update-in descriptor [:requires] #(set (conj % piggieback)))
     descriptor))
 
-(defn grab-cljs-env
+(defn grab-cljs-env-from-piggieback
   [msg]
   (when-let [piggieback-key (resolve 'cemerick.piggieback/*cljs-repl-env*)]
     (let [session (:session msg)
           env (get @session piggieback-key)]
       (if env @(:cljs.env/compiler env)))))
+
+(def ^:dynamic *compiler-env* nil)
+
+(defn grab-cljs-env
+  [msg]
+  (or (grab-cljs-env-from-piggieback msg)
+      (when *compiler-env* @*compiler-env*)))
