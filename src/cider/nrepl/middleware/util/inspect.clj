@@ -210,7 +210,7 @@
       (render "Value: " (pr-str obj))))
 
 (defmethod inspect :default [inspector obj]
-  (let [^"[Ljava.lang.reflect.Field;" fields (. (class obj) getDeclaredFields)
+  (let [^"[Ljava.lang.reflect.Field;" fields (.getDeclaredFields (class obj))
         names (map #(.getName ^Field %) fields)
         get (fn [^Field f]
               (try (.setAccessible f true)
@@ -261,7 +261,7 @@
       (inspect (deref obj))))
 
 (defn ns-refers-by-ns [^clojure.lang.Namespace ns]
-  (group-by (fn [^clojure.lang.Var v] (. v ns))
+  (group-by (fn [^clojure.lang.Var v] (.ns v))
             (map val (ns-refers ns))))
 
 (defmethod inspect :namespace [inspector ^clojure.lang.Namespace obj]
