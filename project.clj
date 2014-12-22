@@ -45,7 +45,7 @@
                                   [org.clojure/clojure "1.5.1"
                                    :classifier "javadoc"]]
                    :injections [~VERSION-FORM]
-                   :plugins [[jonase/eastwood "0.1.4"]
+                   :plugins [[jonase/eastwood "0.2.1"]
                              ;; Wait til 1.5 comes out for a fix to cljs dep
                              ;; [com.cemerick/austin "0.1.5"]
                              ]}
