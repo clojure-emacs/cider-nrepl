@@ -79,6 +79,14 @@
          (-> (info/info-clj 'cider.nrepl.middleware.info-test 'test-info)
              info/handle-cljx-sources
              :file)))
+
+  ;; either symbol or (class method) should be passed
+  (is (thrown? Exception
+               (info/info {:ns "cider.nrepl.middleware.info-test"
+                           :class "Thread"})))
+
+  ;; this is a replacement for (is (not (thrown? ..)))
+  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"})))
   )
 
 (deftest test-response

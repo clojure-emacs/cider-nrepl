@@ -128,9 +128,10 @@
   (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (handle-cljx-sources (info-cljs cljs-env symbol ns))
-      (if ns
-        (handle-cljx-sources (info-clj ns symbol))
-        (info-java class member)))))
+      (cond (and ns symbol) (handle-cljx-sources (info-clj ns symbol))
+            (and class member) (info-java class member)
+            :else (throw (Exception.
+                          "Either \"symbol\", or (\"class\", \"member\") must be supplied"))))))
 
 (defn resource-path
   "If it's a resource, return a tuple of the relative path and the full resource path."
