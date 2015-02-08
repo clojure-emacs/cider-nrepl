@@ -17,6 +17,9 @@
 (defn grab-cljs-env
   [msg]
   (when-let [piggieback-key (resolve 'cemerick.piggieback/*cljs-repl-env*)]
-    (let [session (:session msg)
-          env (get @session piggieback-key)]
-      (if env @(:cljs.env/compiler env)))))
+    (some-> msg
+            :session
+            deref
+            (get piggieback-key)
+            :cljs.env/compiler
+            deref)))
