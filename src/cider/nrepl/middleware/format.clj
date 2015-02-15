@@ -62,8 +62,8 @@
  #'wrap-format
  {:handles
   {"format-code"
-   {:doc "Format a Clojure source file."
-    :requires {"code" "The code to format"}
+   {:doc "Reformats the given Clojure code, returning the result as a string."
+    :requires {"code" "The code to format."}
     :returns {"formatted-code" "The formatted code."}}
    "format-edn"
    {:doc "Reformats the given EDN data, returning the result as a string."
