@@ -11,7 +11,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[compliment "0.2.1-SNAPSHOT"]
                  [cljs-tooling "0.1.3"]
-                 [cljfmt "0.1.7"]
+                 [cljfmt "0.1.9"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.7"]
                  [org.clojure/java.classpath "0.2.0"]
