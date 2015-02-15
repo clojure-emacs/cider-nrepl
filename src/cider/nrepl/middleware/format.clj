@@ -8,8 +8,7 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.reader.edn :as edn]
-            [clojure.tools.reader.reader-types :as readers])
-  (:import [java.net URLDecoder]))
+            [clojure.tools.reader.reader-types :as readers]))
 
 (defn format-code-reply
   [{:keys [transport code] :as msg}]
