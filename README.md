@@ -90,7 +90,7 @@ Middleware        | Op(s)      | Description
 `wrap-apropos`    | `apropos`  | Pattern search for symbols and documentation.
 `wrap-classpath`  | `classpath` | Java classpath.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
-`wrap-format`     | `format-code` | Code formatting.
+`wrap-format`     | `format-(code/edn)` | Code and data formatting.
 `wrap-info`       | `info/eldoc` | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
