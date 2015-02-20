@@ -246,8 +246,8 @@
       (str ".java")))
 
 (defn source-info
-  "If the source for the Java class is available on the classparh, parse it
-  and return info to supplement reflection. Specifically this includes source
+  "If the source for the Java class is available on the classpath, parse it
+  and return info to supplement reflection. Specifically, this includes source
   file and position, docstring, and argument name info. Info returned has the
   same structure as that of `cider.nrepl.middleware.util.java/reflect-info`."
   [class]
