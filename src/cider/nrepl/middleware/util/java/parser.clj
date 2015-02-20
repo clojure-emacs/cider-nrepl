@@ -6,7 +6,7 @@
   (:import (com.sun.javadoc ClassDoc ConstructorDoc Doc FieldDoc MethodDoc
                             Parameter Tag Type)
            (com.sun.source.tree ClassTree)
-           (com.sun.tools.javac.util Context List Options)
+           (com.sun.tools.javac.util Abort Context List Options)
            (com.sun.tools.javadoc DocEnv JavadocEnter JavadocTool Messager
                                   ModifierFilter RootDocImpl)
            (java.io StringReader)
@@ -252,9 +252,11 @@
   same structure as that of `cider.nrepl.middleware.util.java/reflect-info`."
   [class]
   {:pre [(symbol? class)]}
-  (let [path (source-path class)]
-    (when-let [root (parse-java path)]
-      (assoc (->> (map parse-info (.classes root))
-                  (filter #(= class (:class %)))
-                  (first))
-        :file path))))
+  (try
+    (let [path (source-path class)]
+      (when-let [root (parse-java path)]
+        (assoc (->> (map parse-info (.classes root))
+                    (filter #(= class (:class %)))
+                    (first))
+               :file path)))
+    (catch Abort _)))
