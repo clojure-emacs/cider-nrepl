@@ -17,7 +17,8 @@
 
 (defn as-sym
   [x]
-  (if x (symbol x)))
+  (when (or (symbol? x) (string? x))
+    (symbol x)))
 
 (defmulti transform-value "Transform a value for output" type)
 

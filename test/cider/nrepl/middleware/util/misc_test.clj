@@ -18,4 +18,10 @@
 
 (deftest test-as-sym
   (is (= nil (misc/as-sym nil)))
-  (is (= 'WAT (misc/as-sym "WAT"))))
+  (is (= nil (misc/as-sym 1)))
+  (is (= nil (misc/as-sym '())))
+  (is (= nil (misc/as-sym [])))
+  (is (= nil (misc/as-sym {})))
+  (is (= nil (misc/as-sym :WAT)))
+  (is (= 'WAT (misc/as-sym "WAT")))
+  (is (= 'WAT (misc/as-sym 'WAT))))
