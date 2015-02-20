@@ -77,6 +77,7 @@
                  (when (:url m)
                    (str "http://clojure.org/" (:url m)))
                  (str "http://clojure.org/special_forms#" (:name m))))))
+    (catch NoClassDefFoundError _)
     (catch Exception _)))
 
 (defn find-cljx-source
