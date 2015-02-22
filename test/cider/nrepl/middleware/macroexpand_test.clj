@@ -1,9 +1,9 @@
 (ns cider.nrepl.middleware.macroexpand-test
-  (:use clojure.test
-        cider.nrepl.middleware.test-transport
-        cider.nrepl.middleware.macroexpand)
-  (:require [clojure.set :as set]
-            [clojure.string]))
+  (:require [cider.nrepl.middleware.macroexpand :refer :all]
+            [cider.nrepl.middleware.test-transport :refer :all]
+            [clojure.set :as set]
+            [clojure.string]
+            [clojure.test :refer :all]))
 
 (def code
   {:expr         "(while (while 1))"
