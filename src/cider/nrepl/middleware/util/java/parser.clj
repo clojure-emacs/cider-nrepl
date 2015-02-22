@@ -89,29 +89,29 @@
 ;; Use GFM extensions for multiline code blocks and tables.
 (def markdown
   "Syntax map from html tag to a tuple of tag type key, start, and end chars"
-  (let [chars {:p     ["\n\n"]     :code  ["`" "`"]
-               :br    ["\n"]       :code* ["\n\n```\n" "```\n\n"]
-               :em    ["*" "*"]    :table ["\n|--" "\n|--"]
-               :str   ["**" "**"]  :thead ["" "|--\n"]
-               :list  ["\n"]       :tr    ["\n" "|"]
-               :li    ["- "]       :td    ["|"]
-               :dd    [": "]       :th    ["|"]}
-        tags  {HTML$Tag/P  :p           HTML$Tag/TT    :code
-               HTML$Tag/BR :br          HTML$Tag/CODE  :code
-               HTML$Tag/I  :em          HTML$Tag/VAR   :code
-               HTML$Tag/EM :em          HTML$Tag/KBD   :code
-               HTML$Tag/B  :str         HTML$Tag/PRE   :code*
-               HTML$Tag/STRONG :str     HTML$Tag/BLOCKQUOTE :code*
-               HTML$Tag/UL :list        HTML$Tag/TABLE :table
-               HTML$Tag/OL :list        HTML$Tag/TR    :tr
-               HTML$Tag/DL :list        HTML$Tag/TD    :td
-               HTML$Tag/LI :li          HTML$Tag/TH    :th
-               HTML$Tag/DT :li
-               HTML$Tag/DD :dd}]
+  (let [char-map {:p     ["\n\n"]     :code  ["`" "`"]
+                  :br    ["\n"]       :code* ["\n\n```\n" "```\n\n"]
+                  :em    ["*" "*"]    :table ["\n|--" "\n|--"]
+                  :str   ["**" "**"]  :thead ["" "|--\n"]
+                  :list  ["\n"]       :tr    ["\n" "|"]
+                  :li    ["- "]       :td    ["|"]
+                  :dd    [": "]       :th    ["|"]}
+        tags     {HTML$Tag/P  :p           HTML$Tag/TT    :code
+                  HTML$Tag/BR :br          HTML$Tag/CODE  :code
+                  HTML$Tag/I  :em          HTML$Tag/VAR   :code
+                  HTML$Tag/EM :em          HTML$Tag/KBD   :code
+                  HTML$Tag/B  :str         HTML$Tag/PRE   :code*
+                  HTML$Tag/STRONG :str     HTML$Tag/BLOCKQUOTE :code*
+                  HTML$Tag/UL :list        HTML$Tag/TABLE :table
+                  HTML$Tag/OL :list        HTML$Tag/TR    :tr
+                  HTML$Tag/DL :list        HTML$Tag/TD    :td
+                  HTML$Tag/LI :li          HTML$Tag/TH    :th
+                  HTML$Tag/DT :li
+                  HTML$Tag/DD :dd}]
     (-> (reduce (fn [tags [tag k]]
-                  (assoc tags tag (cons k (chars k))))
+                  (assoc tags tag (cons k (char-map k))))
                 {} tags)
-        (with-meta chars))))
+        (with-meta char-map))))
 
 ;; The HTML parser and DTD classes are in the `javax.swing` package, and have
 ;; internal references to the `sun.awt.AppContext` class. On Mac OS X, any use
