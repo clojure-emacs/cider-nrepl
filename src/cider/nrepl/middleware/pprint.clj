@@ -16,11 +16,11 @@
   (handler (assoc msg :eval 'cider.nrepl.middleware.pprint/pprint-eval)))
 
 (defn wrap-pprint
-  [handler]
   "Middleware that adds a pretty printing option to the eval op.
   Passing a non-nil value in the `:pprint` slot will cause eval to call
   clojure.pprint/pprint on its result. The `:right-margin` slot can be used to
   bind `*clojure.pprint/*print-right-margin*` during the evaluation."
+  [handler]
   (fn [{:keys [op pprint right-margin] :as msg}]
     (if (and pprint (= op "eval"))
       (wrap-pprint-reply handler msg)
