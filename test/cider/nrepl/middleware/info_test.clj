@@ -104,21 +104,21 @@
             "resource" "clojure/core.clj"}))))
 
 ;;;; eldoc
-(def test-info {:arglists '([x] [x y])})
+(def test-eldoc-info {:arglists '([x] [x y])})
 
-(def test-info-candidates {:candidates
+(def test-eldoc-info-candidates {:candidates
                            '{X {:arglists ([x])}
                              Y {:arglists ([x] [x y z])}
                              Z {:arglists ([])}}})
 
 (deftest test-extract-eldoc
-  (is (= (info/extract-eldoc test-info) '([x] [x y])))
-  (is (= (info/extract-eldoc test-info-candidates)
+  (is (= (info/extract-eldoc test-eldoc-info) '([x] [x y])))
+  (is (= (info/extract-eldoc test-eldoc-info-candidates)
          '([] [x] [x y z]))))
 
 (deftest test-format-eldoc
-  (is (= (info/format-eldoc (info/extract-eldoc test-info)) '(["x"] ["x" "y"])))
-  (is (= (info/format-eldoc (info/extract-eldoc test-info-candidates))
+  (is (= (info/format-eldoc (info/extract-eldoc test-eldoc-info)) '(["x"] ["x" "y"])))
+  (is (= (info/format-eldoc (info/extract-eldoc test-eldoc-info-candidates))
          '([] ["x"] ["x" "y" "z"]))))
 
 (deftest test-eldoc
