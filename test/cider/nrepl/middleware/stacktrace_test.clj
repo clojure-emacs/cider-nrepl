@@ -80,10 +80,10 @@
             dup? #(or (= (:name %1) (:name %2))
                       (and (= (:file %1) (:file %2))
                            (= (:line %1) (:line %2))))]
-        (every? (fn [[i v]] (dup? v (get ixd1 (dec i))))
-                (filter (comp :dup :flags val) ixd1))
-        (every? (fn [[i v]] (dup? v (get ixd2 (dec i))))
-                (filter (comp :dup :flags val) ixd2))))))
+        (is (every? (fn [[i v]] (dup? v (get ixd1 (dec i))))
+                    (filter (comp :dup :flags val) ixd1)))
+        (is (every? (fn [[i v]] (dup? v (get ixd2 (dec i))))
+                    (filter (comp :dup :flags val) ixd2)))))))
 
 (deftest test-exception-causes
   (testing "Exception cause unrolling"
