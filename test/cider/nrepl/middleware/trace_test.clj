@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.trace-test
-  (:use clojure.test
-        cider.nrepl.middleware.test-transport
-        cider.nrepl.middleware.trace))
+  (:require [cider.nrepl.middleware.test-transport :refer :all]
+            [cider.nrepl.middleware.trace :refer :all]
+            [clojure.test :refer :all]))
 
 (deftest test-toogle-trace-var-op
   (let [transport (test-transport)]
