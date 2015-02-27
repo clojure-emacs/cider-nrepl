@@ -14,7 +14,9 @@
         prefix (str symbol)]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (cljs-complete/completions cljs-env prefix ns)
-      (jvm-complete/completions prefix ns context))))
+      (jvm-complete/completions prefix {:ns ns
+                                        :context context
+                                        :tag-candidates true}))))
 
 (defn completion-doc
   [{:keys [symbol ns] :as msg}]
