@@ -68,46 +68,46 @@
 
 (defn inspect-value
   ([value]
-     (cond (atom? value) (pr-str value)
+   (cond (atom? value) (pr-str value)
 
-           (and (instance? Seqable value) (empty? value))
-           (pr-str value)
+         (and (instance? Seqable value) (empty? value))
+         (pr-str value)
 
-           (and (map? value) (< (count value) 5))
-           (->> value
-                (map (fn [[k v]]
-                       (str (inspect-value k) " " (inspect-value v))))
-                (interpose ", ")
-                s/join
-                (format "{ %s }"))
+         (and (map? value) (< (count value) 5))
+         (->> value
+              (map (fn [[k v]]
+                     (str (inspect-value k) " " (inspect-value v))))
+              (interpose ", ")
+              s/join
+              (format "{ %s }"))
 
-           (map? value)
-           (str "{ " (ffirst value) " "
-                (inspect-value (second (first value))) ", ... }")
+         (map? value)
+         (str "{ " (ffirst value) " "
+              (inspect-value (second (first value))) ", ... }")
 
-           (and (vector? value) (< (count value) 5))
-           (safe-pr-seq value "[ %s ]")
+         (and (vector? value) (< (count value) 5))
+         (safe-pr-seq value "[ %s ]")
 
-           (vector? value)
-           (safe-pr-seq (take 5 value) "[ %s ... ]")
+         (vector? value)
+         (safe-pr-seq (take 5 value) "[ %s ... ]")
 
-           (and (list? value) (< (count value) 5))
-           (safe-pr-seq value "( %s )")
+         (and (list? value) (< (count value) 5))
+         (safe-pr-seq value "( %s )")
 
-           (list? value)
-           (safe-pr-seq (take 5 value) "( %s ... )")
+         (list? value)
+         (safe-pr-seq (take 5 value) "( %s ... )")
 
-           (and (set? value) (< (count value) 5))
-           (safe-pr-seq value "#{ %s }")
+         (and (set? value) (< (count value) 5))
+         (safe-pr-seq value "#{ %s }")
 
-           (set? value)
-           (safe-pr-seq (take 5 value) "#{ %s ... }")
+         (set? value)
+         (safe-pr-seq (take 5 value) "#{ %s ... }")
 
-           (instance? java.lang.Class value)
-           (pr-str value)
+         (instance? java.lang.Class value)
+         (pr-str value)
 
-           :default
-           (str value))))
+         :default
+         (str value))))
 
 (defn render-onto [inspector coll]
   (update-in inspector [:rendered] concat coll))
@@ -163,18 +163,18 @@
 ;; Inspector multimethod
 (defn known-types [ins obj]
   (cond
-   (map? obj) :seq
-   (vector? obj) :seq
-   (seq? obj) :seq
-   (set? obj) :seq
-   (var? obj) :var
-   (string? obj) :string
-   (instance? Class obj) :class
-   (instance? clojure.lang.Namespace obj) :namespace
-   (instance? clojure.lang.ARef obj) :aref
-   (.isArray (class obj)) :array
-   :default (or (:inspector-tag (meta obj))
-                (type obj))))
+    (map? obj) :seq
+    (vector? obj) :seq
+    (seq? obj) :seq
+    (set? obj) :seq
+    (var? obj) :var
+    (string? obj) :string
+    (instance? Class obj) :class
+    (instance? clojure.lang.Namespace obj) :namespace
+    (instance? clojure.lang.ARef obj) :aref
+    (.isArray (class obj)) :array
+    :default (or (:inspector-tag (meta obj))
+                 (type obj))))
 
 (defmulti inspect #'known-types)
 
@@ -231,7 +231,8 @@
         elements (eval (list method obj))]
     (if (seq elements)
       `(~(name section) ": " (:newline)
-        ~@(mapcat (fn [f] `("  " (:value ~f) (:newline))) elements)))))
+                        ~@(mapcat (fn [f]
+                                    `("  " (:value ~f) (:newline))) elements)))))
 
 (defn- render-section [obj inspector section]
   (let [method (symbol (str ".get" (name section)))

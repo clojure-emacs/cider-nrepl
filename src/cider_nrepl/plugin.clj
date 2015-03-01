@@ -10,8 +10,8 @@
               read-string
               (nth 2))]
     (assert (string? v)
-        (str "Something went wrong, version is not a string: "
-             v))
+            (str "Something went wrong, version is not a string: "
+                 v))
     v))
 
 (defn middleware

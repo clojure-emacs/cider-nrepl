@@ -35,8 +35,7 @@
                                                      cider.nrepl.middleware.stacktrace/wrap-stacktrace
                                                      cider.nrepl.middleware.test/wrap-test
                                                      cider.nrepl.middleware.trace/wrap-trace
-                                                     cider.nrepl.middleware.undef/wrap-undef
-                                                     ]}
+                                                     cider.nrepl.middleware.undef/wrap-undef]}
                    ;; The "sources" jar should be the same version as Clojure,
                    ;; but bad sources jars were deployed to the Maven Central
                    ;; "releases" repo, so for the moment, use sources from
@@ -48,10 +47,7 @@
                                    :classifier "sources"]
                                   [org.clojure/clojure "1.5.1"
                                    :classifier "javadoc"]]
-                   :injections [~VERSION-FORM]
-                   :plugins [;; Wait til 1.5 comes out for a fix to cljs dep
-                             ;; [com.cemerick/austin "0.1.5"]
-                             ]}
+                   :injections [~VERSION-FORM]}
              :test {:resource-paths ["test/resources"]}
-             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}}
-  )
+             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :lint {:plugins [[lein-cljfmt "0.1.10"]]}})

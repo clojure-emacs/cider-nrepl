@@ -4,6 +4,7 @@ script:
   - lein2 with-profile +1.5 test
   - lein2 with-profile +1.6 test
   - lein2 with-profile +1.7 test
+  - lein2 with-profile +lint cljfmt check
 jdk:
   - openjdk6
   - openjdk7

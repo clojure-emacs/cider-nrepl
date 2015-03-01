@@ -29,13 +29,13 @@
   "Return a var's docstring, optionally limiting the number of sentences
   returned."
   ([v]
-     (or (:doc (meta v)) "(not documented)"))
+   (or (:doc (meta v)) "(not documented)"))
   ([n v]
-     (->> (-> (var-doc v)
-              (str/replace #"\s+" " ") ; normalize whitespace
-              (str/split #"(?<=\.) ")) ; split sentences
-          (take n)
-          (str/join " "))))
+   (->> (-> (var-doc v)
+            (str/replace #"\s+" " ") ; normalize whitespace
+            (str/split #"(?<=\.) ")) ; split sentences
+        (take n)
+        (str/join " "))))
 
 
 ;;; ## Symbol Search

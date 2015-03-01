@@ -10,8 +10,8 @@
 (defn- resolve-expander [expander]
   (let [sym (symbol expander)]
     (if (= sym 'macroexpand-all)
-     (ns-resolve 'clojure.walk sym)
-     (resolve sym))))
+      (ns-resolve 'clojure.walk sym)
+      (resolve sym))))
 
 (defn- tidy-qualified-var-refs
   "Takes a `form` (usually being the result of a macroexpansion) and replaces
@@ -30,14 +30,14 @@
                symb-name (symbol (name x))
                alias (ns2alias symb-ns)]
            (cond
-            ;; That namespace has an alias
-            alias (symbol (str alias "/" symb-name))
-            ;; That var is defined in the current namespace
-            (= symb-ns (ns-name ns)) symb-name
-            ;; The var is referred to
-            ((ns-refers ns) symb-name) symb-name
-            ;; No alias and from a different namespace
-            :else x))
+             ;; That namespace has an alias
+             alias (symbol (str alias "/" symb-name))
+             ;; That var is defined in the current namespace
+             (= symb-ns (ns-name ns)) symb-name
+             ;; The var is referred to
+             ((ns-refers ns) symb-name) symb-name
+             ;; No alias and from a different namespace
+             :else x))
          x))
      form)))
 

@@ -86,8 +86,7 @@
                            :class "Thread"})))
 
   ;; this is a replacement for (is (not (thrown? ..)))
-  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"})))
-  )
+  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
 
 (deftest test-response
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
@@ -106,10 +105,10 @@
 ;;;; eldoc
 (def test-eldoc-info {:arglists '([x] [x y])})
 
-(def test-eldoc-info-candidates {:candidates
-                           '{X {:arglists ([x])}
-                             Y {:arglists ([x] [x y z])}
-                             Z {:arglists ([])}}})
+(def test-eldoc-info-candidates
+  {:candidates '{X {:arglists ([x])}
+                 Y {:arglists ([x] [x y z])}
+                 Z {:arglists ([])}}})
 
 (deftest test-extract-eldoc
   (is (= (info/extract-eldoc test-eldoc-info) '([x] [x y])))

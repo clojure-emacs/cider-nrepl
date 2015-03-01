@@ -70,13 +70,13 @@
 (defn javadoc-url
   "Return the relative `.html` javadoc path and member fragment."
   ([class]
-     (-> (str/replace (str class) "." "/")
-         (str/replace "$" ".")
-         (str ".html")))
+   (-> (str/replace (str class) "." "/")
+       (str/replace "$" ".")
+       (str ".html")))
   ([class member argtypes]
-     (str (javadoc-url class) "#" member
-          (when argtypes
-            (str "(" (str/join ",%20" argtypes) ")")))))
+   (str (javadoc-url class) "#" member
+        (when argtypes
+          (str "(" (str/join ",%20" argtypes) ")")))))
 
 
 ;;; ## Class Metadata Assembly
