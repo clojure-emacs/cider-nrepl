@@ -49,4 +49,5 @@
                                    :classifier "javadoc"]]
                    :injections [~VERSION-FORM]}
              :test {:resource-paths ["test/resources"]}
-             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}})
+             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :lint {:plugins [[lein-cljfmt "0.1.10"]]}})
