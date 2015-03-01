@@ -33,9 +33,9 @@
                               (str/split #"/"))
           fn (or fn method)] ; protocol functions are not munged
       (assoc frame
-        :ns  ns
-        :fn  (str/join "/" (cons fn anons))
-        :var (str ns "/" fn)))
+             :ns  ns
+             :fn  (str/join "/" (cons fn anons))
+             :var (str ns "/" fn)))
     frame))
 
 (defn analyze-file

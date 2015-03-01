@@ -7,4 +7,4 @@
                 (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
                 rest
                 (zipmap [:major :minor :incremental :qualifier]))
-      :version-string version-string)))
+           :version-string version-string)))

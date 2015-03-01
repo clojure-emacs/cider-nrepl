@@ -44,9 +44,9 @@
   [handler]
   (fn [{:keys [op] :as msg}]
     (cond
-     (= "complete" op) (complete-reply msg)
-     (= "complete-doc" op) (doc-reply msg)
-     :else (handler msg))))
+      (= "complete" op) (complete-reply msg)
+      (= "complete-doc" op) (doc-reply msg)
+      :else (handler msg))))
 
 (set-descriptor!
  #'wrap-complete

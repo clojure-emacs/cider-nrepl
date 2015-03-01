@@ -67,7 +67,7 @@
                      (.setSilent true)
                      (set-field! "showAccess" access))
           source   (proxy [SimpleJavaFileObject]
-                       [(URI. path) JavaFileObject$Kind/SOURCE]
+                          [(URI. path) JavaFileObject$Kind/SOURCE]
                      (getCharContent [_] (slurp res)))
           tree     (.parse compiler source)
           classes  (->> (.defs tree)

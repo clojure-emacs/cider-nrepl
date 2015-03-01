@@ -41,16 +41,16 @@
 (defn inspector-op [inspector {:keys [session op ns sym idx] :as msg}]
   (try
     (cond
-     ;; new
-     (= op "inspect-start")
-     (let [val (lookup ns sym)]
-       (inspect/start inspector val))
-     (= op "inspect-refresh")
-     (inspect/start inspector (:value inspector))
-     (= op "inspect-pop")    (inspect/up inspector)
-     (= op "inspect-push")  (inspect/down inspector (Integer/parseInt idx))
-     (= op "inspect-reset") (inspect/clear inspector)
-     :default nil)
+      ;; new
+      (= op "inspect-start")
+      (let [val (lookup ns sym)]
+        (inspect/start inspector val))
+      (= op "inspect-refresh")
+      (inspect/start inspector (:value inspector))
+      (= op "inspect-pop")    (inspect/up inspector)
+      (= op "inspect-push")  (inspect/down inspector (Integer/parseInt idx))
+      (= op "inspect-reset") (inspect/clear inspector)
+      :default nil)
     (catch java.lang.Throwable e
       (clojure.stacktrace/print-stack-trace e)
       (assoc inspector :rendered (list "Unable to inspect: " sym)))))
@@ -61,11 +61,11 @@
   (let [inspector (or @current-inspector (inspect/fresh))
         result (inspector-op inspector msg)]
     (cond
-     (nil? result) nil
-     (and (:status result) (not= (:status result) :done)) result
-     :default
-     (do (reset! current-inspector result)
-         {:value (inspect/serialize-render result)}))))
+      (nil? result) nil
+      (and (:status result) (not= (:status result) :done)) result
+      :default
+      (do (reset! current-inspector result)
+          {:value (inspect/serialize-render result)}))))
 
 (defn wrap-inspect
   [handler]
@@ -74,10 +74,11 @@
       (transport/send transport (response-for msg {:status :done} result))
       (handler msg))))
 
-(set-descriptor! #'wrap-inspect
-  {:requires #{#'session}
-   :handles {"inspect-reset" {}
-             "inspect-refresh" {}
-             "inspect-push" {}
-             "inspect-pop" {}
-             "inspect-start" {}}})
+(set-descriptor!
+ #'wrap-inspect
+ {:requires #{#'session}
+  :handles {"inspect-reset" {}
+            "inspect-refresh" {}
+            "inspect-push" {}
+            "inspect-pop" {}
+            "inspect-start" {}}})
