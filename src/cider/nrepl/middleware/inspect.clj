@@ -1,84 +1,87 @@
 (ns cider.nrepl.middleware.inspect
   (:require [cider.nrepl.middleware.util.inspect :as inspect]
-            [clojure.tools.nrepl.transport :as transport]
-            [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]))
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
+            [clojure.tools.nrepl.transport :as transport])
+  (:import clojure.tools.nrepl.transport.Transport))
 
-;; I'm not sure if I should be hard-coding the decision to inspect the
-;; var for macros and functions. Yet, in my opinion, the vars have
-;; more valuable info than the values do in those cases.
-(defn try-eval-in-ns [ns expr]
-  {:pre [(symbol? ns) (string? expr)]}
-  (when-let [ns (find-ns ns)]
-    (try
-      (binding [*ns* ns] (eval (read-string expr)))
-      (catch java.lang.Throwable e
-        (clojure.stacktrace/print-stack-trace e)
-        nil))))
+(def ^:dynamic *inspector* (inspect/fresh))
 
-(defn lookup
-  [ns expr]
-  (let [hist? (= (first expr) \*)
-        sym (symbol expr)
-        ns  (symbol ns)
-        val (or (and hist? (ns-resolve (symbol "clojure.core") sym)) ;; *1/*2/*3
-                (try-eval-in-ns ns expr)
-                (find-ns sym) ;; is namespace
-                (and (namespace sym) (resolve sym)) ;; is a fully qualified sym
-                (ns-resolve ns sym))] ;; lookup in current ns
-    (cond (or (instance? Class val) (instance? clojure.lang.Namespace val)
-              (:macro (meta val)) (and (instance? clojure.lang.Var val) (fn? @val)))
-          val ;; aesthetic call, if class/ns/macro or fn show var
-          (instance? clojure.lang.ARef val)
-          @val ;; deref if ARef (e.g. Var)
-          (nil? val)
-          (throw (java.lang.Throwable.))
-          :default
-          val ;; otherwise, show var value
-          )))
+(defn swap-inspector!
+  [{:keys [session] :as msg} f & args]
+  (-> session
+      (swap! update-in [#'*inspector*] #(apply f % args))
+      (get #'*inspector*)))
 
-(defn inspector-op [inspector {:keys [session op ns sym idx] :as msg}]
-  (try
-    (cond
-      ;; new
-      (= op "inspect-start")
-      (let [val (lookup ns sym)]
-        (inspect/start inspector val))
-      (= op "inspect-refresh")
-      (inspect/start inspector (:value inspector))
-      (= op "inspect-pop")    (inspect/up inspector)
-      (= op "inspect-push")  (inspect/down inspector (Integer/parseInt idx))
-      (= op "inspect-reset") (inspect/clear inspector)
-      :default nil)
-    (catch java.lang.Throwable e
-      (clojure.stacktrace/print-stack-trace e)
-      (assoc inspector :rendered (list "Unable to inspect: " sym)))))
+(defn inspect-reply
+  [{:keys [transport] :as msg} eval-response]
+  (let [inspector (swap-inspector! msg inspect/start (:value eval-response))]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector)))))
 
-(def ^:private current-inspector (atom nil))
+(defn inspector-transport
+  [{:keys [^Transport transport] :as msg}]
+  (reify Transport
+    (recv [this] (.recv transport))
+    (recv [this timeout] (.recv transport timeout))
+    (send [this response]
+      (if (contains? response :value)
+        (inspect-reply msg response)
+        (.send transport response))
+      this)))
 
-(defn session-inspector-value [{:keys [session] :as msg}]
-  (let [inspector (or @current-inspector (inspect/fresh))
-        result (inspector-op inspector msg)]
-    (cond
-      (nil? result) nil
-      (and (:status result) (not= (:status result) :done)) result
-      :default
-      (do (reset! current-inspector result)
-          {:value (inspect/serialize-render result)}))))
+(defn eval-msg
+  [{:keys [inspect] :as msg}]
+  (if inspect
+    (assoc msg :transport (inspector-transport msg))
+    msg))
+
+(defn eval-reply
+  [handler msg]
+  (handler (eval-msg msg)))
+
+(defn pop-reply
+  [{:keys [transport] :as msg}]
+  (let [inspector (swap-inspector! msg inspect/up)]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
+
+(defn push-reply
+  [{:keys [idx transport] :as msg}]
+  (let [idx (Integer/parseInt idx)
+        inspector (swap-inspector! msg inspect/down idx)]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
+
+(defn refresh-reply
+  [{:keys [transport] :as msg}]
+  (let [inspector (swap-inspector! msg #(or % (inspect/fresh)))]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
 
 (defn wrap-inspect
+  "Middleware that adds a value inspector option to the eval op. Passing a
+  non-nil value in the `:inspect` slot will cause the last value returned by
+  eval to be inspected. Returns a string representation of the resulting
+  inspector's state in the `:value` slot."
   [handler]
-  (fn [{:keys [transport] :as msg}]
-    (if-let [result (session-inspector-value msg)]
-      (transport/send transport (response-for msg {:status :done} result))
+  (fn [{:keys [op] :as msg}]
+    (case op
+      "eval" (eval-reply handler msg)
+      "inspect-pop" (pop-reply msg)
+      "inspect-push" (push-reply msg)
+      "inspect-refresh" (refresh-reply msg)
       (handler msg))))
 
 (set-descriptor!
  #'wrap-inspect
- {:requires #{#'session}
-  :handles {"inspect-reset" {}
-            "inspect-refresh" {}
+ {:requires #{"clone" #'pr-values}
+  :expects #{"eval"}
+  :handles {"inspect-pop" {}
             "inspect-push" {}
-            "inspect-pop" {}
-            "inspect-start" {}}})
+            "inspect-refresh" {}}})

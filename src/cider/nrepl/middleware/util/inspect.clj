@@ -22,7 +22,7 @@
 (defn fresh
   "Return an empty inspector "
   []
-  (clear {}))
+  (inspect-render (clear {})))
 
 (defn start
   "Put a new value onto the inspector stack"
@@ -35,7 +35,7 @@
   [inspector]
   (let [stack (:stack inspector)]
     (if (empty? stack)
-      inspector
+      (inspect-render inspector)
       (-> inspector
           (inspect-render (last stack))
           (update-in [:stack] pop)))))
@@ -163,6 +163,7 @@
 ;; Inspector multimethod
 (defn known-types [ins obj]
   (cond
+    (nil? obj) :nil
     (map? obj) :seq
     (vector? obj) :seq
     (seq? obj) :seq
@@ -177,6 +178,10 @@
                  (type obj))))
 
 (defmulti inspect #'known-types)
+
+(defmethod inspect :nil [inspector obj]
+  (-> inspector
+      (render-ln "nil")))
 
 (defmethod inspect :seq [inspector obj]
   (-> inspector
@@ -288,17 +293,13 @@
           :default
           inspector)))
 
-(defn inspect-render [inspector value]
-  (-> (reset-index inspector)
-      (assoc :rendered [])
-      (assoc :value value)
-      (render-reference)
-      (inspect value)))
-
-;; Get the string serialization of the rendered sequence
-(defn serialize-render [inspector]
-  (pr-str (:rendered inspector)))
-
+(defn inspect-render
+  ([inspector] (inspect-render inspector (:value inspector)))
+  ([inspector value] (-> (reset-index inspector)
+                         (assoc :rendered [])
+                         (assoc :value value)
+                         (render-reference)
+                         (inspect value))))
 
 ;; Get a human readable printout of rendered sequence
 (defmulti inspect-print-component first)
