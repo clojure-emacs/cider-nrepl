@@ -5,7 +5,8 @@
             [clojure.walk :as walk]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]))
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [cider.nrepl.middleware.util.misc :as u]))
 
 (defn- resolve-expander [expander]
   (let [sym (symbol expander)]
@@ -64,11 +65,15 @@
 
 (defn macroexpansion-reply
   [{:keys [transport expander code ns display-namespaces] :as msg}]
-  (transport/send
-   transport
-   (response-for msg
-                 :expansion (macroexpansion expander code ns display-namespaces)
-                 :status :done)))
+  (try
+    (transport/send
+     transport
+     (response-for msg
+                   :expansion (macroexpansion expander code ns display-namespaces)
+                   :status :done))
+    (catch Exception e
+      (transport/send
+       transport (response-for msg (u/err-info e :macroexpand-error))))))
 
 (defn wrap-macroexpand
   "Middleware that provides macroexpansion ops."
