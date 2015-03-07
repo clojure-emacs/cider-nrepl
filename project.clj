@@ -19,9 +19,8 @@
                  [org.clojure/tools.trace "0.7.8"]
                  [org.clojure/tools.reader "0.8.13"]]
   :exclusions [org.clojure/clojure]
-  :profiles {:1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
-             :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
+
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
                                                      cider.nrepl.middleware.classpath/wrap-classpath
                                                      cider.nrepl.middleware.complete/wrap-complete
@@ -48,8 +47,12 @@
                                   [org.clojure/clojure "1.5.1"
                                    :classifier "javadoc"]]
                    :injections [~VERSION-FORM]}
+
              :test {:resource-paths ["test/resources"]}
-             :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
+
              :cljfmt {:plugins [[lein-cljfmt "0.1.10"]]}
              :eastwood {:plugins [[jonase/eastwood "0.2.1"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})
