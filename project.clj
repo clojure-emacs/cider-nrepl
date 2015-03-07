@@ -50,6 +50,6 @@
                    :injections [~VERSION-FORM]}
              :test {:resource-paths ["test/resources"]}
              :provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
-             :lint {:plugins [[jonase/eastwood "0.2.1"]
-                              [lein-cljfmt "0.1.10"]]
-                    :eastwood {:config-files ["eastwood.clj"]}}})
+             :cljfmt {:plugins [[lein-cljfmt "0.1.10"]]}
+             :eastwood {:plugins [[jonase/eastwood "0.2.1"]]
+                        :eastwood {:config-files ["eastwood.clj"]}}})
