@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.inspect-test
-  (:require [cider.nrepl.middleware.inspect :refer :all]
-            [cider.nrepl.middleware.util.inspect :as inspect]
+  (:require [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.middleware.test-session :as session]
             [clojure.test :refer :all]))
 
@@ -94,12 +93,7 @@
 
 ;; integration tests
 
-(defn inspector-fixture
-  [f]
-  (binding [session/*handler* #'wrap-inspect]
-    (f)))
-
-(use-fixtures :each (compose-fixtures inspector-fixture session/session-fixture))
+(use-fixtures :each session/session-fixture)
 
 (deftest nil-integration-test
   (testing "nil renders correctly"

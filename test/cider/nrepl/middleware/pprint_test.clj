@@ -1,14 +1,8 @@
 (ns cider.nrepl.middleware.pprint-test
-  (:require [cider.nrepl.middleware.pprint :refer [wrap-pprint]]
-            [cider.nrepl.middleware.test-session :as session]
+  (:require [cider.nrepl.middleware.test-session :as session]
             [clojure.test :refer :all]))
 
-(defn pprint-fixture
-  [f]
-  (binding [session/*handler* #'wrap-pprint]
-    (f)))
-
-(use-fixtures :once (compose-fixtures pprint-fixture session/session-fixture))
+(use-fixtures :once session/session-fixture)
 
 (deftest test-wrap-pprint
   (let [code "[1 2 3 4 5 6 7 8 9 0]"]
