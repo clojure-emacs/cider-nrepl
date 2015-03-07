@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/clojure-emacs/cider-nrepl.png?branch=master)](https://travis-ci.org/clojure-emacs/cider-nrepl)
+[![Build Status](https://travis-ci.org/clojure-emacs/cider-nrepl.png?branch=master)](https://travis-ci.org/clojure-emacs/cider-nrepl) [![Coverage Status](https://coveralls.io/repos/clojure-emacs/cider-nrepl/badge.svg?branch=master)](https://coveralls.io/r/clojure-emacs/cider-nrepl?branch=master)
 
 # CIDER nREPL
 

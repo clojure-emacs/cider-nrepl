@@ -54,5 +54,6 @@
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.1.10"]]}
+             :cloverage {:plugins [[lein-cloverage "1.0.2"]]}
              :eastwood {:plugins [[jonase/eastwood "0.2.1"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})
