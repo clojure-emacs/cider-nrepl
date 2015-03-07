@@ -15,7 +15,7 @@
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.7"]
                  [org.clojure/java.classpath "0.2.0"]
-                 [org.clojure/tools.namespace "0.2.5"]
+                 [org.clojure/tools.namespace "0.2.10"]
                  [org.clojure/tools.trace "0.7.8"]
                  [org.clojure/tools.reader "0.8.13"]]
   :exclusions [org.clojure/clojure]
