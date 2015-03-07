@@ -161,6 +161,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 * [cljs-tooling](https://github.com/gtrak/cljs-tooling) - for ClojureScript code completion and var info
 * [tools.trace](https://github.com/clojure/tools.trace) - for tracing
 * [tools.namespace](https://github.com/clojure/tools.namespace) - for namespace reloading
+* [cljfmt](https://github.com/weavejester/cljfmt) - for code formatting
 
 ## License
 
