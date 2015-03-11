@@ -93,3 +93,7 @@
     ;; If ex-data is present, the cause should have a :data attribute.
     (is (:data (first causes1)))
     (is (not (:data (first causes2))))))
+
+(deftest test-ex-data-filtering
+  (is (= {:a :b :c :d}
+         (filtered-ex-data (ex-info "msg" {:a :b :c :d :repl-env :e})))))
