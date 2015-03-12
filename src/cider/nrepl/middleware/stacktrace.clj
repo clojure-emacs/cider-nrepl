@@ -108,6 +108,17 @@
                #".* (compiling:)\((.*)\)" "Error $1 $2")
     cause))
 
+;; CLJS REPLs use :repl-env to store huge amounts of analyzer/compiler state
+(def ^:private ex-data-blacklist #{:repl-env})
+
+(defn filtered-ex-data
+  "Same as `ex-data`, but filters out entries whose keys are
+  blacklisted (generally for containing data not intended for reading by a
+  human)."
+  [e]
+  (when-let [data (ex-data e)]
+    (into {} (filter (comp (complement ex-data-blacklist) key) data))))
+
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
@@ -115,7 +126,7 @@
   (let [m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
-    (if-let [data (ex-data e)]
+    (if-let [data (filtered-ex-data e)]
       (assoc m :data (binding [*print-level* print-level]
                        (with-out-str (pp/pprint data))))
       m)))
