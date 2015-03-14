@@ -10,6 +10,7 @@
    (try (eval form)
         (catch Exception e
           e))
+   nil
    nil))
 
 (defn stack-frames
@@ -97,3 +98,11 @@
 (deftest test-ex-data-filtering
   (is (= {:a :b :c :d}
          (filtered-ex-data (ex-info "msg" {:a :b :c :d :repl-env :e})))))
+
+(deftest test-cause-data-pretty-printing
+  (testing "print-length"
+    (is (= "{:a (0 1 2 ...)}\n"
+           (:data (analyze-cause (ex-info "" {:a (range)}) 3 nil)))))
+  (testing "print-level"
+    (is (= "{:a {#}}\n"
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) nil 3))))))
