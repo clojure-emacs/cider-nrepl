@@ -122,23 +122,24 @@
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
-  [^Exception e print-level]
+  [^Exception e print-length print-level]
   (let [m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
     (if-let [data (filtered-ex-data e)]
-      (assoc m :data (binding [*print-level* print-level]
+      (assoc m :data (binding [*print-length* print-length
+                               *print-level* print-level]
                        (with-out-str (pp/pprint data))))
       m)))
 
 (defn analyze-causes
   "Return the cause chain beginning with the thrown exception, with stack frames
   for each."
-  [e print-level]
+  [e print-length print-level]
   (->> e
        (iterate #(.getCause ^Exception %))
        (take-while identity)
-       (map (comp extract-location #(analyze-cause % print-level)))))
+       (map (comp extract-location #(analyze-cause % print-length print-level)))))
 
 
 ;;; ## Middleware
@@ -147,10 +148,10 @@
   "Middleware that handles stacktrace requests, sending cause and stack frame
   info for the most recent exception."
   [handler]
-  (fn [{:keys [op session transport print-level] :as msg}]
+  (fn [{:keys [op session transport print-length print-level] :as msg}]
     (if (= "stacktrace" op)
       (do (if-let [e (@session #'*e)]
-            (doseq [cause (analyze-causes e print-level)]
+            (doseq [cause (analyze-causes e print-length print-level)]
               (t/send transport (response-for msg cause)))
             (t/send transport (response-for msg :status :no-error)))
           (t/send transport (response-for msg :status :done)))
