@@ -43,12 +43,12 @@
 
 (defn ns-list-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :value (ns-list msg)))
+  (transport/send transport (response-for msg :ns-list (ns-list msg)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn ns-vars-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :value (ns-vars msg)))
+  (transport/send transport (response-for msg :ns-vars (ns-vars msg)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-ns
