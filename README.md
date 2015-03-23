@@ -24,7 +24,7 @@ A minimal `profiles.clj` for CIDER would be:
 ```
 
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev :dependencies` vector plus specific
-middleware to to `:nrepl-middleware` under `:repl-options`.
+middleware to `:nrepl-middleware` under `:repl-options`.
 
 ```clojure
 :dependencies [[cider/cider-nrepl "0.8.2"]]
