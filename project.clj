@@ -14,7 +14,7 @@
                  [debugger "0.1.6"]
                  [cljfmt "0.1.10"]
                  [org.tcrawley/dynapath "0.2.3"]
-                 [org.clojure/tools.nrepl "0.2.7"]
+                 [org.clojure/tools.nrepl "0.2.10"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.10"]
                  [org.clojure/tools.trace "0.7.8"]
