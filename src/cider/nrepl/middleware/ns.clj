@@ -62,7 +62,7 @@
 
 (set-descriptor!
  #'wrap-ns
- (cljs/maybe-piggieback
+ (cljs/requires-piggieback
   {:handles
    {"ns-list"
     {:doc "Return a sorted list of all namespaces."

@@ -1,11 +1,11 @@
 (ns cider.nrepl.middleware.stacktrace
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
-  (:require [clojure.pprint :as pp]
+  (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [clojure.pprint :as pp]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t])
@@ -144,25 +144,32 @@
 
 ;;; ## Middleware
 
+(defn wrap-stacktrace-reply
+  [{:keys [session transport print-length print-level] :as msg}]
+  ;; no stacktrace support for cljs currently - they are printed by piggieback anyway
+  (if-let [e (and (not (cljs/grab-cljs-env msg))
+                  (@session #'*e))]
+    (doseq [cause (analyze-causes e print-length print-level)]
+      (t/send transport (response-for msg cause)))
+    (t/send transport (response-for msg :status :no-error)))
+  (t/send transport (response-for msg :status :done)))
+
 (defn wrap-stacktrace
   "Middleware that handles stacktrace requests, sending cause and stack frame
   info for the most recent exception."
   [handler]
-  (fn [{:keys [op session transport print-length print-level] :as msg}]
-    (if (= "stacktrace" op)
-      (do (if-let [e (@session #'*e)]
-            (doseq [cause (analyze-causes e print-length print-level)]
-              (t/send transport (response-for msg cause)))
-            (t/send transport (response-for msg :status :no-error)))
-          (t/send transport (response-for msg :status :done)))
+  (fn [{:keys [op] :as msg}]
+    (if (and (= "stacktrace" op))
+      (wrap-stacktrace-reply msg)
       (handler msg))))
 
 ;; nREPL middleware descriptor info
 (set-descriptor!
  #'wrap-stacktrace
- {:requires #{#'session}
-  :expects #{#'pr-values}
-  :handles {"stacktrace"
-            {:doc (str "Return messages describing each cause and stack frame "
-                       "of the most recent exception.")
-             :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}})
+ (cljs/requires-piggieback
+  {:requires #{#'session}
+   :expects #{}
+   :handles {"stacktrace"
+             {:doc (str "Return messages describing each cause and stack frame "
+                        "of the most recent exception.")
+              :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))

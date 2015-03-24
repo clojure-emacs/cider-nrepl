@@ -50,7 +50,7 @@
 
 (set-descriptor!
  #'wrap-complete
- (cljs/maybe-piggieback
+ (cljs/requires-piggieback
   {:handles
    {"complete"
     {:doc "Return a list of symbols matching the specified (partial) symbol."
