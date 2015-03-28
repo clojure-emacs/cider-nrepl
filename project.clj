@@ -11,6 +11,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[compliment "0.2.1-SNAPSHOT"]
                  [cljs-tooling "0.1.5-SNAPSHOT"]
+                 [debugger "0.1.6"]
                  [cljfmt "0.1.10"]
                  [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.7"]
@@ -24,6 +25,7 @@
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
                                                      cider.nrepl.middleware.classpath/wrap-classpath
                                                      cider.nrepl.middleware.complete/wrap-complete
+                                                     cider.nrepl.middleware.debug/wrap-debug
                                                      cider.nrepl.middleware.format/wrap-format
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect

@@ -32,6 +32,7 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                  [cider.nrepl.middleware.apropos/wrap-apropos
                   cider.nrepl.middleware.classpath/wrap-classpath
                   cider.nrepl.middleware.complete/wrap-complete
+                  cider.nrepl.middleware.debug/wrap-debug
                   cider.nrepl.middleware.format/wrap-format
                   cider.nrepl.middleware.info/wrap-info
                   cider.nrepl.middleware.inspect/wrap-inspect
@@ -90,6 +91,7 @@ Middleware        | Op(s)      | Description
 `wrap-apropos`    | `apropos`  | Pattern search for symbols and documentation.
 `wrap-classpath`  | `classpath` | Java classpath.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
+`wrap-debug`      | `init-debugger` | Establish a channel for `cider-debug` commands.
 `wrap-format`     | `format-(code/edn)` | Code and data formatting.
 `wrap-info`       | `info/eldoc` | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.

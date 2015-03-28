@@ -3,6 +3,7 @@
             [cider.nrepl.middleware.apropos]
             [cider.nrepl.middleware.classpath]
             [cider.nrepl.middleware.complete]
+            [cider.nrepl.middleware.debug]
             [cider.nrepl.middleware.format]
             [cider.nrepl.middleware.info]
             [cider.nrepl.middleware.inspect]
@@ -20,6 +21,7 @@
   '[cider.nrepl.middleware.apropos/wrap-apropos
     cider.nrepl.middleware.classpath/wrap-classpath
     cider.nrepl.middleware.complete/wrap-complete
+    cider.nrepl.middleware.debug/wrap-debug
     cider.nrepl.middleware.format/wrap-format
     cider.nrepl.middleware.info/wrap-info
     cider.nrepl.middleware.inspect/wrap-inspect
