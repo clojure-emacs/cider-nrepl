@@ -152,6 +152,7 @@ Special credit goes to the following people for their contributions:
 - Jeff Valk ([@jeffvalk](https://github.com/jeffvalk))
 - Hugo Duncan ([@hugoduncan](https://github.com/hugoduncan))
 - Michael Griffiths ([@cichli](https://github.com/cichli))
+- Artur Malabarba ([@malabarba](https://github.com/malabarba))
 
 And a big thanks to
 [all other contributors](https://github.com/clojure-emacs/cider-nrepl/graphs/contributors)
