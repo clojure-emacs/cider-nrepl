@@ -80,6 +80,51 @@
     #'t/instrument-second-arg        (list 'a (bt 'b [14]) 'c)
     #'t/instrument-two-args          (list (bt 'a [13]) (bt 'b [14]) 'c)))
 
+(deftest instrument-clauses
+  (are [exp res] (= (#'t/instrument dex exp)
+                    res)
+
+    '(cond-> value
+       v2 form
+       v3 form)
+    `(~'b (~'cond-> ~(bt 'value [13 1])
+                    ~(bt 'v2 [13 2]) ~'form
+                    ~(bt 'v3 [13 4]) ~'form)
+          ~(id [13]))
+
+    '(case value
+       const expr
+       default)
+    `(~'b (~'case ~(bt 'value [13 1])
+                  ~'const ~(bt 'expr [13 3])
+                  ~(bt 'default [13 4]))
+          ~(id [13]))
+
+    '(condp pred value
+       v4 :key v5)
+    `(~'b (~'condp ~(bt 'pred [13 1]) ~(bt 'value [13 2])
+                   ~(bt 'v4 [13 3]) :key ~(bt 'v5 [13 5]))
+          ~(id [13]))
+
+    '(condp pred value
+       v2 v3
+       default)
+    `(~'b (~'condp ~(bt 'pred [13 1]) ~(bt 'value [13 2])
+                   ~(bt 'v2 [13 3]) ~(bt 'v3 [13 4])
+                   ~(bt 'default [13 5]))
+          ~(id [13]))
+
+    '(cond
+       (= x 1) true
+       false   never
+       :else   final)
+    `(~'b
+      (~'cond (~'b (~'= ~(bt 'x [13 1 1]) 1) ~(id [13 1]))
+              true
+              false ~(bt 'never [13 4])
+              :else ~(bt 'final [13 6]))
+      ~(id [13]))))
+
 
 (deftest instrument-recur
   (is (= (#'t/instrument dex '(loop [x '(1 2)]

@@ -59,6 +59,14 @@
     defn- defn,
     fn ([name? [params*] exprs*] [name? ([params*] exprs*) +]),
 
+    ;; condp, cond, case, cond->, cond->>, all use different meanings
+    ;; for the "clause" argument. We do the best we can in the
+    ;; `specifier-map` below, but we need to override a few here too.
+    ;; case clauses are of the form-expression type.
+    case ([expr fe-clause* expr?]),
+    ;; cond-> clauses are of the expression-form type.
+    cond-> ([expr & ef-clause]),
+    cond->> cond->})
 
 (defn- macro-arglists
   "Return a list of possible arglist vectors for symbol."
@@ -201,13 +209,16 @@
                forms
                (range (count forms))))))
 
-(defn- instrument-two-args
+(defn- instrument-second-arg
   [{:keys [coor] :as ex} [form1 form2 & forms]]
-  (cons (instrument ex form1)
+  (cons form1
         (let [n (last coor)
               coor (vec (butlast coor))]
           (cons (instrument (assoc ex :coor (conj coor (inc n))) form2)
                 forms))))
+
+(def instrument-two-args
+  #(instrument-next-arg %1 (instrument-second-arg %1 %2)))
 
 (declare instrument-special-form-try)
 (def specifier-map
@@ -250,12 +261,19 @@
    "docstring" [#(when (string? (first %)) 1) instrument-nothing]
    "string"    [#(when (string? (first %)) 1) instrument-nothing]
    "map"       [#(when (map? (first %)) 1)    instrument-next-arg]
-   "clause"    [#(when (> (count %) 1) 2)     instrument-two-args]
    "fn-tail"   [#(when (vector? (first %)) (count %))
                 instrument-all-but-first-arg]
    "dispatch-fn" [(fn [[[f & r]]]
                     (when (instrument-special-form-try [] f r) 1))
-                  instrument-next-arg]})
+                  instrument-next-arg]
+   ;; Clauses are a mess. cond, condp, case, all take them to mean
+   ;; different things. And don't get me started on cond->.
+   ;; I hereby declare `clause` to mean "instrument anything".
+   "clause"    [always-1 instrument-next-arg]
+   ;; Expression-Form type clauses instrument every odd argument.
+   "ef-clause" [#(if (> (count %) 1) 2) instrument-next-arg]
+   ;; Form-Expression type clauses instrument every even argument.
+   "fe-clause" [#(if (> (count %) 1) 2) instrument-second-arg]})
 
 (defn- specifier-destructure
   "Take a symbol specifier and return a vector description.
