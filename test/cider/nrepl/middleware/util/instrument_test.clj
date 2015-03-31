@@ -81,6 +81,30 @@
     #'t/instrument-two-args          (list (bt 'a [13]) (bt 'b [14]) 'c)))
 
 
+(deftest instrument-recur
+  (is (= (#'t/instrument dex '(loop [x '(1 2)]
+                                (if (seq x)
+                                  (recur (rest x))
+                                  x)))
+         `(~'b (~'loop [~'x ~(bt ''(1 2) [13 1 1])]
+                       (~'if (~'b (~'seq ~(bt 'x [13 2 1 1]))
+                                  ~(id [13 2 1]))
+                             (~'recur (~'b (~'rest ~(bt 'x [13 2 2 1 1]))
+                                           ~(id [13 2 2 1])))
+                             ~(bt 'x [13 2 3])))
+               ~(id [13]))))
+
+  (is (= (#'t/instrument dex '(fn [x]
+                                (if (seq x)
+                                  (recur (rest x))
+                                  x)))
+         `(~'fn [~'x]
+                (~'if (~'b (~'seq ~(bt 'x [13 2 1 1]))
+                           ~(id [13 2 1]))
+                      (~'recur (~'b (~'rest ~(bt 'x [13 2 2 1 1]))
+                                    ~(id [13 2 2 1])))
+                      ~(bt 'x [13 2 3]))))))
+
 (deftest specifier-match-bindings
   (are [f] (= 1 (#'t/specifier-match-bindings f))
     '([] sherlock)

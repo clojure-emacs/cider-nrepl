@@ -59,11 +59,6 @@
     defn- defn,
     fn ([name? [params*] exprs*] [name? ([params*] exprs*) +]),
 
-    ;; This should be ([bindings & expr]), but we're not allowed to
-    ;; put a breakpoint around a `recur`. There might be an
-    ;; appropriate way to do this more carefully, but for now we just
-    ;; don't instrument the body of a `loop`.
-    loop ([bindings & form])})
 
 (defn- macro-arglists
   "Return a list of possible arglist vectors for symbol."
@@ -462,6 +457,24 @@
   ([form ex]
    `(~(:breakfunction ex) ~form ~ex)))
 
+(defn- contains-recur?
+  "Return true if form is not a `loop` and a `recur` is found in it."
+  [form]
+  (if (listy? form)
+    (condp = (first form)
+      'recur true
+      'loop  false
+      (some contains-recur? (rest form)))))
+
+(defn- dont-break?
+  "Return true if it's NOT ok to wrap form in a breakpoint.
+  Expressions we don't want to wrap are those containing a `recur`
+  form, and those whose `name` is contained in
+  `irrelevant-return-value-macros`."
+  [form]
+  (or (irrelevant-return-value-macros name)
+      (contains-recur? form)))
+
 (defn- instrument-function-like-form
   "Instrument form representing a function/macro call or special-form."
   [ex [name & args :as form]]
@@ -469,7 +482,7 @@
     (let [name (or (ns-resolve *ns* name) name)]
       (if (or (resolve-special name)
               (:macro (meta name)))
-        (if (irrelevant-return-value-macros name)
+        (if (dont-break? form)
           (instrument-special-form ex form)
           (with-break instrument-special-form form ex))
         (with-break instrument-coll form ex)))
