@@ -44,27 +44,42 @@
 
 (deftest always-1
   (are [a] (= (#'t/always-1 a) 1)
-    '[+ 1 2 3 4] '(+ 1 2 3 4)
-    '([& expr]) '([test & body])
+    '[+ 1 2 3 4]
+    '(+ 1 2 3 4)
+    '([& expr])
+    '([test & body])
     'pikachu
     "Charizard"
     :Blastoise))
 
 ;;; Dummy ex
 (def dex {:coor [13] :breakfunction 'b})
+(defn- id [v] (assoc dex :coor v))
+(defmacro bt [form vec]
+  `'(~'b ~(eval form) ~(id vec)))
 
 (deftest instrument-nothing
-  (are [a b] (= (#'t/instrument-nothing '{:coor a} b) b)
+  (are [a b] (= (#'t/instrument-nothing dex b) b)
     '[+ 1 2 3 4] '(+ 1 2 3 4)
-    '([& expr]) '([test & body])
-    'pikachu "Charizard"
-    :Blastoise :Magikarp))
+    '([& expr])  '([test & body])
+    'pikachu     "Charizard"
+    :Blastoise   :Magikarp))
 
 (deftest instrument-map
   (is (= (#'t/instrument-map dex '{:a 1, (name :b) (inc 2)})
-         '{:a 1,
-           (b (name :b) {:breakfunction b, :coor [13 2]})
-           (b (inc 2) {:breakfunction b, :coor [13 3]})})))
+         {:a 1,
+          (bt '(name :b) [13 2])
+          (bt '(inc 2) [13 3])})))
+
+(deftest instrument-basics
+  (are [f o] (= (f dex '(a b c)) o)
+    #'t/instrument-all-args          (list (bt 'a [13]) (bt 'b [14]) (bt 'c [15]))
+    #'t/instrument-next-arg          (list (bt 'a [13]) 'b 'c)
+    #'t/instrument-nothing           (list 'a 'b 'c)
+    #'t/instrument-all-but-first-arg (list 'a (bt 'b [14]) (bt 'c [15]))
+    #'t/instrument-second-arg        (list 'a (bt 'b [14]) 'c)
+    #'t/instrument-two-args          (list (bt 'a [13]) (bt 'b [14]) 'c)))
+
 
 (deftest specifier-match-bindings
   (are [f] (= 1 (#'t/specifier-match-bindings f))
