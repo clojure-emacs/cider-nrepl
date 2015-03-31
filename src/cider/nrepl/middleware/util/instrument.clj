@@ -234,11 +234,12 @@
   if the matcher returned nil."
 
   {;; Safe to instrument
-   "else" [always-1 instrument-next-arg]
    "expr" [always-1 instrument-next-arg]
+   "init" [always-1 instrument-next-arg]
    "pred" [always-1 instrument-next-arg]
-   "then" [always-1 instrument-next-arg]
    "test" [always-1 instrument-next-arg]
+   "then" [always-1 instrument-next-arg]
+   "else" [always-1 instrument-next-arg]
    ;; Match everything.
    "body" [count instrument-all-args]
    ;; Not safe or not meant to be instrumented
@@ -246,6 +247,7 @@
    "oldform" [always-1 instrument-nothing]
    "params"  [always-1 instrument-nothing]
    "name"    [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
+   "symbol"  [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
    ;; Complicated
    "bindings" [specifier-match-bindings
                (fn [ex [bindings & forms]]
@@ -282,6 +284,7 @@
           (if (.endsWith spec-name "s")
             (subs spec-name 0 (dec (count spec-name)))
             (str spec-name "s")))
+         (and (.endsWith spec-name "-symbol") (specifier-map "symbol"))
          (and (.endsWith spec-name "-string") (specifier-map "string"))
          (and (.endsWith spec-name "-map") (specifier-map "map"))
          [always-1 instrument-nothing])
