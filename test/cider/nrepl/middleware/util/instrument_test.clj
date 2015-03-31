@@ -26,12 +26,12 @@
 
 (deftest macro-arglists
   (are [s a] (= (#'t/macro-arglists s) a)
-    'if '([& expr])
+    'if   '([test then else?])
     'when '([test & body])
-    'let '([bindings & body])
+    'let  '([bindings & body])
     'defn '([name doc-string? attr-map? [params*] prepost-map? body]
             [name doc-string? attr-map? ([params*] prepost-map? body) + attr-map?])
-    'def '([form doc-string? expr?])))
+    'def  '([symbol doc-string? init?])))
 
 (deftest reorder-+
   (are [a b] (= (#'t/reorder-+ a) b)

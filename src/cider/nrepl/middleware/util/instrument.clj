@@ -45,18 +45,25 @@
   Used only for the purposed of instrumenting on special symbols which
   don't have arglists (such as `if` or `try`), or for macros whose
   usual arglist we wouldn't understand.
-  
+
   This can also be used to disable instrumenting of a form by setting
   its arglist to ([]).
 
   Finally, if the key's value is a symbol, it is taken as an alias and
   we use this symbol's arglist."
-  
-  '{if ([& expr])
-    try ([])
-    def ([form doc-string? expr?])
-    defn- defn
-    fn ([name? [params*] exprs*] [name? ([params*] exprs*) +])})
+
+  '{;; Possible in theory, but not supported yet.
+    try ([& form]),
+
+    ;; More sophisticated cases with badly written arglists.
+    defn- defn,
+    fn ([name? [params*] exprs*] [name? ([params*] exprs*) +]),
+
+    ;; This should be ([bindings & expr]), but we're not allowed to
+    ;; put a breakpoint around a `recur`. There might be an
+    ;; appropriate way to do this more carefully, but for now we just
+    ;; don't instrument the body of a `loop`.
+    loop ([bindings & form])})
 
 (defn- macro-arglists
   "Return a list of possible arglist vectors for symbol."
@@ -68,8 +75,15 @@
     (let [metadata (if (var? symbol)
                      (meta symbol)
                      (info-clj (ns-name *ns*) symbol))]
+      ;; :debugspec let's people define their own macros in a way we
+      ;; can instrument it (if they don't want to use the arglist).
       (or (:debugspec metadata)
-          (:arglists metadata)))))
+          ;; Then we look for an arglist.
+          (:arglists metadata)
+          ;; If it doesn't have an arglist, it's probably a special
+          ;; form. Try to construct an arglist from :forms.
+          (map (comp vec rest)
+               (filter seq? (:forms metadata)))))))
 
 ;;; Because of the way we handle arglists, we need the modifiers such
 ;;; as + or & to come before the argument they're affecting. That's
