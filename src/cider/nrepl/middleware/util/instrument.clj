@@ -45,18 +45,28 @@
   Used only for the purposed of instrumenting on special symbols which
   don't have arglists (such as `if` or `try`), or for macros whose
   usual arglist we wouldn't understand.
-  
+
   This can also be used to disable instrumenting of a form by setting
   its arglist to ([]).
 
   Finally, if the key's value is a symbol, it is taken as an alias and
   we use this symbol's arglist."
-  
-  '{if ([& expr])
-    try ([])
-    def ([form doc-string? expr?])
-    defn- defn
-    fn ([name? [params*] exprs*] [name? ([params*] exprs*) +])})
+
+  '{;; Possible in theory, but not supported yet.
+    try ([& form]),
+
+    ;; More sophisticated cases with badly written arglists.
+    defn- defn,
+    fn ([name? [params*] exprs*] [name? ([params*] exprs*) +]),
+
+    ;; condp, cond, case, cond->, cond->>, all use different meanings
+    ;; for the "clause" argument. We do the best we can in the
+    ;; `specifier-map` below, but we need to override a few here too.
+    ;; case clauses are of the form-expression type.
+    case ([expr fe-clause* expr?]),
+    ;; cond-> clauses are of the expression-form type.
+    cond-> ([expr & ef-clause]),
+    cond->> cond->})
 
 (defn- macro-arglists
   "Return a list of possible arglist vectors for symbol."
@@ -68,8 +78,15 @@
     (let [metadata (if (var? symbol)
                      (meta symbol)
                      (info-clj (ns-name *ns*) symbol))]
+      ;; :debugspec let's people define their own macros in a way we
+      ;; can instrument it (if they don't want to use the arglist).
       (or (:debugspec metadata)
-          (:arglists metadata)))))
+          ;; Then we look for an arglist.
+          (:arglists metadata)
+          ;; If it doesn't have an arglist, it's probably a special
+          ;; form. Try to construct an arglist from :forms.
+          (map (comp vec rest)
+               (filter seq? (:forms metadata)))))))
 
 ;;; Because of the way we handle arglists, we need the modifiers such
 ;;; as + or & to come before the argument they're affecting. That's
@@ -192,13 +209,16 @@
                forms
                (range (count forms))))))
 
-(defn- instrument-two-args
+(defn- instrument-second-arg
   [{:keys [coor] :as ex} [form1 form2 & forms]]
-  (cons (instrument ex form1)
+  (cons form1
         (let [n (last coor)
               coor (vec (butlast coor))]
           (cons (instrument (assoc ex :coor (conj coor (inc n))) form2)
                 forms))))
+
+(def instrument-two-args
+  #(instrument-next-arg %1 (instrument-second-arg %1 %2)))
 
 (declare instrument-special-form-try)
 (def specifier-map
@@ -220,11 +240,12 @@
   if the matcher returned nil."
 
   {;; Safe to instrument
-   "else" [always-1 instrument-next-arg]
    "expr" [always-1 instrument-next-arg]
+   "init" [always-1 instrument-next-arg]
    "pred" [always-1 instrument-next-arg]
-   "then" [always-1 instrument-next-arg]
    "test" [always-1 instrument-next-arg]
+   "then" [always-1 instrument-next-arg]
+   "else" [always-1 instrument-next-arg]
    ;; Match everything.
    "body" [count instrument-all-args]
    ;; Not safe or not meant to be instrumented
@@ -232,6 +253,7 @@
    "oldform" [always-1 instrument-nothing]
    "params"  [always-1 instrument-nothing]
    "name"    [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
+   "symbol"  [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
    ;; Complicated
    "bindings" [specifier-match-bindings
                (fn [ex [bindings & forms]]
@@ -239,12 +261,19 @@
    "docstring" [#(when (string? (first %)) 1) instrument-nothing]
    "string"    [#(when (string? (first %)) 1) instrument-nothing]
    "map"       [#(when (map? (first %)) 1)    instrument-next-arg]
-   "clause"    [#(when (> (count %) 1) 2)     instrument-two-args]
    "fn-tail"   [#(when (vector? (first %)) (count %))
                 instrument-all-but-first-arg]
    "dispatch-fn" [(fn [[[f & r]]]
                     (when (instrument-special-form-try [] f r) 1))
-                  instrument-next-arg]})
+                  instrument-next-arg]
+   ;; Clauses are a mess. cond, condp, case, all take them to mean
+   ;; different things. And don't get me started on cond->.
+   ;; I hereby declare `clause` to mean "instrument anything".
+   "clause"    [always-1 instrument-next-arg]
+   ;; Expression-Form type clauses instrument every odd argument.
+   "ef-clause" [#(if (> (count %) 1) 2) instrument-next-arg]
+   ;; Form-Expression type clauses instrument every even argument.
+   "fe-clause" [#(if (> (count %) 1) 2) instrument-second-arg]})
 
 (defn- specifier-destructure
   "Take a symbol specifier and return a vector description.
@@ -268,6 +297,7 @@
           (if (.endsWith spec-name "s")
             (subs spec-name 0 (dec (count spec-name)))
             (str spec-name "s")))
+         (and (.endsWith spec-name "-symbol") (specifier-map "symbol"))
          (and (.endsWith spec-name "-string") (specifier-map "string"))
          (and (.endsWith spec-name "-map") (specifier-map "map"))
          [always-1 instrument-nothing])
@@ -445,6 +475,24 @@
   ([form ex]
    `(~(:breakfunction ex) ~form ~ex)))
 
+(defn- contains-recur?
+  "Return true if form is not a `loop` and a `recur` is found in it."
+  [form]
+  (if (listy? form)
+    (condp = (first form)
+      'recur true
+      'loop  false
+      (some contains-recur? (rest form)))))
+
+(defn- dont-break?
+  "Return true if it's NOT ok to wrap form in a breakpoint.
+  Expressions we don't want to wrap are those containing a `recur`
+  form, and those whose `name` is contained in
+  `irrelevant-return-value-macros`."
+  [form]
+  (or (irrelevant-return-value-macros name)
+      (contains-recur? form)))
+
 (defn- instrument-function-like-form
   "Instrument form representing a function/macro call or special-form."
   [ex [name & args :as form]]
@@ -452,7 +500,7 @@
     (let [name (or (ns-resolve *ns* name) name)]
       (if (or (resolve-special name)
               (:macro (meta name)))
-        (if (irrelevant-return-value-macros name)
+        (if (dont-break? form)
           (instrument-special-form ex form)
           (with-break instrument-special-form form ex))
         (with-break instrument-coll form ex)))

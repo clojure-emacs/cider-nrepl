@@ -35,7 +35,7 @@
    (:transport @debugger-message)
    (response-for @debugger-message
                  (assoc extras
-                        :value (pr-str value)
+                        :debug-value (pr-str value)
                         :breakfunction nil)))
   ;; Send the actual break.
   (binding [*out* (new java.io.StringWriter)]
