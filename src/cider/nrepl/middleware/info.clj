@@ -266,7 +266,7 @@
 
 (set-descriptor!
  #'wrap-info
- (cljs/maybe-piggieback
+ (cljs/requires-piggieback
   {:handles
    {"info"
     {:doc "Return a map of information about the specified symbol."

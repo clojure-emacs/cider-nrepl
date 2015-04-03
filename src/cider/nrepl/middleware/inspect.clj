@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.inspect
-  (:require [cider.nrepl.middleware.util.inspect :as inspect]
+  (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.inspect :as inspect]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
@@ -16,7 +17,8 @@
 
 (defn inspect-reply
   [{:keys [transport] :as msg} eval-response]
-  (let [inspector (swap-inspector! msg inspect/start (:value eval-response))]
+  (let [value (cljs/response-value msg eval-response)
+        inspector (swap-inspector! msg inspect/start value)]
     (transport/send
      transport
      (response-for msg :value (:rendered inspector)))))
@@ -80,8 +82,9 @@
 
 (set-descriptor!
  #'wrap-inspect
- {:requires #{"clone" #'pr-values}
-  :expects #{"eval"}
-  :handles {"inspect-pop" {}
-            "inspect-push" {}
-            "inspect-refresh" {}}})
+ (cljs/expects-piggieback
+  {:requires #{"clone" #'pr-values}
+   :expects #{"eval"}
+   :handles {"inspect-pop" {}
+             "inspect-push" {}
+             "inspect-refresh" {}}}))
