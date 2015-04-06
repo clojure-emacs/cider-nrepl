@@ -1,5 +1,8 @@
 language: clojure
 sudo: false
+cache:
+  directories:
+    - $HOME/.m2
 script:
   - lein2 test
   - lein2 with-profile +1.5 test
