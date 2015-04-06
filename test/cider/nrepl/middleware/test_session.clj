@@ -11,7 +11,7 @@
   [f]
   (with-open [server (server/start-server :handler cider-nrepl-handler)
               transport (nrepl/connect :port (:port server))]
-    (let [client (nrepl/client transport 1000)]
+    (let [client (nrepl/client transport Long/MAX_VALUE)]
       (binding [*session* (nrepl/client-session client)]
         (f)))))
 
