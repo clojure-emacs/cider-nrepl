@@ -1,4 +1,5 @@
 language: clojure
+sudo: false
 script:
   - lein2 test
   - lein2 with-profile +1.5 test
