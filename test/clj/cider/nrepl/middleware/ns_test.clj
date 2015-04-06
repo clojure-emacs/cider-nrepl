@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.ns-test
-  (:require [cider.nrepl.middleware.test-transport :refer [messages test-transport]]
-            [cider.nrepl.middleware.test-session :as session]
-            [cider.nrepl.middleware.ns :refer [ns-list-clj ns-vars-clj]]
+  (:require [cider.nrepl.middleware.ns :refer [ns-list-clj ns-vars-clj]]
+            [cider.nrepl.test-session :as session]
+            [cider.nrepl.test-transport :refer [messages test-transport]]
             [clojure.test :refer :all]))
 
 (deftest test-toogle-ns-list

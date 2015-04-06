@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require [cider.nrepl.middleware.util.inspect :as inspect]
-            [cider.nrepl.middleware.test-session :as session]
+            [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
 (def nil-result ["(\"nil\" (:newline))"])

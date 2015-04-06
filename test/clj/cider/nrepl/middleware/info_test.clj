@@ -19,7 +19,7 @@
          java.net.URL))
   (is (= (class (file "clojure-1.5.1.jar:clojure/core.clj"))
          java.net.URL))
-  (is (= (class (file "test/cider/nrepl/middleware/info_test.clj"))
+  (is (= (class (file "test/clj/cider/nrepl/middleware/info_test.clj"))
          java.net.URL))
   (is (relative "clojure/core.clj"))
   (is (nil? (relative "notclojure/core.clj"))))

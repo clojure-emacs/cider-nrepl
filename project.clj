@@ -20,6 +20,7 @@
                  [org.clojure/tools.trace "0.7.8"]
                  [org.clojure/tools.reader "0.8.13"]]
   :exclusions [org.clojure/clojure]
+  :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
@@ -52,11 +53,21 @@
                    :injections [~VERSION-FORM]}
 
              :test {:resource-paths ["test/resources"]}
+             :test-clj {:test-paths ["test/clj"]}
+             :test-cljs {:test-paths ["test/cljs"]
+                         :dependencies [[com.cemerick/piggieback "0.2.0"]]}
+
+             :coveralls {:plugins [[lein-cloverage "1.0.2"]
+                                   [lein-shell "0.4.0"]]
+                         :aliases {"coveralls" ["do" "cloverage" "--coveralls,"
+                                                "shell" "curl" "-F"
+                                                "json_file=@target/coverage/coveralls.json"
+                                                "https://coveralls.io/api/v1/jobs"]}}
+
              :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha6"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.1.10"]]}
-             :cloverage {:plugins [[lein-cloverage "1.0.2"]]}
              :eastwood {:plugins [[jonase/eastwood "0.2.1"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})

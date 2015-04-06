@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.pprint-test
-  (:require [cider.nrepl.middleware.test-session :as session]
+  (:require [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
 (use-fixtures :once session/session-fixture)
