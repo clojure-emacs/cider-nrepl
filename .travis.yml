@@ -5,7 +5,7 @@ script:
   - lein2 with-profile +1.6 test
   - lein2 with-profile +1.7 test
   - lein2 with-profile +cljfmt cljfmt check
-#  - lein2 with-profile +eastwood eastwood
+  - lein2 with-profile +eastwood eastwood
   - lein2 with-profile +cloverage cloverage --coveralls
   - curl -F 'json_file=@target/coverage/coveralls.json' 'https://coveralls.io/api/v1/jobs'
 jdk:

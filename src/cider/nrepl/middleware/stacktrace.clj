@@ -159,7 +159,7 @@
   info for the most recent exception."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (and (= "stacktrace" op))
+    (if (= "stacktrace" op)
       (wrap-stacktrace-reply msg)
       (handler msg))))
 
