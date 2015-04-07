@@ -144,6 +144,38 @@ Before submitting a patch or a pull request make sure all tests are
 passing and that your patch is in line with the [contribution
 guidelines](CONTRIBUTING.md).
 
+### Working with mranderson (inlining dependencies)
+
+[mranderson](https://github.com/benedekfazekas/mranderson) is used to avoid classpath collisions.
+
+To work with `mranderson` the first thing to do is:
+
+`lein do clean, source-deps`
+
+This creates the munged local dependencies in `target/srcdeps` directory.
+
+After that you can run your tests or your REPL with:
+
+`lein with-profile +plugin.mranderson/config repl`
+
+`lein with-profile +plugin.mranderson/config test`
+
+Note the plus sign before the leiningen profile. For this leiningen profile to work **you need leiningen version 2.5.0+!** If you want to use `mranderson` while developing locally with the REPL the source has to be modified in the `target/srcdeps` directory. When you want to release locally:
+
+`lein with-profile plugin.mranderson/config install`
+
+Release to clojars:
+
+`lein with-profile plugin.mranderson/config deploy clojars`
+
+Or you can use the very sophisticated script to clean, inline, test and run an end target like install or deploy:
+
+`./build.sh install`
+
+`./build.sh deploy clojars`
+
+[build.sh](build.sh) cleans, runs source-deps with the right parameters, runs the tests and then runs the provided lein target.
+
 ## Hall of Fame
 
 Special credit goes to the following people for their contributions:

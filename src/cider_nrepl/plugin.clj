@@ -5,7 +5,7 @@
 ;; Keep in sync with VERSION-FORM in project.clj
 (defn- version
   []
-  (let [v (-> (io/resource "META-INF/leiningen/cider/cider-nrepl/project.clj")
+  (let [v (-> (io/resource "cider/cider-nrepl/project.clj")
               slurp
               read-string
               (nth 2))]

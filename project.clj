@@ -1,26 +1,24 @@
 (def VERSION "0.9.0-SNAPSHOT")
 
-(def VERSION-FORM `(do (require 'cider-nrepl.plugin)
-                       (alter-var-root #'cider-nrepl.plugin/version
-                                       (constantly (constantly ~VERSION)))))
-
 (defproject cider/cider-nrepl VERSION
   :description "nREPL middlewares for CIDER"
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[compliment "0.2.1-SNAPSHOT"]
-                 [cljs-tooling "0.1.5-SNAPSHOT"]
-                 [debugger "0.1.7"]
-                 [cljfmt "0.1.10"]
-                 [org.tcrawley/dynapath "0.2.3"]
+  :dependencies [^:source-dep [compliment "0.2.1-SNAPSHOT"]
+                 ^:source-dep [cljs-tooling "0.1.5-SNAPSHOT"]
+                 ^:source-dep [debugger "0.1.7"]
+                 ^:source-dep [cljfmt "0.1.10"]
+                 ^:source-dep [org.tcrawley/dynapath "0.2.3"]
                  [org.clojure/tools.nrepl "0.2.10"]
-                 [org.clojure/java.classpath "0.2.2"]
-                 [org.clojure/tools.namespace "0.2.10"]
-                 [org.clojure/tools.trace "0.7.8"]
-                 [org.clojure/tools.reader "0.9.1"]]
+                 ^:source-dep [org.clojure/java.classpath "0.2.2"]
+                 ^:source-dep [org.clojure/tools.namespace "0.2.10"]
+                 ^:source-dep [org.clojure/tools.trace "0.7.8"]
+                 ^:source-dep [org.clojure/tools.reader "0.9.1"]]
   :exclusions [org.clojure/clojure]
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
+  :plugins [[thomasa/mranderson "0.4.3"]]
+  :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
@@ -49,8 +47,7 @@
                                   [org.clojure/clojure "1.5.2-SNAPSHOT"
                                    :classifier "sources"]
                                   [org.clojure/clojure "1.5.1"
-                                   :classifier "javadoc"]]
-                   :injections [~VERSION-FORM]}
+                                   :classifier "javadoc"]]}
 
              :test {:resource-paths ["test/resources"]}
              :test-clj {:test-paths ["test/clj"]}
