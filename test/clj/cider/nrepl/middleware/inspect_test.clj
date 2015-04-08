@@ -1,11 +1,11 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require [cider.nrepl.middleware.util.inspect :as inspect]
-            [cider.nrepl.middleware.test-session :as session]
+            [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
 (def nil-result ["(\"nil\" (:newline))"])
 
-(def var-result ["(\"Class\" \": \" (:value \"clojure.lang.Var\" 0) (:newline) \"Meta Information: \" (:newline) \"  \" (:value \":added\" 1) \" = \" (:value \"\\\"1.0\\\"\" 2) (:newline) \"  \" (:value \":tag\" 3) \" = \" (:value \"clojure.lang.Agent\" 4) (:newline) \"  \" (:value \":ns\" 5) \" = \" (:value \"clojure.core\" 6) (:newline) \"  \" (:value \":name\" 7) \" = \" (:value \"*agent*\" 8) (:newline) \"  \" (:value \":doc\" 9) \" = \" (:value \"\\\"The agent currently running an action on this thread, else nil\\\"\" 10) (:newline) \"Value: \" (:value \"\" 11))"])
+(def var-result ["(\"Class\" \": \" (:value \"clojure.lang.Var\" 0) (:newline) \"Meta Information: \" (:newline) \"  \" (:value \":ns\" 1) \" = \" (:value \"clojure.core\" 2) (:newline) \"  \" (:value \":name\" 3) \" = \" (:value \"*assert*\" 4) (:newline) \"Value: \" (:value \"true\" 5))"])
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
@@ -63,7 +63,7 @@
 (deftest inspect-var-test
   (testing "rendering a var"
     (is (= var-result
-           (-> #'*agent*
+           (-> #'*assert*
                inspect
                render)))))
 
@@ -159,7 +159,7 @@
     (is (= var-result
            (:value (session/message {:op "eval"
                                      :inspect "true"
-                                     :code "#'*agent*"}))))))
+                                     :code "#'*assert*"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"

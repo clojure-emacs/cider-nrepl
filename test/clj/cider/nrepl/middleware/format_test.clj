@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.format-test
   (:require [cider.nrepl.middleware.format :refer :all]
-            [cider.nrepl.middleware.test-transport :refer :all]
+            [cider.nrepl.test-transport :refer :all]
             [clojure.test :refer :all]))
 
 (def ugly-code

@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.undef-test
-  (:require [cider.nrepl.middleware.test-session :as session]
+  (:require [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)

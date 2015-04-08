@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.classpath-test
   (:require [cider.nrepl.middleware.classpath :refer :all]
-            [cider.nrepl.middleware.test-transport :refer :all]
+            [cider.nrepl.test-transport :refer :all]
             [clojure.test :refer :all]))
 
 (deftest test-classpath-op

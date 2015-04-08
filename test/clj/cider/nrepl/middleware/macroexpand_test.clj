@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.macroexpand-test
   (:require [cider.nrepl.middleware.macroexpand :refer :all]
-            [cider.nrepl.middleware.test-transport :refer :all]
+            [cider.nrepl.test-transport :refer :all]
             [clojure.set :as set]
             [clojure.string]
             [clojure.test :refer :all]))

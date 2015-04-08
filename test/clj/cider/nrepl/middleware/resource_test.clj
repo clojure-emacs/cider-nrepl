@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.resource-test
   (:require [cider.nrepl.middleware.resource :refer :all]
-            [cider.nrepl.middleware.test-transport :refer :all]
+            [cider.nrepl.test-transport :refer :all]
             [clojure.test :refer :all]))
 
 (deftest test-resource-op

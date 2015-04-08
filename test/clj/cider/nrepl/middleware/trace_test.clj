@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.trace-test
-  (:require [cider.nrepl.middleware.test-transport :refer :all]
+  (:require [cider.nrepl.test-transport :refer :all]
             [cider.nrepl.middleware.trace :refer :all]
             [clojure.test :refer :all]))
 
