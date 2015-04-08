@@ -18,7 +18,7 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.clojure/tools.namespace "0.2.10"]
                  [org.clojure/tools.trace "0.7.8"]
-                 [org.clojure/tools.reader "0.8.13"]]
+                 [org.clojure/tools.reader "0.8.16"]]
   :exclusions [org.clojure/clojure]
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
