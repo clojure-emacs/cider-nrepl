@@ -3,6 +3,8 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [cider.nrepl.middleware.util.instrument :refer [instrument]]
+            [debugger.time :as t]
+            [debugger.config :as c]
             [debugger.core :refer [break]]))
 
 ;;;; ## Interaction with the client
@@ -28,18 +30,26 @@
   "Send value and coordinates to the client through the debug channel.
   Sends a response to the message stored in debugger-message."
   [value extras]
-  ;; Notify cider that a (break) is incoming, along with the value of
-  ;; the instrumented sexp and instructions on how to find it in the
-  ;; code.
-  (transport/send
-   (:transport @debugger-message)
-   (response-for @debugger-message
-                 (assoc extras
-                        :debug-value (pr-str value)
-                        :breakfunction nil)))
-  ;; Send the actual break.
-  (binding [*out* (new java.io.StringWriter)]
-    (break value)))
+  ;; If the user has recently replied (quit) to a `break` statement,
+  ;; then debugger will not ask for input. Therefore, have to avoid
+  ;; sending the following message in these cases.
+  (if (->> (t/now) (t/interval @c/*last-quit-at*) t/in-seconds (< c/*skip-repl-if-last-quit-ago*))
+    ;; TODO: If clj-debugger makes the `read` call in `read-fn`
+    ;; configurable (perhaps with a dynamic variable) we would have to
+    ;; divide our breakpoint into two messages.
+    (do (transport/send
+         (:transport @debugger-message)
+         (response-for @debugger-message
+                       (assoc extras
+                              :debug-value (pr-str value)
+                              :breakfunction nil)))
+        ;; Send the actual break.
+        (binding [*out* (new java.io.StringWriter)]
+          (break value)))
+    ;; Notify cider that a (break) is incoming, along with the value
+    ;; of the instrumented sexp and instructions on how to find it in
+    ;; the code.
+    value))
 
 (defn instrument-and-eval
   "Instrument form and evaluate the result.
