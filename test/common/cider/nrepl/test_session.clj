@@ -19,3 +19,15 @@
 (defn message
   [msg]
   (nrepl/combine-responses (nrepl/message *session* msg)))
+
+(use-fixtures :each session-fixture)
+
+(deftest sanity
+  (testing "eval works"
+    (is (= ["(true false true false true false)"]
+           (:value (message {:op :eval
+                             :code (nrepl/code (map even? (range 6)))})))))
+
+  (testing "unsupported op"
+    (is (= #{"error" "unknown-op" "done"}
+           (:status (message {:op "abcdefg"}))))))
