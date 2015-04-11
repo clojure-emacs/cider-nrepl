@@ -55,7 +55,8 @@
              :test {:resource-paths ["test/resources"]}
              :test-clj {:test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[com.cemerick/piggieback "0.2.0"]]}
+                         :dependencies [[com.cemerick/piggieback "0.2.0"]
+                                        [org.clojure/clojurescript "0.0-3196"]]}
 
              :coveralls {:plugins [[lein-cloverage "1.0.2"]
                                    [lein-shell "0.4.0"]]
