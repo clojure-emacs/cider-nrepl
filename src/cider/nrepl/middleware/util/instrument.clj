@@ -13,9 +13,9 @@
 (def irrelevant-return-value-macros
   "Set of macros whose return value we don't care about.
   When instrumenting, these will not be wrapped in a breakpoint."
-  #{#'defn- #'defn 'def #'fn 'fn*
-    #'defmacro #'defmethod #'defmulti
-    #'definline #'definterface})
+  #{'defn- 'defn 'def 'fn 'fn*
+    'defmacro 'defmethod 'defmulti
+    'definline 'definterface})
 
 ;;; We'll probably want to expand this variable. It is used to
 ;;; determine uninteresting symbols.
@@ -489,7 +489,7 @@
   Expressions we don't want to wrap are those containing a `recur`
   form, and those whose `name` is contained in
   `irrelevant-return-value-macros`."
-  [form]
+  [[name :as form]]
   (or (irrelevant-return-value-macros name)
       (contains-recur? form)))
 

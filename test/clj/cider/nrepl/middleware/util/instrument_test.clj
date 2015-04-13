@@ -3,6 +3,25 @@
             [clojure.repl :as repl]
             [cider.nrepl.middleware.util.instrument :as t]))
 
+(deftest dont-break?
+  (are [x] (#'t/dont-break? x)
+    '(defn name "" [] (inc 2))
+    '(defn-)
+    '(def)
+    '(fn)
+    '(fn*)
+    '(defmacro)
+    '(defmethod)
+    '(defmulti)
+    '(definline)
+    '(definterface))
+  (are [x] (#'t/dont-break? x)
+    '(if 1 (recur (inc 2)) 0))
+  (are [x] (not (#'t/dont-break? x))
+    '(loop [] (if 1 (recur (inc 2)) 0))
+    '(inc 1)
+    '(inc 2)))
+
 (deftest listy?
   (are [x] (#'t/listy? x)
     '()
