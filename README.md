@@ -66,14 +66,19 @@ server with CIDER's own nREPL handler.
   (nrepl-server/start-server :port 7888 :handler cider-nrepl-handler))
 ```
 
-### With Immutant
-Using the advanced features of the `info` middleware with WildFly/Immutant
-requires a tweek, since JBoss modules prevent modifications to `AppClassLoader`
-(usually the highest modifiable classloader) from being seen by application
-code. To work around this, run the following code from within your
-WildFly/Immutant container to mark that classloader as unmodifiable, and cause
-the lower level `clojure.lang.DynamicClassLoader` to be used instead. This code
-must execute prior to loading the `cider-nrepl` middleware.
+### With JBoss AS/JBoss EAP/WildFly
+
+Using the advanced features of the `info` middleware with one of the
+JBoss application servers requires a tweak, since JBoss modules
+prevent modifications to `AppClassLoader` (usually the highest
+modifiable classloader) from being seen by application code. To work
+around this, run the following code from within your application
+to mark that classloader as unmodifiable, and cause the lower level
+`clojure.lang.DynamicClassLoader` to be used instead. This code must
+execute prior to loading the `cider-nrepl` middleware. Note that this
+is only if you are deploying a standard WAR file to the application
+server directly. If you are using [Immutant](http://immutant.org/)
+(1.x or 2.x), you won't need to do this.
 
 ```clj
 (require '[dynapath.dynamic-classpath :as cp])
@@ -84,6 +89,8 @@ must execute prior to loading the `cider-nrepl` middleware.
     :classpath-urls #(seq (.getURLs %))
     :can-add? (constantly false)))
 ```
+
+
 ## Supplied nREPL middleware
 
 Middleware        | Op(s)      | Description
