@@ -5,12 +5,12 @@
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [^:source-dep [compliment "0.2.1-SNAPSHOT"]
+  :dependencies [[org.clojure/tools.nrepl "0.2.10"]
+                 ^:source-dep [compliment "0.2.1-SNAPSHOT"]
                  ^:source-dep [cljs-tooling "0.1.5-SNAPSHOT"]
                  ^:source-dep [debugger "0.1.7"]
                  ^:source-dep [cljfmt "0.1.10"]
                  ^:source-dep [org.tcrawley/dynapath "0.2.3"]
-                 [org.clojure/tools.nrepl "0.2.10"]
                  ^:source-dep [org.clojure/java.classpath "0.2.2"]
                  ^:source-dep [org.clojure/tools.namespace "0.2.10"]
                  ^:source-dep [org.clojure/tools.trace "0.7.8"]
