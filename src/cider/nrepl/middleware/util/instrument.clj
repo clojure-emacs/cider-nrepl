@@ -1,4 +1,6 @@
 (ns cider.nrepl.middleware.util.instrument
+  "Generic instrumentation for clojure code"
+  {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.info :refer [resolve-special info-clj]]))
 
 ;;;; # Instrumentation
@@ -473,7 +475,10 @@
   ([function form ex]
    (with-break (function ex form) ex))
   ([form ex]
-   `(~(:breakfunction ex) ~form ~ex)))
+   (if (seq (:coor ex))
+     `(~(:breakfunction ex) ~form ~ex)
+     ;; Top-level sexps are rarely interesting.
+     form)))
 
 (defn- contains-recur?
   "Return true if form is not a `loop` and a `recur` is found in it."
@@ -518,11 +523,9 @@
     symbol? (if (interesting-symbol? form)
               (with-break form ex)
               form)
-    ;; We just can't walk through a set, as the order is unstable.
+    ;; We just can't walk through a set or a map, as the order is unstable.
     set? (with-break form ex)
-    ;; TODO: Maps are written as a line but walked as a table. They'll
-    ;; need their own function to instrument.
-    map? (instrument-map ex form)
+    map? (with-break form ex)
     ;; Other coll types are safe, so we go inside them and only
     ;; instrument what's interesting.
     ;; Do we also need to check for seq?
