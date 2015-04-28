@@ -39,6 +39,7 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.ns/wrap-ns
                   cider.nrepl.middleware.pprint/wrap-pprint
+                  cider.nrepl.middleware.refresh/wrap-refresh
                   cider.nrepl.middleware.resource/wrap-resource
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
                   cider.nrepl.middleware.test/wrap-test
@@ -105,6 +106,7 @@ Middleware        | Op(s)      | Description
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars` | Namespace browsing.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation.
+`wrap-refresh`    | `refresh/refresh-all` | Code reloading.
 `wrap-resource`   | `resource` | Return resource path.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
