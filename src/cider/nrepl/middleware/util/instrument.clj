@@ -468,6 +468,18 @@
       out
       (into (empty coll) out))))
 
+(defn- instrument-function-call
+  "Instrument a regular function call sexp.
+  This must be a sexp that starts with a symbol which is not a macro
+  nor a special form.
+  This includes regular function forms, like `(range 10)`, and also
+  includes calls to Java methods, like `(System/currentTimeMillis)`."
+  [{:keys [coor] :as ex} [name & args]]
+  (cons name
+        (map #(instrument (assoc ex :coor (conj coor %1)) %2)
+             (range 1 (inc (count args)))
+             args)))
+
 (defn with-break
   "Return form and ex wrapped in a breakpoint.
   If function is given, use it to instrument form before wrapping. The
@@ -501,15 +513,20 @@
 (defn- instrument-function-like-form
   "Instrument form representing a function/macro call or special-form."
   [ex [name & args :as form]]
-  (if (symbol? name)
+  (if-not (symbol? name)
+    ;; If the car is not a symbol, nothing fancy is going on and we
+    ;; can instrument everything.
+    (with-break instrument-coll form ex)
     (let [name (or (ns-resolve *ns* name) name)]
       (if (or (resolve-special name)
               (:macro (meta name)))
+        ;; If macro or special form, thread with care.
         (if (dont-break? form)
           (instrument-special-form ex form)
           (with-break instrument-special-form form ex))
-        (with-break instrument-coll form ex)))
-    (with-break instrument-coll form ex)))
+        ;; Otherwise, probably just a function. Just leave the
+        ;; function name and instrument the args.
+        (with-break instrument-function-call form ex)))))
 
 (defn instrument
   "Walk through form and return it instrumented with breakpoints.

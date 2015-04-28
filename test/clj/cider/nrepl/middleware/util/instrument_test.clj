@@ -197,3 +197,17 @@
     'tarzan '(false false))
   (is (= (#'t/specifier-destructure "bindings")
          (#'t/specifier-destructure "binding"))))
+
+(deftest instrument-function-call
+  (is (= '(System/currentTimeMillis)
+         (#'t/instrument
+          {:coor [] :breakfunction 'b}
+          '(System/currentTimeMillis))))
+  (is (eval
+       (#'t/instrument
+        {:coor []
+         :breakfunction #'cider.nrepl.middleware.debug/breakpoint}
+        '(defn test-fn []
+           (let [start-time (System/currentTimeMillis)]
+             (Thread/sleep 1000)
+             (- (System/currentTimeMillis) start-time)))))))
