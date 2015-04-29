@@ -109,3 +109,16 @@
              ;; 3} might also be printed as #{1 3 2} or #{3 2 1}.
              (format "(deftest test-foo (is (clojure.string/blank? \"\")) (is (= my-set (set/intersection %s %s))))"
                      #{1 2 3} #{2 3 4}))))))
+
+(deftest test-macroexpand-1-op-print-meta
+  (let [transport (test-transport)
+        _ (macroexpansion-reply {:transport transport
+                                 :op "macroexpand"
+                                 :expander "macroexpand-1"
+                                 :code "(defn x [] nil)"
+                                 :ns "cider.nrepl.middleware.macroexpand-test"
+                                 :display-namespaces "tidy"
+                                 :print-meta "true"})
+        [val] (messages transport)]
+    (is (= (:status val) #{:done}))
+    (is (= (:expansion val) "(def ^{:arglists (quote ([]))} x (fn ([] nil)))"))))

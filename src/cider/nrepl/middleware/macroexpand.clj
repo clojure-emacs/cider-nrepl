@@ -42,7 +42,7 @@
          x))
      form)))
 
-(defn macroexpansion [expander code ns-name display-namespaces]
+(defn macroexpansion [expander code ns-name display-namespaces print-meta]
   ;; display-namespaces can either be
   ;;    "tidy"      => print aliases instead of qnames, simple names if
   ;;                  var is refered to or defined in the same ns
@@ -59,21 +59,21 @@
                                           [expansion suppress-namespaces])
         suppress-namespaces (boolean suppress-namespaces)]
     (with-out-str
-      (pp/write expansion
-                :suppress-namespaces suppress-namespaces
-                :dispatch clojure.pprint/code-dispatch))))
+      (binding [*print-meta* (boolean print-meta)]
+        (pp/write expansion
+                  :suppress-namespaces suppress-namespaces
+                  :dispatch clojure.pprint/code-dispatch)))))
 
 (defn macroexpansion-reply
-  [{:keys [transport expander code ns display-namespaces] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg
-                   :expansion (macroexpansion expander code ns display-namespaces)
-                   :status :done))
-    (catch Exception e
+  [{:keys [transport expander code ns display-namespaces print-meta] :as msg}]
+  (let [expansion (macroexpansion expander code ns display-namespaces print-meta)]
+    (try
       (transport/send
-       transport (response-for msg (u/err-info e :macroexpand-error))))))
+       transport
+       (response-for msg :expansion expansion :status :done))
+      (catch Exception e
+        (transport/send
+         transport (response-for msg (u/err-info e :macroexpand-error)))))))
 
 (defn wrap-macroexpand
   "Middleware that provides macroexpansion ops."
@@ -91,4 +91,5 @@
     :requires {"code" "The form to macroexpand."
                "expander" "The macroexpansion function which to use."
                "ns" "The namespace in which to perform the macroexpansion."}
+    :optional {"print-meta" "If truthy, also print metadata of forms."}
     :returns {"expansion" "The macroexpanded form."}}}})
