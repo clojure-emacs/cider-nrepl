@@ -19,4 +19,22 @@
         candidate (first (:completions response))]
     (is (= "defprotocol" (:candidate candidate)))
     (is (= "cljs.core" (:ns candidate)))
-    (is (= "macro" (:type candidate)))))
+    (is (= "macro" (:type candidate))))
+
+  (testing "function metadata"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :symbol "assoc"
+                                     :extra-metadata ["arglists" "doc"]})
+          candidate (first (:completions response))]
+      (is (= '("[coll k v]" "[coll k v & kvs]") (:arglists candidate)))
+      (is (string? (:doc candidate)))))
+
+  (testing "macro metadata"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :symbol "defprot"
+                                     :extra-metadata ["arglists" "doc"]})
+          candidate (first (:completions response))]
+      (is (= '("[psym & doc+methods]") (:arglists candidate)))
+      (is (string? (:doc candidate))))))
