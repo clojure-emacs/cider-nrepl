@@ -17,8 +17,12 @@
         (f)))))
 
 (defn message
-  [msg]
-  (nrepl/combine-responses (nrepl/message *session* msg)))
+  ([msg] (message msg true))
+  ([msg combine-responses?]
+   (let [responses (nrepl/message *session* msg)]
+     (if combine-responses?
+       (nrepl/combine-responses responses)
+       responses))))
 
 (use-fixtures :each session-fixture)
 
