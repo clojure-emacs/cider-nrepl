@@ -127,8 +127,9 @@ release starts immediately after the previous one has been
 shipped. Bugfix/point releases (if any) address only serious bugs and
 never contain new features.
 
-The versions of CIDER and cider-nrepl are always kept in sync. If you're tracking the
-`master` branch of CIDER, you should also be tracking the `master` branch of `cider-nrepl`.
+The versions of CIDER and cider-nrepl are always kept in sync. If
+you're tracking the `master` branch of CIDER, you should also be
+tracking the `master` branch of `cider-nrepl`.
 
 ## Contributing
 
@@ -141,9 +142,9 @@ Please, don't report issues there, as this makes them harder to track.
 ### Issues
 
 Report issues and suggest features and improvements on the
-[GitHub issue tracker](https://github.com/clojure-emacs/cider-nrepl/issues). Don't ask
-questions on the issue tracker - the mailing list and the IRC channel are the
-places for questions.
+[GitHub issue tracker](https://github.com/clojure-emacs/cider-nrepl/issues). Don't
+ask questions on the issue tracker - the mailing list and the IRC
+channel are the places for questions.
 
 ### Patches
 
@@ -155,7 +156,8 @@ guidelines](CONTRIBUTING.md).
 
 ### Working with mranderson (inlining dependencies)
 
-[mranderson](https://github.com/benedekfazekas/mranderson) is used to avoid classpath collisions.
+[mranderson](https://github.com/benedekfazekas/mranderson) is used to
+avoid classpath collisions.
 
 To work with `mranderson` the first thing to do is:
 
@@ -169,7 +171,11 @@ After that you can run your tests or your REPL with:
 
 `lein with-profile +plugin.mranderson/config test`
 
-Note the plus sign before the leiningen profile. For this leiningen profile to work **you need leiningen version 2.5.0+!** If you want to use `mranderson` while developing locally with the REPL the source has to be modified in the `target/srcdeps` directory. When you want to release locally:
+Note the plus sign before the leiningen profile. For this leiningen
+profile to work **you need leiningen version 2.5.0+!** If you want to
+use `mranderson` while developing locally with the REPL the source has
+to be modified in the `target/srcdeps` directory. When you want to
+release locally:
 
 `lein with-profile plugin.mranderson/config install`
 
@@ -177,13 +183,15 @@ Release to clojars:
 
 `lein with-profile plugin.mranderson/config deploy clojars`
 
-Or you can use the very sophisticated script to clean, inline, test and run an end target like install or deploy:
+Or you can use the very sophisticated script to clean, inline, test
+and run an end target like install or deploy:
 
 `./build.sh install`
 
 `./build.sh deploy clojars`
 
-[build.sh](build.sh) cleans, runs source-deps with the right parameters, runs the tests and then runs the provided lein target.
+[build.sh](build.sh) cleans, runs source-deps with the right
+parameters, runs the tests and then runs the provided lein target.
 
 ## Hall of Fame
 
