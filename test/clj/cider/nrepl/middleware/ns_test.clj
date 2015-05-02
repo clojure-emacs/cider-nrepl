@@ -25,3 +25,11 @@
                                             :ns "clojure.walk"}))]
     (is (sequential? ns-vars))
     (is (every? string? ns-vars))))
+
+(deftest ns-path-integration-test
+  (let [ns-path (:path (session/message {:op "ns-path"
+                                         :ns "cider.nrepl.middleware.ns"}))
+        core-path (:path (session/message {:op "ns-path"
+                                           :ns "clojure.core"}))]
+    (is (.endsWith ns-path "cider/nrepl/middleware/ns.clj"))
+    (is (.endsWith core-path "clojure/core.clj"))))
