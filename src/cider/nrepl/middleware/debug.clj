@@ -5,7 +5,6 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.instrument :refer [instrument]])
   (:import [clojure.lang Compiler$LocalBinding]))
 
