@@ -219,6 +219,23 @@
           (cons (instrument (assoc ex :coor (conj coor (inc n))) form2)
                 forms))))
 
+(defn- instrument-like-fn
+  [{:keys [coor] :as ex} [[name & fn-tail] & forms]]
+  ;; Pretend it's an `fn`.
+  (let [instrumented (instrument ex (cons 'fn fn-tail))]
+    ;; Dump the `fn` head and replace witht the actual name.
+    (cons (cons name (rest instrumented))
+          forms)))
+
+(defn- match-like-fn
+  "Return 1 if the first element of the arg looks like a fn."
+  [[f]]
+  (and (listy? f)
+       (> (count f) 2)
+       (symbol? (first f))
+       (vector? (second f))
+       1))
+
 (def instrument-two-args
   #(instrument-next-arg %1 (instrument-second-arg %1 %2)))
 
@@ -248,12 +265,15 @@
    "test" [always-1 instrument-next-arg]
    "then" [always-1 instrument-next-arg]
    "else" [always-1 instrument-next-arg]
+   "x"    [always-1 instrument-next-arg]
+   "next" [always-1 instrument-next-arg]
    ;; Match everything.
    "body" [count instrument-all-args]
    ;; Not safe or not meant to be instrumented
    "form"    [always-1 instrument-nothing]
    "oldform" [always-1 instrument-nothing]
    "params"  [always-1 instrument-nothing]
+   "args"    [always-1 instrument-nothing]
    "name"    [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
    "symbol"  [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
    ;; Complicated
@@ -263,6 +283,7 @@
    "docstring" [#(when (string? (first %)) 1) instrument-nothing]
    "string"    [#(when (string? (first %)) 1) instrument-nothing]
    "map"       [#(when (map? (first %)) 1)    instrument-next-arg]
+   "f"         [match-like-fn instrument-like-fn]
    "fn-tail"   [#(when (vector? (first %)) (count %))
                 instrument-all-but-first-arg]
    "dispatch-fn" [(fn [[[f & r]]]

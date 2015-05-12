@@ -99,6 +99,17 @@
     #'t/instrument-second-arg        (list 'a (bt 'b [14]) 'c)
     #'t/instrument-two-args          (list (bt 'a [13]) (bt 'b [14]) 'c)))
 
+(deftest like-fn
+  (is (= (#'t/instrument-like-fn dex '((some-name [args] instrument-this) anything else))
+         (list (list 'some-name '[args]
+                     (bt 'instrument-this [13 2]))
+               'anything 'else)))
+  (is (= (#'t/match-like-fn '((some-name [args] instrument-this) anything else))
+         1))
+  (is (not (#'t/match-like-fn '((some-name not-args instrument-this) anything else))))
+  (is (not (#'t/match-like-fn '((some-name [args]) anything else))))
+  (is (not (#'t/match-like-fn '(not-list anything else)))))
+
 (deftest instrument-clauses
   (are [exp res] (= (#'t/instrument dex exp)
                     res)
