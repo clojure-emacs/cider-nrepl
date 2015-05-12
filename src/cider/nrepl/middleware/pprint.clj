@@ -3,22 +3,31 @@
             [clojure.pprint :refer [pprint *print-right-margin*]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]])
+            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
+            [clojure.tools.nrepl.middleware.session :as session]
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.transport :as transport])
   (:import clojure.tools.nrepl.transport.Transport))
 
+(defn- pprint-writer
+  [{:keys [session transport] :as msg}]
+  (#'session/session-out :pprint-out (:id (meta session)) transport))
+
 (defn pprint-reply
-  [{:keys [right-margin session] :as msg} response]
-  ;; Binding `*msg*` sets the `:id` slot when printing to the nREPL session's
-  ;; writer for `*out*`, which the client requires to handle the response
-  ;; correctly.
-  (binding [*msg* msg
-            *out* (get @session #'*out*)
-            *print-length* (get @session #'*print-length*)
-            *print-level* (get @session #'*print-level*)
-            *print-right-margin* right-margin]
-    (let [value (cljs/response-value msg response)
-          print-fn (if (string? value) println pprint)]
-      (print-fn value))))
+  [{:keys [right-margin session transport] :as msg} response]
+  (with-open [writer (pprint-writer msg)]
+    ;; Binding `*msg*` sets the `:id` slot when printing to an nREPL session
+    ;; PrintWriter (as created by `pprint-writer`), which the client requires to
+    ;; handle the response correctly.
+    (binding [*msg* msg
+              *out* writer
+              *print-length* (get @session #'*print-length*)
+              *print-level* (get @session #'*print-level*)
+              *print-right-margin* right-margin]
+      (let [value (cljs/response-value msg response)
+            print-fn (if (string? value) println pprint)]
+        (print-fn value))))
+  (transport/send transport (response-for msg :pprint-sentinel {})))
 
 (defn pprint-transport
   [{:keys [right-margin ^Transport transport] :as msg}]
@@ -28,7 +37,7 @@
     (send [this response]
       (when (contains? response :value)
         (pprint-reply msg response))
-      (.send transport response))))
+      (.send transport (dissoc response :value)))))
 
 (defn wrap-pprint
   "Middleware that adds a pretty printing option to the eval op.
