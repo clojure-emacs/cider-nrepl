@@ -57,6 +57,4 @@
    :expects #{"eval"}
    :handles
    {"pprint-middleware"
-    {:doc "Enhances the `eval` op by pretty printing the evaluation result if a `:pprint` slot is found in the msg map. Not an op by itself."
-     :requires #{"clone" #'pr-values}
-     :expects #{"eval"}}}}))
+    {:doc "Enhances the `eval` op by pretty printing the evaluation result if a `:pprint` slot is found in the msg map. Not an op by itself."}}}))
