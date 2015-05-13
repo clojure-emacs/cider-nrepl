@@ -34,4 +34,11 @@
 
   (testing "unsupported op"
     (is (= #{"error" "unknown-op" "done"}
-           (:status (message {:op "abcdefg"}))))))
+           (:status (message {:op "abcdefg"})))))
+
+  (testing "describe works"
+    (let [response (message {:op :describe})
+          verbose-response (message {:op :describe
+                                     :verbose? "true"})]
+      (is (contains? response :ops))
+      (is (contains? verbose-response :ops)))))
