@@ -87,7 +87,7 @@
                 (when (= "file" (.getProtocol rsrc))
                   (io/as-file rsrc))
                 (io/as-file filename))]
-    (when (and file (.exists file))
+    (when (and file (.exists file) (.isFile file))
       (with-open [in (io/input-stream file)]
         (.skip in (max 0 (- (.length file) 1024)))
         (->> (slurp in)
