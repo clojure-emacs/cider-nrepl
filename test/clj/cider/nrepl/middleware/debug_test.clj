@@ -94,6 +94,14 @@
            (with-locals
              (#'d/eval-with-locals '(inc x)))))))
 
+(deftest locals-for-message
+  (let [x 1
+        to__ignore 0]
+    (with-locals
+      (is (= '(("x" "1"))
+             (#'d/locals-for-message d/*locals*))))))
+
+
 ;; (deftest breakpoint
 ;;   (reset! @#'d/debugger-message {})
 ;;   (let [x 1]
