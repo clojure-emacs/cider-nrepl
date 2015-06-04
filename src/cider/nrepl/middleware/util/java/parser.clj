@@ -63,7 +63,6 @@
           compiler (JavadocTool/make0 context)
           enter    (JavadocEnter/instance0 context)
           docenv   (doto (DocEnv/instance context)
-                     (.setLocale (str (Locale/getDefault)))
                      (.setEncoding "utf-8")
                      (.setSilent true)
                      (set-field! "showAccess" access))
