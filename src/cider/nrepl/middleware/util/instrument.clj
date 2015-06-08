@@ -470,7 +470,7 @@
     (cons name result)
     (do (binding [*print-length* 4
                   *print-level*  1]
-          (println "Failed to instrument " form))
+          (println "Failed to instrument " form ", please file a bug report"))
         form)))
 
 ;;;; ## Instrumenting Functions and Collections
