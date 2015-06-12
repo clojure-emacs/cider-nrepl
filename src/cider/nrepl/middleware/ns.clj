@@ -12,8 +12,20 @@
              [transport :as transport]])
   (:import java.util.jar.JarFile))
 
+(defn inlined-dependency?
+  "Returns true if the namespace matches one of our, or eastwood's,
+  inlined dependencies."
+  [namespace]
+  (let [ns-name (str (ns-name namespace))]
+    (or
+     ;; rewritten by mranderson
+     (.startsWith ns-name "deps.")
+     ;; rewritten by dolly
+     (.startsWith ns-name "eastwood.copieddeps"))))
+
 (defn ns-list-clj []
   (->> (all-ns)
+       (remove inlined-dependency?)
        (map ns-name)
        (map name)
        (sort)))

@@ -5,7 +5,8 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
-            [cider.nrepl.middleware.util.misc :as u]))
+            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.ns :as ns]))
 
 ;;; ## Overview
 ;; This middleware provides regular expression search across namespaces for
@@ -56,7 +57,7 @@
                     (and (clojure-ns? x) (not (clojure-ns? y))) -1
                     (and (clojure-ns? y) (not (clojure-ns? x)))  1
                     :else (compare (str x) (str y))))
-            (all-ns)))))
+            (remove ns/inlined-dependency? (all-ns))))))
 
 (defn find-symbols
   "Find symbols or (optionally) docstrings matching `query` in `search-ns` if
