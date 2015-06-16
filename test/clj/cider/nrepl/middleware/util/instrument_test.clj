@@ -1,20 +1,17 @@
 (ns cider.nrepl.middleware.util.instrument-test
-  (:require [clojure.test :refer :all]
+  (:require [cider.nrepl.middleware.debug :as d]
+            [cider.nrepl.middleware.util.instrument :as t]
             [clojure.repl :as repl]
-            [cider.nrepl.middleware.util.instrument :as t]))
+            [clojure.test :refer :all]
+            [clojure.walk :as walk]))
 
 (deftest dont-break?
-  (are [x] (#'t/dont-break? x)
+  (are [x] (#'t/dont-break? (walk/macroexpand-all x))
     '(defn name "" [] (inc 2))
-    '(defn-)
-    '(def)
-    '(fn)
-    '(fn*)
-    '(defmacro)
-    '(defmethod)
-    '(defmulti)
-    '(definline)
-    '(definterface))
+    '(defn- name "" [] (inc 2))
+    '(def name "")
+    '(fn name [] (inc 2))
+    '(fn* name ([] (inc 2))))
   (are [x] (#'t/dont-break? x)
     '(if 1 (recur (inc 2)) 0))
   (are [x] (not (#'t/dont-break? x))
@@ -27,7 +24,8 @@
     '()
     `()
     '(a)
-    (second `[b (inc 1)]))
+    (second `[b (inc 1)])
+    (map inc (range)))
 
   (are [x] (not (#'t/listy? x))
     nil
@@ -43,176 +41,107 @@
     'killer-croc
     'hannah-montana))
 
-(deftest macro-arglists
-  (are [s a] (= (#'t/macro-arglists s) a)
-    'if   '([test then else?])
-    'when '([test & body])
-    'let  '([bindings & body])
-    'defn '([name doc-string? attr-map? [params*] prepost-map? body]
-            [name doc-string? attr-map? ([params*] prepost-map? body) + attr-map?])
-    'def  '([symbol doc-string? init?])))
+(def bp-tracker (atom #{}))
+(defmacro bp [value coor]
+  (swap! bp-tracker conj [value coor])
+  value)
 
-(deftest reorder-+
-  (are [a b] (= (#'t/reorder-+ a) b)
-    '[+ 1 2 3 4] '[+ 1 2 3 4]
-    '[1 + 2 3 4] '[+ 1 2 3 4]
-    '[1 2 + 3 4] '[1 + 2 3 4]
-    '[1 2 3 + 4] '[1 2 + 3 4]
-    '[1 2 3 4 +] '[1 2 3 + 4]
-    '[1 2 3 4] '[1 2 3 4]))
-
-(deftest always-1
-  (are [a] (= (#'t/always-1 a) 1)
-    '[+ 1 2 3 4]
-    '(+ 1 2 3 4)
-    '([& expr])
-    '([test & body])
-    'pikachu
-    "Charizard"
-    :Blastoise))
-
-;;; Dummy ex
-(def dex {:coor [13] :breakfunction 'b})
-(defn- id [v] (assoc dex :coor v))
-(defmacro bt [form vec]
-  `'(~'b ~(eval form) ~(id vec)))
-
-(deftest instrument-nothing
-  (are [a b] (= (#'t/instrument-nothing dex b) b)
-    '[+ 1 2 3 4] '(+ 1 2 3 4)
-    '([& expr])  '([test & body])
-    'pikachu     "Charizard"
-    :Blastoise   :Magikarp))
-
-(deftest instrument-basics
-  (are [f o] (= (f dex '(a b c)) o)
-    #'t/instrument-all-args          (list (bt 'a [13]) (bt 'b [14]) (bt 'c [15]))
-    #'t/instrument-next-arg          (list (bt 'a [13]) 'b 'c)
-    #'t/instrument-nothing           (list 'a 'b 'c)
-    #'t/instrument-all-but-first-arg (list 'a (bt 'b [14]) (bt 'c [15]))
-    #'t/instrument-second-arg        (list 'a (bt 'b [14]) 'c)
-    #'t/instrument-two-args          (list (bt 'a [13]) (bt 'b [14]) 'c)))
-
-(deftest like-fn
-  (is (= (#'t/instrument-like-fn dex '((some-name [args] instrument-this) anything else))
-         (list (list 'some-name '[args]
-                     (bt 'instrument-this [13 2]))
-               'anything 'else)))
-  (is (= (#'t/match-like-fn '((some-name [args] instrument-this) anything else))
-         1))
-  (is (not (#'t/match-like-fn '((some-name not-args instrument-this) anything else))))
-  (is (not (#'t/match-like-fn '((some-name [args]) anything else))))
-  (is (not (#'t/match-like-fn '(not-list anything else)))))
+(defn breakpoint-tester [form]
+  (with-redefs [d/breakpoint-reader
+                (fn [x] (t/with-meta-safe x {:cider-breakfunction #'bp}))]
+    (reset! bp-tracker #{})
+    (clojure.pprint/pprint (walk/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form))))
+    ;; Replace #'bp with 'bp for easier comparison.
+    (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker)))
 
 (deftest instrument-clauses
-  (are [exp res] (= (#'t/instrument dex exp)
-                    res)
-
+  (are [exp res] (= (breakpoint-tester exp) res)
     '(cond-> value
        v2 form
-       v3 form)
-    `(~'b (~'cond-> ~(bt 'value [13 1])
-                    ~(bt 'v2 [13 2]) ~'form
-                    ~(bt 'v3 [13 4]) ~'form)
-          ~(id [13]))
+       v3 (boogie oogie form))
+    '#{[oogie [5 1]] [form [5 2]] [value [1]] [v2 [2]] [v3 [4]]} 
 
     '(case value
-       const expr
-       default)
-    `(~'b (~'case ~(bt 'value [13 1])
-                  ~'const ~(bt 'expr [13 3])
-                  ~(bt 'default [13 4]))
-          ~(id [13]))
+       some-const some-expr
+       the-default)
+    '#{[the-default [4]] [some-expr [3]] [value [1]]} 
+    
+    '(condp pred value
+       v4 :>> v5)
+    '#{[pred [1]] [v4 [3]] [value [2]]} 
 
     '(condp pred value
-       v4 :key v5)
-    `(~'b (~'condp ~(bt 'pred [13 1]) ~(bt 'value [13 2])
-                   ~(bt 'v4 [13 3]) :key ~(bt 'v5 [13 5]))
-          ~(id [13]))
-
+       v4 v5)
+    '#{[pred [1]] [v5 [4]] [v4 [3]] [value [2]]} 
+    
     '(condp pred value
        v2 v3
        default)
-    `(~'b (~'condp ~(bt 'pred [13 1]) ~(bt 'value [13 2])
-                   ~(bt 'v2 [13 3]) ~(bt 'v3 [13 4])
-                   ~(bt 'default [13 5]))
-          ~(id [13]))
+    '#{[pred [1]] [default [5]] [value [2]] [v3 [4]] [v2 [3]]} 
 
     '(cond
        (= x 1) true
        false   never
        :else   final)
-    `(~'b
-      (~'cond (~'b (~'= ~(bt 'x [13 1 1]) 1) ~(id [13 1]))
-              true
-              false ~(bt 'never [13 4])
-              :else ~(bt 'final [13 6]))
-      ~(id [13]))))
-
+    '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x [1 1]) 1) [1]]}))
 
 (deftest instrument-recur
-  (is (= (#'t/instrument dex '(loop [x '(1 2)]
-                                (if (seq x)
-                                  (recur (rest x))
-                                  x)))
-         `(~'b (~'loop [~'x ~(bt ''(1 2) [13 1 1])]
-                       (~'if (~'b (~'seq ~(bt 'x [13 2 1 1]))
-                                  ~(id [13 2 1]))
-                             (~'recur (~'b (~'rest ~(bt 'x [13 2 2 1 1]))
-                                           ~(id [13 2 2 1])))
-                             ~(bt 'x [13 2 3])))
-               ~(id [13]))))
+  (is (= (breakpoint-tester '(loop [x '(1 2)]
+                               (if (seq x)
+                                 (recur (rest x))
+                                 x)))
+         '#{[(rest (bp x [2 2 1 1])) [2 2 1]]
+            [x [2 2 1 1]]
+            [x [2 1 1]]
+            [x [2 3]]
+            [(seq (bp x [2 1 1])) [2 1]]}))
 
-  (is (= (#'t/instrument dex '(fn [x]
-                                (if (seq x)
-                                  (recur (rest x))
-                                  x)))
-         `(~'fn [~'x]
-                (~'if (~'b (~'seq ~(bt 'x [13 2 1 1]))
-                           ~(id [13 2 1]))
-                      (~'recur (~'b (~'rest ~(bt 'x [13 2 2 1 1]))
-                                    ~(id [13 2 2 1])))
-                      ~(bt 'x [13 2 3]))))))
+  (is (= (breakpoint-tester '(fn [x]
+                               (if (seq x)
+                                 (recur (rest x))
+                                 x)))
+         '#{[(rest (bp x [2 2 1 1])) [2 2 1]]
+            [x [2 2 1 1]]
+            [x [2 1 1]]
+            [x [2 3]]
+            [(seq (bp x [2 1 1])) [2 1]]})))
 
-(deftest specifier-match-bindings
-  (are [f] (= 1 (#'t/specifier-match-bindings f))
-    '([] sherlock)
-    '([watson (moriarty) watson (moriarty) watson (moriarty)])
-    '([watson (moriarty) watson (moriarty) watson (moriarty)] sherlock)
-    '([]))
-  (are [f] (not (#'t/specifier-match-bindings f))
-    '(() sherlock)
-    '([watson (moriarty) watson (moriarty) watson])
-    '([(moriarty) watson (moriarty)] sherlock)
-    '(10)))
-
-(deftest specifier-destructure
-  (are [s o] (let [[[matcher handler] & r]
-                   (#'t/specifier-destructure s)]
-               (and (= r o)
-                    (function? matcher)
-                    (function? handler)))
-    'binding '(false false)
-    'bindings '(false false)
-    'expr '(false false)
-    'expr* '(false true)
-    'expr? '(true false)
-    'exprs? '(true false)
-    'forms* '(false true)
-    'tarzan '(false false))
-  (is (= (#'t/specifier-destructure "bindings")
-         (#'t/specifier-destructure "binding"))))
+(deftest instrument-reify
+  (is (= (breakpoint-tester '(reify Transport
+                               (recv [this] (.recv transport))
+                               (send [this response]
+                                 (if (contains? response :value)
+                                   (inspect-reply msg response)
+                                   (.send transport response))
+                                 this)))
+         '#{[this [3 3]]
+            [(contains? (bp response [3 2 1 1]) :value) [3 2 1]]
+            [msg [3 2 2 1]]
+            [(inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2]]
+            [(. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]]
+            [(if (bp (contains? (bp response [3 2 1 1]) :value) [3 2 1])
+               (bp (inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2])
+               (bp (. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3])) [3 2]]
+            [transport [3 2 3 1]]
+            [transport [2 2 1]]
+            [response [3 2 3 2]]
+            [response [3 2 1 1]]
+            [response [3 2 2 2]]
+            [(. (bp transport [2 2 1]) recv) [2 2]]})))
 
 (deftest instrument-function-call
-  (is (= '(System/currentTimeMillis)
-         (#'t/instrument
-          {:coor [] :breakfunction 'b}
-          '(System/currentTimeMillis))))
-  (is (eval
-       (#'t/instrument
-        {:coor []
-         :breakfunction #'cider.nrepl.middleware.debug/breakpoint}
-        '(defn test-fn []
-           (let [start-time (System/currentTimeMillis)]
-             (Thread/sleep 1000)
-             (- (System/currentTimeMillis) start-time)))))))
+  (is (empty? (breakpoint-tester '(System/currentTimeMillis))))
+  (is (= (breakpoint-tester
+          '(defn test-fn []
+             (let [start-time (System/currentTimeMillis)]
+               (Thread/sleep 1000)
+               (- (System/currentTimeMillis) start-time))))
+         '#{[(- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]]
+            [start-time [3 3 2]]
+            [(. Thread sleep 1000) [3 2]]
+            [(. System currentTimeMillis) [3 3 1]]
+            [(. System currentTimeMillis) [3 1 1]]
+            [(let* [start-time (bp (. System currentTimeMillis) [3 1 1])]
+                   (bp (. Thread sleep 1000) [3 2])
+                   (bp (- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]))
+             [3]]})))
