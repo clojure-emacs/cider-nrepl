@@ -84,12 +84,6 @@
     'pikachu     "Charizard"
     :Blastoise   :Magikarp))
 
-(deftest instrument-map
-  (is (= (#'t/instrument-map dex '{:a 1, (name :b) (inc 2)})
-         {:a 1,
-          (bt '(name :b) [13 2])
-          (bt '(inc 2) [13 3])})))
-
 (deftest instrument-basics
   (are [f o] (= (f dex '(a b c)) o)
     #'t/instrument-all-args          (list (bt 'a [13]) (bt 'b [14]) (bt 'c [15]))
