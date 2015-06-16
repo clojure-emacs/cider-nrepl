@@ -177,17 +177,13 @@
 
 (defn- instrument-map
   "Instrument a map collection.
-  The rules of what gets instrumented are the same as for any
-  collection, but maps need special handling because they're read as
-  tables but written as a linear collection, and this affects the
-  `coor` variable."
-  [{:keys [coor] :as ex} themap]
-  (let [out (map (fn [pos [a b]]
-                   [(instrument (assoc ex :coor (conj coor (* 2 pos))) a)
-                    (instrument (assoc ex :coor (conj coor (inc (* 2 pos)))) b)])
-                 (range (count themap))
-                 themap)]
-    (into {} out)))
+  Just return `themap` untouched. Instrumenting maps is not supported
+  yet."
+  ;; Actually, instrumenting the map is easy, the hard part is telling
+  ;; Emacs the coordinates of each key/val, because the order in which
+  ;; the user writes the map is not the order in which the reader
+  ;; returns it to us.
+  [{:keys [coor] :as ex} themap] themap)
 
 (defn- instrument-next-arg
   [ex [form & forms]]
@@ -276,13 +272,19 @@
    "args"    [always-1 instrument-nothing]
    "name"    [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
    "symbol"  [(fn [[f]] (if (symbol? f) 1)) instrument-nothing]
+   ;; If a macro arg asks for a map, it's not gonna like to see a map
+   ;; wrapped in a breakpoint. We could still instrument the inside of
+   ;; the map, but that's not supported yet, so just do nothing here.
+   ;; Note that this matches args whose names end with "map" (like
+   ;; `attr-map?` from defn), but not args that are actual maps (those
+   ;; are handled in `instrument-forms-per-specifier`).
+   "map"       [#(when (map? (first %)) 1) instrument-nothing]
    ;; Complicated
    "bindings" [specifier-match-bindings
                (fn [ex [bindings & forms]]
                  (cons (instrument-bindings ex bindings) forms))]
    "docstring" [#(when (string? (first %)) 1) instrument-nothing]
    "string"    [#(when (string? (first %)) 1) instrument-nothing]
-   "map"       [#(when (map? (first %)) 1)    instrument-next-arg]
    "f"         [match-like-fn instrument-like-fn]
    "fn-tail"   [#(when (vector? (first %)) (count %))
                 instrument-all-but-first-arg]
@@ -366,10 +368,12 @@
     (symbol? spec) (apply instrument-forms-per-matcher-handler
                           ex (inc n) forms (specifier-destructure spec))
     ;; Some arglists have maps.
-    (map? spec) [1 (cons
-                    (instrument-map (assoc ex :coor (conj coor (inc n)))
-                                    (first forms))
-                    (rest forms))]
+    (map? spec)
+    (when (map? (first forms))
+      [1 (cons
+          (instrument (assoc ex :coor (conj coor (inc n)))
+                      (first forms))
+          (rest forms))])
     ;; See `defn` for an example of arglist with both lists and vectors.
     (list? spec)
     (when (list? (first forms))
