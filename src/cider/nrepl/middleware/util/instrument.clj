@@ -56,6 +56,7 @@
 
   '{;; Possible in theory, but not supported yet.
     try ([& form]),
+    fn* ([& form]),
 
     ;; More sophisticated cases with badly written arglists.
     defn- defn,
