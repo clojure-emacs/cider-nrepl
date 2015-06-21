@@ -6,8 +6,16 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [cider.nrepl.middleware.util.instrument :as ins]
+            [cider.nrepl.middleware.util.cljs :as cljs]
             [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
+
+(defn random-uuid-str []
+  (letfn [(hex [] (format "%x" (rand-int 15)))
+          (nhex [n] (apply str (repeatedly n hex)))]
+    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
+      (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
+        "-" rhex (nhex 3) "-" (nhex 12)))))
 
 ;;;; # The Debugger
 ;;; The debugger is divided into two parts, intrument.clj and
@@ -118,7 +126,7 @@
   "Like `read`, but reply is sent through `debugger-message`.
   type is sent in the message as :input-type."
   [extras type prompt]
-  (let [key (str (java.util.UUID/randomUUID))
+  (let [key (random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
     (->> (assoc extras
@@ -156,7 +164,9 @@
     eval: Evaluate an expression, display result, and prompt again.
     quit: Abort current eval session."
   [value extras]
-  (let [commands [:next :continue :out :inject :eval :quit]
+  (let [commands (if (cljs/grab-cljs-env *msg*)
+                   [:next :continue :out :inject :eval :quit]
+                   [:next :continue :out :inject :eval :quit])
         prompt (apply str (map #(let [[f & r] (name %)]
                                   (apply str " (" f ")" r))
                                commands))]
@@ -253,22 +263,23 @@
 
 (set-descriptor!
  #'wrap-debug
- {:expects #{"eval"}
-  :handles
-  {"debug-input"
-   {:doc "Read client input on debug action."
-    :requires {"input" "The user's reply to the input request."}
-    :returns {"status" "done"}}
-   "init-debugger"
-   {:doc "Initialize the debugger so that `breakpoint` works correctly.
+ (cljs/requires-piggieback
+  {:expects #{"eval"}
+   :handles
+   {"debug-input"
+    {:doc "Read client input on debug action."
+     :requires {"input" "The user's reply to the input request."}
+     :returns {"status" "done"}}
+    "init-debugger"
+    {:doc "Initialize the debugger so that `breakpoint` works correctly.
 This usually does not respond immediately. It sends a response when a
 breakpoint is reached or when the message is discarded."
-    :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-   "debug-middleware"
-   {:doc "Debug a code form or fall back on regular eval."
-    :requires {"id" "A message id that will be responded to when a breakpoint is reached."
-               "code" "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-               "file" "File where the code is located."
-               "ns" "Passed to \"eval\"."
-               "point" "Position in the file where the provided code begins."}
-    :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}})
+     :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+    "debug-middleware"
+    {:doc "Debug a code form or fall back on regular eval."
+     :requires {"id" "A message id that will be responded to when a breakpoint is reached."
+                "code" "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
+                "file" "File where the code is located."
+                "ns" "Passed to \"eval\"."
+                "point" "Position in the file where the provided code begins."}
+     :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
