@@ -160,7 +160,18 @@
        (println "[DBG]" (not (not cider-breakfunction)) cider-coor form))
      (if (and cider-breakfunction (seq cider-coor))
        (list cider-breakfunction form cider-coor)
-       form))))
+       ;; If the form is a list and has no metadata, maybe it was
+       ;; destroyed by a macro. Try guessing the coor by looking at
+       ;; the first element. This fixes `->`, for instance.
+       (if (listy? form)
+         (let [{:keys [cider-coor cider-breakfunction]} (meta (first form))
+               coor (if (= (last cider-coor) 0)
+                      (pop cider-coor)
+                      cider-coor)]
+           (if (and cider-breakfunction (seq cider-coor))
+             (list cider-breakfunction form coor)
+             form))
+         form)))))
 
 (defn- contains-recur?
   "Return true if form is not a `loop` and a `recur` is found in it."
