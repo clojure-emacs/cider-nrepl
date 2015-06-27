@@ -241,8 +241,13 @@
    (let [map-inner (fn [forms]
                      (map-indexed #(walk-indexed (conj coor %1) f %2)
                                   forms))
-         ;; Order of maps and sets is unpredictable, unfortunately.
-         result (cond (map? form)  form
+         ;; Maps are unordered, but we can try to use the keys (and
+         ;; they're important enough that we're willing to risk
+         ;; getting the position wrong).
+         result (cond (map? form)  (into {} (map (fn [[k v]]
+                                                   [k (walk-indexed (conj coor (pr-str k)) f v)])
+                                                 form))
+                      ;; Order of sets is unpredictable, unfortunately.
                       (set? form)  form
                       ;; Borrowed from clojure.walk/walk
                       (list? form) (apply list (map-inner form))
