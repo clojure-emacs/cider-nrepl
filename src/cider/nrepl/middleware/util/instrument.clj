@@ -76,6 +76,13 @@
   (into {} (map (fn [[k [v1 v2]]] [k [v1 (instrument v2)]])
                 args)))
 
+(defn list-instrumented-defs [ns]
+  (let [ns (if (instance? clojure.lang.Namespace ns) ns
+               (find-ns (symbol ns)))]
+    (->> (ns-interns ns)
+         (filter (comp :cider-instrumented meta second))
+         (map first))))
+
 (defn- instrument-special-form
   "Instrument form representing a macro call or special-form."
   [[name & args :as form]]
@@ -91,7 +98,7 @@
             '#{.} `(~(instrument (first args))
                     ~(second args)
                     ~@(instrument-coll (rest (rest args))))
-            '#{def set!} (list (first args)
+            '#{def set!} (list (with-meta-safe (first args) {:cider-instrumented true})
                                (instrument (second args)))
             '#{loop* let* letfn*} (cons (vec (map-indexed (fn [i x] (if (odd? i) (instrument x) x))
                                                           (first args)))
