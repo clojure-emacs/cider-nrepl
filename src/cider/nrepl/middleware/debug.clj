@@ -254,7 +254,11 @@
       "eval" (h (maybe-debug msg))
       "debug-input" (when-let [pro (@promises (:key msg))]
                       (swap! promises dissoc  (:key msg))
-                      (deliver pro (read-string input))
+                      (try (deliver pro (read-string input))
+                           (catch Exception e
+                             (when-not (realized? pro)
+                               (deliver pro :quit))
+                             (throw e)))
                       (transport/send (:transport msg)
                                       (response-for msg :status :done)))
       "init-debugger" (initialize msg)
