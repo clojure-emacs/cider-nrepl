@@ -103,3 +103,14 @@
     (with-locals
       (is (= '(("x" "1"))
              (#'d/locals-for-message d/*locals*))))))
+
+(deftest eval-expression-with-code
+  (with-locals
+    (is (= (#'d/read-debug-eval-expression
+            "Unused prompt" {:some "random", 'meaningless :map} '(inc 1))
+           2)))
+  (let [x 10]
+    (with-locals
+      (is (= (#'d/read-debug-eval-expression
+              "Unused prompt" {:some "random", 'meaningless :map} '(inc x))
+             11)))))

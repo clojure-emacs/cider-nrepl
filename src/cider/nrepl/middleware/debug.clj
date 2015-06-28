@@ -150,8 +150,9 @@
   "Read and eval an expression from the client.
   extras is a map to be added to the message, and prompt is added into
   the :prompt key."
-  [prompt extras]
-  (eval-with-locals (read-debug extras :expression prompt)))
+  ([prompt extras] (read-debug-eval-expression prompt extras nil))
+  ([prompt extras code]
+   (eval-with-locals (or code (read-debug extras :expression prompt)))))
 
 (defn read-debug-command
   "Read and take action on a debugging command.
@@ -162,20 +163,29 @@
     out: Skip breakpoints in the current sexp.
     inject: Evaluate an expression and return it.
     eval: Evaluate an expression, display result, and prompt again.
-    quit: Abort current eval session."
+    quit: Abort current eval session.
+
+  Response received can be any one of these values. It can also be a
+  map whose :response entry is one of these values, which can thus be
+  used to provide aditional parameters. For instance, if this map has
+  a :code entry, its value is used for operations such as :eval, which
+  would otherwise interactively prompt for an expression."
   [value extras]
   (let [commands (if (cljs/grab-cljs-env *msg*)
                    [:next :continue :out :inject :eval :quit]
                    [:next :continue :out :inject :eval :quit])
         prompt (apply str (map #(let [[f & r] (name %)]
                                   (apply str " (" f ")" r))
-                               commands))]
-    (case (read-debug extras commands prompt)
+                               commands))
+        response-raw (read-debug extras commands prompt)
+        {:keys [code response]} (if (map? response-raw) response-raw
+                                    {:response response-raw})]
+    (case response
       :next     value
       :continue (do (skip-breaks! true) value)
       :out      (do (skip-breaks! (butlast (:coor extras))) value)
-      :inject   (read-debug-eval-expression "Expression to inject: " extras)
-      :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras)]
+      :inject   (read-debug-eval-expression "Expression to inject: " extras code)
+      :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-str return))))
       :quit     (abort!))))
 
