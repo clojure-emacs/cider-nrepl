@@ -114,3 +114,33 @@
       (is (= (#'d/read-debug-eval-expression
               "Unused prompt" {:some "random", 'meaningless :map} '(inc x))
              11)))))
+
+(deftest inspect-then-read-command
+  (binding [*msg* {:session (atom {})}]
+    (with-redefs [d/read-debug-command vector]
+      (let [[v m] (#'d/inspect-then-read-command {} 10)]
+        (is (= v 10))
+        (is (string? (:inspect m)))))))
+
+(deftest debug-reader
+  (is (empty? (remove #(:cider-breakfunction (meta %))
+                      (d/debug-reader '[a b c]))))
+  (is (:cider-breakfunction (meta (d/debug-reader '[a b c]))))
+  (is (= (count (remove #(:cider-breakfunction (meta %))
+                        (d/debug-reader '[a :b 10])))
+         2)))
+
+(deftest breakpoint-reader
+  (is (:cider-breakfunction (meta (d/breakpoint-reader '[a b c]))))
+  (is (= '[a :b 10 "ok"]
+         (remove #(:cider-breakfunction (meta %)) (d/breakpoint-reader '[a :b 10 "ok"]))))
+  ;; Just don't error
+  (is (map d/breakpoint-reader '[a :b 10 "ok"])))
+
+(deftest reader-macros
+  (binding [*data-readers* {'dbg d/debug-reader}]
+    ;; Reader macro variants
+    (is (empty? (remove #(:cider-breakfunction (meta %)) (read-string "#dbg [a b c]"))))
+    (is (:cider-breakfunction (meta (read-string "#dbg [a b c]"))))
+    (is (= (count (remove #(:cider-breakfunction (meta %)) (read-string "#dbg [a :b 10]")))
+           2))))
