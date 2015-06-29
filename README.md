@@ -99,7 +99,7 @@ Middleware        | Op(s)      | Description
 `wrap-apropos`    | `apropos`  | Pattern search for symbols and documentation.
 `wrap-classpath`  | `classpath` | Java classpath.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
-`wrap-debug`      | `init-debugger` | Establish a channel for `cider-debug` commands.
+`wrap-debug`      | `init-debugger/debug-input` | Establish a channel for `cider-debug` commands, use it to get debug input, and also wrap the eval op.
 `wrap-format`     | `format-(code/edn)` | Code and data formatting.
 `wrap-info`       | `info/eldoc` | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
