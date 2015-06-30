@@ -30,6 +30,14 @@
        (map name)
        (sort)))
 
+(defn ns-list-vars-by-name
+  "Return a list of vars named `name` amongst all namespaces.
+  `name` is a symbol."
+  [name]
+  (->> (mapcat ns-interns (all-ns))
+       (filter #(= (first %) name))
+       (map second)))
+
 (defn ns-vars-clj [ns]
   (->> (symbol ns)
        ns-publics
@@ -64,6 +72,13 @@
   [{:keys [transport] :as msg}]
   (transport/send transport (response-for msg :ns-list (ns-list msg)))
   (transport/send transport (response-for msg :status :done)))
+
+(defn ns-list-vars-by-name-reply
+  [{:keys [transport name] :as msg}]
+  (->> (ns-list-vars-by-name (symbol name))
+       pr-str
+       (response-for msg :status :done :var-list)
+       (transport/send transport)))
 
 (defn ns-vars-reply
   [{:keys [transport] :as msg}]
@@ -112,6 +127,7 @@
   (fn [{:keys [op] :as msg}]
     (case op
       "ns-list" (ns-list-reply msg)
+      "ns-list-vars-by-name" (ns-list-vars-by-name-reply msg)
       "ns-vars" (ns-vars-reply msg)
       "ns-path" (ns-path-reply msg)
       (handler msg))))
@@ -123,6 +139,10 @@
    {"ns-list"
     {:doc "Return a sorted list of all namespaces."
      :returns {"status" "done"}}
+    "ns-list-vars-by-name"
+    {:doc "Return a list of vars named `name` amongst all namespaces."
+     :requires {"name" "The name to use."}
+     :returns {"status" "done" "var-list" "The list obtained."}}
     "ns-vars"
     {:doc "Returns a sorted list of all vars in a namespace."
      :requires {"ns" "The namespace to browse."}
