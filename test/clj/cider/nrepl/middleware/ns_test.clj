@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.ns-test
   (:require [cider.nrepl.middleware.ns
-             :refer [ns-list-clj ns-vars-clj inlined-dependency?]]
+             :refer [ns-list-clj ns-vars-clj inlined-dependency?
+                     ns-list-vars-by-name]]
             [cider.nrepl.test-session :as session]
             [cider.nrepl.test-transport :refer [messages test-transport]]
             [clojure.test :refer :all]))
@@ -39,3 +40,9 @@
                                            :ns "clojure.core"}))]
     (is (.endsWith ns-path "cider/nrepl/middleware/ns.clj"))
     (is (.endsWith core-path "clojure/core.clj"))))
+
+(deftest test-ns-list-vars-by-name
+  (is (= (first (ns-list-vars-by-name 'test-ns-list-vars-by-name))
+         #'cider.nrepl.middleware.ns-test/test-ns-list-vars-by-name))
+  (is (= (count (ns-list-vars-by-name 'test-ns-list-vars-by-name)) 1))
+  (is (not (seq (ns-list-vars-by-name 'all-your-base-are-belong-to-us)))))
