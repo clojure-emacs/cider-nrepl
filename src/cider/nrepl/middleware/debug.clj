@@ -256,10 +256,24 @@
 ;;; Middleware setup
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
-  [{:keys [code session] :as msg}]
+  [{:keys [code session ns] :as msg}]
   (when (instance? clojure.lang.Atom session)
     (swap! session update-in [#'*data-readers*] assoc
-           'dbg #'debug-reader 'break  #'breakpoint-reader))
+           'dbg #'debug-reader 'break  #'breakpoint-reader)
+    ;; The session atom is reset! after eval, so it's the best way of
+    ;; running some code after eval is done. Since nrepl evals are async
+    ;; we can't just run this code after propagating the message.
+    (add-watch session :debug-track-instrumented-defs
+               (fn [& _]
+                 (try
+                   (when-let [transport (:transport @debugger-message)]
+                     (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
+                       (->> {:instrumented-defs ins-defs :ns ns}
+                            (misc/transform-value)
+                            (response-for @debugger-message)
+                            (transport/send transport))
+                       (remove-watch session :debug-track-instrumented-defs)))
+                   (catch Exception e)))))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
