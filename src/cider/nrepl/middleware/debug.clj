@@ -9,6 +9,7 @@
             [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
+            [cider.nrepl.middleware.util.misc :as misc]
             [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
 
@@ -284,10 +285,21 @@
   ;; The above is just bureaucracy. The below is important.
   (reset! debugger-message msg))
 
+(defn- instrumented-defs-reply
+  "Reply to `msg` with an alist of instrumented defs on the \"list\" entry."
+  [msg]
+  (->> (all-ns)
+       (map #(cons (ns-name %) (ins/list-instrumented-defs %)))
+       (filter second)
+       misc/transform-value
+       (response-for msg :status :done :list)
+       (transport/send (:transport msg))))
+
 (defn wrap-debug [h]
   (fn [{:keys [op input] :as msg}]
     (case op
       "eval" (h (maybe-debug msg))
+      "debug-instrumented-defs" (instrumented-defs-reply msg)
       "debug-input" (when-let [pro (@promises (:key msg))]
                       (swap! promises dissoc  (:key msg))
                       (try (deliver pro (read-string input))
@@ -315,6 +327,13 @@
 This usually does not respond immediately. It sends a response when a
 breakpoint is reached or when the message is discarded."
      :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+    "debug-instrumented-defs"
+    {:doc "Return an alist of definitions currently thought to be instrumented on each namespace.
+Due to Clojure's versatility, this could include false postives, but
+there will not be false negatives. Instrumentations inside protocols
+are not listed."
+     :returns {"status" "done"
+               "list" "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
     "debug-middleware"
     {:doc "Debug a code form or fall back on regular eval."
      :requires {"id" "A message id that will be responded to when a breakpoint is reached."
