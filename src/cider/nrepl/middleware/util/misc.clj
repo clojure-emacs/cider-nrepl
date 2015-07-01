@@ -1,6 +1,12 @@
 (ns cider.nrepl.middleware.util.misc
   (:require [clojure.string :as str]
-            [clojure.stacktrace :as stacktrace]))
+            [clojure.java.io :as io]
+            [clojure.tools.namespace
+             [file :refer [read-file-ns-decl]]
+             [find :refer [clojure-sources-in-jar find-clojure-sources-in-dir]]]
+            [clojure.java.classpath :as cp]
+            [clojure.stacktrace :as stacktrace])
+  (:import java.util.jar.JarFile))
 
 (def java-api-version
   (try (-> (System/getProperty "java.version") (str/split #"\.") second)
@@ -61,3 +67,37 @@
   {:ex (str (class ex))
    :err (with-out-str (stacktrace/print-cause-trace ex))
    :status #{status :done}})
+
+;;; Finding a namespace's file.
+(defn- jar-file?
+  "Returns true if file is a normal file with a .jar or .JAR extension."
+  [f]
+  (let [file (io/file f)]
+    (and (.isFile file)
+         (.endsWith (.. file getName toLowerCase) ".jar"))))
+
+(defn- get-clojure-sources-in-jar
+  [^JarFile jar]
+  (let [path-to-jar (.getName jar)]
+    (map #(str "jar:file:" path-to-jar "!/" %) (clojure-sources-in-jar jar))))
+
+(defn- all-clj-files-on-cp []
+  (let [dirs-on-cp (filter #(.isDirectory %) (cp/classpath))
+        jars-on-cp (map #(JarFile. %) (filter jar-file? (cp/classpath)))]
+    (concat (->> dirs-on-cp
+                 (mapcat find-clojure-sources-in-dir)
+                 (map #(.getAbsolutePath %)))
+            (mapcat get-clojure-sources-in-jar jars-on-cp))))
+
+(defn ns-path
+  "Return the path to a file containing namespace `ns`.
+  `ns` can be a Namespace object or the name of a namespace."
+  [ns]
+  (let [ns (if (instance? clojure.lang.Namespace ns)
+             (ns-name ns) (symbol ns))]
+    (loop [paths (all-clj-files-on-cp)]
+      (when (seq paths)
+        (let [file-ns (second (read-file-ns-decl (first paths)))]
+          (if (= file-ns ns)
+            (first paths)
+            (recur (rest paths))))))))

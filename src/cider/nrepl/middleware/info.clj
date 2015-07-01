@@ -26,9 +26,19 @@
     x
     nil))
 
+(defn maybe-add-file
+  "If `meta-map` has no :file, assoc the :namespace file into it."
+  [{:keys [file ns] :as meta-map}]
+  ;; If we don't know its file, use the ns file.
+  (if (and ns (or (not file)
+                  (re-find #"/form-init[^/]*$" file)))
+    (-> (dissoc meta-map :line)
+        (assoc :file (u/ns-path ns)))
+    meta-map))
+
 (defn var-meta
   [v]
-  (-> v meta maybe-protocol (select-keys var-meta-whitelist) map-seq))
+  (-> v meta maybe-protocol (select-keys var-meta-whitelist) map-seq maybe-add-file))
 
 (defn ns-meta
   [ns]
