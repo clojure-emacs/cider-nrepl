@@ -6,7 +6,9 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [cider.nrepl.middleware.util.instrument :as ins]
+            [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.inspect :as inspect]
             [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
 
@@ -150,8 +152,17 @@
   "Read and eval an expression from the client.
   extras is a map to be added to the message, and prompt is added into
   the :prompt key."
-  [prompt extras]
-  (eval-with-locals (read-debug extras :expression prompt)))
+  ([prompt extras] (read-debug-eval-expression prompt extras nil))
+  ([prompt extras code]
+   (eval-with-locals (or code (read-debug extras :expression prompt)))))
+
+(declare read-debug-command)
+
+(defn inspect-then-read-command
+  "Inspect `value` and send it as part of a new `read-debug-command`."
+  [extras value]
+  (let [i (pr-str (:rendered (swap-inspector! *msg* inspect/start value)))]
+    (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
   "Read and take action on a debugging command.
@@ -160,22 +171,34 @@
     next: Return value.
     continue: Skip breakpoints for the remainder of this eval session.
     out: Skip breakpoints in the current sexp.
+    inspect: Evaluate an expression and inspect it.
+    locals: Inspect local variables.
     inject: Evaluate an expression and return it.
     eval: Evaluate an expression, display result, and prompt again.
-    quit: Abort current eval session."
+    quit: Abort current eval session.
+
+  Response received can be any one of these values. It can also be a
+  map whose :response entry is one of these values, which can thus be
+  used to provide aditional parameters. For instance, if this map has
+  a :code entry, its value is used for operations such as :eval, which
+  would otherwise interactively prompt for an expression."
   [value extras]
   (let [commands (if (cljs/grab-cljs-env *msg*)
-                   [:next :continue :out :inject :eval :quit]
-                   [:next :continue :out :inject :eval :quit])
-        prompt (apply str (map #(let [[f & r] (name %)]
-                                  (apply str " (" f ")" r))
-                               commands))]
-    (case (read-debug extras commands prompt)
+                   [:next :continue :out :inspect :locals :inject :eval :quit]
+                   [:next :continue :out :inspect :locals :inject :eval :quit])
+        response-raw (read-debug extras commands nil)
+        {:keys [code response]} (if (map? response-raw) response-raw
+                                    {:response response-raw})
+        extras (dissoc extras :inspect)]
+    (case response
       :next     value
       :continue (do (skip-breaks! true) value)
       :out      (do (skip-breaks! (butlast (:coor extras))) value)
-      :inject   (read-debug-eval-expression "Expression to inject: " extras)
-      :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras)]
+      :locals   (inspect-then-read-command extras *locals*)
+      :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
+                     (inspect-then-read-command extras))
+      :inject   (read-debug-eval-expression "Expression to inject: " extras code)
+      :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-str return))))
       :quit     (abort!))))
 
@@ -254,7 +277,11 @@
       "eval" (h (maybe-debug msg))
       "debug-input" (when-let [pro (@promises (:key msg))]
                       (swap! promises dissoc  (:key msg))
-                      (deliver pro (read-string input))
+                      (try (deliver pro (read-string input))
+                           (catch Exception e
+                             (when-not (realized? pro)
+                               (deliver pro :quit))
+                             (throw e)))
                       (transport/send (:transport msg)
                                       (response-for msg :status :done)))
       "init-debugger" (initialize msg)

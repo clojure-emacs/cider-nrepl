@@ -50,12 +50,12 @@
   (with-redefs [d/breakpoint-reader
                 (fn [x] (t/with-meta-safe x {:cider-breakfunction #'bp}))]
     (reset! bp-tracker #{})
-    (clojure.pprint/pprint (walk/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form))))
-    ;; Replace #'bp with 'bp for easier comparison.
+    (walk/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form)))
+    ;; Replace #'bp with 'bp for easier print and comparison.
     (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker)))
 
 (deftest instrument-clauses
-  (are [exp res] (= (breakpoint-tester exp) res)
+  (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
     '(cond-> value
        v2 form
        v3 (boogie oogie form))

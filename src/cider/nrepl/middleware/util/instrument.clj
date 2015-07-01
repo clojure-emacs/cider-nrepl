@@ -160,7 +160,18 @@
        (println "[DBG]" (not (not cider-breakfunction)) cider-coor form))
      (if (and cider-breakfunction (seq cider-coor))
        (list cider-breakfunction form cider-coor)
-       form))))
+       ;; If the form is a list and has no metadata, maybe it was
+       ;; destroyed by a macro. Try guessing the coor by looking at
+       ;; the first element. This fixes `->`, for instance.
+       (if (listy? form)
+         (let [{:keys [cider-coor cider-breakfunction]} (meta (first form))
+               coor (if (= (last cider-coor) 0)
+                      (pop cider-coor)
+                      cider-coor)]
+           (if (and cider-breakfunction (seq cider-coor))
+             (list cider-breakfunction form coor)
+             form))
+         form)))))
 
 (defn- contains-recur?
   "Return true if form is not a `loop` and a `recur` is found in it."
@@ -230,8 +241,13 @@
    (let [map-inner (fn [forms]
                      (map-indexed #(walk-indexed (conj coor %1) f %2)
                                   forms))
-         ;; Order of maps and sets is unpredictable, unfortunately.
-         result (cond (map? form)  form
+         ;; Maps are unordered, but we can try to use the keys (and
+         ;; they're important enough that we're willing to risk
+         ;; getting the position wrong).
+         result (cond (map? form)  (into {} (map (fn [[k v]]
+                                                   [k (walk-indexed (conj coor (pr-str k)) f v)])
+                                                 form))
+                      ;; Order of sets is unpredictable, unfortunately.
                       (set? form)  form
                       ;; Borrowed from clojure.walk/walk
                       (list? form) (apply list (map-inner form))
