@@ -258,12 +258,12 @@
   [{:keys [code session] :as msg}]
   (when (instance? clojure.lang.Atom session)
     (swap! session update-in [#'*data-readers*] assoc
-           'dbg #'debug-reader 'bp  #'breakpoint-reader))
+           'dbg #'debug-reader 'break  #'breakpoint-reader))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
         fake-reader (fn [x] (reset! has-debug? true) nil)]
-    (binding [*data-readers* {'dbg fake-reader, 'bp fake-reader}]
+    (binding [*data-readers* {'dbg fake-reader, 'break fake-reader}]
       (try
         (read-string code)
         (catch Exception e))
