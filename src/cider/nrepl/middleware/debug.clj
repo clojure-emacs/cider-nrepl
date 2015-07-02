@@ -142,11 +142,24 @@
     @input))
 
 (defn- eval-with-locals
-  "`eval` form wrapped in a let of the *locals* map."
+  "`eval` form wrapped in a let of the *locals* map.
+  If an exception is thrown, it is caught and sent to the client, and
+  this function returns nil."
   [form]
-  (eval
-   `(let ~(vec (mapcat #(list % `(*locals* '~%)) (keys *locals*)))
-      ~form)))
+  (try
+    (eval `(let ~(vec (mapcat #(list % `(*locals* '~%))
+                              (keys *locals*)))
+             ~form))
+    (catch Exception e
+      ;; Borrowed from interruptible-eval/evaluate.
+      (let [root-ex (#'clojure.main/root-cause e)]
+        (when-not (instance? ThreadDeath root-ex)
+          (swap! (:session *msg*) assoc #'*e e)
+          (transport/send (:transport *msg*)
+                          (response-for *msg* {:status :eval-error
+                                               :ex (-> e class str)
+                                               :root-ex (-> root-ex class str)}))
+          (clojure.main/repl-caught e))))))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.

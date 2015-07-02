@@ -1,16 +1,14 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.misc :as misc]
             [cljs-tooling.util.analysis :as cljs-analysis]
-            [clojure.java.classpath :as cp]
-            [clojure.java.io :as io]
             [clojure.tools.namespace
              [file :refer [read-file-ns-decl]]
              [find :refer [clojure-sources-in-jar find-clojure-sources-in-dir]]]
             [clojure.tools.nrepl
              [middleware :refer [set-descriptor!]]
              [misc :refer [response-for]]
-             [transport :as transport]])
-  (:import java.util.jar.JarFile))
+             [transport :as transport]]))
 
 (defn inlined-dependency?
   "Returns true if the namespace matches one of our, or eastwood's,
@@ -85,40 +83,10 @@
   (transport/send transport (response-for msg :ns-vars (ns-vars msg)))
   (transport/send transport (response-for msg :status :done)))
 
-(defn- jar-file?
-  "Returns true if file is a normal file with a .jar or .JAR extension."
-  [f]
-  (let [file (io/file f)]
-    (and (.isFile file)
-         (.endsWith (.. file getName toLowerCase) ".jar"))))
-
-(defn- get-clojure-sources-in-jar
-  [^JarFile jar]
-  (let [path-to-jar (.getName jar)]
-    (map #(str "jar:file:" path-to-jar "!/" %) (clojure-sources-in-jar jar))))
-
-(defn- all-clj-files-on-cp []
-  (let [dirs-on-cp (filter #(.isDirectory %) (cp/classpath))
-        jars-on-cp (map #(JarFile. %) (filter jar-file? (cp/classpath)))]
-    (concat (->> dirs-on-cp
-                 (mapcat find-clojure-sources-in-dir)
-                 (map #(.getAbsolutePath %)))
-            (mapcat get-clojure-sources-in-jar jars-on-cp))))
-
-(defn- ns-path
-  [{:keys [ns]}]
-  (let [ns (symbol ns)]
-    (loop [paths (all-clj-files-on-cp)]
-      (when (seq paths)
-        (let [file-ns (second (read-file-ns-decl (first paths)))]
-          (if (= file-ns ns)
-            (first paths)
-            (recur (rest paths))))))))
-
 (defn- ns-path-reply
-  [{:keys [transport] :as msg}]
-  (when-let [path (ns-path msg)]
-    (transport/send transport (response-for msg :path (ns-path msg))))
+  [{:keys [transport ns] :as msg}]
+  (when-let [path (misc/ns-path ns)]
+    (transport/send transport (response-for msg :path path)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-ns

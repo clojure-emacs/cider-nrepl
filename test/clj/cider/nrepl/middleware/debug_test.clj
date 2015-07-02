@@ -96,6 +96,31 @@
            (with-locals
              (#'d/eval-with-locals '(inc x)))))))
 
+(deftest eval-with-locals-exceptions
+  (binding [*msg* {:session (atom {})}]
+    (let [resp (atom nil)
+          e (Exception. "HI")]
+      (with-redefs [clojure.main/repl-caught (fn [& _])
+                    t/send (fn [_ response] (reset! resp response))]
+        (with-locals
+          (is (not (#'d/eval-with-locals '(do (throw e) true))))))
+      (are [k v] (= (k @resp) v)
+        :status #{:eval-error}
+        :ex (-> e class str)
+        :root-ex (-> (#'clojure.main/root-cause e) class str)))))
+
+(deftest initialize
+  (reset! d/debugger-message nil)
+  (let [resp (atom nil)]
+    (with-redefs [t/send (fn [_ response] (reset! resp response))]
+      (#'d/initialize {:hi true}))
+    (is (= @d/debugger-message {:hi true}))
+    (is (not (:status @resp))))
+  (let [resp (atom nil)]
+    (with-redefs [t/send (fn [_ response] (reset! resp response))]
+      (#'d/initialize {:hi true}))
+    (is (:status @resp))))
+
 (deftest locals-for-message
   (let [x 1
         to_ignore 0
