@@ -9,6 +9,7 @@
             [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
+            [cider.nrepl.middleware.util.misc :as misc]
             [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
 
@@ -255,10 +256,24 @@
 ;;; Middleware setup
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
-  [{:keys [code session] :as msg}]
+  [{:keys [code session ns] :as msg}]
   (when (instance? clojure.lang.Atom session)
     (swap! session update-in [#'*data-readers*] assoc
-           'dbg #'debug-reader 'break  #'breakpoint-reader))
+           'dbg #'debug-reader 'break  #'breakpoint-reader)
+    ;; The session atom is reset! after eval, so it's the best way of
+    ;; running some code after eval is done. Since nrepl evals are async
+    ;; we can't just run this code after propagating the message.
+    (add-watch session :debug-track-instrumented-defs
+               (fn [& _]
+                 (try
+                   (when-let [transport (:transport @debugger-message)]
+                     (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
+                       (->> {:instrumented-defs ins-defs :ns ns}
+                            (misc/transform-value)
+                            (response-for @debugger-message)
+                            (transport/send transport))
+                       (remove-watch session :debug-track-instrumented-defs)))
+                   (catch Exception e)))))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
@@ -284,10 +299,21 @@
   ;; The above is just bureaucracy. The below is important.
   (reset! debugger-message msg))
 
+(defn- instrumented-defs-reply
+  "Reply to `msg` with an alist of instrumented defs on the \"list\" entry."
+  [msg]
+  (->> (all-ns)
+       (map #(cons (ns-name %) (ins/list-instrumented-defs %)))
+       (filter second)
+       misc/transform-value
+       (response-for msg :status :done :list)
+       (transport/send (:transport msg))))
+
 (defn wrap-debug [h]
   (fn [{:keys [op input] :as msg}]
     (case op
       "eval" (h (maybe-debug msg))
+      "debug-instrumented-defs" (instrumented-defs-reply msg)
       "debug-input" (when-let [pro (@promises (:key msg))]
                       (swap! promises dissoc  (:key msg))
                       (try (deliver pro (read-string input))
@@ -315,6 +341,13 @@
 This usually does not respond immediately. It sends a response when a
 breakpoint is reached or when the message is discarded."
      :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+    "debug-instrumented-defs"
+    {:doc "Return an alist of definitions currently thought to be instrumented on each namespace.
+Due to Clojure's versatility, this could include false postives, but
+there will not be false negatives. Instrumentations inside protocols
+are not listed."
+     :returns {"status" "done"
+               "list" "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
     "debug-middleware"
     {:doc "Debug a code form or fall back on regular eval."
      :requires {"id" "A message id that will be responded to when a breakpoint is reached."
