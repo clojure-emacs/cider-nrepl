@@ -8,7 +8,7 @@
             [clojure.tools.namespace.repl :as repl]
             [clojure.tools.namespace.track :as track]))
 
-(defonce ^:private refresh-tracker (atom (track/tracker)))
+(defonce ^:private refresh-tracker (agent (track/tracker)))
 
 (defn- scan
   [tracker scan-fn dirs]
@@ -36,13 +36,12 @@
 
 (defn- refresh-reply
   [{:keys [dirs scan-fn] :as msg}]
-  (reset! refresh-tracker
-          (-> @refresh-tracker
-              (scan scan-fn dirs)
-              remove-disabled
-              (doto (reloading-reply msg))
-              reload/track-reload
-              (doto (result-reply msg)))))
+  (send-off refresh-tracker
+            #(-> (scan % scan-fn dirs)
+                 (remove-disabled)
+                 (doto (reloading-reply msg))
+                 (reload/track-reload)
+                 (doto (result-reply msg)))))
 
 (defn wrap-refresh
   "Middleware that provides code reloading."
