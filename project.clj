@@ -11,7 +11,7 @@
                  ^:source-dep [cljs-tooling "0.1.7"]
                  ^:source-dep [cljfmt "0.1.10"]
                  ^:source-dep [org.clojure/java.classpath "0.2.2"]
-                 ^:source-dep [org.clojure/tools.namespace "0.2.10"]
+                 ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.8"]
                  ^:source-dep [org.clojure/tools.reader "0.9.2"]]
   :exclusions [org.clojure/clojure]
