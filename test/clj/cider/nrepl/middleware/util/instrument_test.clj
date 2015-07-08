@@ -145,3 +145,14 @@
                    (bp (. Thread sleep 1000) [3 2])
                    (bp (- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]))
              [3]]})))
+
+(deftest instrument-try
+  ;; No breakpoints around `catch`, `finally`, `Exception`, or `e`.
+  (is (= (breakpoint-tester '(try
+                               x
+                               (catch Exception e z)
+                               (finally y)))
+         '#{[y [3 1]]
+            [(try (bp x [1]) (catch Exception e (bp z [2 3])) (finally (bp y [3 1]))) []]
+            [x [1]]
+            [z [2 3]]})))

@@ -16,6 +16,7 @@
   "Set of macros whose return value we don't care about.
   When instrumenting, these will not be wrapped in a breakpoint."
   '#{def fn* deftype* reify* quote
+     catch finally
      monitor-enter monitor-exit})
 
 ;;; We'll probably want to expand this variable. It is used to
