@@ -143,8 +143,8 @@
 (deftest inspect-then-read-command
   (binding [*msg* {:session (atom {})}]
     (with-redefs [d/read-debug-command vector]
-      (let [[v m] (#'d/inspect-then-read-command {} 10)]
-        (is (= v 10))
+      (let [[v m] (#'d/inspect-then-read-command :value {} 10)]
+        (is (= v :value))
         (is (string? (:inspect m)))))))
 
 (deftest debug-reader

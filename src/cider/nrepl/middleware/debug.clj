@@ -173,9 +173,11 @@
 (declare read-debug-command)
 
 (defn inspect-then-read-command
-  "Inspect `value` and send it as part of a new `read-debug-command`."
-  [extras value]
-  (let [i (pr-str (:rendered (swap-inspector! *msg* inspect/start value)))]
+  "Inspect `inspect-value` and send it as part of a new `read-debug-command`.
+  This `read-debug-command` is passed `value` and the `extras` map
+  with the result of the inspection `assoc`ed in."
+  [value extras inspect-value]
+  (let [i (pr-str (:rendered (swap-inspector! *msg* inspect/start inspect-value)))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
@@ -208,9 +210,9 @@
       :next     value
       :continue (do (skip-breaks! true) value)
       :out      (do (skip-breaks! (butlast (:coor extras))) value)
-      :locals   (inspect-then-read-command extras *locals*)
+      :locals   (inspect-then-read-command value extras *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
-                     (inspect-then-read-command extras))
+                     (inspect-then-read-command value extras))
       :inject   (read-debug-eval-expression "Expression to inject: " extras code)
       :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-str return))))
