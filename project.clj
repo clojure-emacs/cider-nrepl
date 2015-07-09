@@ -9,7 +9,7 @@
                  [org.tcrawley/dynapath "0.2.3"]
                  ^:source-dep [compliment "0.2.4"]
                  ^:source-dep [cljs-tooling "0.1.7"]
-                 ^:source-dep [cljfmt "0.1.10"]
+                 ^:source-dep [cljfmt "0.2.0"]
                  ^:source-dep [org.clojure/java.classpath "0.2.2"]
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.8"]
