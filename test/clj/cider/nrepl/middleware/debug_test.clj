@@ -169,3 +169,33 @@
     (is (:cider-breakfunction (meta (read-string "#dbg [a b c]"))))
     (is (= (count (remove #(:cider-breakfunction (meta %)) (read-string "#dbg [a :b 10]")))
            2))))
+
+(deftest pr-short
+  (reset! d/print-length 4)
+  (reset! d/print-level 2)
+  (is (< (count (d/pr-short [1 2 3 4 5 6 7 8 9 10]))
+         (count (pr-str [1 2 3 4 5 6 7 8 9 10]))))
+  (is (< (count (d/pr-short [[[1 2 3 4]]]))
+         (count (pr-str [[[1 2 3 4]]]))))
+  (is (= (d/pr-short [1 2 3 4])
+         (pr-str [1 2 3 4]))))
+
+(deftest breakpoint
+  ;; Map merging
+  (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
+                d/debugger-message (atom [:fake])]
+    (binding [*msg* {:session (atom {#'d/*skip-breaks* false})
+                     :code :code, :id :id, :file :file, :point :point}]
+      (let [m (eval '(cider.nrepl.middleware.debug/breakpoint (inc 10) [6]))]
+        (are [k v] (= (k m) v)
+          :value 11
+          :debug-value "11"
+          :coor [6]
+          :file :file
+          :point :point
+          :code :code
+          :original-id :id))
+      ;; Locals capturing
+      (reset! @#'d/debugger-message nil)
+      (is (= (eval '(let [x 10] (cider.nrepl.middleware.debug/breakpoint cider.nrepl.middleware.debug/*locals* [])))
+             '{x 10})))))
