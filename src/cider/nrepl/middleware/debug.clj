@@ -84,6 +84,9 @@
   "Stop current eval thread.
   This does not quit the repl, it only interrupts an eval operation."
   []
+  ;; Stopping a thread doesn't reset the session binding map (although
+  ;; other exceptions do), so we have to reset `*skip-breaks*` here.
+  (skip-breaks! false)
   (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
   (transport/send (:transport *msg*) (response-for *msg* :status :done))
   (.stop (:thread (meta (:session *msg*)))))
