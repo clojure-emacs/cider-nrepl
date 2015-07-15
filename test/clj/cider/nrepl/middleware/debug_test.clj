@@ -5,7 +5,7 @@
             [cider.nrepl.middleware.debug  :as d]))
 
 (deftest skip-breaks
-  (binding [*msg* {:session (atom {#'d/*skip-breaks* true})}]
+  (binding [d/*skip-breaks* (atom true)]
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
 
@@ -49,10 +49,10 @@
     (is (= 'value (#'d/read-debug-command 'value {}))))
 
   ;; Check that :quit is the last
-  (with-redefs [d/abort! (constantly :aborted)
-                t/send (fn [trans {:keys [key input-type]}]
-                         (deliver (@d/promises key) (last input-type)))]
-    (is (= :aborted (#'d/read-debug-command 'value {}))))
+  (binding [*msg* {:session (atom {})}]
+    (with-redefs [d/abort! (constantly :aborted)
+                  d/read-debug (fn [r c & _] (last c))]
+      (is (= :aborted (#'d/read-debug-command 'value {})))))
 
   ;; Check functionality
   (with-redefs [d/abort! (constantly :aborted)
@@ -60,11 +60,13 @@
     (is (= :aborted (#'d/read-debug-command 'value {}))))
   (with-redefs [t/send (send-override :next)]
     (is (= 'value (#'d/read-debug-command 'value {}))))
-  (binding [*msg* {:session (atom {#'d/*skip-breaks* true})}]
+  (binding [*msg* {:session (atom {})}
+            d/*skip-breaks* (atom true)]
     (with-redefs [t/send (send-override :continue)]
       (is (= 'value (#'d/read-debug-command 'value {})))
       (is (#'d/skip-breaks? nil))))
-  (binding [*msg* {:session (atom {#'d/*skip-breaks* true})}]
+  (binding [*msg* {:session (atom {})}
+            d/*skip-breaks* (atom true)]
     (with-redefs [t/send (send-override :out)]
       (is (= 'value (#'d/read-debug-command 'value {:coor [1 2 3]})))
       (is (#'d/skip-breaks? [1 2 3]))
@@ -72,6 +74,13 @@
       (is (not (#'d/skip-breaks? [1 2])))))
   (with-redefs [t/send (send-override :inject)]
     (is (= :inject (#'d/read-debug-command 'value {})))))
+
+(deftest read-debug-command-eval
+  (let [replies (atom [:eval 100 :next])]
+    (with-redefs [t/send (fn [trans {:keys [key]}]
+                           (deliver (@d/promises key) (first @replies))
+                           (swap! replies rest))]
+      (is (= 'value (#'d/read-debug-command 'value {}))))))
 
 (defmacro with-locals
   "Send value and coordinates to the client through the debug channel.
@@ -98,16 +107,13 @@
 
 (deftest eval-with-locals-exceptions
   (binding [*msg* {:session (atom {})}]
-    (let [resp (atom nil)
-          e (Exception. "HI")]
-      (with-redefs [clojure.main/repl-caught (fn [& _])
-                    t/send (fn [_ response] (reset! resp response))]
-        (with-locals
-          (is (not (#'d/eval-with-locals '(do (throw e) true))))))
-      (are [k v] (= (k @resp) v)
-        :status #{:eval-error}
-        :ex (-> e class str)
-        :root-ex (-> (#'clojure.main/root-cause e) class str)))))
+    (let [e (Exception. "HI")
+          resp (atom nil)]
+      (with-redefs [d/debugger-send #(reset! resp %)]
+        (with-locals (#'d/eval-with-locals '(do (throw e) true)))
+        (is (= (:status @resp) :eval-error))
+        (is (coll? (:causes @resp)))
+        (is (= "HI" (:message (last (:causes @resp)))))))))
 
 (deftest initialize
   (reset! d/debugger-message nil)
@@ -141,11 +147,11 @@
              11)))))
 
 (deftest inspect-then-read-command
-  (binding [*msg* {:session (atom {})}]
-    (with-redefs [d/read-debug-command vector]
-      (let [[v m] (#'d/inspect-then-read-command :value {} 10)]
-        (is (= v :value))
-        (is (string? (:inspect m)))))))
+  (with-redefs [d/debugger-message (atom {:session (atom {})})
+                d/read-debug-command vector]
+    (let [[v m] (#'d/inspect-then-read-command :value {} 10)]
+      (is (= v :value))
+      (is (string? (:inspect m))))))
 
 (deftest debug-reader
   (is (empty? (remove #(:cider-breakfunction (meta %))
@@ -184,8 +190,8 @@
   ;; Map merging
   (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
                 d/debugger-message (atom [:fake])]
-    (binding [*msg* {:session (atom {#'d/*skip-breaks* false})
-                     :code :code, :id :id, :file :file, :point :point}]
+    (binding [*msg* {:session (atom {}) :code :code, :id :id,
+                     :file :file, :point :point}]
       (let [m (eval '(cider.nrepl.middleware.debug/breakpoint (inc 10) [6]))]
         (are [k v] (= (k m) v)
           :value 11

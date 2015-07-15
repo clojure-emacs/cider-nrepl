@@ -155,14 +155,12 @@
   (let [key (random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
-    (->> (assoc extras
-                :status :need-debug-input
-                :locals (locals-for-message *locals*)
-                :key key
-                :prompt prompt
-                :input-type type)
-         (response-for @debugger-message)
-         (transport/send (:transport @debugger-message)))
+    (debugger-send (assoc extras
+                          :status :need-debug-input
+                          :locals (locals-for-message *locals*)
+                          :key key
+                          :prompt prompt
+                          :input-type type))
     @input))
 
 (defn- eval-with-locals
@@ -291,13 +289,10 @@
     (add-watch session :debug-track-instrumented-defs
                (fn [& _]
                  (try
-                   (when-let [transport (:transport @debugger-message)]
+                   (when (map? @debugger-message)
                      (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
-                       (->> (misc/transform-value ins-defs)
-                            (assoc {:ns ns :status :instrumented-defs}
-                                   :instrumented-defs)
-                            (response-for @debugger-message)
-                            (transport/send transport))
+                       (debugger-send {:ns ns :status :instrumented-defs
+                                       :instrumented-defs (misc/transform-value ins-defs)})
                        (remove-watch session :debug-track-instrumented-defs)))
                    (catch Exception e)))))
   ;; The best way of checking if there's a #break reader-macro in
@@ -319,9 +314,8 @@
 (defn- initialize
   "Initialize the channel used for debug-input requests."
   [{:keys [print-length print-level] :as msg}]
-  (when-let [stored-message @debugger-message]
-    (transport/send (:transport stored-message)
-                    (response-for stored-message :status :done)))
+  (when (map? @debugger-message)
+    (debugger-send :status :done))
   ;; The above is just bureaucracy. The below is important.
   (reset! @#'print-length print-length)
   (reset! @#'print-level print-level)
