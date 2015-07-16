@@ -7,6 +7,7 @@
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [cider.nrepl.middleware.util.instrument :as ins]
             [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+            [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.middleware.util.misc :as misc]
@@ -66,7 +67,7 @@
   If *skip-breaks* is a vector of integers, return true if coordinates
   are deeper than this vector."
   [coordinates]
-  (when-let [sb (@(:session *msg*) #'*skip-breaks*)]
+  (when-let [sb @*skip-breaks*]
     (or
      ;; From :continue, skip everything.
      (true? sb)
@@ -76,20 +77,23 @@
             (> (count coordinates) (count parent)))))))
 
 (defn skip-breaks!
-  "Set the value of *skip-breaks* in the session binding map."
+  "Set the value of *skip-breaks* for the top-level breakpoint."
   [bool-or-vec]
-  (swap! (:session *msg*) assoc #'*skip-breaks* bool-or-vec))
+  (reset! *skip-breaks* bool-or-vec))
 
 (defn- abort!
   "Stop current eval thread.
   This does not quit the repl, it only interrupts an eval operation."
   []
-  ;; Stopping a thread doesn't reset the session binding map (although
-  ;; other exceptions do), so we have to reset `*skip-breaks*` here.
-  (skip-breaks! false)
-  (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
-  (transport/send (:transport *msg*) (response-for *msg* :status :done))
-  (.stop (:thread (meta (:session *msg*)))))
+  (if (map? *msg*)
+    (do
+      (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
+      (transport/send (:transport *msg*) (response-for *msg* :status :done))
+      (.stop (:thread (meta (:session *msg*)))))
+    ;; We can't really abort if there's no *msg*, so we do our best
+    ;; impression of that. This is only used in some panic situations,
+    ;; the user won't be offered the :quit option if there's no *msg*.
+    (skip-breaks! true)))
 
 ;;; Politely borrowed from clj-debugger.
 (defn- sanitize-env
@@ -138,6 +142,12 @@
   (map (partial map pr-short)
        (remove (fn [[k]] (re-find  #"_" (name k))) m)))
 
+(defn debugger-send
+  "Send a response through debugger-message."
+  [& r]
+  (transport/send (:transport @debugger-message)
+                  (apply response-for @debugger-message r)))
+
 (defn- read-debug
   "Like `read`, but reply is sent through `debugger-message`.
   type is sent in the message as :input-type."
@@ -145,14 +155,12 @@
   (let [key (random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
-    (->> (assoc extras
-                :status :need-debug-input
-                :locals (locals-for-message *locals*)
-                :key key
-                :prompt prompt
-                :input-type type)
-         (response-for @debugger-message)
-         (transport/send (:transport @debugger-message)))
+    (debugger-send (assoc extras
+                          :status :need-debug-input
+                          :locals (locals-for-message *locals*)
+                          :key key
+                          :prompt prompt
+                          :input-type type))
     @input))
 
 (defn- eval-with-locals
@@ -168,12 +176,11 @@
       ;; Borrowed from interruptible-eval/evaluate.
       (let [root-ex (#'clojure.main/root-cause e)]
         (when-not (instance? ThreadDeath root-ex)
-          (swap! (:session *msg*) assoc #'*e e)
-          (transport/send (:transport *msg*)
-                          (response-for *msg* {:status :eval-error
-                                               :ex (-> e class str)
-                                               :root-ex (-> root-ex class str)}))
-          (clojure.main/repl-caught e))))))
+          (debugger-send
+           {:status :eval-error
+            :causes [(let [causes (stacktrace/analyze-causes e 50 50)]
+                       (when (coll? causes) (last causes)))]})))
+      nil)))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.
@@ -190,7 +197,7 @@
   This `read-debug-command` is passed `value` and the `extras` map
   with the result of the inspection `assoc`ed in."
   [value extras inspect-value]
-  (let [i (pr-str (:rendered (swap-inspector! *msg* inspect/start inspect-value)))]
+  (let [i (pr-str (:rendered (swap-inspector! @debugger-message inspect/start inspect-value)))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
@@ -212,9 +219,9 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (if (cljs/grab-cljs-env *msg*)
-                   [:next :continue :out :inspect :locals :inject :eval :quit]
-                   [:next :continue :out :inspect :locals :inject :eval :quit])
+  (let [commands (cond->> [:next :continue :out :inspect :locals :inject :eval :quit]
+                          (not (map? *msg*)) (remove #{:quit})
+                          (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
         {:keys [code response]} (if (map? response-raw) response-raw
                                     {:response response-raw})
@@ -236,7 +243,8 @@
   "Send value and coordinates to the client through the debug channel.
   Sends a response to the message stored in debugger-message."
   [value coor]
-  `(binding [*locals* ~(sanitize-env &env)]
+  `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
+             *locals* ~(sanitize-env &env)]
      (let [val# ~value]
        (cond
          (skip-breaks? ~coor) val#
@@ -281,12 +289,10 @@
     (add-watch session :debug-track-instrumented-defs
                (fn [& _]
                  (try
-                   (when-let [transport (:transport @debugger-message)]
+                   (when (map? @debugger-message)
                      (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
-                       (->> {:instrumented-defs ins-defs :ns ns}
-                            (misc/transform-value)
-                            (response-for @debugger-message)
-                            (transport/send transport))
+                       (debugger-send {:ns ns :status :instrumented-defs
+                                       :instrumented-defs (misc/transform-value ins-defs)})
                        (remove-watch session :debug-track-instrumented-defs)))
                    (catch Exception e)))))
   ;; The best way of checking if there's a #break reader-macro in
@@ -308,9 +314,8 @@
 (defn- initialize
   "Initialize the channel used for debug-input requests."
   [{:keys [print-length print-level] :as msg}]
-  (when-let [stored-message @debugger-message]
-    (transport/send (:transport stored-message)
-                    (response-for stored-message :status :done)))
+  (when (map? @debugger-message)
+    (debugger-send :status :done))
   ;; The above is just bureaucracy. The below is important.
   (reset! @#'print-length print-length)
   (reset! @#'print-level print-level)
