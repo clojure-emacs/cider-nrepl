@@ -104,8 +104,13 @@
   from its message and discard the string representation of its inner cause."
   [{:keys [class] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
-    (update-in cause [:message] str/replace
-               #".* (compiling:)\((.*)\)" "Error $1 $2")
+    (let [re #".* (compiling:)\(([^:]*):(\d+):(\d+)\)"
+          [_ label source line column] (re-matches re (:message cause))]
+      (assoc (update-in cause [:message] str/replace re
+                        (str "Error " label " " source " line " line " col " column))
+             :source source
+             :line line
+             :column column))
     cause))
 
 ;; CLJS REPLs use :repl-env to store huge amounts of analyzer/compiler state
