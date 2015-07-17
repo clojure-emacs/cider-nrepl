@@ -17,7 +17,8 @@
   "Clear an inspector's state"
   [inspector]
   (merge (reset-index inspector)
-         {:value nil :stack [] :rendered '()}))
+         {:value nil :stack [] :rendered '()
+          :page-size 32 :current-page 0}))
 
 (defn fresh
   "Return an empty inspector "
@@ -49,6 +50,25 @@
     (-> (update-in inspector [:stack] conj val)
         (inspect-render new))))
 
+(defn next-page
+  "Jump to the next page when inspecting a paginated sequence/map. Does nothing
+  if already on the last page."
+  [inspector]
+  (inspect-render (update-in inspector [:current-page] inc)))
+
+(defn prev-page
+  "Jump to the previous page when inspecting a paginated sequence/map. Does
+  nothing if already on the first page."
+  [inspector]
+  (inspect-render (update-in inspector [:current-page] dec)))
+
+(defn set-page-size
+  "Set the page size in pagination mode to the specified value. Current page
+  will be reset to zero."
+  [inspector new-page-size]
+  (inspect-render (assoc inspector
+                         :page-size new-page-size
+                         :current-page 0)))
 
 (declare inspector-value-string)
 
@@ -133,13 +153,50 @@
       (render-ln)))
 
 (defn render-indexed-values [inspector obj]
-  (reduce (fn [ins [idx val]]
-            (-> ins
-                (render "  " (str idx) ". ")
-                (render-value val)
-                (render '(:newline))))
-          inspector
-          (map-indexed list obj)))
+  (let [{:keys [current-page page-size]} inspector
+        last-page (if (or (instance? clojure.lang.Counted obj)
+                          ;; if there are no more items after the current page,
+                          ;; we must have reached the end of the collection, so
+                          ;; it's not infinite.
+                          (empty? (drop (* (inc current-page) page-size) obj)))
+                    (quot (dec (count obj)) page-size)
+                    Integer/MAX_VALUE) ;; possibly infinite
+        ;; current-page might contain an incorrect value, fix that
+        current-page (cond (< current-page 0) 0
+                           (> current-page last-page) last-page
+                           :else current-page)
+        chunk-to-display (->> (map-indexed list obj)
+                              (drop (* current-page page-size))
+                              (take page-size))
+        paginate? (not= last-page 0)]
+    (as-> inspector ins
+      (if (> current-page 0)
+        (-> ins
+            (render "  ...")
+            (render '(:newline)))
+        ins)
+
+      (reduce (fn [ins [idx val]]
+                (-> ins
+                    (render "  " (str idx) ". ")
+                    (render-value val)
+                    (render '(:newline))))
+              ins
+              chunk-to-display)
+
+      (if (< current-page last-page)
+        (render ins "  ...")
+        ins)
+
+      (if paginate?
+        (-> ins
+            (render '(:newline))
+            (render (format "  Page size: %d, showing page: %d of %s"
+                            page-size (inc current-page)
+                            (if (= last-page Integer/MAX_VALUE)
+                              "?" (inc last-page))))
+            (assoc :current-page current-page))
+        ins))))
 
 (defn render-map-values [inspector mappable]
   (reduce (fn [ins [key val]]
