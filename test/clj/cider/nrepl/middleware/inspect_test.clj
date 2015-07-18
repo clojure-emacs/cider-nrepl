@@ -15,6 +15,13 @@
 
 (def push-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentTreeMap$BlackVal\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \":a\" 1) (:newline) \"  \" \"1\" \". \" (:value \"{ :b 1 }\" 2) (:newline))"])
 
+(def long-sequence (range 70))
+(def long-vector (vec (range 70)))
+(def long-map (zipmap (range 70) (range 70)))
+
+(def next-page-result ["(\"Class\" \": \" (:value \"clojure.lang.LazySeq\" 0) (:newline) \"Contents: \" (:newline) \"  ...\" (:newline) \"  \" \"32\" \". \" (:value \"32\" 1) (:newline) \"  \" \"33\" \". \" (:value \"33\" 2) (:newline) \"  \" \"34\" \". \" (:value \"34\" 3) (:newline) (:newline) \"  Page size: 32, showing page: 2 of 2\")"])
+(def first-page-result ["(\"Class\" \": \" (:value \"clojure.lang.LazySeq\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \"0\" 1) (:newline) \"  \" \"1\" \". \" (:value \"1\" 2) (:newline) \"  \" \"2\" \". \" (:value \"2\" 3) (:newline) \"  \" \"3\" \". \" (:value \"3\" 4) (:newline) \"  \" \"4\" \". \" (:value \"4\" 5) (:newline) \"  ...\" (:newline) \"  Page size: 5, showing page: 1 of ?\")"])
+
 (defn inspect
   [value]
   (inspect/start (inspect/fresh) value))
@@ -90,6 +97,68 @@
                (inspect/down 1)
                inspect/up
                render)))))
+
+(deftest pagination-test
+  (testing "big collections are paginated"
+    (is (= 33 (-> long-sequence
+                  inspect
+                  :counter)))
+    (is (= 33 (-> long-map
+                  inspect
+                  :counter)))
+    (is (.startsWith (-> long-vector
+                         inspect
+                         :rendered
+                         last)
+                     "  Page size:")))
+  (testing "small collections are not paginated"
+    (is (= '(:newline)
+           (-> (range 10)
+               inspect
+               :rendered
+               last))))
+  (testing "changing page size"
+    (is (= 21 (-> long-sequence
+                  inspect
+                  (inspect/set-page-size 20)
+                  :counter)))
+    (is (= '(:newline) (-> long-sequence
+                           inspect
+                           (inspect/set-page-size 200)
+                           :rendered
+                           last))))
+  (testing "uncounted collections have their size determined on the last page"
+    (is (= "  Page size: 32, showing page: 2 of 2"
+           (-> (range 50)
+               inspect
+               inspect/next-page
+               :rendered
+               last))))
+  (testing "next-page and prev-page are bound to collection size"
+    (is (= 2
+           (-> long-vector
+               inspect
+               inspect/next-page
+               inspect/next-page
+               inspect/next-page
+               inspect/next-page
+               inspect/next-page
+               :current-page)))
+    (is (= 0
+           (-> long-vector
+               inspect
+               inspect/prev-page
+               inspect/prev-page
+               :current-page)))
+    (is (= 1
+           (-> long-vector
+               inspect
+               inspect/next-page
+               inspect/next-page
+               inspect/prev-page
+               inspect/next-page
+               inspect/prev-page
+               :current-page)))))
 
 ;; integration tests
 
@@ -177,6 +246,27 @@
                                        :code code})
                      (session/message {:op "inspect-push"
                                        :idx "1"})))))))
+
+(deftest next-page-integration-test
+  (testing "jumping to next page in a rendered expr inspector"
+    (is (= next-page-result
+           (:value (do
+                     (session/message {:op "eval"
+                                       :inspect "true"
+                                       :code "(map identity (range 35))"})
+                     (session/message {:op "inspect-next-page"})))))))
+
+(deftest prev-page-integration-test
+  (testing "jumping to previous page in a rendered expr inspector"
+    (is (= first-page-result
+           (:value (do
+                     (session/message {:op "eval"
+                                       :inspect "true"
+                                       :code "(map identity (range 35))"})
+                     (session/message {:op "inspect-set-page-size"
+                                       :page-size "5"})
+                     (session/message {:op "inspect-next-page"})
+                     (session/message {:op "inspect-prev-page"})))))))
 
 (deftest pop-integration-test
   (testing "popping a rendered expr inspector"

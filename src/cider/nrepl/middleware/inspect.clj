@@ -16,9 +16,11 @@
       (get #'*inspector*)))
 
 (defn inspect-reply
-  [{:keys [transport] :as msg} eval-response]
+  [{:keys [page-size transport] :as msg} eval-response]
   (let [value (cljs/response-value msg eval-response)
-        inspector (swap-inspector! msg inspect/start value)]
+        page-size (or page-size 32)
+        inspector (swap-inspector! msg #(-> (assoc % :page-size page-size)
+                                            (inspect/start value)))]
     (transport/send
      transport
      (response-for msg :value (:rendered inspector)))))
@@ -66,6 +68,28 @@
      transport
      (response-for msg :value (:rendered inspector) :status :done))))
 
+(defn next-page-reply
+  [{:keys [transport] :as msg}]
+  (let [inspector (swap-inspector! msg inspect/next-page)]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
+
+(defn prev-page-reply
+  [{:keys [transport] :as msg}]
+  (let [inspector (swap-inspector! msg inspect/prev-page)]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
+
+(defn set-page-size-reply
+  [{:keys [page-size transport] :as msg}]
+  (let [page-size (Integer/parseInt page-size)
+        inspector (swap-inspector! msg inspect/set-page-size page-size)]
+    (transport/send
+     transport
+     (response-for msg :value (:rendered inspector) :status :done))))
+
 (defn wrap-inspect
   "Middleware that adds a value inspector option to the eval op. Passing a
   non-nil value in the `:inspect` slot will cause the last value returned by
@@ -78,6 +102,9 @@
       "inspect-pop" (pop-reply msg)
       "inspect-push" (push-reply msg)
       "inspect-refresh" (refresh-reply msg)
+      "inspect-next-page" (next-page-reply msg)
+      "inspect-prev-page" (prev-page-reply msg)
+      "inspect-set-page-size" (set-page-size-reply msg)
       (handler msg))))
 
 (set-descriptor!
@@ -85,6 +112,29 @@
  (cljs/expects-piggieback
   {:requires #{"clone" #'pr-values}
    :expects #{"eval"}
-   :handles {"inspect-pop" {}
-             "inspect-push" {}
-             "inspect-refresh" {}}}))
+   :handles {"inspect-pop"
+             {:doc "Moves one level up in the inspector stack."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-push"
+             {:doc "Inspects the inside value specified by index."
+              :requires {"idx" "Index of the internal value currently rendered."
+                         "session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-refresh"
+             {:doc "Re-renders the currently inspected value."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-next-page"
+             {:doc "Jumps to the next page in paginated collection view."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-prev-page"
+             {:doc "Jumps to the previous page in paginated collection view."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-set-page-size"
+             {:doc "Sets the page size in paginated view to specified value."
+              :requires {"page-size" "New page size."
+                         "session" "The current session"}
+              :returns {"status" "\"done\""}}}}))
