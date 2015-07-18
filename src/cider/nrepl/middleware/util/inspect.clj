@@ -17,13 +17,12 @@
   "Clear an inspector's state"
   [inspector]
   (merge (reset-index inspector)
-         {:value nil :stack [] :rendered '()
-          :page-size 32 :current-page 0}))
+         {:value nil :stack [] :rendered '() :current-page 0}))
 
 (defn fresh
   "Return an empty inspector "
   []
-  (inspect-render (clear {})))
+  (inspect-render (clear {:page-size 32})))
 
 (defn start
   "Put a new value onto the inspector stack"

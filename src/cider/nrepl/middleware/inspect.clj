@@ -16,9 +16,11 @@
       (get #'*inspector*)))
 
 (defn inspect-reply
-  [{:keys [transport] :as msg} eval-response]
+  [{:keys [page-size transport] :as msg} eval-response]
   (let [value (cljs/response-value msg eval-response)
-        inspector (swap-inspector! msg inspect/start value)]
+        page-size (or page-size 32)
+        inspector (swap-inspector! msg #(-> (assoc % :page-size page-size)
+                                            (inspect/start value)))]
     (transport/send
      transport
      (response-for msg :value (:rendered inspector)))))
