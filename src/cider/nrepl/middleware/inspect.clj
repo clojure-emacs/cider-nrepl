@@ -110,9 +110,29 @@
  (cljs/expects-piggieback
   {:requires #{"clone" #'pr-values}
    :expects #{"eval"}
-   :handles {"inspect-pop" {}
-             "inspect-push" {}
-             "inspect-refresh" {}
-             "inspect-next-page" {}
-             "inspect-prev-page" {}
-             "inspect-set-page-size" {}}}))
+   :handles {"inspect-pop"
+             {:doc "Moves one level up in the inspector stack."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-push"
+             {:doc "Inspects the inside value specified by index."
+              :requires {"idx" "Index of the internal value currently rendered."
+                         "session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-refresh"
+             {:doc "Re-renders the currently inspected value."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-next-page"
+             {:doc "Jumps to the next page in paginated collection view."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-prev-page"
+             {:doc "Jumps to the previous page in paginated collection view."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-set-page-size"
+             {:doc "Sets the page size in paginated view to specified value."
+              :requires {"page-size" "New page size."
+                         "session" "The current session"}
+              :returns {"status" "\"done\""}}}}))
