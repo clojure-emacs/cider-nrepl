@@ -23,8 +23,11 @@
 
 (defn as-sym
   [x]
-  (when (or (symbol? x) (string? x))
-    (symbol x)))
+  (cond
+    (symbol? x) x
+    (string? x) (if-let [[_ ns sym] (re-matches #"(.+)/(.+)" x)]
+                  (symbol ns sym)
+                  (symbol x))))
 
 (defmulti transform-value "Transform a value for output" type)
 
