@@ -64,6 +64,7 @@
           (dissoc :file)
           (info/format-response)))
 
+  (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core//)))
   (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
   ;; used to crash, sym is parsed as a class name
   (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'notincanter.core))))
