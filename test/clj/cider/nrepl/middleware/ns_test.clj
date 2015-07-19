@@ -24,6 +24,7 @@
     (is (every? string? ns-list))
     (testing "Removal of namespaces created by source rewriting"
       (is (not-any? #(or (.startsWith % "deps.")
+                         (.startsWith % "mranderson")
                          (.startsWith % "eastwood.copieddeps"))
                     ns-list)))))
 

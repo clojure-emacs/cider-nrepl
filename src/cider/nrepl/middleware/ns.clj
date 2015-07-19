@@ -18,6 +18,7 @@
     (or
      ;; rewritten by mranderson
      (.startsWith ns-name "deps.")
+     (.startsWith ns-name "mranderson")
      ;; rewritten by dolly
      (.startsWith ns-name "eastwood.copieddeps"))))
 
