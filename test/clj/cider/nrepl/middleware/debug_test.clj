@@ -149,7 +149,7 @@
 (deftest inspect-then-read-command
   (with-redefs [d/debugger-message (atom {:session (atom {})})
                 d/read-debug-command vector]
-    (let [[v m] (#'d/inspect-then-read-command :value {} 10)]
+    (let [[v m] (#'d/inspect-then-read-command :value {} 32 10)]
       (is (= v :value))
       (is (string? (:inspect m))))))
 
