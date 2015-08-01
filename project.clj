@@ -66,7 +66,7 @@
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
-             :cljfmt {:plugins [[lein-cljfmt "0.1.10"]]
+             :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]}}}
              :eastwood {:plugins [[jonase/eastwood "0.2.1"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})
