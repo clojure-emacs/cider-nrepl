@@ -215,7 +215,6 @@
         (render-map-values (meta obj)))
     inspector))
 
-
 ;; Inspector multimethod
 (defn known-types [ins obj]
   (cond
@@ -335,7 +334,6 @@
       (render-map-values (ns-refers-by-ns obj))
       (render-labeled-value "Imports" (ns-imports obj))
       (render-labeled-value "Interns" (ns-interns obj))))
-
 
 ;;
 ;; Entry point to inspect a value and get the serialized rep

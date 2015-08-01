@@ -19,7 +19,7 @@
           (nhex [n] (apply str (repeatedly n hex)))]
     (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
       (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
-        "-" rhex (nhex 3) "-" (nhex 12)))))
+           "-" rhex (nhex 3) "-" (nhex 12)))))
 
 ;;;; # The Debugger
 ;;; The debugger is divided into two parts, intrument.clj and
@@ -220,8 +220,8 @@
   would otherwise interactively prompt for an expression."
   [value extras]
   (let [commands (cond->> [:next :continue :out :inspect :locals :inject :eval :quit]
-                          (not (map? *msg*)) (remove #{:quit})
-                          (cljs/grab-cljs-env *msg*) identity)
+                   (not (map? *msg*)) (remove #{:quit})
+                   (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
         {:keys [code response]} (if (map? response-raw) response-raw
                                     {:response response-raw})

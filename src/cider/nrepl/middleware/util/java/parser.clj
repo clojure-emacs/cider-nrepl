@@ -77,7 +77,6 @@
       (.main enter (List/of tree))
       (RootDocImpl. docenv classes (List/nil) (List/nil)))))
 
-
 ;;; ## Docstring Parsing
 ;; Unlike source metadata (line, position, etc) that's available directly from
 ;; the compiler parse tree, docstrings are "some assembly required." Javadoc
@@ -183,7 +182,6 @@
                 "@literal" (format " `%s` " (-> t .inlineTags ^Tag first .text))
                 (parse-html (.text t)))))
        (apply str)))
-
 
 ;;; ## Java Parse Tree Traversal
 ;; From the parse tree returned by the compiler, create a nested map structure

@@ -106,7 +106,6 @@
       (report {:type :error, :expected nil, :actual e
                :message "Unhandled exception in test fixture"}))))
 
-
 ;;; ## Test Execution
 ;; These functions are based on the ones in `clojure.test`, updated to accept
 ;; a list of vars to test, and use the report implementation above.
@@ -139,7 +138,6 @@
                         (vals (ns-interns ns)))))
     (test/do-report {:type :end-test-ns, :ns ns})
     @current-report))
-
 
 ;;; ## Middleware
 

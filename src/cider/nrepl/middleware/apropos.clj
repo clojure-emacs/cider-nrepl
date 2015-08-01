@@ -14,7 +14,6 @@
 ;; symbols from the current namespace are preferred, then `clojure.*` symbols,
 ;; and then other results.
 
-
 ;;; ## Metadata
 ;; Var metadata provides the search targets. In the case of docstrings, an
 ;; abbreviated version (i.e. first sentence only) may be returned for
@@ -37,7 +36,6 @@
             (str/split #"(?<=\.) ")) ; split sentences
         (take n)
         (str/join " "))))
-
 
 ;;; ## Symbol Search
 
@@ -78,7 +76,6 @@
                        :type (cond (:macro (meta v)) :macro
                                    (fn? (deref v))   :function
                                    :else             :variable)})))))
-
 
 ;;; ## Middleware
 

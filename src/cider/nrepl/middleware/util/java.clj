@@ -57,7 +57,6 @@
     (when (.canRead jar)
       (add-classpath! (io/as-url jar)))))
 
-
 ;;; ## Javadoc URLs
 ;; Relative Javadoc URLs can be constructed from class/member signatures.
 ;;
@@ -77,7 +76,6 @@
    (str (javadoc-url class) "#" member
         (when argtypes
           (str "(" (str/join ",%20" argtypes) ")")))))
-
 
 ;;; ## Class Metadata Assembly
 ;; We construct metadata at the class level, first using `reflect-info` to
@@ -152,7 +150,6 @@
                         :interfaces (map typesym (.getInterfaces c))
                         :javadoc    (javadoc-url class)}))))
 
-
 ;;; ## Class Metadata Caching
 ;; When it won't change, cache the class info. Otherwise when we analyze
 ;; hundreds or more classes at once (as with a naive symbol resolution call),
@@ -183,7 +180,6 @@
         (when (cache? info)
           (swap! cache assoc class info))
         info)))
-
 
 ;;; ## Class/Member Info
 ;; These functions filter the class info assembled above to respond to a more
@@ -229,7 +225,6 @@
                                   (vals m))
                    :javadoc (javadoc-url class member
                                          (:argtypes m*))))))))
-
 
 ;;; ## Class/Member Resolution
 ;; A namespace provides a search context for resolving a symbol to a Java class
@@ -283,7 +278,6 @@
         (if (= 1 (count ms))
           (first ms)
           {:candidates (zipmap (map :class ms) ms)})))))
-
 
 ;;; ## Initialization
 ;; On startup, cache info for the most commonly referenced classes.

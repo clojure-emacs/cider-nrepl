@@ -96,7 +96,6 @@
       (flag-duplicates)
       (flag-tooling)))
 
-
 ;;; ## Causes
 
 (defn extract-location
@@ -140,7 +139,6 @@
        (iterate #(.getCause ^Exception %))
        (take-while identity)
        (map (comp extract-location #(analyze-cause % print-length print-level)))))
-
 
 ;;; ## Middleware
 
