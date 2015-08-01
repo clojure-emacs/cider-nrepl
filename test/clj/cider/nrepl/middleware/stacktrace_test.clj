@@ -20,7 +20,6 @@
         (catch Exception e
           e))))
 
-
 ;; ## Test fixtures
 
 (def form1 '(throw (ex-info "oops" {:x 1} (ex-info "cause" {:y 2}))))
@@ -31,7 +30,6 @@
 (def frames2 (stack-frames form2))
 (def causes1 (causes form1))
 (def causes2 (causes form2))
-
 
 ;; ## Tests
 

@@ -59,25 +59,25 @@
     '(cond-> value
        v2 form
        v3 (boogie oogie form))
-    '#{[oogie [5 1]] [form [5 2]] [value [1]] [v2 [2]] [v3 [4]]} 
+    '#{[oogie [5 1]] [form [5 2]] [value [1]] [v2 [2]] [v3 [4]]}
 
     '(case value
        some-const some-expr
        the-default)
-    '#{[the-default [4]] [some-expr [3]] [value [1]]} 
-    
+    '#{[the-default [4]] [some-expr [3]] [value [1]]}
+
     '(condp pred value
        v4 :>> v5)
-    '#{[pred [1]] [v4 [3]] [value [2]]} 
+    '#{[pred [1]] [v4 [3]] [value [2]]}
 
     '(condp pred value
        v4 v5)
-    '#{[pred [1]] [v5 [4]] [v4 [3]] [value [2]]} 
-    
+    '#{[pred [1]] [v5 [4]] [v4 [3]] [value [2]]}
+
     '(condp pred value
        v2 v3
        default)
-    '#{[pred [1]] [default [5]] [value [2]] [v3 [4]] [v2 [3]]} 
+    '#{[pred [1]] [default [5]] [value [2]] [v3 [4]] [v2 [3]]}
 
     '(cond
        (= x 1) true
