@@ -196,8 +196,10 @@
   "Inspect `inspect-value` and send it as part of a new `read-debug-command`.
   This `read-debug-command` is passed `value` and the `extras` map
   with the result of the inspection `assoc`ed in."
-  [value extras inspect-value]
-  (let [i (pr-str (:rendered (swap-inspector! @debugger-message inspect/start inspect-value)))]
+  [value extras page-size inspect-value]
+  (let [i (pr-str (:rendered (swap-inspector! @debugger-message
+                                              #(-> (assoc % :page-size page-size)
+                                                   (inspect/start inspect-value)))))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
@@ -223,16 +225,16 @@
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
-        {:keys [code response]} (if (map? response-raw) response-raw
-                                    {:response response-raw})
+        {:keys [code response page-size] :or {page-size 32}} (if (map? response-raw) response-raw
+                                                                 {:response response-raw})
         extras (dissoc extras :inspect)]
     (case response
       :next     value
       :continue (do (skip-breaks! true) value)
       :out      (do (skip-breaks! (butlast (:coor extras))) value)
-      :locals   (inspect-then-read-command value extras *locals*)
+      :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
-                     (inspect-then-read-command value extras))
+                     (inspect-then-read-command value extras page-size))
       :inject   (read-debug-eval-expression "Expression to inject: " extras code)
       :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-short return))))
