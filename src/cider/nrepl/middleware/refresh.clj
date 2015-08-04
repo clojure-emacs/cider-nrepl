@@ -1,11 +1,14 @@
 (ns ^{:clojure.tools.namespace.repl/load false
       :clojure.tools.namespace.repl/unload false} cider.nrepl.middleware.refresh
+      ;; The above metadata prevents reloading of this namespace - otherwise,
+      ;; `refresh-tracker` is reset with every refresh. This only has any effect
+      ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
+      ;; checkout dependency - tools.namespace doesn't reload source in JARs.
   (:require [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.main :refer [repl-caught]]
             [clojure.tools.namespace.dir :as dir]
             [clojure.tools.namespace.reload :as reload]
-            [clojure.tools.namespace.repl :as repl]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -18,9 +21,25 @@
   [tracker scan-fn dirs]
   (apply scan-fn tracker (or (seq dirs) [])))
 
+;; We construct the keyword at runtime here because namespaced keyword literals
+;; in clojure.tools.namespace.repl itself might be rewritten by mranderson - in
+;; this case, we still want to disable reloading of namespaces that a user has
+;; added the (non-rewritten) metadata to.
+(defn- load-disabled?
+  [sym]
+  (false? (get (meta (find-ns sym))
+               (keyword "clojure.tools.namespace.repl" "load"))))
+
+(defn- unload-disabled?
+  [sym]
+  (false? (get (meta (find-ns sym))
+               (keyword "clojure.tools.namespace.repl" "unload"))))
+
 (defn- remove-disabled
   [tracker]
-  (#'repl/remove-disabled tracker))
+  (-> tracker
+      (update-in [::track/load] #(remove load-disabled? %))
+      (update-in [::track/unload] #(remove unload-disabled? %))))
 
 (defn- resolve-and-invoke
   [sym {:keys [session] :as msg}]
