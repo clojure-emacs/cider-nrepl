@@ -1,4 +1,5 @@
-(ns cider.nrepl.middleware.refresh
+(ns ^{:clojure.tools.namespace.repl/load false
+      :clojure.tools.namespace.repl/unload false} cider.nrepl.middleware.refresh
   (:require [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.main :refer [repl-caught]]
