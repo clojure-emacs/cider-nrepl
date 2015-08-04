@@ -152,6 +152,13 @@
                   (error-reply {:error e} msg)
                   tracker)))))
 
+(defn- clear-reply
+  [{:keys [transport] :as msg}]
+  (send-off refresh-tracker (constantly (track/tracker)))
+  (transport/send
+   transport
+   (response-for msg {:status :done})))
+
 (defn wrap-refresh
   "Middleware that provides code reloading."
   [handler]
@@ -159,6 +166,7 @@
     (case op
       "refresh" (refresh-reply (assoc msg :scan-fn dir/scan))
       "refresh-all" (refresh-reply (assoc msg :scan-fn dir/scan-all))
+      "refresh-clear" (clear-reply msg)
       (handler msg))))
 
 (set-descriptor!
@@ -176,6 +184,7 @@
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
               "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+
    "refresh-all"
    {:doc "Reloads all files in dependency order."
     :optional {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
@@ -186,4 +195,7 @@
     :returns {"reloading" "List of namespaces that will be reloaded."
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-              "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}}})
+              "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+
+   "refresh-clear"
+   {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}}})
