@@ -1,10 +1,14 @@
-(ns cider.nrepl.middleware.refresh
+(ns ^{:clojure.tools.namespace.repl/load false
+      :clojure.tools.namespace.repl/unload false} cider.nrepl.middleware.refresh
+      ;; The above metadata prevents reloading of this namespace - otherwise,
+      ;; `refresh-tracker` is reset with every refresh. This only has any effect
+      ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
+      ;; checkout dependency - tools.namespace doesn't reload source in JARs.
   (:require [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.main :refer [repl-caught]]
             [clojure.tools.namespace.dir :as dir]
             [clojure.tools.namespace.reload :as reload]
-            [clojure.tools.namespace.repl :as repl]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -17,9 +21,25 @@
   [tracker scan-fn dirs]
   (apply scan-fn tracker (or (seq dirs) [])))
 
+;; We construct the keyword at runtime here because namespaced keyword literals
+;; in clojure.tools.namespace.repl itself might be rewritten by mranderson - in
+;; this case, we still want to disable reloading of namespaces that a user has
+;; added the (non-rewritten) metadata to.
+(defn- load-disabled?
+  [sym]
+  (false? (get (meta (find-ns sym))
+               (keyword "clojure.tools.namespace.repl" "load"))))
+
+(defn- unload-disabled?
+  [sym]
+  (false? (get (meta (find-ns sym))
+               (keyword "clojure.tools.namespace.repl" "unload"))))
+
 (defn- remove-disabled
   [tracker]
-  (#'repl/remove-disabled tracker))
+  (-> tracker
+      (update-in [::track/load] #(remove load-disabled? %))
+      (update-in [::track/unload] #(remove unload-disabled? %))))
 
 (defn- resolve-and-invoke
   [sym {:keys [session] :as msg}]
@@ -132,6 +152,13 @@
                   (error-reply {:error e} msg)
                   tracker)))))
 
+(defn- clear-reply
+  [{:keys [transport] :as msg}]
+  (send-off refresh-tracker (constantly (track/tracker)))
+  (transport/send
+   transport
+   (response-for msg {:status :done})))
+
 (defn wrap-refresh
   "Middleware that provides code reloading."
   [handler]
@@ -139,6 +166,7 @@
     (case op
       "refresh" (refresh-reply (assoc msg :scan-fn dir/scan))
       "refresh-all" (refresh-reply (assoc msg :scan-fn dir/scan-all))
+      "refresh-clear" (clear-reply msg)
       (handler msg))))
 
 (set-descriptor!
@@ -156,6 +184,7 @@
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
               "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+
    "refresh-all"
    {:doc "Reloads all files in dependency order."
     :optional {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
@@ -166,4 +195,7 @@
     :returns {"reloading" "List of namespaces that will be reloaded."
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-              "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}}})
+              "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+
+   "refresh-clear"
+   {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}}})

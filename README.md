@@ -106,7 +106,7 @@ Middleware        | Op(s)      | Description
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars/ns-path` | Namespace browsing.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.
-`wrap-refresh`    | `refresh/refresh-all` | Code reloading.
+`wrap-refresh`    | `refresh/refresh-all/refresh-clear` | Code reloading.
 `wrap-resource`   | `resource` | Return resource path.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
