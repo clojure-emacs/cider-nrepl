@@ -1,12 +1,11 @@
 (ns cider.nrepl.middleware.classpath
   (:require [clojure.java.classpath :as cp]
-            [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]])
-  (:import [java.net URLDecoder]))
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.transport :as transport]))
 
 (defn classpath []
-  (map #(URLDecoder/decode (str %) "utf-8") (cp/classpath)))
+  (map str (cp/classpath)))
 
 (defn classpath-reply
   [{:keys [transport] :as msg}]
