@@ -99,8 +99,14 @@
             '#{.} `(~(instrument (first args))
                     ~(second args)
                     ~@(instrument-coll (rest (rest args))))
-            '#{def set!} (list* (with-meta-safe (first args) {:cider-instrumented true})
-                                (map instrument (rest args)))
+            '#{def} (let [sym (first args)]
+                      (list* (if (meta sym)
+                               (with-meta-safe sym (assoc (instrument (meta sym))
+                                                          :cider-instrumented true))
+                               sym)
+                             (map instrument (rest args))))
+            '#{set!} (list (with-meta-safe (first args) {:cider-instrumented true})
+                           (instrument (second args)))
             '#{loop* let* letfn*} (cons (vec (map-indexed (fn [i x] (if (odd? i) (instrument x) x))
                                                           (first args)))
                                         (instrument-coll (rest args)))
@@ -259,11 +265,19 @@
      (f coor (with-meta-safe result (meta form))))))
 
 (defn macroexpand-all
-  "Like clojure.walk/macroexpand-all, but preserve metadata."
+  "Like clojure.walk/macroexpand-all, but preserves and macroexpands
+  metadata."
   [form]
-  (->> (if (seq? form) (macroexpand form) form)
-       (walk/walk macroexpand-all identity)
-       (#(with-meta-safe % (meta form)))))
+  (let [md (meta form)
+        expanded (walk/walk macroexpand-all
+                            identity
+                            (if (seq? form) (macroexpand form) form))]
+    (if md
+      ;; Macroexpand the metadata too, because sometimes metadata
+      ;; contains, for example, functions. This is the case for
+      ;; deftest forms.
+      (with-meta-safe expanded (macroexpand-all md))
+      expanded)))
 
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
