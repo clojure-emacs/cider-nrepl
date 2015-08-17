@@ -156,3 +156,17 @@
             [(try (bp x [1]) (catch Exception e (bp z [2 3])) (finally (bp y [3 1]))) []]
             [x [1]]
             [z [2 3]]})))
+
+(deftest instrument-def
+  (is (= (breakpoint-tester '(def foo (bar)))
+         '#{[(bar) [2]]}))
+  (is (= (breakpoint-tester '(def foo "foo doc" (bar)))
+         '#{[(bar) [3]]})))
+
+(deftest instrument-set!
+  (is (= (breakpoint-tester '(set! foo (bar)))
+         '#{[(set! foo (bp (bar) [2])) []] [(bar) [2]]}))
+  (is (= (breakpoint-tester '(set! (. inst field) (bar)))
+         '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]}))
+  (is (= (breakpoint-tester '(set! (.field inst) (bar)))
+         '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]})))
