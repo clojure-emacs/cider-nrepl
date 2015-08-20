@@ -50,7 +50,7 @@
   (with-redefs [d/breakpoint-reader
                 (fn [x] (t/with-meta-safe x {:cider-breakfunction #'bp}))]
     (reset! bp-tracker #{})
-    (walk/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form)))
+    (t/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form)))
     ;; Replace #'bp with 'bp for easier print and comparison.
     (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker)))
 
@@ -170,3 +170,8 @@
          '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (.field inst) (bar)))
          '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]})))
+
+(deftest instrument-deftest
+  (binding [*ns* (the-ns 'cider.nrepl.middleware.util.instrument-test)]
+    (is (= (breakpoint-tester '(deftest foo (bar)))
+           '#{[(bar) [2]]}))))
