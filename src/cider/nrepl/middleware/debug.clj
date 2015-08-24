@@ -289,14 +289,14 @@
     ;; The session atom is reset! after eval, so it's the best way of
     ;; running some code after eval is done. Since nrepl evals are async
     ;; we can't just run this code after propagating the message.
-    (add-watch session :debug-track-instrumented-defs
+    (add-watch session ::track-instrumented-defs
                (fn [& _]
                  (try
                    (when (map? @debugger-message)
                      (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
                        (debugger-send {:ns ns :status :instrumented-defs
                                        :instrumented-defs (misc/transform-value ins-defs)})
-                       (remove-watch session :debug-track-instrumented-defs)))
+                       (remove-watch session ::track-instrumented-defs)))
                    (catch Exception e)))))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
