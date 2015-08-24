@@ -285,6 +285,7 @@
   (when (instance? clojure.lang.Atom session)
     (swap! session update-in [#'*data-readers*] assoc
            'dbg #'debug-reader 'break  #'breakpoint-reader)
+    (swap! session assoc #'*skip-breaks* (atom nil))
     ;; The session atom is reset! after eval, so it's the best way of
     ;; running some code after eval is done. Since nrepl evals are async
     ;; we can't just run this code after propagating the message.
