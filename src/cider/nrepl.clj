@@ -15,6 +15,7 @@
             [cider.nrepl.middleware.stacktrace]
             [cider.nrepl.middleware.test]
             [cider.nrepl.middleware.trace]
+            [cider.nrepl.middleware.track-state]
             [cider.nrepl.middleware.undef]))
 
 (def cider-middleware
@@ -34,6 +35,7 @@
     cider.nrepl.middleware.stacktrace/wrap-stacktrace
     cider.nrepl.middleware.test/wrap-test
     cider.nrepl.middleware.trace/wrap-trace
+    cider.nrepl.middleware.track-state/wrap-tracker
     cider.nrepl.middleware.undef/wrap-undef])
 
 (def cider-nrepl-handler

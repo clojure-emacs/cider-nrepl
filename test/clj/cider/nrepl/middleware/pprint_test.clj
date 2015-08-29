@@ -45,7 +45,7 @@
                    :code "[1 2 3] [4 5 6]"
                    :pprint "true"}
           responses (->> (session/message message false)
-                         (map #(dissoc % :id :session :ns))
+                         (map #(dissoc % :id :session :ns :state))
                          (filter not-empty))]
       (is (= responses [{:pprint-out "[1 2 3]\n"}
                         {:pprint-sentinel {}}
