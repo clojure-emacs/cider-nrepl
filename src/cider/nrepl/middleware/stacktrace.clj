@@ -1,8 +1,8 @@
 (ns cider.nrepl.middleware.stacktrace
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [clojure.pprint :as pp]
+  (:require [cider.nrepl.middleware.pprint :as pprint]
+            [cider.nrepl.middleware.util.cljs :as cljs]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -122,33 +122,31 @@
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
-  [^Exception e print-length print-level]
+  [^Exception e pprint-fn]
   (let [m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
     (if-let [data (filtered-ex-data e)]
-      (assoc m :data (binding [*print-length* print-length
-                               *print-level* print-level]
-                       (with-out-str (pp/pprint data))))
+      (assoc m :data (with-out-str (pprint-fn data)))
       m)))
 
 (defn analyze-causes
   "Return the cause chain beginning with the thrown exception, with stack frames
   for each."
-  [e print-length print-level]
+  [e pprint-fn]
   (->> e
        (iterate #(.getCause ^Exception %))
        (take-while identity)
-       (map (comp extract-location #(analyze-cause % print-length print-level)))))
+       (map (comp extract-location #(analyze-cause % pprint-fn)))))
 
 ;;; ## Middleware
 
 (defn wrap-stacktrace-reply
-  [{:keys [session transport print-length print-level] :as msg}]
+  [{:keys [session transport pprint-fn] :as msg}]
   ;; no stacktrace support for cljs currently - they are printed by piggieback anyway
   (if-let [e (and (not (cljs/grab-cljs-env msg))
                   (@session #'*e))]
-    (doseq [cause (analyze-causes e print-length print-level)]
+    (doseq [cause (analyze-causes e pprint-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
   (t/send transport (response-for msg :status :done)))
@@ -166,9 +164,10 @@
 (set-descriptor!
  #'wrap-stacktrace
  (cljs/requires-piggieback
-  {:requires #{#'session}
+  {:requires #{#'session #'pprint/wrap-pprint-fn}
    :expects #{}
    :handles {"stacktrace"
              {:doc (str "Return messages describing each cause and stack frame "
                         "of the most recent exception.")
+              :optional pprint/wrap-pprint-fn-optional-arguments
               :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))

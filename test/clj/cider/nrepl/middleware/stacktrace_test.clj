@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.stacktrace-test
   (:require [cider.nrepl.middleware.stacktrace :refer :all]
+            [clojure.pprint :refer [pprint]]
             [clojure.test :refer :all]))
 
 ;; # Utils
@@ -10,8 +11,7 @@
    (try (eval form)
         (catch Exception e
           e))
-   nil
-   nil))
+   pprint))
 
 (defn stack-frames
   [form]
@@ -104,10 +104,14 @@
 (deftest test-cause-data-pretty-printing
   (testing "print-length"
     (is (= "{:a (0 1 2 ...)}\n"
-           (:data (analyze-cause (ex-info "" {:a (range)}) 3 nil)))))
+           (:data (analyze-cause (ex-info "" {:a (range)}) (fn [object]
+                                                             (binding [*print-length* 3]
+                                                               (clojure.pprint/pprint object))))))))
   (testing "print-level"
     (is (= "{:a {#}}\n"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) nil 3)))))
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) (fn [object]
+                                                                             (binding [*print-level* 3]
+                                                                               (clojure.pprint/pprint object))))))))
   (testing "compilation errors"
     (is (re-find #"Error compiling: .* Unable to resolve symbol: not-defined in this context"
                  (:message (first causes3))))))

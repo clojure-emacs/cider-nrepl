@@ -4,7 +4,8 @@
       ;; `refresh-tracker` is reset with every refresh. This only has any effect
       ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
       ;; checkout dependency - tools.namespace doesn't reload source in JARs.
-  (:require [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
+  (:require [cider.nrepl.middleware.pprint :as pprint]
+            [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.main :refer [repl-caught]]
             [clojure.tools.namespace.dir :as dir]
@@ -70,12 +71,12 @@
 
 (defn- error-reply
   [{:keys [error error-ns]}
-   {:keys [print-length print-level session transport] :as msg}]
+   {:keys [pprint-fn session transport] :as msg}]
 
   (transport/send
    transport
    (response-for msg (cond-> {:status :error}
-                       error (assoc :error (analyze-causes error print-length print-level))
+                       error (assoc :error (analyze-causes error pprint-fn))
                        error-ns (assoc :error-ns error-ns))))
 
   (binding [*msg* msg
@@ -171,15 +172,14 @@
 
 (set-descriptor!
  #'wrap-refresh
- {:requires #{"clone"}
+ {:requires #{"clone" #'pprint/wrap-pprint-fn}
   :handles
   {"refresh"
    {:doc "Reloads all changed files in dependency order."
-    :optional {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
-               "before" "The namespace-qualified name of a zero-arity function to call before reloading."
-               "after" "The namespace-qualified name of a zero-arity function to call after reloading."
-               "print-length" "Value to bind to `*print-length*` when pretty-printing error data, if an exception is thrown."
-               "print-level" "Value to bind to `*print-level*` when pretty-printing error data, if an exception is thrown."}
+    :optional (merge pprint/wrap-pprint-fn-optional-arguments
+                     {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
+                      "before" "The namespace-qualified name of a zero-arity function to call before reloading."
+                      "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
     :returns {"reloading" "List of namespaces that will be reloaded."
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
@@ -187,11 +187,10 @@
 
    "refresh-all"
    {:doc "Reloads all files in dependency order."
-    :optional {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
-               "before" "The namespace-qualified name of a zero-arity function to call before reloading."
-               "after" "The namespace-qualified name of a zero-arity function to call after reloading."
-               "print-length" "Value to bind to `*print-length*` when pretty-printing error data, if an exception is thrown."
-               "print-level" "Value to bind to `*print-level*` when pretty-printing error data, if an exception is thrown."}
+    :optional (merge pprint/wrap-pprint-fn-optional-arguments
+                     {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
+                      "before" "The namespace-qualified name of a zero-arity function to call before reloading."
+                      "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
     :returns {"reloading" "List of namespaces that will be reloaded."
               "status" "`:ok` if reloading was successful; otherwise `:error`."
               "error" "A sequence of all causes of the thrown exception when `status` is `:error`."

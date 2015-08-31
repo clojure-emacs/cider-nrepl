@@ -32,7 +32,7 @@
              (:pprint-out (session/message {:op :eval
                                             :code code
                                             :pprint "true"
-                                            :right-margin 10})))))
+                                            :print-right-margin 10})))))
 
     (testing "wrap-pprint does not escape special characters when printing strings"
       (is (= "abc\ndef\tghi\n"
