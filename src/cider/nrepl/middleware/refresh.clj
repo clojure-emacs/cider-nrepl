@@ -54,7 +54,7 @@
                     (-> (set (:arglists (meta var)))
                         (contains? []))))
       (throw (IllegalArgumentException.
-              (format "%s is not a single-arity fn" sym))))
+              (format "%s is not a function of no arguments" sym))))
 
     (binding [*msg* msg
               *out* (get @session #'*out*)
