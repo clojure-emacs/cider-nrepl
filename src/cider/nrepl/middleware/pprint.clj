@@ -45,10 +45,10 @@
   clojure.pprint/pprint on its result. The `:right-margin` slot can be used to
   bind `*clojure.pprint/*print-right-margin*` during the evaluation."
   [handler]
-  (fn [{:keys [op pprint right-margin] :as msg}]
-    (if (and pprint (= op "eval"))
-      (handler (merge msg {:transport (pprint-transport msg)}))
-      (handler msg))))
+  (fn [{:keys [op pprint] :as msg}]
+    (handler (cond-> msg
+               (and (= op "eval") pprint)
+               (assoc :transport (pprint-transport msg))))))
 
 (set-descriptor!
  #'wrap-pprint
