@@ -2,17 +2,116 @@
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
+            [cider.nrepl.middleware.util.misc :as misc]
+            [cljs-tooling.util.analysis :as cljs-ana]
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]])
   (:import clojure.tools.nrepl.transport.Transport))
 
-(defn assoc-state
-  "Return response with a :state entry assoc'ed."
-  [response msg]
-  (assoc response :state {:repl-type (if (cljs/grab-cljs-env msg) :cljs :clj)}))
+;;; Auxiliary
+(defn update-vals
+  "Update the keys of map `m` via the function `f`."
+  [m f]
+  (reduce (fn [acc [k v]]
+            (assoc acc k (f v)))
+          {} m))
 
+(defn filter-core
+  "Remove keys whose values are vars in the core namespace."
+  [refers]
+  (let [core (find-ns 'clojure.core)]
+    (reduce (fn [acc [sym var]]
+              (if (identical? (:ns (meta var)) core)
+                acc
+                (assoc acc sym var)))
+            {} refers)))
+
+(def relevant-meta-keys
+  "Metadata keys that are useful to us.
+  This is used so that we don't crowd the ns cache with useless or
+  redudant information, such as :name and :ns."
+  [:indent :cider-instrumented :macro :arglists :test])
+
+(defn relevant-meta
+  "Return the meta of var, selecting only keys of interest."
+  [var]
+  (select-keys (meta var) relevant-meta-keys))
+
+;;; State management
+(defmulti ns-as-map
+  "Return a map of useful information about ns."
+  class)
+
+;; Clojure Namespaces
+(defmethod ns-as-map clojure.lang.Namespace [ns]
+  {:name    (ns-name ns)
+   :interns (update-vals (ns-interns ns) relevant-meta)
+   :aliases (update-vals (ns-aliases ns) ns-name)
+   :refers  (filter-core (ns-refers ns))})
+;; ClojureScript Namespaces
+(defmethod ns-as-map clojure.lang.Associative [ns]
+  (let [{:keys [use-macros require-macros uses requires defs]} ns]
+    ;; For some reason, cljs (or piggieback) adds a :test key to the
+    ;; var metadata stored in the namespace.
+    {:name    (:name ns)
+     :interns (update-vals defs #(-> (select-keys % relevant-meta-keys)
+                                     (dissoc :test)))
+     :aliases (merge require-macros requires)
+     :refers  (merge uses use-macros)}))
+
+(def ns-cache
+  "Cache of the namespace info that has been sent to each session.
+  Each key is a session. Each value is a map from namespace names to
+  data (as returned by `ns-as-map`)."
+  (atom {}))
+
+(defn calculate-changed-ns-map
+  "Return a map of namespaces that changed between new and old-map.
+  new is a list of namespaces objects, as returned by `all-ns`.
+  old-map is a map from namespace names to namespace data, which is
+  the same format of map returned by this function. old-map can also
+  be nil, which is the same as an empty map."
+  [new old-map]
+  (reduce (if (empty? old-map)
+            ;; Optimization for an empty map.
+            (fn [acc ns]
+              (assoc acc (:name ns) ns))
+            ;; General implementation.
+            (fn [acc {:keys [name] :as ns}]
+              (if (= (get old-map name) ns)
+                acc
+                (assoc acc name ns))))
+          {}
+          (map ns-as-map new)))
+
+(defn assoc-state
+  "Return response with a :state entry assoc'ed.
+  This function is not pure nor idempotent!
+  It updates the server's cache, so not sending the value it returns
+  implies that the client's cache will get outdated.
+
+  The state is a map of two entries. One is the :repl-type, which is
+  either :clj or :cljs.
+
+  The other is :changed-namespaces, which is a map from namespace
+  names to namespace data (as returned by `ns-as-map`). This contains
+  only namespaces which have changed since we last notified the
+  client."
+  [response {:keys [session] :as msg}]
+  (let [old-data (@ns-cache session)
+        cljs (cljs/grab-cljs-env msg)
+        ;; See what has changed compared to the cache. If the cache
+        ;; was empty, everything is considered to have changed (and
+        ;; the cache will then be filled).
+        changed-ns-map (-> (if cljs
+                             (vals (cljs-ana/all-ns cljs))
+                             (all-ns))
+                           (calculate-changed-ns-map old-data))]
+    (swap! ns-cache update-in [session]
+           merge changed-ns-map)
+    (assoc response :state {:repl-type (if cljs :cljs :clj)
+                            :changed-namespaces (misc/transform-value changed-ns-map)})))
+
+;;; Middleware
 (defn make-transport
   "Return a Transport that defers to `transport` and possibly notifies
   about the state."
@@ -21,20 +120,28 @@
     (recv [this] (.recv transport))
     (recv [this timeout] (.recv transport timeout))
     (send [this {:keys [status] :as response}]
-      (.send transport (cond-> response
-                         (contains? status :done) (assoc-state msg))))))
+      (.send transport (try ;If we screw up, we break eval completely.
+                         (cond-> response
+                           (contains? status :done) (assoc-state msg))
+                         (catch Exception e
+                           (println e)
+                           response))))))
+
+(def ops-that-can-eval
+  "Set of nREPL ops that can lead code being evaluated."
+  #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear" "undef"})
 
 (defn wrap-tracker
   "Middleware that tracks relevant server info and notifies the client."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (#{"eval" "load-file" "refresh" "refresh-all" "refresh-clear" "undef"} op)
+    (if (ops-that-can-eval op)
       (handler (assoc msg :transport (make-transport msg)))
       (handler msg))))
 
 (set-descriptor!
  #'wrap-tracker
- (cljs/requires-piggieback
+ (cljs/expects-piggieback
   {:expects #{"eval"}
    :handles
    {"track-state-middleware"
