@@ -16,7 +16,12 @@
     (is (string? (:file response)))
     (is (:line response))
     (is (:column response))
-    (is (= #{"done"} (:status response)))))
+    (is (= #{"done"} (:status response))))
+
+  (let [{:keys [status]} (session/message {:op "info"
+                                           :ns "cljs.core"
+                                           :symbol "non-existent-var"})]
+    (is (= #{"no-info" "done"} status))))
 
 (deftest cljs-eldoc
   (let [response (session/message {:op "eldoc"

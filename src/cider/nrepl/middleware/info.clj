@@ -128,7 +128,7 @@
 
 (defn info-cljs
   [env symbol ns]
-  (let [x (cljs-info/info env symbol ns)]
+  (when-let [x (cljs-info/info env symbol ns)]
     (select-keys x [:file :line :ns :doc :column :name :arglists])))
 
 (defn info-java
