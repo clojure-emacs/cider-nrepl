@@ -115,15 +115,15 @@
 (defn info-clj
   [ns sym]
   (cond
-   ;; it's a special (special-symbol? or :special-form)
+    ;; it's a special (special-symbol? or :special-form)
     (resolve-special sym) (resolve-special sym)
-   ;; it's a var
+    ;; it's a var
     (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
-   ;; sym is an alias for another ns
+    ;; sym is an alias for another ns
     (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
-   ;; it's simply a full ns
+    ;; it's simply a full ns
     (find-ns sym) (ns-meta (find-ns sym))
-   ;; it's a Java class/member symbol...or nil
+    ;; it's a Java class/member symbol...or nil
     :else (java/resolve-symbol ns sym)))
 
 (defn info-cljs
