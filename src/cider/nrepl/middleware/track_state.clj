@@ -28,9 +28,9 @@
   "Middleware that tracks relevant server info and notifies the client."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (cond
-      (#{"eval" "load-file"} op) (handler (assoc msg :transport (make-transport msg)))
-      :else (handler msg))))
+    (if (#{"eval" "load-file" "refresh" "refresh-all" "refresh-clear" "undef"} op)
+      (handler (assoc msg :transport (make-transport msg)))
+      (handler msg))))
 
 (set-descriptor!
  #'wrap-tracker
