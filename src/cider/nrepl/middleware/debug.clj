@@ -1,16 +1,16 @@
 (ns cider.nrepl.middleware.debug
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
-  (:require [clojure.tools.nrepl.transport :as transport]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+  (:require [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
+            [cider.nrepl.middleware.util.instrument :as ins]
             [cider.nrepl.middleware.util.misc :as misc]
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.transport :as transport]
             [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
 
@@ -285,19 +285,7 @@
   (when (instance? clojure.lang.Atom session)
     (swap! session update-in [#'*data-readers*] assoc
            'dbg #'debug-reader 'break  #'breakpoint-reader)
-    (swap! session assoc #'*skip-breaks* (atom nil))
-    ;; The session atom is reset! after eval, so it's the best way of
-    ;; running some code after eval is done. Since nrepl evals are async
-    ;; we can't just run this code after propagating the message.
-    (add-watch session ::track-instrumented-defs
-               (fn [& _]
-                 (try
-                   (when (map? @debugger-message)
-                     (let [ins-defs (into [] (if ns (ins/list-instrumented-defs ns)))]
-                       (debugger-send {:ns ns :status :instrumented-defs
-                                       :instrumented-defs (misc/transform-value ins-defs)})
-                       (remove-watch session ::track-instrumented-defs)))
-                   (catch Exception e)))))
+    (swap! session assoc #'*skip-breaks* (atom nil)))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
