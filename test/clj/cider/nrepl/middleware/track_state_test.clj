@@ -55,10 +55,11 @@
 
 (deftest relevant-meta
   (is (= (:macro (s/relevant-meta #'deftest))
-         true))
+         "true"))
   (alter-meta! #'update-vals merge {:indent 1 :cider-instrumented 2 :something-else 3})
   (is (= (s/relevant-meta #'update-vals)
-         {:cider-instrumented 2, :indent 1, :test (:test (meta #'update-vals))})))
+         {:cider-instrumented "2", :indent "1",
+          :test (pr-str (:test (meta #'update-vals)))})))
 
 (deftest ns-as-map
   (alter-meta! #'update-vals

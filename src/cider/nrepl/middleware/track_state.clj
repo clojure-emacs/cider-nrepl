@@ -34,7 +34,9 @@
 (defn relevant-meta
   "Return the meta of var, selecting only keys of interest."
   [var]
-  (select-keys (meta var) relevant-meta-keys))
+  (->> (select-keys (meta var) relevant-meta-keys)
+       (filter second)
+       (update-vals pr-str)))
 
 ;;; State management
 (defmulti ns-as-map
@@ -53,9 +55,7 @@
     ;; For some reason, cljs (or piggieback) adds a :test key to the
     ;; var metadata stored in the namespace.
     {:name    (:name ns)
-     :interns (update-vals #(-> (select-keys % relevant-meta-keys)
-                                (dissoc :test))
-                           defs)
+     :interns (update-vals #(dissoc (relevant-meta %) :test) defs)
      :aliases (merge require-macros requires)
      :refers  (merge uses use-macros)}))
 
