@@ -10,7 +10,7 @@
 ;;; Auxiliary
 (defn update-vals
   "Update the keys of map `m` via the function `f`."
-  [m f]
+  [f m]
   (reduce (fn [acc [k v]]
             (assoc acc k (f v)))
           {} m))
@@ -44,8 +44,8 @@
 ;; Clojure Namespaces
 (defmethod ns-as-map clojure.lang.Namespace [ns]
   {:name    (ns-name ns)
-   :interns (update-vals (ns-interns ns) relevant-meta)
-   :aliases (update-vals (ns-aliases ns) ns-name)
+   :interns (update-vals relevant-meta (ns-interns ns))
+   :aliases (update-vals ns-name (ns-aliases ns))
    :refers  (filter-core (ns-refers ns))})
 ;; ClojureScript Namespaces
 (defmethod ns-as-map clojure.lang.Associative [ns]
@@ -53,8 +53,9 @@
     ;; For some reason, cljs (or piggieback) adds a :test key to the
     ;; var metadata stored in the namespace.
     {:name    (:name ns)
-     :interns (update-vals defs #(-> (select-keys % relevant-meta-keys)
-                                     (dissoc :test)))
+     :interns (update-vals #(-> (select-keys % relevant-meta-keys)
+                                (dissoc :test))
+                           defs)
      :aliases (merge require-macros requires)
      :refers  (merge uses use-macros)}))
 

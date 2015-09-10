@@ -37,13 +37,13 @@
       (is (map? changed-namespaces)))))
 
 (deftest update-vals
-  (is (= (s/update-vals {1 2 3 4 5 6} inc)
+  (is (= (s/update-vals inc {1 2 3 4 5 6})
          {1 3 3 5 5 7}))
-  (is (= (s/update-vals {1 2 3 4 5 6} range)
+  (is (= (s/update-vals range {1 2 3 4 5 6})
          '{5 (0 1 2 3 4 5), 3 (0 1 2 3), 1 (0 1)}))
-  (is (= (s/update-vals {:a :b :c :d :e :f} str)
+  (is (= (s/update-vals str {:a :b :c :d :e :f})
          {:e ":f", :c ":d", :a ":b"}))
-  (is (= (s/update-vals {1 2 3 4 5 6} odd?)
+  (is (= (s/update-vals odd? {1 2 3 4 5 6})
          {1 false 3 false 5 false})))
 
 (deftest filter-core
