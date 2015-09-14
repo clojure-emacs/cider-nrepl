@@ -10,23 +10,26 @@
              [misc :refer [response-for]]
              [transport :as transport]]))
 
+(defn inlined-dependency-name? [^String ns-name]
+  (or
+   ;; rewritten by mranderson
+   (.startsWith ns-name "deps.")
+   (.startsWith ns-name "mranderson")
+   ;; rewritten by dolly
+   (.startsWith ns-name "eastwood.copieddeps")))
+
 (defn inlined-dependency?
   "Returns true if the namespace matches one of our, or eastwood's,
   inlined dependencies."
   [namespace]
   (let [ns-name (str (ns-name namespace))]
-    (or
-     ;; rewritten by mranderson
-     (.startsWith ns-name "deps.")
-     (.startsWith ns-name "mranderson")
-     ;; rewritten by dolly
-     (.startsWith ns-name "eastwood.copieddeps"))))
+    (inlined-dependency-name? ns-name)))
 
 (defn ns-list-clj []
   (->> (all-ns)
-       (remove inlined-dependency?)
        (map ns-name)
        (map name)
+       (remove inlined-dependency-name?)
        (sort)))
 
 (defn ns-list-vars-by-name
