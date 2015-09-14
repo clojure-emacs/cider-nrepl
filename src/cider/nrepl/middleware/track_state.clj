@@ -1,11 +1,15 @@
 (ns cider.nrepl.middleware.track-state
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
+  (:require [cider.nrepl.middleware.ns :as ns]
+            [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as misc]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]])
   (:import clojure.tools.nrepl.transport.Transport))
+
+(def clojure-core (try (find-ns 'clojure.core)
+                       (catch Exception e nil)))
 
 ;;; Auxiliary
 (defn update-vals
@@ -18,12 +22,11 @@
 (defn filter-core
   "Remove keys whose values are vars in the core namespace."
   [refers]
-  (let [core (find-ns 'clojure.core)]
-    (reduce (fn [acc [sym var]]
-              (if (identical? (:ns (meta var)) core)
-                acc
-                (assoc acc sym var)))
-            {} refers)))
+  (reduce (fn [acc [sym var]]
+            (if (identical? (:ns (meta var)) clojure-core)
+              acc
+              (assoc acc sym var)))
+          {} refers))
 
 (def relevant-meta-keys
   "Metadata keys that are useful to us.
@@ -43,21 +46,29 @@
   "Return a map of useful information about ns."
   class)
 
+(defn track-ns? [ns-name-symbol]
+  (let [^String name-string (name ns-name-symbol)]
+    (not (or (ns/inlined-dependency-name? name-string)
+             (.startsWith name-string "cider.")))))
+
 ;; Clojure Namespaces
 (defmethod ns-as-map clojure.lang.Namespace [ns]
-  {:name    (ns-name ns)
-   :interns (update-vals relevant-meta (ns-interns ns))
-   :aliases (update-vals ns-name (ns-aliases ns))
-   :refers  (filter-core (ns-refers ns))})
+  (let [the-name (ns-name ns)]
+    (when (track-ns? the-name)
+      {:name    the-name
+       :interns (update-vals relevant-meta (ns-interns ns))
+       :aliases (update-vals ns-name (ns-aliases ns))
+       :refers  (filter-core (ns-refers ns))})))
 ;; ClojureScript Namespaces
-(defmethod ns-as-map clojure.lang.Associative [ns]
-  (let [{:keys [use-macros require-macros uses requires defs]} ns]
-    ;; For some reason, cljs (or piggieback) adds a :test key to the
-    ;; var metadata stored in the namespace.
-    {:name    (:name ns)
-     :interns (update-vals #(dissoc (relevant-meta %) :test) defs)
-     :aliases (merge require-macros requires)
-     :refers  (merge uses use-macros)}))
+(defmethod ns-as-map clojure.lang.Associative [{the-name :name, :as ns}]
+  (when (track-ns? the-name)
+    (let [{:keys [use-macros require-macros uses requires defs]} ns]
+      {:name    the-name
+       ;; For some reason, cljs (or piggieback) adds a :test key to the
+       ;; var metadata stored in the namespace.
+       :interns (update-vals #(dissoc (relevant-meta %) :test) defs)
+       :aliases (merge require-macros requires)
+       :refers  (merge uses use-macros)})))
 
 (def ns-cache
   "Cache of the namespace info that has been sent to each session.
@@ -82,7 +93,7 @@
                 acc
                 (assoc acc name ns))))
           {}
-          (map ns-as-map new)))
+          (remove not (map ns-as-map new))))
 
 (defn assoc-state
   "Return response with a :state entry assoc'ed.

@@ -13,8 +13,17 @@
            nil
            (catch Exception e true))))
 
+(deftest track-ns?
+  (is (s/track-ns? 'me.ok))
+  (is (s/track-ns? 'batman.not-bruce))
+  (is (not (s/track-ns? 'mranderson045.a)))
+  (is (not (s/track-ns? 'cider.nrepl.middleware.track-state)))
+  (is (not (s/track-ns? 'deps.pl)))
+  (is (not (s/track-ns? 'eastwood.copieddeps))))
+
 (deftest assoc-state
-  (with-redefs [s/ns-cache (atom {})]
+  (with-redefs [s/ns-cache (atom {})
+                s/track-ns? (constantly true)]
     (let [{:keys [repl-type changed-namespaces]} (:state (s/assoc-state {} msg))]
       (is (= repl-type :clj))
       (is (map? changed-namespaces))
@@ -64,11 +73,16 @@
 (deftest ns-as-map
   (alter-meta! #'update-vals
                merge {:indent 1 :cider-instrumented 2 :something-else 3})
-  (let [{:keys [interns aliases] :as ns} (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
-    (is (> (count ns) 3))
-    (is (> (count interns) 4))
-    (is (= (into #{} (keys (interns 'update-vals)))
-           #{:cider-instrumented :indent :test}))
-    (is (> (count aliases) 2))
-    (is (= (aliases 's)
-           'cider.nrepl.middleware.track-state))))
+  (with-redefs [s/track-ns? (constantly true)]
+    (let [{:keys [interns aliases] :as ns} (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+      (is (> (count ns) 3))
+      (is (> (count interns) 4))
+      (is (= (into #{} (keys (interns 'update-vals)))
+             #{:cider-instrumented :indent :test}))
+      (is (> (count aliases) 2))
+      (is (= (aliases 's)
+             'cider.nrepl.middleware.track-state))))
+  (with-redefs [s/track-ns? (constantly nil)]
+    (let [{:keys [interns aliases] :as ns}
+          (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+      (is (not ns)))))
