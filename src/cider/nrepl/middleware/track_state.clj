@@ -1,11 +1,18 @@
 (ns cider.nrepl.middleware.track-state
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
+  (:require [cider.nrepl.middleware.ns :as ns]
+            [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as misc]
             [cljs-tooling.util.analysis :as cljs-ana]
+            [clojure.java.classpath :as cp]
+            [clojure.tools.namespace.find :as ns-find]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]])
-  (:import clojure.tools.nrepl.transport.Transport))
+  (:import clojure.lang.Namespace
+           clojure.tools.nrepl.transport.Transport))
+
+(def clojure-core (try (find-ns 'clojure.core)
+                       (catch Exception e nil)))
 
 ;;; Auxiliary
 (defn update-vals
@@ -15,16 +22,6 @@
             (assoc acc k (f v)))
           {} m))
 
-(defn filter-core
-  "Remove keys whose values are vars in the core namespace."
-  [refers]
-  (let [core (find-ns 'clojure.core)]
-    (reduce (fn [acc [sym var]]
-              (if (identical? (:ns (meta var)) core)
-                acc
-                (assoc acc sym var)))
-            {} refers)))
-
 (def relevant-meta-keys
   "Metadata keys that are useful to us.
   This is used so that we don't crowd the ns cache with useless or
@@ -33,37 +30,56 @@
 
 (defn relevant-meta
   "Return the meta of var, selecting only keys of interest."
-  [var]
-  (->> (select-keys (meta var) relevant-meta-keys)
+  [m]
+  (->> (select-keys m relevant-meta-keys)
        (filter second)
        (update-vals pr-str)))
 
-;;; State management
+(defn filter-core-and-get-meta
+  "Remove keys whose values are vars in the core namespace."
+  [refers]
+  (reduce (fn [^clojure.lang.PersistentHashMap acc [sym var]]
+            (if (not (var? var))
+              acc
+              (let [^clojure.lang.PersistentHashMap m
+                    (meta ^clojure.lang.Var var)]
+                (if (identical? (:ns m) clojure-core)
+                  acc
+                  (assoc acc sym (relevant-meta m))))))
+          {} refers))
+
+;;; Namespaces
+(def jar-namespaces
+  (->> (cp/classpath-jarfiles)
+       (mapcat ns-find/find-namespaces-in-jarfile)
+       (into #{})))
+
+(defn track-ns? [ns-name]
+  (not (jar-namespaces ns-name)))
+
 (defmulti ns-as-map
   "Return a map of useful information about ns."
   class)
 
 ;; Clojure Namespaces
-(defmethod ns-as-map clojure.lang.Namespace [ns]
-  {:name    (ns-name ns)
-   :interns (update-vals relevant-meta (ns-interns ns))
-   :aliases (update-vals ns-name (ns-aliases ns))
-   :refers  (filter-core (ns-refers ns))})
+(defmethod ns-as-map Namespace [^Namespace ns]
+  (let [aliases (update-vals ns-name (.getAliases ns))]
+    {:aliases aliases
+     :interns (filter-core-and-get-meta (.getMappings ns))}))
 ;; ClojureScript Namespaces
-(defmethod ns-as-map clojure.lang.Associative [ns]
-  (let [{:keys [use-macros require-macros uses requires defs]} ns]
-    ;; For some reason, cljs (or piggieback) adds a :test key to the
-    ;; var metadata stored in the namespace.
-    {:name    (:name ns)
-     :interns (update-vals #(dissoc (relevant-meta %) :test) defs)
-     :aliases (merge require-macros requires)
-     :refers  (merge uses use-macros)}))
+(defmethod ns-as-map clojure.lang.Associative
+  [{:keys [use-macros uses require-macros requires defs]}]
+  (let [aliases (merge require-macros requires)]
+    {:aliases aliases
+     ;; For some reason, cljs (or piggieback) adds a :test key to the
+     ;; var metadata stored in the namespace.
+     :interns (update-vals #(dissoc (relevant-meta %) :test)
+                           (merge defs uses use-macros))}))
 
-(def ns-cache
-  "Cache of the namespace info that has been sent to each session.
-  Each key is a session. Each value is a map from namespace names to
-  data (as returned by `ns-as-map`)."
-  (atom {}))
+(def clojure-core-map
+  (when clojure-core
+    (update-vals #(relevant-meta (meta %))
+                 (ns-map clojure-core))))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new and old-map.
@@ -72,17 +88,46 @@
   the same format of map returned by this function. old-map can also
   be nil, which is the same as an empty map."
   [new old-map]
-  (reduce (if (empty? old-map)
-            ;; Optimization for an empty map.
-            (fn [acc ns]
-              (assoc acc (:name ns) ns))
-            ;; General implementation.
-            (fn [acc {:keys [name] :as ns}]
-              (if (= (get old-map name) ns)
-                acc
-                (assoc acc name ns))))
-          {}
-          (map ns-as-map new)))
+  (reduce (fn [acc ns]
+            (let [n (if (instance? Namespace ns)
+                      (ns-name ns)
+                      (:name ns))]
+              (if-let [m (and (track-ns? n)
+                              (ns-as-map ns))]
+                (if (= (get old-map n) m)
+                  acc
+                  (assoc acc n m))
+                acc)))
+          ;; We want to inform the client of what's in clojure.core,
+          ;; but we don't want to track changes. So we add it in when
+          ;; the old-data is nil (meaning this is the first message).
+          (if (and (not old-map) clojure-core-map)
+            {'clojure.core clojure-core-map}
+            {})
+          new))
+
+;;; State management
+(defn calculate-used-aliases
+  "Return a map of namespaces aliased by a namespace in new-ns-map.
+  Skip any namespaces already present in new-ns-map or old-ns-map."
+  [^clojure.lang.PersistentHashMap new-ns-map
+   ^clojure.lang.PersistentHashMap old-ns-map]
+  (->> (vals new-ns-map)
+       (map :aliases)
+       (mapcat vals)
+       (reduce (fn [acc name]
+                 (if (or (get acc name)
+                         (get old-ns-map name)
+                         (get new-ns-map name))
+                   acc
+                   (assoc acc name (ns-as-map (find-ns name)))))
+               {})))
+
+(def ns-cache
+  "Cache of the namespace info that has been sent to each session.
+  Each key is a session. Each value is a map from namespace names to
+  data (as returned by `ns-as-map`)."
+  (atom {}))
 
 (defn assoc-state
   "Return response with a :state entry assoc'ed.
@@ -106,7 +151,9 @@
         changed-ns-map (-> (if cljs
                              (vals (cljs-ana/all-ns cljs))
                              (all-ns))
-                           (calculate-changed-ns-map old-data))]
+                           (calculate-changed-ns-map old-data))
+        used-aliases (calculate-used-aliases changed-ns-map (or old-data {}))
+        changed-ns-map (merge changed-ns-map used-aliases)]
     (swap! ns-cache update-in [session]
            merge changed-ns-map)
     (assoc response :state {:repl-type (if cljs :cljs :clj)
