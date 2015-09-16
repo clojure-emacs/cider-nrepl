@@ -7,7 +7,9 @@
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.java.classpath :as cp]
             [clojure.tools.namespace.find :as ns-find]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]])
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.transport :as transport])
   (:import clojure.lang.Namespace
            clojure.tools.nrepl.transport.Transport))
 
@@ -78,8 +80,10 @@
 
 (def clojure-core-map
   (when clojure-core
-    (update-vals #(relevant-meta (meta %))
-                 (ns-map clojure-core))))
+    {:aliases {}
+     :interns (->> (.getMappings clojure-core)
+                   (filter #(var? (second %)))
+                   (update-vals #(relevant-meta (meta %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new and old-map.
@@ -127,24 +131,26 @@
   "Cache of the namespace info that has been sent to each session.
   Each key is a session. Each value is a map from namespace names to
   data (as returned by `ns-as-map`)."
-  (atom {}))
+  (agent {}
+         :error-handler
+         (fn [_ e]
+           (println "Exception updating the ns-cache" e))))
 
-(defn assoc-state
-  "Return response with a :state entry assoc'ed.
-  This function is not pure nor idempotent!
-  It updates the server's cache, so not sending the value it returns
-  implies that the client's cache will get outdated.
+(defn update-and-send-cache
+  "Send a reply to msg with state information assoc'ed.
+  old-data is the ns-cache that needs to be updated (the one
+  associated with msg's session). Return the updated value for it.
+  This function has side-effects (sending the message)!
 
-  The state is a map of two entries. One is the :repl-type, which is
-  either :clj or :cljs.
+  Two extra entries are sent in the reply. One is the :repl-type,
+  which is either :clj or :cljs.
 
   The other is :changed-namespaces, which is a map from namespace
   names to namespace data (as returned by `ns-as-map`). This contains
   only namespaces which have changed since we last notified the
   client."
-  [response {:keys [session] :as msg}]
-  (let [old-data (@ns-cache session)
-        cljs (cljs/grab-cljs-env msg)
+  [old-data msg]
+  (let [cljs (cljs/grab-cljs-env msg)
         ;; See what has changed compared to the cache. If the cache
         ;; was empty, everything is considered to have changed (and
         ;; the cache will then be filled).
@@ -154,26 +160,26 @@
                            (calculate-changed-ns-map old-data))
         used-aliases (calculate-used-aliases changed-ns-map (or old-data {}))
         changed-ns-map (merge changed-ns-map used-aliases)]
-    (swap! ns-cache update-in [session]
-           merge changed-ns-map)
-    (assoc response :state {:repl-type (if cljs :cljs :clj)
-                            :changed-namespaces (misc/transform-value changed-ns-map)})))
+    (->> (response-for
+          msg :status :state
+          :repl-type (if cljs :cljs :clj)
+          :changed-namespaces (misc/transform-value changed-ns-map))
+         (transport/send (:transport msg)))
+    (merge old-data changed-ns-map)))
 
 ;;; Middleware
 (defn make-transport
   "Return a Transport that defers to `transport` and possibly notifies
   about the state."
-  [{:keys [^Transport transport] :as msg}]
+  [{:keys [^Transport transport session] :as msg}]
   (reify Transport
     (recv [this] (.recv transport))
     (recv [this timeout] (.recv transport timeout))
     (send [this {:keys [status] :as response}]
-      (.send transport (try ;If we screw up, we break eval completely.
-                         (cond-> response
-                           (contains? status :done) (assoc-state msg))
-                         (catch Exception e
-                           (println e)
-                           response))))))
+      (.send transport response)
+      (when (contains? status :done)
+        (send ns-cache update-in [session]
+              update-and-send-cache msg)))))
 
 (def ops-that-can-eval
   "Set of nREPL ops that can lead code being evaluated."
