@@ -44,7 +44,7 @@
                    ;; See http://dev.clojure.org/jira/browse/CLJ-1161.
                    :repositories [["snapshots"
                                    "https://oss.sonatype.org/content/repositories/snapshots"]]
-                   :dependencies [[org.clojure/tools.nrepl "0.2.10"]
+                   :dependencies [[org.clojure/tools.nrepl "0.2.11"]
                                   [org.clojure/clojure "1.5.2-SNAPSHOT"
                                    :classifier "sources"]
                                   [org.clojure/clojure "1.5.1"
