@@ -16,29 +16,39 @@
 (deftest track-ns?
   (is (not (some s/track-ns? s/jar-namespaces))))
 
-(deftest assoc-state
-  (with-redefs [s/ns-cache (atom {})
-                s/track-ns? (constantly true)]
-    (let [{:keys [repl-type changed-namespaces]} (:state (s/assoc-state {} msg))]
-      (is (= repl-type :clj))
-      (is (map? changed-namespaces))
-      (is (> (count changed-namespaces) 100)))
-    ;; Check the caching
-    (let [changed-again (get-in (s/assoc-state {} msg) [:state :changed-namespaces])]
-      (is (map? changed-again))
-      (is (empty? changed-again)))
-    ;; Remove a value
-    (swap! s/ns-cache update-in [:dummy]
-           #(dissoc % (ffirst %)))
-    ;; Check again
-    (let [changed-again (get-in (s/assoc-state {} msg) [:state :changed-namespaces])]
-      (is (= (count changed-again) 1))))
-  ;; Check repl-type :cljs
-  (with-redefs [cljs/grab-cljs-env (constantly true)
-                s/ns-cache (atom {})]
-    (let [{:keys [repl-type changed-namespaces]} (:state (s/assoc-state {} msg))]
-      (is (= repl-type :cljs))
-      (is (map? changed-namespaces)))))
+(deftest update-and-send-cache
+  (let [sent-value (atom nil)]
+    (with-redefs [s/track-ns? (constantly true)
+                  t/send (fn [t m] (reset! sent-value m))]
+      (let [new-data (s/update-and-send-cache nil msg)]
+        (is (map? new-data))
+        (is (> (count new-data) 100)))
+      (let [{:keys [repl-type changed-namespaces]} @sent-value]
+        (is (= repl-type :clj))
+        (is (map? changed-namespaces))
+        (is (> (count changed-namespaces) 100)))
+      (let [full-cache (s/update-and-send-cache nil msg)
+            get-sent-value (fn [old] (s/update-and-send-cache old msg)
+                             @sent-value)]
+        ;; Return value depends only on the current state.
+        (is (= (s/update-and-send-cache nil msg)
+               (s/update-and-send-cache (into {} (take 5 full-cache)) msg)
+               (s/update-and-send-cache full-cache msg)))
+        ;; Sent message depends on the first arg.
+        (is (= (get-sent-value full-cache)
+               (get-sent-value full-cache)))
+        (is (= (get-sent-value (into {} (drop 3 full-cache)))
+               (get-sent-value (into {} (drop 3 full-cache))))))
+      ;; In particular, the sent message only contains the diff.
+      (let [changed-again (:changed-namespaces @sent-value)]
+        (is (map? changed-again))
+        (is (= (count changed-again) 3)))
+      ;; Check repl-type :cljs
+      (with-redefs [cljs/grab-cljs-env (constantly true)]
+        (s/update-and-send-cache nil msg)
+        (let [{:keys [repl-type changed-namespaces]} @sent-value]
+          (is (= repl-type :cljs))
+          (is (map? changed-namespaces)))))))
 
 (deftest update-vals
   (is (= (s/update-vals inc {1 2 3 4 5 6})
