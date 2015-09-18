@@ -44,6 +44,7 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.stacktrace/wrap-stacktrace
                   cider.nrepl.middleware.test/wrap-test
                   cider.nrepl.middleware.trace/wrap-trace
+                  cider.nrepl.middleware.out/wrap-out
                   cider.nrepl.middleware.undef/wrap-undef]}
 
 ```
@@ -111,6 +112,7 @@ Middleware        | Op(s)      | Description
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
 `wrap-trace`      | `toggle-trace-var`/`toggle-trace-ns` | Toggle tracing of a given var or ns.
+`wrap-out`        | | Echo the server's output stream to client sessions.
 `wrap-undef`      | `undef`    | Undefine a var.
 
 ## Release policy
