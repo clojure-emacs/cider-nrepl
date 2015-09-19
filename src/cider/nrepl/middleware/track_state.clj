@@ -75,7 +75,7 @@
     {:aliases aliases
      ;; For some reason, cljs (or piggieback) adds a :test key to the
      ;; var metadata stored in the namespace.
-     :interns (update-vals #(dissoc (relevant-meta %) :test)
+     :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
                            (merge defs uses use-macros))}))
 
 (def clojure-core-map

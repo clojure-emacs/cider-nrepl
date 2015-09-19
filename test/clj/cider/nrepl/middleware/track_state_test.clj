@@ -67,7 +67,14 @@
           ns-map s/filter-core-and-get-meta
           seq not)))
 
+(defn- test-fn "docstring"
+  ([a b] nil)
+  ([a] nil)
+  ([]))
+
 (deftest relevant-meta
+  (is (= (s/relevant-meta (meta #'test-fn))
+         {:arglists "([a b] [a] [])"}))
   (is (= (:macro (s/relevant-meta (meta #'deftest)))
          "true"))
   (alter-meta! #'update-vals merge {:indent 1 :cider-instrumented 2 :something-else 3})
@@ -92,6 +99,18 @@
     (let [{:keys [interns aliases] :as ns}
           (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
       (is interns))))
+
+(deftest ns-as-map-cljs
+  (let [cljs-ns {:use-macros {'sym-0 #'test-fn}
+                 :uses {'sym-1 #'ns-as-map-cljs}
+                 :defs {'sym-2 #'ns-as-map-cljs}
+                 :require-macros {'sym-3 'some-namespace}
+                 :requires {'sym-4 'some-namespace}}
+        {:keys [aliases interns]} (s/ns-as-map cljs-ns)]
+    (is (= aliases '{sym-3 some-namespace sym-4 some-namespace}))
+    (is (= interns '{sym-0 {:arglists "([a b] [a] [])"}
+                     sym-1 {}
+                     sym-2 {}}))))
 
 (deftest calculate-used-aliases
   (let [nsm {'cider.nrepl.middleware.track-state-test
