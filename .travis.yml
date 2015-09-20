@@ -10,9 +10,11 @@ env:
   - TEST_CMD="lein2 with-profile +1.5,+plugin.mranderson/config,+test-clj test"
   - TEST_CMD="lein2 with-profile +1.6,+plugin.mranderson/config,+test-clj test"
   - TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-clj test"
 
   - TEST_CMD="lein2 with-profile +1.6,+plugin.mranderson/config,+test-cljs test"
   - TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
+  - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
 jdk:
   - openjdk6
   - openjdk7
@@ -23,6 +25,8 @@ matrix:
     - env: TEST_CMD="lein2 with-profile +1.6,+plugin.mranderson/config,+test-cljs test"
       jdk: openjdk6
     - env: TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
+      jdk: openjdk6
+    - env: TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
       jdk: openjdk6
   include:
     - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+coveralls coveralls"
