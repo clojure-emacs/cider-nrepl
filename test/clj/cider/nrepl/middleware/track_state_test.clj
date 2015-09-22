@@ -5,6 +5,11 @@
             [clojure.tools.nrepl.transport :as t])
   (:import clojure.tools.nrepl.transport.Transport))
 
+;;; This is to prevent the agent from flooding test reports with
+;;; irrelevant exceptions.
+(set-error-handler! s/ns-cache (constantly nil))
+(set-error-mode! s/ns-cache :continue)
+
 (def ^:const msg {:session :dummy})
 
 (deftest make-transport
