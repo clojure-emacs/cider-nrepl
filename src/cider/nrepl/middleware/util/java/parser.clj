@@ -115,8 +115,10 @@
 ;; The HTML parser and DTD classes are in the `javax.swing` package, and have
 ;; internal references to the `sun.awt.AppContext` class. On Mac OS X, any use
 ;; of this class causes a stray GUI window to pop up. Setting the system
-;; property below prevents this.
-(System/setProperty "apple.awt.UIElement" "true")
+;; property below prevents this. We only set the property if it
+;; hasn't already been explicitly set.
+(when (nil? (System/getProperty "apple.awt.UIElement"))
+  (System/setProperty "apple.awt.UIElement" "true"))
 
 ;; We parse html and emit text in a single pass -- there's no need to build a
 ;; tree. The syntax map defines most of the output format, but a few stateful
