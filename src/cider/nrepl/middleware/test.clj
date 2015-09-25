@@ -6,7 +6,7 @@
             [clojure.pprint :as pp]
             [clojure.test :as test]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
+            [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
@@ -148,57 +148,69 @@
   the nREPL session."
   (atom {}))
 
+(defmacro with-interruptible-eval
+  "Run body mimicking interruptible-eval."
+  [msg & body]
+  `(let [session# (:session ~msg)]
+     (ie/queue-eval session# (:executor ~msg)
+                    (fn []
+                      (alter-meta! session# assoc
+                                   :thread (Thread/currentThread)
+                                   :eval-msg ~msg)
+                      (binding [ie/*msg* ~msg]
+                        (with-bindings @session#
+                          ~@body)
+                        (alter-meta! session# dissoc :thread :eval-msg))))))
+
 (defn handle-test
   "Run tests in the specified namespace and return results. This accepts a set
   of `tests` to be run; if nil, runs all tests. Results are cached for exception
   retrieval and to enable re-running of failed/erring tests."
   [{:keys [ns tests session transport] :as msg}]
-  (binding [*msg* msg]
-    (with-bindings @session
-      (if-let [ns (try (doto (symbol ns) require) (catch Exception _))]
-        (let [report (->> (map #(ns-resolve ns (symbol %)) tests)
-                          (filter identity)
-                          (test-ns (the-ns ns)))]
-          (swap! results update-in [ns] merge (:results report))
-          (t/send transport (response-for msg (u/transform-value report))))
-        (t/send transport (response-for msg :status :namespace-not-found)))
-      (t/send transport (response-for msg :status :done)))))
+  (with-interruptible-eval msg
+    (if-let [ns (try (doto (symbol ns) require) (catch Exception _))]
+      (let [report (->> (map #(ns-resolve ns (symbol %)) tests)
+                        (filter identity)
+                        (test-ns (the-ns ns)))]
+        (swap! results update-in [ns] merge (:results report))
+        (t/send transport (response-for msg (u/transform-value report))))
+      (t/send transport (response-for msg :status :namespace-not-found)))
+    (t/send transport (response-for msg :status :done))))
 
 (defn handle-stacktrace
   "Return exception cause and stack frame info for an erring test via the
   `stacktrace` middleware. The error to be retrieved is referenced by namespace,
   var name, and assertion index within the var."
   [{:keys [ns var index session transport print-length print-level] :as msg}]
-  (binding [*msg* msg]
-    (with-bindings @session
-      (let [[ns var] (map u/as-sym [ns var])]
-        (if-let [e (get-in @results [ns var index :error])]
-          (doseq [cause (st/analyze-causes e print-length print-level)]
-            (t/send transport (response-for msg cause)))
-          (t/send transport (response-for msg :status :no-error)))
-        (t/send transport (response-for msg :status :done))))))
+  (with-interruptible-eval msg
+    (let [[ns var] (map u/as-sym [ns var])]
+      (if-let [e (get-in @results [ns var index :error])]
+        (doseq [cause (st/analyze-causes e print-length print-level)]
+          (t/send transport (response-for msg cause)))
+        (t/send transport (response-for msg :status :no-error)))
+      (t/send transport (response-for msg :status :done)))))
 
 (defn handle-retest
   "Rerun tests in the specified namespace that did not pass when last run. This
   behaves exactly as the `test` op, but passes the set of `tests` having
   previous failures/errors."
   [{:keys [ns session] :as msg}]
-  (binding [*msg* msg]
-    (with-bindings @session
-      (let [problems (->> (mapcat val (get @results (u/as-sym ns)))
-                          (filter (comp #{:fail :error} :type)))
-            retests (distinct (map :var problems))]
-        (handle-test (assoc msg :tests retests))))))
+  (with-interruptible-eval msg
+    (let [problems (->> (mapcat val (get @results (u/as-sym ns)))
+                        (filter (comp #{:fail :error} :type)))
+          retests (distinct (map :var problems))]
+      (handle-test (assoc msg :tests retests)))))
 
 (defn wrap-test
   "Middleware that handles testing requests"
-  [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "test"            (handle-test msg)
-      "test-stacktrace" (handle-stacktrace msg)
-      "retest"          (handle-retest msg)
-      (handler msg))))
+  [handler & configuration]
+  (let [executor (:executor configuration @ie/default-executor)]
+    (fn [{:keys [op] :as msg}]
+      (case op
+        "test"            (handle-test (assoc msg :executor executor))
+        "test-stacktrace" (handle-stacktrace (assoc msg :executor executor))
+        "retest"          (handle-retest (assoc msg :executor executor))
+        (handler msg)))))
 
 ;; nREPL middleware descriptor info
 (set-descriptor!
