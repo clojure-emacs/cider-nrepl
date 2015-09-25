@@ -112,7 +112,8 @@
 
 ;;; State management
 (defn calculate-used-aliases
-  "Return a map of namespaces aliased by a namespace in new-ns-map.
+  "Return a seq of namespaces aliased by a namespace in new-ns-map.
+  The elements are symbols (namespace names).
   Skip any namespaces already present in new-ns-map or old-ns-map."
   [^clojure.lang.PersistentHashMap new-ns-map
    ^clojure.lang.PersistentHashMap old-ns-map]
@@ -124,8 +125,8 @@
                          (get old-ns-map name)
                          (get new-ns-map name))
                    acc
-                   (assoc acc name (ns-as-map (find-ns name)))))
-               {})))
+                   (conj acc name)))
+               [])))
 
 (def ns-cache
   "Cache of the namespace info that has been sent to each session.
@@ -158,7 +159,12 @@
                              (vals (cljs-ana/all-ns cljs))
                              (all-ns))
                            (calculate-changed-ns-map old-data))
-        used-aliases (calculate-used-aliases changed-ns-map (or old-data {}))
+        find-ns-fn (if cljs
+                     #(cljs-ana/find-ns cljs %)
+                     find-ns)
+        used-aliases (->> (calculate-used-aliases changed-ns-map (or old-data {}))
+                          (map #(vector % (ns-as-map (find-ns-fn %))))
+                          (into {}))
         changed-ns-map (merge changed-ns-map used-aliases)]
     (->> (response-for
           msg :status :state

@@ -5,6 +5,9 @@
             [clojure.tools.nrepl.transport :as t])
   (:import clojure.tools.nrepl.transport.Transport))
 
+(def some-ns-map {'cider.nrepl.middleware.track-state-test
+                  (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))})
+
 ;;; This is to prevent the agent from flooding test reports with
 ;;; irrelevant exceptions.
 (set-error-handler! s/ns-cache (constantly nil))
@@ -118,11 +121,9 @@
                      sym-2 {}}))))
 
 (deftest calculate-used-aliases
-  (let [nsm {'cider.nrepl.middleware.track-state-test
-             (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))}]
-    (is (contains? (into #{} (keys (s/calculate-used-aliases nsm nil)))
-                   'cider.nrepl.middleware.track-state))
-    (is (contains? (into #{} (keys (s/calculate-used-aliases nsm {'cider.nrepl.middleware.track-state nil})))
-                   'cider.nrepl.middleware.track-state))
-    (is (contains? (into #{} (keys (s/calculate-used-aliases (assoc nsm 'cider.nrepl.middleware.track-state nil) nil)))
-                   'cider.nrepl.middleware.track-state))))
+  (is (contains? (into #{} (s/calculate-used-aliases some-ns-map nil))
+                 'cider.nrepl.middleware.track-state))
+  (is (contains? (into #{} (s/calculate-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil}))
+                 'cider.nrepl.middleware.track-state))
+  (is (contains? (into #{} (s/calculate-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil))
+                 'cider.nrepl.middleware.track-state)))
