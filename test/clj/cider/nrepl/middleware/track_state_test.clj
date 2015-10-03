@@ -102,7 +102,7 @@
     (is (= (into #{} (keys (interns 'update-vals)))
            #{:cider-instrumented :indent :test}))
     (is (> (count aliases) 2))
-    (is (= (aliases 's)
+    (is (= (aliases 'st)
            'cider.nrepl.middleware.track-state)))
   (with-redefs [st/track-ns? (constantly nil)]
     (let [{:keys [interns aliases] :as ns}
