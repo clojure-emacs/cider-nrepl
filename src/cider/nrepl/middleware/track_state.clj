@@ -69,6 +69,7 @@
     {:aliases aliases
      :interns (filter-core-and-get-meta (.getMappings ns))}))
 ;; ClojureScript Namespaces
+(defmethod ns-as-map nil [_] {})
 (defmethod ns-as-map clojure.lang.Associative
   [{:keys [use-macros uses require-macros requires defs]}]
   (let [aliases (merge require-macros requires)]
