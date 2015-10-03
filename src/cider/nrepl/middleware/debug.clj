@@ -88,7 +88,6 @@
   (if (map? *msg*)
     (do
       (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
-      (transport/send (:transport *msg*) (response-for *msg* :status :done))
       (.stop (:thread (meta (:session *msg*)))))
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
