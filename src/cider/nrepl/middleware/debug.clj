@@ -332,9 +332,7 @@
                            (catch Exception e
                              (when-not (realized? pro)
                                (deliver pro :quit))
-                             (throw e)))
-                      (transport/send (:transport msg)
-                                      (response-for msg :status :done)))
+                             (throw e))))
       "init-debugger" (initialize msg)
       ;; else
       (h msg))))
