@@ -91,6 +91,7 @@
           :test (pr-str (:test (meta #'update-vals)))})))
 
 (deftest ns-as-map
+  (is (empty? (st/ns-as-map nil)))
   (alter-meta! #'update-vals
                merge {:indent 1 :cider-instrumented 2 :something-else 3})
   (let [{:keys [interns aliases] :as ns} (s/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
