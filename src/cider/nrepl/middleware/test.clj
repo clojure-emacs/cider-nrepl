@@ -152,15 +152,16 @@
   "Run body mimicking interruptible-eval."
   [msg & body]
   `(let [session# (:session ~msg)]
-     (ie/queue-eval session# (:executor ~msg)
-                    (fn []
-                      (alter-meta! session# assoc
-                                   :thread (Thread/currentThread)
-                                   :eval-msg ~msg)
-                      (binding [ie/*msg* ~msg]
-                        (with-bindings @session#
-                          ~@body)
-                        (alter-meta! session# dissoc :thread :eval-msg))))))
+     ;; Before tools.nrepl-0.2.10, `queue-eval` was private.
+     (@#'ie/queue-eval session# (:executor ~msg)
+                       (fn []
+                         (alter-meta! session# assoc
+                                      :thread (Thread/currentThread)
+                                      :eval-msg ~msg)
+                         (binding [ie/*msg* ~msg]
+                           (with-bindings @session#
+                             ~@body)
+                           (alter-meta! session# dissoc :thread :eval-msg))))))
 
 (defn handle-test
   "Run tests in the specified namespace and return results. This accepts a set
@@ -201,10 +202,16 @@
           retests (distinct (map :var problems))]
       (handle-test (assoc msg :tests retests)))))
 
+;; Before tools.nrepl-0.2.10, `default-executor` was private and
+;; before 0.2.9 it didn't even exist.
+(def default-executor (delay (if-let [def (resolve 'ie/default-executor)]
+                               @@def
+                               (@#'ie/configure-executor))))
+
 (defn wrap-test
   "Middleware that handles testing requests"
   [handler & configuration]
-  (let [executor (:executor configuration @ie/default-executor)]
+  (let [executor (:executor configuration @default-executor)]
     (fn [{:keys [op] :as msg}]
       (case op
         "test"            (handle-test (assoc msg :executor executor))
