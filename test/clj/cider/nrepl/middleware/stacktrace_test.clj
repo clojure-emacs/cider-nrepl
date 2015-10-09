@@ -25,11 +25,13 @@
 (def form1 '(throw (ex-info "oops" {:x 1} (ex-info "cause" {:y 2}))))
 (def form2 '(do (defn oops [] (+ 1 "2"))
                 (oops)))
+(def form3 '(not-defined))
 
 (def frames1 (stack-frames form1))
 (def frames2 (stack-frames form2))
 (def causes1 (causes form1))
 (def causes2 (causes form2))
+(def causes3 (causes form3))
 
 ;; ## Tests
 
@@ -103,4 +105,7 @@
            (:data (analyze-cause (ex-info "" {:a (range)}) 3 nil)))))
   (testing "print-level"
     (is (= "{:a {#}}\n"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) nil 3))))))
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) nil 3)))))
+  (testing "compilation errors"
+    (is (re-find #"Error compiling: .* Unable to resolve symbol: not-defined in this context"
+                 (:message (first causes3))))))

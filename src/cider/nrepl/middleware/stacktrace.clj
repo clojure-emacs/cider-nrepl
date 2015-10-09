@@ -100,11 +100,11 @@
 
 (defn extract-location
   "If the cause is a compiler exception, extract the useful location information
-  from its message and discard the string representation of its inner cause."
+  from its message."
   [{:keys [class] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
     (update-in cause [:message] str/replace
-               #".* (compiling:)\((.*)\)" "Error $1 $2")
+               #".*?: (.*?), (compiling:)\((.*)\)" "Error $2 $3 $1")
     cause))
 
 ;; CLJS REPLs use :repl-env to store huge amounts of analyzer/compiler state
