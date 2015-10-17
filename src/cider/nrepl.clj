@@ -1,5 +1,6 @@
 (ns cider.nrepl
   (:require [clojure.tools.nrepl.server :as nrepl-server]
+            [cider.nrepl.print-method]
             [cider.nrepl.middleware.apropos]
             [cider.nrepl.middleware.classpath]
             [cider.nrepl.middleware.complete]
