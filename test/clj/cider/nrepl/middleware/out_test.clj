@@ -9,9 +9,6 @@
 
 (def the-meta {:id (random-str)})
 
-(defn test []
-  {:id (random-str)})
-
 (def msg {:op "eval" :id (random-str)
           :transport 90
           :some-other-key 10
@@ -21,11 +18,11 @@
 
 (deftest maybe-register-session
   (with-redefs [o/tracked-sessions-map (atom {})]
-    (o/maybe-register-session (assoc msg :op "clone"))
-    (is (= @o/tracked-sessions-map {}))
-    (o/maybe-register-session msg)
+    (o/subscribe-session msg)
     (let [{:keys [transport session id some-other-key]} (@o/tracked-sessions-map (:id the-meta))]
       (is (= transport (:transport msg)))
       (is (= session (:session msg)))
       (is (= id (:id msg)))
-      (is (not some-other-key)))))
+      (is (not some-other-key)))
+    (o/unsubscribe-session (:id the-meta))
+    (is (empty? @o/tracked-sessions-map))))

@@ -18,6 +18,7 @@
 (defonce original-out *out*)
 
 (declare tracked-sessions-map)
+(declare unsubscribe-session)
 
 (defmacro with-out-binding
   "Run body with v bound to the output stream of each msg in msg-seq.
@@ -31,8 +32,7 @@
                   ~@body)
                 ;; If a channel is faulty, dissoc it.
                 (catch Exception ~'e
-                  (swap! tracked-sessions-map dissoc
-                         (:id (meta ~'session)))))))))
+                  (unsubscribe-session ~'session)))))))
 
 (defn fork-out
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
@@ -70,20 +70,29 @@
 
 (add-watch tracked-sessions-map :update-out tracked-sessions-map-watch)
 
-(defn maybe-register-session
-  "Add msg to `tracked-sessions-map` if it is an eval op."
+(defn subscribe-session
+  "Add msg to `tracked-sessions-map`."
   [{:keys [op session] :as msg}]
   (try
-    (when (= op "eval")
-      (when-let [session (:id (meta session))]
-        (swap! tracked-sessions-map assoc session
-               (select-keys msg [:transport :session :id]))))
+    (when-let [session (:id (meta session))]
+      (swap! tracked-sessions-map assoc session
+             (select-keys msg [:transport :session :id])))
     (catch Exception e nil)))
 
+(defn unsubscribe-session
+  "Remove session from `tracked-sessions-map`."
+  [session]
+  (swap! tracked-sessions-map dissoc
+         (if-let [m (meta session)]
+           (:id m)
+           session)))
+
 (defn wrap-out [handler]
-  (fn [msg]
-    (maybe-register-session msg)
-    (handler msg)))
+  (fn [{:keys [op] :as msg}]
+    (case op
+      "out-subscribe" (subscribe-session msg)
+      "out-unsubscribe" (unsubscribe-session msg)
+      (handler msg))))
 
 (set-descriptor!
  #'wrap-out
@@ -91,5 +100,7 @@
   {:requires #{#'session/session}
    :expects #{"eval"}
    :handles
-   {"out-middleware"
-    {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}}}))
+   {"out-subscribe"
+    {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
+    "out-unsubscribe"
+    {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
