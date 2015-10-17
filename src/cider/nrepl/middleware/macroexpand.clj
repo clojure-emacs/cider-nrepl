@@ -66,14 +66,14 @@
 
 (defn macroexpansion-reply
   [{:keys [transport expander code ns display-namespaces print-meta] :as msg}]
-  (let [expansion (macroexpansion expander code ns display-namespaces print-meta)]
-    (try
+  (try
+    (let [expansion (macroexpansion expander code ns display-namespaces print-meta)]
       (transport/send
        transport
-       (response-for msg :expansion expansion :status :done))
-      (catch Exception e
-        (transport/send
-         transport (response-for msg (u/err-info e :macroexpand-error)))))))
+       (response-for msg :expansion expansion :status :done)))
+    (catch Exception e
+      (transport/send
+       transport (response-for msg (u/err-info e :macroexpand-error))))))
 
 (defn wrap-macroexpand
   "Middleware that provides macroexpansion ops."
