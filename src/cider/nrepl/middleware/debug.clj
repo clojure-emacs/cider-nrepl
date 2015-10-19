@@ -289,10 +289,12 @@
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
         fake-reader (fn [x] (reset! has-debug? true) nil)]
-    (binding [*data-readers* {'dbg fake-reader, 'break fake-reader}]
+    (binding [*data-readers* (assoc *data-readers* 'dbg fake-reader 'break fake-reader)]
       (try
         (read-string code)
-        (catch Exception e))
+        (catch Exception e)))
+    (binding [*data-readers* (assoc *data-readers* 'dbg #'debug-reader 'break #'breakpoint-reader)
+              *skip-breaks* (atom nil)]
       (if @has-debug?
         ;; Technically, `instrument-and-eval` acts like a regular eval
         ;; if there are no debugging macros. But we still only use it
