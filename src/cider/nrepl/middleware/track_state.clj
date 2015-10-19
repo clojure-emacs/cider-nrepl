@@ -28,7 +28,7 @@
   "Metadata keys that are useful to us.
   This is used so that we don't crowd the ns cache with useless or
   redudant information, such as :name and :ns."
-  [:indent :cider-instrumented :macro :arglists :test])
+  [:indent :cider-instrumented :deprecated :macro :arglists :test])
 
 (defn relevant-meta
   "Return the meta of var, selecting only keys of interest."
