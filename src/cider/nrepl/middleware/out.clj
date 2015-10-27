@@ -9,6 +9,7 @@
   guarantee that the channel that sent the clone message will properly
   handle output replies."
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [clojure.string :as s]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
             [clojure.tools.nrepl.middleware.session :as session])
