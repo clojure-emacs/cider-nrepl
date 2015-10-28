@@ -263,6 +263,7 @@
                        :debug-value (pr-short val#)))))))
 
 ;;; Data readers
+;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
@@ -282,8 +283,6 @@
   "Return msg, prepared for debugging if code contains debugging macros."
   [{:keys [code session ns] :as msg}]
   (when (instance? clojure.lang.Atom session)
-    (swap! session update-in [#'*data-readers*] assoc
-           'dbg #'debug-reader 'break  #'breakpoint-reader)
     (swap! session assoc #'*skip-breaks* (atom nil)))
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
@@ -293,8 +292,7 @@
       (try
         (read-string code)
         (catch Exception e)))
-    (binding [*data-readers* (assoc *data-readers* 'dbg #'debug-reader 'break #'breakpoint-reader)
-              *skip-breaks* (atom nil)]
+    (binding [*skip-breaks* (atom nil)]
       (if @has-debug?
         ;; Technically, `instrument-and-eval` acts like a regular eval
         ;; if there are no debugging macros. But we still only use it
