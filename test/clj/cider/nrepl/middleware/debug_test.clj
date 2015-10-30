@@ -191,14 +191,15 @@
   (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
                 d/debugger-message (atom [:fake])]
     (binding [*msg* {:session (atom {}) :code :code, :id :id,
-                     :file :file, :point :point}]
+                     :file :file, :line :line, :column :column}]
       (let [m (eval '(cider.nrepl.middleware.debug/breakpoint (inc 10) [6]))]
         (are [k v] (= (k m) v)
           :value 11
           :debug-value "11"
           :coor [6]
           :file :file
-          :point :point
+          :line :line
+          :column :column
           :code :code
           :original-id :id))
       ;; Locals capturing
