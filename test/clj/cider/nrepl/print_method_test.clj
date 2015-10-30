@@ -25,7 +25,6 @@
 
 (deftest print-namespaces
   (are [f s] (= (pr-str f) s)
-    *ns* "#namespace[cider.nrepl.print-method-test]"
     (find-ns 'clojure.core) "#namespace[clojure.core]"
     (find-ns 'cider.nrepl.print-method) "#namespace[cider.nrepl.print-method]"
     (find-ns 'clojure.test) "#namespace[clojure.test]"))
