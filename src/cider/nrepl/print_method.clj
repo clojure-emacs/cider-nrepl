@@ -1,6 +1,6 @@
 (ns cider.nrepl.print-method
   (:require [clojure.string :as s])
-  (:import [clojure.lang AFunction MultiFn]
+  (:import [clojure.lang AFunction MultiFn Namespace]
            java.io.Writer))
 
 ;; Extending `print-method` defined in clojure.core, to provide
@@ -60,3 +60,10 @@
   ;; MultiFn names are not unique so we keep the identity HashCode to
   ;; make sure it's unique.
   (format " 0x%x]" (System/identityHashCode c)))
+
+;;; Namespaces
+;; Ex: #namespace[clojure.core]
+(def-print-method Namespace c
+  "#namespace["
+  (format "%s" (ns-name c))
+  "]")
