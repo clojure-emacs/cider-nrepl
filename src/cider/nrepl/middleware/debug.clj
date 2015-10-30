@@ -257,9 +257,9 @@
                 ;; This *msg* is evaluated at compile-time, so it's
                 ;; the message that instrumented the function, not the
                 ;; message that led to its evaluation.
-                (assoc ~(let [{:keys [code id file point]} *msg*]
+                (assoc ~(let [{:keys [code id file point line column]} *msg*]
                           {:code code, :original-id id, :coor coor
-                           :file file, :point point})
+                           :file file, :line line, :column column})
                        :debug-value (pr-short val#)))))))
 
 ;;; Data readers
