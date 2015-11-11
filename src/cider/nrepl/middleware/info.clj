@@ -10,6 +10,31 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]))
 
+(defn- boot-project? []
+  ;; fake.class.path under boot contains the original directories with source
+  ;; files, see https://github.com/boot-clj/boot/issues/249
+  (not (nil? (System/getProperty "fake.class.path"))))
+
+(defn- boot-class-loader
+  "Creates a class-loader that knows original source files paths in Boot project."
+  []
+  (let [class-path (System/getProperty "fake.class.path")
+        dir-separator (System/getProperty "file.separator")
+        paths (str/split class-path (re-pattern (System/getProperty "path.separator")))
+        urls (map
+              (fn [path]
+                (let [url (if (re-find #".jar$" path)
+                            (str "file:" path)
+                            (str "file:" path dir-separator))]
+                  (new java.net.URL url)))
+              paths)]
+    (new java.net.URLClassLoader (into-array java.net.URL urls))))
+
+(defn- resource-full-path [relative-path]
+  (if (boot-project?)
+    (io/resource relative-path (boot-class-loader))
+    (io/resource relative-path)))
+
 (defn maybe-protocol
   [info]
   (if-let [prot-meta (meta (:protocol info))]
@@ -93,7 +118,7 @@
 (defn find-cljx-source
   "If file was cross-compiled using CLJX, return path to original file."
   [filename]
-  (let [file  (if-let [rsrc (io/resource filename)]
+  (let [file  (if-let [rsrc (resource-full-path filename)]
                 (when (= "file" (.getProtocol rsrc))
                   (io/as-file rsrc))
                 (io/as-file filename))]
@@ -148,14 +173,14 @@
 (defn resource-path
   "If it's a resource, return a tuple of the relative path and the full resource path."
   [x]
-  (or (if-let [full (io/resource x)]
+  (or (if-let [full (resource-full-path x)]
         [x full])
       (if-let [[_ relative] (re-find #".*jar!/(.*)" x)]
-        (if-let [full (io/resource relative)]
+        (if-let [full (resource-full-path relative)]
           [relative full]))
       ;; handles load-file on jar resources from a cider buffer
       (if-let [[_ relative] (re-find #".*jar:(.*)" x)]
-        (if-let [full (io/resource relative)]
+        (if-let [full (resource-full-path relative)]
           [relative full]))))
 
 (defn file-path
@@ -182,7 +207,7 @@
   classes. If no source is available, return the relative path as is."
   [path]
   {:javadoc
-   (or (io/resource path)
+   (or (resource-full-path path)
        (when (re-find #"^(java|javax|org.omg|org.w3c.dom|org.xml.sax)/" path)
          (format "http://docs.oracle.com/javase/%s/docs/api/%s"
                  u/java-api-version path))
