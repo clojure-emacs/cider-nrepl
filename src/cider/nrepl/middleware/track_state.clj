@@ -11,7 +11,8 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport])
   (:import clojure.lang.Namespace
-           clojure.tools.nrepl.transport.Transport))
+           clojure.tools.nrepl.transport.Transport
+           java.net.SocketException))
 
 (def clojure-core (try (find-ns 'clojure.core)
                        (catch Exception e nil)))
@@ -168,11 +169,14 @@
                           (map #(vector % (ns-as-map (find-ns-fn %))))
                           (into {}))
         changed-ns-map (merge changed-ns-map used-aliases)]
-    (->> (response-for
-          msg :status :state
-          :repl-type (if cljs :cljs :clj)
-          :changed-namespaces (misc/transform-value changed-ns-map))
-         (transport/send (:transport msg)))
+    (try (->> (response-for
+               msg :status :state
+               :repl-type (if cljs :cljs :clj)
+               :changed-namespaces (misc/transform-value changed-ns-map))
+              (transport/send (:transport msg)))
+         ;; We run async, so the connection might have been closed in
+         ;; the mean time.
+         (catch SocketException _ nil))
     (merge old-data changed-ns-map)))
 
 ;;; Middleware
