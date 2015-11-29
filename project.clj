@@ -12,7 +12,7 @@
                  ^:source-dep [cljfmt "0.3.0"]
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
-                 ^:source-dep [org.clojure/tools.trace "0.7.8"]
+                 ^:source-dep [org.clojure/tools.trace "0.7.9"]
                  ^:source-dep [org.clojure/tools.reader "0.9.2"]]
   :exclusions [org.clojure/clojure]
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
