@@ -2,7 +2,7 @@
 
 (def version
   "Current version of CIDER nREPL, map of :major, :minor, :incremental, and :qualifier."
-  (let [version-string "0.10.0"]
+  (let [version-string "0.10.1-snapshot"]
     (assoc (->> version-string
                 (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
                 rest
