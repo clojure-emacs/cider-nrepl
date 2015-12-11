@@ -57,7 +57,7 @@
                          :dependencies [[com.cemerick/piggieback "0.2.1"]
                                         [org.clojure/clojurescript "0.0-3211"]]}
 
-             :coveralls {:plugins [[lein-cloverage "1.0.2"]
+             :coveralls {:plugins [[lein-cloverage "1.0.6"]
                                    [lein-shell "0.5.0"]]
                          :aliases {"coveralls" ["do" "cloverage" "--coveralls,"
                                                 "shell" "curl" "-F"
