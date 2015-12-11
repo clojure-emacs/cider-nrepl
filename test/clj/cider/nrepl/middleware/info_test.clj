@@ -34,11 +34,14 @@
                   java.net.URL)))
       (is (= (file tmp-file-name) tmp-file-name)))
     (testing "when fake.class.path is set"
-      (System/setProperty "fake.class.path" tmp-dir-name)
-      (is (= (class (file tmp-file-name))
-             java.net.URL))
-      (is (= (.getPath (file tmp-file-name))
-             tmp-file-path)))))
+      (try
+        (System/setProperty "fake.class.path" tmp-dir-name)
+        (is (= (class (file tmp-file-name))
+               java.net.URL))
+        (is (= (.getPath (file tmp-file-name))
+               tmp-file-path))
+        (finally
+          (System/clearProperty "fake.class.path"))))))
 
 (deftype T [])
 
