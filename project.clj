@@ -42,7 +42,6 @@
                                    "https://oss.sonatype.org/content/repositories/snapshots"]]
                    :dependencies [[org.clojure/tools.nrepl "0.2.12"]]}
 
-             :test {:resource-paths ["test/resources"]}
              :test-clj {:test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
                          :dependencies [[com.cemerick/piggieback "0.2.1"]
