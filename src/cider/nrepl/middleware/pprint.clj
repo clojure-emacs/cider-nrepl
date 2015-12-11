@@ -7,10 +7,18 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
+            [clojure.tools.nrepl.transport :as transport]
+            [fipp.edn :as fipp]
+            [puget.printer :as puget])
   (:import clojure.tools.nrepl.transport.Transport))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn fipp-pprint [object]
+  (fipp/pprint object {:width (or *print-right-margin* 72)}))
+
+(defn puget-pprint [object]
+  (puget/pprint object {:width (or *print-right-margin* 72)}))
 
 (defn- resolve-pprint-fn
   [sym]

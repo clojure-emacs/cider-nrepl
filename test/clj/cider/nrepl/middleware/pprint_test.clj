@@ -51,4 +51,22 @@
                         {:pprint-sentinel {}}
                         {:pprint-out "[4 5 6]\n"}
                         {:pprint-sentinel {}}
-                        {:status ["done"]}])))))
+                        {:status ["done"]}]))))
+
+  (testing "fipp-pprint works"
+    (let [message {:op :eval
+                   :code "{nil [nil nil nil #{nil} nil nil nil]}"
+                   :pprint "true"
+                   :pprint-fn "cider.nrepl.middleware.pprint/fipp-pprint"
+                   :print-right-margin 10}]
+      (is (= "{nil\n [nil\n  nil\n  nil\n  #{nil}\n  nil\n  nil\n  nil]}\n"
+             (:pprint-out (session/message (dissoc message :pprint-fn)))))
+      (is (= "{nil [nil\n      nil\n      nil\n      #{nil}\n      nil\n      nil\n      nil]}\n"
+             (:pprint-out (session/message message))))))
+
+  (testing "puget-pprint works"
+    (is (= "{:a 1, :b 2, :c 3, :d 4, :e 5}\n"
+           (:pprint-out (session/message {:op :eval
+                                          :code "{:b 2 :e 5 :a 1 :d 4 :c 3}"
+                                          :pprint "true"
+                                          :pprint-fn "cider.nrepl.middleware.pprint/puget-pprint"}))))))
