@@ -11,6 +11,6 @@ function check_result {
 
 lein do clean, source-deps
 check_result
-lein with-profile +test-clj,+1.6,+plugin.mranderson/config test
+lein with-profile +test-clj,+1.7,+plugin.mranderson/config test
 check_result
 lein with-profile plugin.mranderson/config "$@"

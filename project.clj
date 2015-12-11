@@ -18,7 +18,7 @@
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
   :plugins [[thomasa/mranderson "0.4.5"]]
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
                                                      cider.nrepl.middleware.classpath/wrap-classpath
@@ -46,9 +46,9 @@
                    :repositories [["snapshots"
                                    "https://oss.sonatype.org/content/repositories/snapshots"]]
                    :dependencies [[org.clojure/tools.nrepl "0.2.12"]
-                                  [org.clojure/clojure "1.5.2-SNAPSHOT"
+                                  [org.clojure/clojure "1.7.0"
                                    :classifier "sources"]
-                                  [org.clojure/clojure "1.5.1"
+                                  [org.clojure/clojure "1.7.0"
                                    :classifier "javadoc"]]}
 
              :test {:resource-paths ["test/resources"]}
@@ -64,8 +64,6 @@
                                                 "json_file=@target/coverage/coveralls.json"
                                                 "https://coveralls.io/api/v1/jobs"]}}
 
-             :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
-             :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
