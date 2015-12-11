@@ -5,6 +5,7 @@
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+
   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
                  [org.tcrawley/dynapath "0.2.3"]
                  ^:source-dep [compliment "0.2.5"]
@@ -14,10 +15,13 @@
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
                  ^:source-dep [org.clojure/tools.reader "0.10.0"]]
-  :exclusions [org.clojure/clojure]
-  :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
   :plugins [[thomasa/mranderson "0.4.5"]]
+  :exclusions [org.clojure/clojure]
+
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
+
+  :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
+
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
@@ -40,6 +44,9 @@
                                                      cider.nrepl.middleware.undef/wrap-undef]}
                    :dependencies [[org.clojure/tools.nrepl "0.2.12"]]}
 
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC3"]]}
+
              :test-clj {:test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
                          :dependencies [[com.cemerick/piggieback "0.2.1"]
@@ -52,10 +59,8 @@
                                                 "json_file=@target/coverage/coveralls.json"
                                                 "https://coveralls.io/api/v1/jobs"]}}
 
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC3"]]}
-
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]}}}
+
              :eastwood {:plugins [[jonase/eastwood "0.2.2"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})
