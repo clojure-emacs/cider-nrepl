@@ -40,11 +40,7 @@
                                                      cider.nrepl.middleware.undef/wrap-undef]}
                    :repositories [["snapshots"
                                    "https://oss.sonatype.org/content/repositories/snapshots"]]
-                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
-                                  [org.clojure/clojure "1.7.0"
-                                   :classifier "sources"]
-                                  [org.clojure/clojure "1.7.0"
-                                   :classifier "javadoc"]]}
+                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]]}
 
              :test {:resource-paths ["test/resources"]}
              :test-clj {:test-paths ["test/clj"]}
@@ -59,7 +55,9 @@
                                                 "json_file=@target/coverage/coveralls.json"
                                                 "https://coveralls.io/api/v1/jobs"]}}
 
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
+             :1.7 {:dependencies [^:replace [org.clojure/clojure "1.7.0"]
+                                  [org.clojure/clojure "1.7.0" :classifier "sources"]
+                                  [org.clojure/clojure "1.7.0" :classifier "javadoc"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]}}}
