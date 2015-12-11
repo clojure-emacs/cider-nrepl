@@ -58,6 +58,9 @@
              :1.7 {:dependencies [^:replace [org.clojure/clojure "1.7.0"]
                                   [org.clojure/clojure "1.7.0" :classifier "sources"]
                                   [org.clojure/clojure "1.7.0" :classifier "javadoc"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC3"]
+                                  [org.clojure/clojure "1.8.0-RC3" :classifier "sources"]
+                                  [org.clojure/clojure "1.8.0-RC3" :classifier "javadoc"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]}}}
