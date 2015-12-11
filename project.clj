@@ -38,8 +38,6 @@
                                                      cider.nrepl.middleware.trace/wrap-trace
                                                      cider.nrepl.middleware.track-state/wrap-tracker
                                                      cider.nrepl.middleware.undef/wrap-undef]}
-                   :repositories [["snapshots"
-                                   "https://oss.sonatype.org/content/repositories/snapshots"]]
                    :dependencies [[org.clojure/tools.nrepl "0.2.12"]]}
 
              :test-clj {:test-paths ["test/clj"]}
