@@ -27,9 +27,9 @@
 (deftest sanity
   (testing "cljs repl is active"
     (let [response (session/message {:op :eval
-                                     :code (nrepl/code js/console)})]
+                                     :code (nrepl/code (js/Object.))})]
       (is (= "cljs.user" (:ns response)))
-      (is (= ["#<[object Object]>"] (:value response)))
+      (is (= ["#js {}"] (:value response)))
       (is (= #{"done"} (:status response)))))
 
   (testing "eval works"
