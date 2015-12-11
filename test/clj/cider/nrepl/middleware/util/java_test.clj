@@ -5,29 +5,25 @@
 
 (deftest test-source-info
   (let [resolve-src (comp (fnil io/resource "-none-") :file source-info)]
-    (when jdk-tools
+    (when (and jdk-sources jdk-tools)
       (testing "Source file resolution"
-        (testing "from Clojure"
-          (is (resolve-src 'clojure.lang.Compiler))
-          (is (resolve-src 'clojure.lang.PersistentHashSet)))
         (testing "from JDK"
-          (when jdk-sources ; system dependent; not managed by project.clj
-            (is (resolve-src 'java.lang.String))
-            (is (resolve-src 'java.util.regex.Matcher))))
+          (is (resolve-src 'java.lang.String))
+          (is (resolve-src 'java.util.regex.Matcher)))
         (testing "for non-existent classes"
           (is (not (resolve-src 'not.actually.AClass)))))
       (testing "Parse tree kinds"
         ;; classes, nested, interfaces, enums
-        (is (-> (source-info 'clojure.lang.IFn) :line)) ; interface
-        (is (-> (source-info 'clojure.lang.AFn) :line)) ; abstract class
-        (is (-> (source-info 'clojure.lang.IFn$LODDO) :line)) ; nested interface
-        (is (-> (source-info 'clojure.lang.Numbers$Category) :line)) ; enum
+        (is (-> (source-info 'java.util.Collection) :line)) ; interface
+        (is (-> (source-info 'java.util.AbstractCollection) :line)) ; abstract class
+        (is (-> (source-info 'java.lang.Thread$UncaughtExceptionHandler) :line)) ; nested interface
+        (is (-> (source-info 'java.net.Authenticator$RequestorType) :line)) ; enum
         (when jdk-sources
           (is (-> (source-info 'java.sql.ClientInfoStatus) :line)))) ; top-level enum
       (testing "Source parsing"
-        (is (-> (source-info 'clojure.lang.ExceptionInfo) :doc))
-        (is (-> (get-in (source-info 'clojure.lang.Compiler)
-                        [:members 'compile])
+        (is (-> (source-info 'java.util.AbstractCollection) :doc))
+        (is (-> (get-in (source-info 'java.util.AbstractCollection)
+                        [:members 'size])
                 first val :line))))))
 
 (deftest test-map-structure
@@ -52,16 +48,17 @@
                  (every? true?)))))))
 
 (deftest test-class-info
-  (let [c1 (class-info 'clojure.lang.PersistentHashMap)
-        c2 (class-info 'clojure.lang.PersistentHashMap$ArrayNode)
+  (let [c1 (class-info 'java.lang.Thread)
+        c2 (class-info 'java.lang.Thread$State)
         c3 (class-info 'not.actually.AClass)]
     (testing "Class"
-      (testing "source file"
-        (is (string? (:file c1)))
-        (is (io/resource (:file c1))))
-      (testing "source file for nested class"
-        (is (string? (:file c2)))
-        (is (io/resource (:file c2))))
+      (when (and jdk-sources jdk-tools)
+        (testing "source file"
+          (is (string? (:file c1)))
+          (is (io/resource (:file c1))))
+        (testing "source file for nested class"
+          (is (string? (:file c2)))
+          (is (io/resource (:file c2)))))
       (testing "member info"
         (is (map? (:members c1)))
         (is (every? map? (vals (:members c1))))
@@ -71,19 +68,20 @@
         (is (nil? c3))))))
 
 (deftest test-member-info
-  (let [m1 (member-info 'clojure.lang.PersistentHashMap 'assoc)
-        m2 (member-info 'clojure.lang.PersistentHashMap 'nothing)
+  (let [m1 (member-info 'java.util.AbstractCollection 'size)
+        m2 (member-info 'java.util.AbstractCollection 'non-existent-member)
         m3 (member-info 'not.actually.AClass 'nada)
         m4 (member-info 'java.awt.Point 'x)
         m5 (member-info 'java.lang.Class 'forName)
         m6 (member-info 'java.util.AbstractMap 'finalize)
         m7 (member-info 'java.util.HashMap 'finalize)]
     (testing "Member"
-      (testing "source file"
-        (is (string? (:file m1)))
-        (is (io/resource (:file m1))))
-      (testing "line number"
-        (is (number? (:line m1))))
+      (when (and jdk-sources jdk-tools)
+        (testing "source file"
+          (is (string? (:file m1)))
+          (is (io/resource (:file m1))))
+        (testing "line number"
+          (is (number? (:line m1)))))
       (testing "arglists"
         (is (seq? (:arglists m1)))
         (is (every? vector? (:arglists m1))))
