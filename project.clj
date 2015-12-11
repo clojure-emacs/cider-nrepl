@@ -58,7 +58,7 @@
                                         [org.clojure/clojurescript "0.0-3211"]]}
 
              :coveralls {:plugins [[lein-cloverage "1.0.2"]
-                                   [lein-shell "0.4.0"]]
+                                   [lein-shell "0.5.0"]]
                          :aliases {"coveralls" ["do" "cloverage" "--coveralls,"
                                                 "shell" "curl" "-F"
                                                 "json_file=@target/coverage/coveralls.json"
