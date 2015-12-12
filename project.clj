@@ -57,12 +57,7 @@
                          :dependencies [[com.cemerick/piggieback "0.2.1"]
                                         [org.clojure/clojurescript "1.7.189"]]}
 
-             :coveralls {:plugins [[lein-cloverage "1.0.6"]
-                                   [lein-shell "0.5.0"]]
-                         :aliases {"coveralls" ["do" "cloverage" "--coveralls,"
-                                                "shell" "curl" "-F"
-                                                "json_file=@target/coverage/coveralls.json"
-                                                "https://coveralls.io/api/v1/jobs"]}}
+             :cloverage {:plugins [[lein-cloverage "1.0.7-SNAPSHOT"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]}}}
