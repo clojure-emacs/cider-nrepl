@@ -48,6 +48,8 @@
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC3"]]}
+             :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
+                      :dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
 
              :test-clj {:test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]

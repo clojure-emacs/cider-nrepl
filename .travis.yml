@@ -12,6 +12,9 @@ env:
 
   - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-clj test"
   - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
+
+  - TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
 jdk:
   - openjdk7
   - oraclejdk7
