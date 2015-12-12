@@ -8,6 +8,8 @@
 
   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
                  [org.tcrawley/dynapath "0.2.3"]
+                 ^:source-dep [mvxcvi/puget "1.0.0"]
+                 ^:source-dep [fipp "0.6.3"]
                  ^:source-dep [compliment "0.2.5"]
                  ^:source-dep [cljs-tooling "0.1.9"]
                  ^:source-dep [cljfmt "0.3.0"]
@@ -15,7 +17,7 @@
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
                  ^:source-dep [org.clojure/tools.reader "0.10.0"]]
-  :plugins [[thomasa/mranderson "0.4.5"]]
+  :plugins [[thomasa/mranderson "0.4.6"]]
   :exclusions [org.clojure/clojure]
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]

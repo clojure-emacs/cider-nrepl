@@ -2,6 +2,7 @@
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+            [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
@@ -123,6 +124,11 @@
   "Bound by the `breakpoint` macro to the local &env."
   {})
 
+(def ^:dynamic *pprint-fn*
+  "Bound by the `breakpoint` macro to the pretty-printing function determined by
+  the `wrap-pprint-fn` middleware."
+  nil)
+
 (def print-length (atom nil))
 (def print-level (atom nil))
 
@@ -177,7 +183,7 @@
         (when-not (instance? ThreadDeath root-ex)
           (debugger-send
            {:status :eval-error
-            :causes [(let [causes (stacktrace/analyze-causes e 50 50)]
+            :causes [(let [causes (stacktrace/analyze-causes e *pprint-fn*)]
                        (when (coll? causes) (last causes)))]})))
       nil)))
 
@@ -245,7 +251,8 @@
   Sends a response to the message stored in debugger-message."
   [value coor]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
-             *locals* ~(sanitize-env &env)]
+             *locals* ~(sanitize-env &env)
+             *pprint-fn* (:pprint-fn *msg*)]
      (let [val# ~value]
        (cond
          (skip-breaks? ~coor) val#
@@ -341,6 +348,7 @@
  #'wrap-debug
  (cljs/requires-piggieback
   {:expects #{"eval"}
+   :requires #{#'pprint/wrap-pprint-fn}
    :handles
    {"debug-input"
     {:doc "Read client input on debug action."

@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.test
   "Test execution, reporting, and inspection"
   {:author "Jeff Valk"}
-  (:require [cider.nrepl.middleware.stacktrace :as st]
+  (:require [cider.nrepl.middleware.pprint :as pprint]
+            [cider.nrepl.middleware.stacktrace :as st]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.pprint :as pp]
             [clojure.test :as test]
@@ -182,11 +183,11 @@
   "Return exception cause and stack frame info for an erring test via the
   `stacktrace` middleware. The error to be retrieved is referenced by namespace,
   var name, and assertion index within the var."
-  [{:keys [ns var index session transport print-length print-level] :as msg}]
+  [{:keys [ns var index session transport pprint-fn] :as msg}]
   (with-interruptible-eval msg
     (let [[ns var] (map u/as-sym [ns var])]
       (if-let [e (get-in @results [ns var index :error])]
-        (doseq [cause (st/analyze-causes e print-length print-level)]
+        (doseq [cause (st/analyze-causes e pprint-fn)]
           (t/send transport (response-for msg cause)))
         (t/send transport (response-for msg :status :no-error)))
       (t/send transport (response-for msg :status :done)))))
@@ -222,8 +223,11 @@
 ;; nREPL middleware descriptor info
 (set-descriptor!
  #'wrap-test
- {:requires #{#'session}
+ {:requires #{#'session #'pprint/wrap-pprint-fn}
   :expects #{#'pr-values}
-  :handles {"test"            {:doc (:doc (meta #'handle-test))}
-            "test-stacktrace" {:doc (:doc (meta #'handle-stacktrace))}
-            "retest"          {:doc (:doc (meta #'handle-retest))}}})
+  :handles {"test"            {:doc (:doc (meta #'handle-test))
+                               :optional pprint/wrap-pprint-fn-optional-arguments}
+            "test-stacktrace" {:doc (:doc (meta #'handle-stacktrace))
+                               :optional pprint/wrap-pprint-fn-optional-arguments}
+            "retest"          {:doc (:doc (meta #'handle-retest))
+                               :optional pprint/wrap-pprint-fn-optional-arguments}}})
