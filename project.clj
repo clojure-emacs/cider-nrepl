@@ -11,7 +11,7 @@
                  ^:source-dep [mvxcvi/puget "1.0.0"]
                  ^:source-dep [fipp "0.6.3"]
                  ^:source-dep [compliment "0.2.5"]
-                 ^:source-dep [cljs-tooling "0.1.9"]
+                 ^:source-dep [cljs-tooling "0.2.0"]
                  ^:source-dep [cljfmt "0.3.0"]
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
