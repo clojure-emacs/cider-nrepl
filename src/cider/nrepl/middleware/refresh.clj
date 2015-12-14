@@ -44,15 +44,15 @@
 
 (defn- resolve-and-invoke
   [sym {:keys [session] :as msg}]
-  (let [var (some-> sym u/as-sym resolve)]
+  (let [the-var (some-> sym u/as-sym resolve)]
 
-    (when (or (nil? var)
-              (not (var? var)))
+    (when (or (nil? the-var)
+              (not (var? the-var)))
       (throw (IllegalArgumentException.
               (format "%s is not resolvable as a var" sym))))
 
-    (when (not (and (fn? @var)
-                    (-> (set (:arglists (meta var)))
+    (when (not (and (fn? @the-var)
+                    (-> (set (:arglists (meta the-var)))
                         (contains? []))))
       (throw (IllegalArgumentException.
               (format "%s is not a function of no arguments" sym))))
@@ -60,7 +60,7 @@
     (binding [*msg* msg
               *out* (get @session #'*out*)
               *err* (get @session #'*err*)]
-      (@var))))
+      (@the-var))))
 
 (defn- reloading-reply
   [{reloading ::track/load}
