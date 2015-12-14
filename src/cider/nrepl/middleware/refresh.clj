@@ -128,14 +128,10 @@
                           :after after}))
 
       (catch Exception e
-        (error-reply {:error e} msg))))
-
-  (transport/send
-   transport
-   (response-for msg {:status :done})))
+        (error-reply {:error e} msg)))))
 
 (defn- refresh-reply
-  [{:keys [dirs scan-fn] :as msg}]
+  [{:keys [dirs scan-fn transport] :as msg}]
   (send-off refresh-tracker
             (fn [tracker]
               (try
@@ -151,7 +147,12 @@
 
                 (catch Throwable e
                   (error-reply {:error e} msg)
-                  tracker)))))
+                  tracker)
+
+                (finally
+                  (transport/send
+                   transport
+                   (response-for msg {:status :done})))))))
 
 (defn- clear-reply
   [{:keys [transport] :as msg}]
