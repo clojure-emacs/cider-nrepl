@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.complete-test
   (:require [cider.nrepl.test-session :as session]
-            [cider.nrepl.test-transport :refer [messages test-transport]]
             [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
