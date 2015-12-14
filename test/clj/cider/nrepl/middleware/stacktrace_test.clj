@@ -61,13 +61,6 @@
       ;; Every frame should have its file type added as a flag.
       (is (every? #(contains? (:flags %) (:type %)) frames1))
       (is (every? #(contains? (:flags %) (:type %)) frames2)))
-    (testing "for REPL frames"
-      ;; Frames defined in the test should be flagged as from the REPL. Here,
-      ;; this is only eval call. Whether there are 1 or 2 frames present depends
-      ;; on if Clojure is compiled with direct linking enabled or not (with DL
-      ;; enabled, there is an additional invokeStatic frame).
-      (is (contains? #{1 2} (count (filter (comp :repl :flags) frames1))))
-      (is (contains? #{1 2} (count (filter (comp :repl :flags) frames2)))))
     (testing "for tooling"
       ;; Tooling frames are classes named with 'clojure' or 'nrepl',
       ;; or are java thread runners...or calls made from these.
