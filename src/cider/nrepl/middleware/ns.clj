@@ -19,6 +19,7 @@
      ;; rewritten by mranderson
      (.startsWith ns-name "deps.")
      (.startsWith ns-name "mranderson")
+     (.startsWith ns-name "cider.inlined-deps")
      ;; rewritten by dolly
      (.startsWith ns-name "eastwood.copieddeps"))))
 

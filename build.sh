@@ -9,7 +9,7 @@ function check_result {
     fi
 }
 
-lein do clean, source-deps
+lein do clean, source-deps :project-prefix cider.inlined-deps
 check_result
 lein with-profile +1.7,+plugin.mranderson/config,+test-clj,+test-cljs test
 check_result
