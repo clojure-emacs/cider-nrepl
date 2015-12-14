@@ -222,7 +222,7 @@ who have helped so far.
 Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
 * [compliment](https://github.com/alexander-yakushev/compliment) - for Clojure code completion
-* [cljs-tooling](https://github.com/gtrak/cljs-tooling) - for ClojureScript code completion and var info
+* [cljs-tooling](https://github.com/clojure-emacs/cljs-tooling) - for ClojureScript code completion and var info
 * [tools.trace](https://github.com/clojure/tools.trace) - for tracing
 * [tools.namespace](https://github.com/clojure/tools.namespace) - for namespace reloading
 * [cljfmt](https://github.com/weavejester/cljfmt) - for code formatting
