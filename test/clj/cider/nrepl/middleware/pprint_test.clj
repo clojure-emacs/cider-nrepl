@@ -27,7 +27,7 @@
                                             :code code
                                             :pprint "true"})))))
 
-    (testing "wrap-pprint respects the :right-margin slot"
+    (testing "wrap-pprint respects the :print-right-margin slot"
       (is (= "[1\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 0]\n"
              (:pprint-out (session/message {:op :eval
                                             :code code
