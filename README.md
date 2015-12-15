@@ -172,7 +172,7 @@ avoid classpath collisions.
 To work with `mranderson` the first thing to do is:
 
 ```
-lein do clean, source-deps
+lein do clean, source-deps :project-prefix cider.inlined-deps
 ```
 
 This creates the munged local dependencies in `target/srcdeps` directory.
