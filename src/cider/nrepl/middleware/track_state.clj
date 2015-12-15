@@ -195,7 +195,8 @@
 
 (def ops-that-can-eval
   "Set of nREPL ops that can lead code being evaluated."
-  #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear" "undef"})
+  #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
+    "toggle-trace-var" "toggle-trace-ns" "undef"})
 
 (defn wrap-tracker
   "Middleware that tracks relevant server info and notifies the client."
