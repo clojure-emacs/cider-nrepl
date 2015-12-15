@@ -194,7 +194,7 @@
               update-and-send-cache msg)))))
 
 (def ops-that-can-eval
-  "Set of nREPL ops that can lead code being evaluated."
+  "Set of nREPL ops that can lead to code being evaluated."
   #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
     "toggle-trace-var" "toggle-trace-ns" "undef"})
 
