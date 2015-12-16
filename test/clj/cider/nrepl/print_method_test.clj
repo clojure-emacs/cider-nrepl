@@ -17,11 +17,10 @@
 
 (deftest print-multimethods
   (require 'cider.nrepl.middleware.track-state)
-  (doseq [it '(print-method cider.nrepl.middleware.track-state/ns-as-map)]
-    (let [var (resolve it)]
-      (is (re-find (Pattern/compile (format "#multifn\\[%s 0x[a-z0-9]+\\]"
-                                            (:name (meta var))))
-                   (pr-str @var))))))
+  (let [var (resolve 'print-method)]
+    (is (re-find (Pattern/compile (format "#multifn\\[%s 0x[a-z0-9]+\\]"
+                                          (:name (meta var))))
+                 (pr-str @var)))))
 
 (deftest print-namespaces
   (are [f s] (= (pr-str f) s)

@@ -61,25 +61,23 @@
 (defn track-ns? [ns-name]
   (not (jar-namespaces ns-name)))
 
-(defmulti ns-as-map
-  "Return a map of useful information about ns."
-  class)
+(defn ns-as-map [object]
+  (cond
+    ;; Clojure Namespaces
+    (instance? Namespace object) (let [aliases (update-vals ns-name (ns-aliases object))]
+                                   {:aliases aliases
+                                    :interns (filter-core-and-get-meta (ns-map object))})
 
-;; Clojure Namespaces
-(defmethod ns-as-map Namespace [^Namespace ns]
-  (let [aliases (update-vals ns-name (.getAliases ns))]
-    {:aliases aliases
-     :interns (filter-core-and-get-meta (.getMappings ns))}))
-;; ClojureScript Namespaces
-(defmethod ns-as-map nil [_] {})
-(defmethod ns-as-map clojure.lang.Associative
-  [{:keys [use-macros uses require-macros requires defs]}]
-  (let [aliases (merge require-macros requires)]
-    {:aliases aliases
-     ;; For some reason, cljs (or piggieback) adds a :test key to the
-     ;; var metadata stored in the namespace.
-     :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
-                           (merge defs uses use-macros))}))
+    ;; ClojureScript Namespaces
+    (associative? object) (let [{:keys [use-macros uses require-macros requires defs]} object
+                                aliases (merge require-macros requires)]
+                            {:aliases aliases
+                             ;; For some reason, cljs (or piggieback) adds a :test key to the
+                             ;; var metadata stored in the namespace.
+                             :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
+                                                   (merge defs uses use-macros))})
+
+    :else {}))
 
 (def clojure-core-map
   (when clojure-core
