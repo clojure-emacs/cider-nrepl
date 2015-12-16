@@ -1,10 +1,8 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as misc]
+            [cljs-tooling.info :as cljs-info]
             [cljs-tooling.util.analysis :as cljs-analysis]
-            [clojure.tools.namespace
-             [file :refer [read-file-ns-decl]]
-             [find :refer [clojure-sources-in-jar find-clojure-sources-in-dir]]]
             [clojure.tools.nrepl
              [middleware :refer [set-descriptor!]]
              [misc :refer [response-for]]
@@ -58,6 +56,11 @@
        (map name)
        sort))
 
+(defn ns-path-cljs [env ns]
+  (->> (symbol ns)
+       (cljs-info/info env)
+       (:file)))
+
 (defn ns-list [msg]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-list-cljs cljs-env)
@@ -67,6 +70,11 @@
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-vars-cljs cljs-env ns)
     (ns-vars-clj ns)))
+
+(defn ns-path [{:keys [ns] :as msg}]
+  (if-let [cljs-env (cljs/grab-cljs-env msg)]
+    (ns-path-cljs cljs-env ns)
+    (misc/ns-path ns)))
 
 (defn ns-list-reply
   [{:keys [transport] :as msg}]
@@ -87,8 +95,7 @@
 
 (defn- ns-path-reply
   [{:keys [transport ns] :as msg}]
-  (when-let [path (misc/ns-path ns)]
-    (transport/send transport (response-for msg :path path)))
+  (transport/send transport (response-for msg :path (ns-path msg)))
   (transport/send transport (response-for msg :status :done)))
 
 (defn wrap-ns
