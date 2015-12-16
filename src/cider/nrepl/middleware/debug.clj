@@ -236,6 +236,21 @@
                  :rendered pr-str))]
     (read-debug-command value (assoc extras :inspect i))))
 
+(defn stack-then-read-command
+  "Create a dummy exception, send its stack, and read a debugging command.
+  Stack is sent via `debugger-message`, under the :causes entry
+  with the :status entry set to :stack-trace.
+  value and extras are passed unmodified to `read-debug-command`."
+  [value extras]
+  (debugger-send
+   {:status :stack
+    :causes [{:class "StackTrace"
+              :message "Harmless user-requested stacktrace"
+              :stacktrace (-> (Exception. "Dummy")
+                              (stacktrace/analyze-causes *pprint-fn*)
+                              last :stacktrace)}]})
+  (read-debug-command value extras))
+
 (defn read-debug-command
   "Read and take action on a debugging command.
   Ask for one of the following debug commands using `read-debug`:
@@ -247,6 +262,7 @@
     locals: Inspect local variables.
     inject: Evaluate an expression and return it.
     eval: Evaluate an expression, display result, and prompt again.
+    stacktrace: Print the current stacktrace, and prompt again.
     quit: Abort current eval session.
 
   Response received can be any one of these values. It can also be a
@@ -255,7 +271,7 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :quit]
+  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :stacktrace :quit]
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
@@ -277,6 +293,7 @@
       :inject   (read-debug-eval-expression "Expression to inject: " extras code)
       :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-short return))))
+      :stacktrace (stack-then-read-command value extras)
       :quit     (abort!))))
 
 ;;; ## High-level functions
