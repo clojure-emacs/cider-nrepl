@@ -42,15 +42,12 @@
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
   [refers]
-  (reduce (fn [^clojure.lang.PersistentHashMap acc [sym var]]
-            (if (not (var? var))
-              acc
-              (let [^clojure.lang.PersistentHashMap m
-                    (meta ^clojure.lang.Var var)]
-                (if (identical? (:ns m) clojure-core)
-                  acc
-                  (assoc acc sym (relevant-meta m))))))
-          {} refers))
+  (->> refers
+       (into {} (keep (fn [[sym the-var]]
+                        (when (var? the-var)
+                          (let [{the-ns :ns :as the-meta} (meta the-var)]
+                            (when-not (identical? the-ns clojure-core)
+                              [sym (relevant-meta the-meta)]))))))))
 
 ;;; Namespaces
 (def jar-namespaces
@@ -93,23 +90,20 @@
   the same format of map returned by this function. old-map can also
   be nil, which is the same as an empty map."
   [new old-map]
-  (reduce (fn [acc ns]
-            (let [n (if (instance? Namespace ns)
-                      (ns-name ns)
-                      (:name ns))]
-              (if-let [m (and (track-ns? n)
-                              (ns-as-map ns))]
-                (if (= (get old-map n) m)
-                  acc
-                  (assoc acc n m))
-                acc)))
-          ;; We want to inform the client of what's in clojure.core,
-          ;; but we don't want to track changes. So we add it in when
-          ;; the old-data is nil (meaning this is the first message).
-          (if (and (not old-map) clojure-core-map)
-            {'clojure.core clojure-core-map}
-            {})
-          new))
+  (->> new
+       (into (cond-> {}
+               ;; We want to inform the client of what's in clojure.core,
+               ;; but we don't want to track changes. So we add it in when
+               ;; the old-data is nil (meaning this is the first message).
+               (and (not old-map) clojure-core-map) (assoc 'clojure.core clojure-core-map))
+             (keep (fn [the-ns]
+                     (let [the-ns-name (if (instance? Namespace the-ns)
+                                         (ns-name the-ns)
+                                         (:name the-ns))]
+                       (when-let [data (and (track-ns? the-ns-name)
+                                            (ns-as-map the-ns))]
+                         (when-not (= (get old-map the-ns-name) data)
+                           [the-ns-name data]))))))))
 
 ;;; State management
 (defn calculate-used-aliases
