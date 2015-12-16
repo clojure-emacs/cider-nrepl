@@ -199,9 +199,11 @@
   This `read-debug-command` is passed `value` and the `extras` map
   with the result of the inspection `assoc`ed in."
   [value extras page-size inspect-value]
-  (let [i (pr-str (:rendered (swap-inspector! @debugger-message
-                                              #(-> (assoc % :page-size page-size)
-                                                   (inspect/start inspect-value)))))]
+  (let [i (binding [*print-length* nil
+                    *print-level* nil]
+            (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
+                 (swap-inspector! @debugger-message)
+                 :rendered pr-str))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
