@@ -6,14 +6,16 @@
 (use-fixtures :each piggieback-fixture)
 
 (deftest cljs-ns
-  (let [ns-list (:ns-list (session/message {:op "ns-list"}))]
-    (is (sequential? ns-list))
-    (is (every? string? ns-list)))
+  (testing "ns-list op"
+    (let [{:keys [ns-list]} (session/message {:op "ns-list"})]
+      (is (sequential? ns-list))
+      (is (every? string? ns-list))))
 
-  (let [ns-vars (:ns-vars (session/message {:op "ns-vars"
-                                            :ns "cljs.reader"}))]
-    (is (sequential? ns-vars))
-    (is (every? string? ns-vars)))
+  (testing "ns-vars op"
+    (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
+                                              :ns "cljs.reader"})]
+      (is (sequential? ns-vars))
+      (is (every? string? ns-vars))))
 
   (testing "ns-path op"
     (let [{:keys [path]} (session/message {:op "ns-path"
