@@ -18,7 +18,8 @@
   (fipp/pprint object {:width (or *print-right-margin* 72)}))
 
 (defn puget-pprint [object]
-  (puget/pprint object {:width (or *print-right-margin* 72)}))
+  (puget/pprint object {:width (or *print-right-margin* 72)
+                        :seq-limit *print-length*}))
 
 (defn- resolve-pprint-fn
   [sym]
