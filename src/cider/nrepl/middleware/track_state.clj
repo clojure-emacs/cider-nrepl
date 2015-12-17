@@ -79,7 +79,7 @@
 (def clojure-core-map
   (when clojure-core
     {:aliases {}
-     :interns (->> (.getMappings clojure-core)
+     :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
                    (update-vals #(relevant-meta (meta %))))}))
 
