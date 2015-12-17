@@ -4,6 +4,15 @@
             [clojure.tools.nrepl.transport :as t]
             [cider.nrepl.middleware.debug  :as d]))
 
+(deftest coord<
+  (are [a b] (and (d/coord< a b)
+                  (not (d/coord< b a)))
+    [1] []
+    [0] [1]
+    [1] [2]
+    [1 2] [1 3]
+    [1 0] [1]))
+
 (deftest skip-breaks
   (binding [d/*skip-breaks* (atom [:all])]
     (is (#'d/skip-breaks? []))

@@ -62,11 +62,30 @@
   Its value is discarded at the end each eval session."
   nil)
 
+(defn coord<
+  "Return true if coordinate x comes before y.
+  Here, \"comes before\" means that a sexp at coord x is evaluated
+  before a sexp at coord y (assuming a trivial code-flow)."
+  [x y]
+  (if (seq x)
+    (if (seq y)
+      (let [fa (first x)
+            fb (first y)]
+        (if (= fa fb)
+          (recur (rest x) (rest y))
+          (< fa fb)))
+      ;; If coord `x` goes deeper than `y`, then is `x < y`.
+      true)
+    false))
+
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
-  If *skip-breaks* is true, return true.
-  If *skip-breaks* is a vector of integers, return true if coordinates
-  are deeper than this vector."
+  If the first element of `*skip-breaks*` is :all, return true.
+
+  Otherwise, the first element should be :deeper or :before.
+  If :deeper, return true if the given coordinates are deeper than the
+  rest of `*skip-breaks*`. If :before, return true if they represent a
+  place before the rest."
   [coordinates]
   (when-let [[mode & skip-coords] @*skip-breaks*]
     (case mode
@@ -75,11 +94,13 @@
       ;; From :out, skip some breaks.
       :deeper (let [parent (take (count skip-coords) coordinates)]
                 (and (= skip-coords parent)
-                     (> (count coordinates) (count parent)))))))
+                     (> (count coordinates) (count parent))))
+      ;; From :here, skip some breaks.
+      :before (coord< coordinates skip-coords))))
 
 (defn skip-breaks!
   "Set the value of *skip-breaks* for the top-level breakpoint.
-  If bool-or-vec is a vector, mode should be :deeper (see
+  If bool-or-vec is a vector, mode should be :deeper or :before (see
   `skip-breaks?`). Otherwise mode should be :all or false."
   [mode & [bool-or-vec]]
   (reset! *skip-breaks* (when mode
@@ -234,17 +255,21 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :continue :out :inspect :locals :inject :eval :quit]
+  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :quit]
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
-        {:keys [code response page-size] :or {page-size 32}} (if (map? response-raw) response-raw
-                                                                 {:response response-raw})
+
+        {:keys [code coord response page-size] :or {page-size 32}}
+        (if (map? response-raw) response-raw
+            {:response response-raw})
         extras (dissoc extras :inspect)]
     (case response
       :next     value
       :continue (do (skip-breaks! :all) value)
       :out      (do (skip-breaks! :deeper (butlast (:coor extras)))
+                    value)
+      :here     (do (skip-breaks! :before coord)
                     value)
       :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
