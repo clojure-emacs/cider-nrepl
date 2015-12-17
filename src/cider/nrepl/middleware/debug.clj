@@ -68,19 +68,22 @@
   If *skip-breaks* is a vector of integers, return true if coordinates
   are deeper than this vector."
   [coordinates]
-  (when-let [sb @*skip-breaks*]
-    (or
-     ;; From :continue, skip everything.
-     (true? sb)
-     ;; From :out, skip some breaks.
-     (let [parent (take (count sb) coordinates)]
-       (and (= sb parent)
-            (> (count coordinates) (count parent)))))))
+  (when-let [[mode & skip-coords] @*skip-breaks*]
+    (case mode
+      ;; From :continue, skip everything.
+      :all    true
+      ;; From :out, skip some breaks.
+      :deeper (let [parent (take (count skip-coords) coordinates)]
+                (and (= skip-coords parent)
+                     (> (count coordinates) (count parent)))))))
 
 (defn skip-breaks!
-  "Set the value of *skip-breaks* for the top-level breakpoint."
-  [bool-or-vec]
-  (reset! *skip-breaks* bool-or-vec))
+  "Set the value of *skip-breaks* for the top-level breakpoint.
+  If bool-or-vec is a vector, mode should be :deeper (see
+  `skip-breaks?`). Otherwise mode should be :all or false."
+  [mode & [bool-or-vec]]
+  (reset! *skip-breaks* (when mode
+                          (cons mode bool-or-vec))))
 
 (defn- abort!
   "Stop current eval thread.
@@ -93,7 +96,7 @@
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
     ;; the user won't be offered the :quit option if there's no *msg*.
-    (skip-breaks! true)))
+    (skip-breaks! :all)))
 
 ;;; Politely borrowed from clj-debugger.
 (defn- sanitize-env
@@ -240,8 +243,9 @@
         extras (dissoc extras :inspect)]
     (case response
       :next     value
-      :continue (do (skip-breaks! true) value)
-      :out      (do (skip-breaks! (butlast (:coor extras))) value)
+      :continue (do (skip-breaks! :all) value)
+      :out      (do (skip-breaks! :deeper (butlast (:coor extras)))
+                    value)
       :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
                      (inspect-then-read-command value extras page-size))
@@ -262,7 +266,7 @@
        (cond
          (skip-breaks? ~coor) val#
          (not (seq @debugger-message)) (do (println "Debugger not initialized")
-                                           (skip-breaks! true)
+                                           (skip-breaks! :all)
                                            val#)
          :else (read-debug-command
                 val#
