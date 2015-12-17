@@ -61,18 +61,20 @@
 (defn ns-as-map [object]
   (cond
     ;; Clojure Namespaces
-    (instance? Namespace object) (let [aliases (update-vals ns-name (ns-aliases object))]
-                                   {:aliases aliases
-                                    :interns (filter-core-and-get-meta (ns-map object))})
+    (instance? Namespace object)
+    (let [aliases (update-vals ns-name (ns-aliases object))]
+      {:aliases aliases
+       :interns (filter-core-and-get-meta (ns-map object))})
 
     ;; ClojureScript Namespaces
-    (associative? object) (let [{:keys [use-macros uses require-macros requires defs]} object
-                                aliases (merge require-macros requires)]
-                            {:aliases aliases
-                             ;; For some reason, cljs (or piggieback) adds a :test key to the
-                             ;; var metadata stored in the namespace.
-                             :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
-                                                   (merge defs uses use-macros))})
+    (associative? object)
+    (let [{:keys [use-macros uses require-macros requires defs]} object
+          aliases (merge require-macros requires)]
+      {:aliases aliases
+       ;; For some reason, cljs (or piggieback) adds a :test key to the
+       ;; var metadata stored in the namespace.
+       :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
+                             (merge defs uses use-macros))})
 
     :else {}))
 
