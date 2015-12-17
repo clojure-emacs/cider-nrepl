@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.format-test
   (:require [cider.nrepl.middleware.format :refer :all]
+            [cider.nrepl.test-session :as session]
             [cider.nrepl.test-transport :refer :all]
             [clojure.test :refer :all]))
 
@@ -20,7 +21,7 @@
     (format-code-reply {:transport transport :code ugly-code})
     (is (= (messages transport) [{:formatted-code formatted-code :status #{:done}}]))))
 
-(def ugly-edn
+(def ugly-edn-sample
   "{    :a 1
    :b 2
        :c [0 1 2 3]
@@ -33,18 +34,10 @@
            1 2 3]]
 }")
 
-(def formatted-edn
+(def formatted-edn-sample
   "{:a 1, :b 2, :c [0 1 2 3], :d [[0 1 2 3] [0 1 2 3]]}")
 
-(def formatted-with-margin-edn
-  "{:a 1,
- :b 2,
- :c [0 1 2 3],
- :d
- [[0 1 2 3]
-  [0 1 2 3]]}")
-
-(def ugly-edn-forms
+(def ugly-edn-forms-sample
   "[
 0 1 2 3]
 
@@ -56,40 +49,38 @@
 
 ]")
 
-(def formatted-edn-forms
+(def formatted-edn-forms-sample
   "[0 1 2 3]
 [0 1 2 3]
 [0 1 2 3]")
 
-(def formatted-with-margin-edn-forms
-  "[0
- 1
- 2
- 3]
-[0
- 1
- 2
- 3]
-[0
- 1
- 2
- 3]")
-
-(def unmatched-delimiter-edn
+(def unmatched-delimiter-edn-sample
   ")")
 
+(use-fixtures :once session/session-fixture)
+
 (deftest test-format-edn-op
-  (let [transport (test-transport)]
-    (format-edn-reply {:transport transport :edn ugly-edn})
-    (format-edn-reply {:transport transport :edn ugly-edn :right-margin 20})
-    (format-edn-reply {:transport transport :edn ugly-edn-forms})
-    (format-edn-reply {:transport transport :edn ugly-edn-forms :right-margin 4})
-    (is (= (messages transport) [{:formatted-edn formatted-edn :status #{:done}}
-                                 {:formatted-edn formatted-with-margin-edn :status #{:done}}
-                                 {:formatted-edn formatted-edn-forms :status #{:done}}
-                                 {:formatted-edn formatted-with-margin-edn-forms :status #{:done}}])))
-  (let [transport (test-transport)
-        _ (format-edn-reply {:transport transport :edn unmatched-delimiter-edn})
-        response (first (messages transport))]
-    (is (= (:status response) #{:edn-read-error :done}))
-    (is (.startsWith (:err response) "clojure.lang.ExceptionInfo: Unmatched delimiter"))))
+  (testing "format-edn works"
+    (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
+                                                           :edn ugly-edn-sample})]
+      (is (= formatted-edn-sample formatted-edn))
+      (is (= #{"done"} status))))
+
+  (testing "format-edn works for multiple forms"
+    (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
+                                                           :edn ugly-edn-forms-sample})]
+      (is (= formatted-edn-forms-sample formatted-edn))
+      (is (= #{"done"} status))))
+
+  (testing "format-edn returns an error if the given EDN is malformed"
+    (let [{:keys [err status]} (session/message {:op "format-edn"
+                                                 :edn unmatched-delimiter-edn-sample})]
+      (is (= #{"edn-read-error" "done"} status))
+      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))))
+
+  (testing "format-edn respects the :pprint-fn slot"
+    (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
+                                                           :edn "{:b 2 :c 3 :a 1}"
+                                                           :pprint-fn "cider.nrepl.middleware.pprint/puget-pprint"})]
+      (is (= "{:a 1, :b 2, :c 3}" formatted-edn))
+      (is (= #{"done"} status)))))

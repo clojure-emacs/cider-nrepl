@@ -1,8 +1,8 @@
 (ns cider.nrepl.middleware.format
   (:refer-clojure :exclude [read-string])
   (:require [cider.nrepl.middleware.util.misc :refer [err-info]]
+            [cider.nrepl.middleware.pprint :as pprint]
             [cljfmt.core :as fmt]
-            [clojure.pprint :refer [pprint *print-right-margin*]]
             [clojure.string :as string]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -30,12 +30,11 @@
           (recur (conj forms form)))))))
 
 (defn- format-edn
-  [{:keys [edn right-margin] :as msg}]
-  (binding [*print-right-margin* (or right-margin *print-right-margin*)]
-    (->> (read-edn edn)
-         (map #(with-out-str (pprint %)))
-         string/join
-         string/trim)))
+  [{:keys [edn pprint-fn] :as msg}]
+  (->> (read-edn edn)
+       (map #(with-out-str (pprint-fn %)))
+       string/join
+       string/trim))
 
 (defn format-edn-reply
   [{:keys [transport] :as msg}]
@@ -59,7 +58,8 @@
 
 (set-descriptor!
  #'wrap-format
- {:handles
+ {:requires #{#'pprint/wrap-pprint-fn}
+  :handles
   {"format-code"
    {:doc "Reformats the given Clojure code, returning the result as a string."
     :requires {"code" "The code to format."}
