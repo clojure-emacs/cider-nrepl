@@ -60,6 +60,23 @@ Note that you should use a `cider-nrepl` version compatible with your CIDER. Gen
 using CIDER 0.x.y you should be using `cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should be
 using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
 
+#### Via Boot
+
+Boot users can configure the tool to include the middleware automatically in
+all of their projects using a `~/.boot/profile.boot` file like so:
+
+```clojure
+(require 'boot.repl)
+
+(swap! boot.repl/*default-dependencies*
+       concat '[[cider/cider-nrepl "0.10.0"]])
+
+(swap! boot.repl/*default-middleware*
+       conj 'cider.nrepl/cider-middleware)
+```
+
+For more information visit [boot-clj wiki](https://github.com/boot-clj/boot/wiki/Cider-REPL).
+
 ### Via embedding nREPL in your app
 
 If you're embedding nREPL in your application you'll have to start the
