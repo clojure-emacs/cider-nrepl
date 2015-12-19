@@ -11,7 +11,7 @@ A collection of [nREPL](https://github.com/clojure/tools.nrepl) middleware desig
 
 `cider-nrepl` supports only Clojure(Script) 1.7+ and Java 7+.
 
-Leiningen users will need to have version 2.5.3 or newer installed.
+Leiningen users will need to have version 2.5.2 or newer installed.
 
 ### Via Leiningen
 
