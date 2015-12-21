@@ -45,7 +45,9 @@
                                                      cider.nrepl.middleware.trace/wrap-trace
                                                      cider.nrepl.middleware.track-state/wrap-tracker
                                                      cider.nrepl.middleware.undef/wrap-undef]}
-                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]]}
+                   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
+                                  ;; For developing the Leiningen plugin.
+                                  [leiningen-core "2.5.3"]]}
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC4"]]}
