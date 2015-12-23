@@ -5,11 +5,11 @@
 
 (deftest test-toogle-trace-var-op
   (let [transport (test-transport)]
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "map"})
-    (is (= (messages transport) [{:var-name "#'clojure.core/map" :var-status "traced" :status #{:done}}]))
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "map"})
-    (is (= (messages transport) [{:var-name "#'clojure.core/map" :var-status "traced" :status #{:done}}
-                                 {:var-name "#'clojure.core/map" :var-status "untraced" :status #{:done}}]))))
+    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "zipmap"})
+    (is (= (messages transport) [{:var-name "#'clojure.core/zipmap" :var-status "traced" :status #{:done}}]))
+    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "zipmap"})
+    (is (= (messages transport) [{:var-name "#'clojure.core/zipmap" :var-status "traced" :status #{:done}}
+                                 {:var-name "#'clojure.core/zipmap" :var-status "untraced" :status #{:done}}]))))
 
 (deftest test-toogle-trace-var-op-missing-var
   (let [transport (test-transport)]
