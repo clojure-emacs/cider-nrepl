@@ -14,10 +14,9 @@
                                         (conj (map resolve cider-middleware)
                                               #'piggieback/wrap-cljs-repl))]
        (session/message {:op :eval
-                         :code (nrepl/code
-                                (require '[cemerick.piggieback :as piggieback])
-                                (require '[cljs.repl.node :as node])
-                                (piggieback/cljs-repl (node/repl-env)))})
+                         :code (nrepl/code (require '[cemerick.piggieback :as piggieback])
+                                           (require '[cljs.repl.node :as node])
+                                           (piggieback/cljs-repl (node/repl-env)))})
        (f)
        (session/message {:op :eval
                          :code (nrepl/code :cljs/quit)})))))
