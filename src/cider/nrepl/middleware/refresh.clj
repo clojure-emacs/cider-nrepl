@@ -43,23 +43,23 @@
 
 (defn- resolve-and-invoke
   [sym {:keys [session] :as msg}]
-  (let [var (some-> sym u/as-sym resolve)]
+  (let [the-var (some-> sym u/as-sym resolve)]
 
-    (when (or (nil? var)
-              (not (var? var)))
+    (when (or (nil? the-var)
+              (not (var? the-var)))
       (throw (IllegalArgumentException.
               (format "%s is not resolvable as a var" sym))))
 
-    (when (not (and (fn? @var)
-                    (-> (set (:arglists (meta var)))
+    (when (not (and (fn? @the-var)
+                    (-> (set (:arglists (meta the-var)))
                         (contains? []))))
       (throw (IllegalArgumentException.
-              (format "%s is not a single-arity fn" sym))))
+              (format "%s is not a function of no arguments" sym))))
 
     (binding [*msg* msg
               *out* (get @session #'*out*)
               *err* (get @session #'*err*)]
-      (@var))))
+      (@the-var))))
 
 (defn- reloading-reply
   [{reloading ::track/load}
@@ -127,14 +127,10 @@
                           :after after}))
 
       (catch Exception e
-        (error-reply {:error e} msg))))
-
-  (transport/send
-   transport
-   (response-for msg {:status :done})))
+        (error-reply {:error e} msg)))))
 
 (defn- refresh-reply
-  [{:keys [dirs scan-fn] :as msg}]
+  [{:keys [dirs scan-fn transport] :as msg}]
   (send-off refresh-tracker
             (fn [tracker]
               (try
@@ -150,7 +146,12 @@
 
                 (catch Throwable e
                   (error-reply {:error e} msg)
-                  tracker)))))
+                  tracker)
+
+                (finally
+                  (transport/send
+                   transport
+                   (response-for msg {:status :done})))))))
 
 (defn- clear-reply
   [{:keys [transport] :as msg}]
