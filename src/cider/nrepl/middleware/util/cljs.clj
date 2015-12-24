@@ -49,16 +49,19 @@
   [x]
   (if (instance? clojure.lang.IDeref x) @x x))
 
-(defn grab-cljs-env
-  "If piggieback is active, returns the ClojureScript compiler environment for
-  the running REPL."
+(defn- grab-cljs-env*
   [msg]
   (let [path (cljs-env-path)]
     (some-> msg
             :session
             maybe-deref
-            (get-in path)
-            maybe-deref)))
+            (get-in path))))
+
+(defn grab-cljs-env
+  "If piggieback is active, returns the ClojureScript compiler environment for
+  the running REPL."
+  [msg]
+  (maybe-deref (grab-cljs-env* msg)))
 
 (defn cljs-response-value
   "Returns the :value slot of an eval response from piggieback as a Clojure
@@ -82,3 +85,17 @@
   (if (grab-cljs-env msg)
     (cljs-response-value response)
     (:value response)))
+
+(defmacro with-cljs-env [msg & body]
+  (try
+    (require 'cljs.env)
+    `(binding [cljs.env/*compiler* ~(grab-cljs-env* msg)]
+       ~@body)
+    (catch Exception _)))
+
+(defmacro with-cljs-ns [ns-sym & body]
+  (try
+    (require 'cljs.analyzer)
+    `(binding [cljs.analyzer/*cljs-ns* ~ns-sym]
+       ~@body)
+    (catch Exception _)))

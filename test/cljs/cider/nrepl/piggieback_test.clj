@@ -17,6 +17,8 @@
                          :code (nrepl/code (require '[cemerick.piggieback :as piggieback])
                                            (require '[cljs.repl.node :as node])
                                            (piggieback/cljs-repl (node/repl-env)))})
+       (session/message {:op :eval
+                         :code (nrepl/code (require 'clojure.data))})
        (f)
        (session/message {:op :eval
                          :code (nrepl/code :cljs/quit)})))))
