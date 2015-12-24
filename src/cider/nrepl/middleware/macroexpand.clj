@@ -202,13 +202,14 @@
 (defn macroexpansion-reply
   [{:keys [transport] :as msg}]
   (try
-    (let [expansion (macroexpansion msg)]
-      (transport/send
-       transport
-       (response-for msg :expansion expansion :status :done)))
+    (transport/send
+     transport
+     (response-for msg {:expansion (macroexpansion msg)
+                        :status :done}))
     (catch Exception e
       (transport/send
-       transport (response-for msg (u/err-info e :macroexpand-error))))))
+       transport
+       (response-for msg (u/err-info e :macroexpand-error))))))
 
 (defn wrap-macroexpand
   "Middleware that provides a macroexpand op."
