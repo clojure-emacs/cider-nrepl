@@ -107,5 +107,5 @@
     (is (= "{:a {#}}\n"
            (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) nil 3)))))
   (testing "compilation errors"
-    (is (re-find #"Error compiling: .* Unable to resolve symbol: not-defined in this context"
+    (is (re-find #"Unable to resolve symbol: not-defined in this context"
                  (:message (first causes3))))))
