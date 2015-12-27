@@ -33,12 +33,17 @@
             (is (not (contains-cider-nrepl-middleware? project))))))
 
       (with-redefs [lein/leiningen-version (constantly "2.5.1")]
+        (testing "Invalid Lein version; valid Clojure version"
+          (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.8.0"]]})]
+            (is (not (contains-cider-nrepl-dep? project)))
+            (is (not (contains-cider-nrepl-middleware? project)))))
+
         (testing "Invalid Lein version; no Clojure version specified"
           (let [project (plugin/middleware '{})]
             (is (not (contains-cider-nrepl-dep? project)))
             (is (not (contains-cider-nrepl-middleware? project)))))
 
-        (testing "Invalid Lein version; valid Clojure version"
-          (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.8.0"]]})]
+        (testing "Invalid Lein version; invalid Clojure version"
+          (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.6.0"]]})]
             (is (not (contains-cider-nrepl-dep? project)))
             (is (not (contains-cider-nrepl-middleware? project)))))))))
