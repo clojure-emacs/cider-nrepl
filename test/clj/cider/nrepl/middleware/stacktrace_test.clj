@@ -106,5 +106,5 @@
                                                                              (binding [*print-level* 3]
                                                                                (clojure.pprint/pprint object))))))))
   (testing "compilation errors"
-    (is (re-find #"Error compiling: .* Unable to resolve symbol: not-defined in this context"
+    (is (re-find #"Unable to resolve symbol: not-defined in this context"
                  (:message (first causes3))))))
