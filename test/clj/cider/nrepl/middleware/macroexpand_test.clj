@@ -53,8 +53,8 @@
       (is ex)
       (is (= #{"done" "macroexpand-error"} status)))))
 
-;; Tests for the three different cider-macroexpansion-display-namespaces
-;; values: nil, t, and 'tidy
+;; Tests for the three possible values of the display-namespaces option:
+;; "qualified", "none" and "tidy"
 
 (def zipmap nil)
 (def my-set #{2 3})
