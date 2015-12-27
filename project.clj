@@ -16,7 +16,7 @@
                  ^:source-dep [org.clojure/tools.reader "0.10.0"]]
   :exclusions [org.clojure/clojure]
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
-  :plugins [[thomasa/mranderson "0.4.5"]]
+  :plugins [[thomasa/mranderson "0.4.6"]]
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.5.1"]]}
 
