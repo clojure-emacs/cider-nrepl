@@ -63,15 +63,20 @@
   [ns v m]
   (let [c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get (@current-report :results) (:name (meta v))))
-        f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
-    (merge {:ns ns, :var (:name (meta v)), :index i, :context c}
-           (if (#{:fail :error} (:type m))
-             (-> (if-let [e (when (= :error (:type m)) (:actual m))]
-                   (assoc m :error e, :line (:line (stack-frame e f)))
-                   m)
-                 (update-in [:expected] #(with-out-str (pp/pprint %)))
-                 (update-in [:actual]   #(with-out-str (pp/pprint %))))
-             (dissoc m :expected :actual)))))
+        t (:type m)]
+    ;; Errors outside assertions (faults) do not return an :expected value.
+    ;; Type :fail returns :actual value. Type :error returns :error and :line.
+    (merge (dissoc m :expected :actual)
+           {:ns ns, :var (:name (meta v)), :index i, :context c}
+           (when (and (#{:fail :error} t) (not (:fault m)))
+             {:expected (with-out-str (pp/pprint (:expected m)))})
+           (when (#{:fail} t)
+             {:actual (with-out-str (pp/pprint (:actual m)))})
+           (when (#{:error} t)
+             (let [e (:actual m)
+                   f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
+               {:error e
+                :line (:line (stack-frame e f))})))))
 
 (defn report
   "Handle reporting for test events. This takes a test event map as an argument
@@ -103,16 +108,31 @@
         fixture (resolve (symbol (:var frame)))]
     (swap! current-report update-in [:summary :test] dec)
     (binding [test/*testing-vars* (list fixture)]
-      (report {:type :error, :expected nil, :actual e
-               :message "Unhandled exception in test fixture"}))))
+      (report {:type :error, :fault true, :expected nil, :actual e
+               :message "Uncaught exception in test fixture"}))))
 
 ;;; ## Test Execution
 ;; These functions are based on the ones in `clojure.test`, updated to accept
-;; a list of vars to test, and use the report implementation above.
+;; a list of vars to test, use the report implementation above, and distinguish
+;; between test errors and faults outside of assertions.
+
+(defn test-var
+  "If var `v` has a function in its `:test` metadata, call that function,
+  with `clojure.test/*testing-vars*` bound to append `v`."
+  [v]
+  (when-let [t (:test (meta v))]
+    (binding [test/*testing-vars* (conj test/*testing-vars* v)]
+      (test/do-report {:type :begin-test-var :var v})
+      (test/inc-report-counter :test)
+      (try (t)
+           (catch Throwable e
+             (test/do-report {:type :error, :fault true, :expected nil, :actual e
+                              :message "Uncaught exception, not in assertion"})))
+      (test/do-report {:type :end-test-var :var v}))))
 
 (defn test-vars
-  "Call `clojure.test/test-var` on each var, with the fixtures defined for
-  namespace object `ns`."
+  "Call `test-var` on each var, with the fixtures defined for namespace
+  object `ns`."
   [ns vars]
   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
         each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
@@ -120,7 +140,7 @@
           (fn []
             (doseq [v vars]
               (when (:test (meta v))
-                (each-fixture-fn (fn [] (test/test-var v)))))))
+                (each-fixture-fn (fn [] (test-var v)))))))
          (catch Throwable e
            (report-fixture-error ns e)))))
 
