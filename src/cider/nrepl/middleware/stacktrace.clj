@@ -99,13 +99,26 @@
 
 ;;; ## Causes
 
+(defn relative-path
+  "If the path is under the project root, return the relative path; otherwise
+  return the original path."
+  [path]
+  (let [dir (str (System/getProperty "user.dir")
+                 (System/getProperty "file.separator"))]
+    (str/replace-first path dir "")))
+
 (defn extract-location
   "If the cause is a compiler exception, extract the useful location information
-  from its message."
-  [{:keys [class] :as cause}]
+  from its message. Include relative path for simpler reporting."
+  [{:keys [class message] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
-    (update-in cause [:message] str/replace
-               #".*?: (.*?), (compiling:)\((.*)\)" "Error $2 $3 $1")
+    (let [[_ msg file line column]
+          (re-find #".*?: (.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
+      (assoc cause
+             :message msg :file file
+             :path (relative-path file)
+             :line (Integer/parseInt line)
+             :column (Integer/parseInt column)))
     cause))
 
 ;; CLJS REPLs use :repl-env to store huge amounts of analyzer/compiler state
