@@ -109,3 +109,23 @@
   (testing "compilation errors"
     (is (re-find #"Unable to resolve symbol: not-defined in this context"
                  (:message (first causes3))))))
+
+(deftest compilation-errors
+  (testing "extract-location"
+    (is (= {:class "clojure.lang.Compiler$CompilerException"
+            :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"
+            :file "/foo/bar/baz.clj"
+            :path "/foo/bar/baz.clj"
+            :line 1
+            :column 42}
+           (extract-location {:class "clojure.lang.Compiler$CompilerException"
+                              :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context, compiling:(/foo/bar/baz.clj:1:42)"})))
+
+    (is (= {:class "clojure.lang.Compiler$CompilerException"
+            :message "java.lang.NegativeArraySizeException"
+            :file "/foo/bar/baz.clj"
+            :path "/foo/bar/baz.clj"
+            :line 1
+            :column 42}
+           (extract-location {:class "clojure.lang.Compiler$CompilerException"
+                              :message "java.lang.NegativeArraySizeException, compiling:(/foo/bar/baz.clj:1:42)"})))))

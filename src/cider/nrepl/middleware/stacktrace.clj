@@ -113,7 +113,7 @@
   [{:keys [class message] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
     (let [[_ msg file line column]
-          (re-find #".*?: (.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
+          (re-find #"(.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
       (assoc cause
              :message msg :file file
              :path (relative-path file)
