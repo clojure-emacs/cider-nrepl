@@ -1,5 +1,5 @@
 (ns cider.nrepl.print-method
-  (:require [clojure.string :as s])
+  (:require [clojure.main :as main])
   (:import [clojure.lang AFunction Atom MultiFn Namespace]
            java.io.Writer))
 
@@ -25,6 +25,9 @@
        (do ~@(map #(list '.write 'w %) strings))
        (#'clojure.core/print-object ~arg ~'w))))
 
+(defn- translate-class-name [c]
+  (main/demunge (.getName (class c))))
+
 ;;; Atoms
 ;; Ex: #atom[{:foo :bar} 0x54274a2b]
 (def-print-method Atom c
@@ -36,15 +39,7 @@
 ;; Ex: #function[cider.nrepl.print-method/multifn-name]
 (def-print-method AFunction c
   "#function["
-  (-> (.getName (class c))
-      (s/replace-first "$" "/")
-      (s/replace "_QMARK_" "?")
-      (s/replace "_PLUS_" "+")
-      (s/replace "_BANG_" "!")
-      (s/replace "_EQ_" "=")
-      (s/replace "_SLASH_" "/")
-      (s/replace "_STAR_" "*")
-      (s/replace "_" "-"))
+  (translate-class-name c)
   "]")
 
 ;;; Multimethods
@@ -63,7 +58,7 @@
   "#multifn["
   (try (multifn-name c)
        (catch SecurityException _
-         (class c)))
+         (translate-class-name c)))
   ;; MultiFn names are not unique so we keep the identity HashCode to
   ;; make sure it's unique.
   (format " 0x%x]" (System/identityHashCode c)))
