@@ -69,3 +69,20 @@
   "#namespace["
   (format "%s" (ns-name c))
   "]")
+
+;;; Agents, futures, delays, promises, etc
+(defn- deref-name [c]
+  (let [class-name (translate-class-name c)]
+    (if-let [[_ short-name] (re-find #"^clojure\.lang\.([^.]+)" class-name)]
+      (.toLowerCase short-name)
+      (case (second (re-find #"^clojure\.core/(.+)/reify" class-name))
+        "future-call" "future"
+        "promise"     "promise"
+        nil           class-name))))
+
+;; `deref-as-map` is a private function, so let's be careful.
+(when (resolve 'clojure.core/deref-as-map)
+  (def-print-method clojure.lang.IDeref c
+    "#" (deref-name c) "["
+    (pr-str (#'clojure.core/deref-as-map c))
+    (format " 0x%x]" (System/identityHashCode c))))
