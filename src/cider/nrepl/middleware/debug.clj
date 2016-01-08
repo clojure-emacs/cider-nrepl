@@ -247,13 +247,13 @@
 
 ;;; ## High-level functions
 (defmacro breakpoint
-  "Send value and coordinates to the client through the debug channel.
+  "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
-  [value coor]
+  [form coor]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
              *locals* ~(sanitize-env &env)
              *pprint-fn* (:pprint-fn *msg*)]
-     (let [val# ~value]
+     (let [val# ~form]
        (cond
          (skip-breaks? ~coor) val#
          (not (seq @debugger-message)) (do (println "Debugger not initialized")
