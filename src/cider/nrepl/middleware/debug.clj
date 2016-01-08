@@ -262,12 +262,24 @@
                            :file file, :line line, :column column})
                        :debug-value (pr-short val#)))))))
 
+(defmacro breakpoint-if-not-core
+  "Wrap form in a breakpoint unless it is a symbol that resolves to `clojure.core`.
+  This takes the namespace shadowing and local vars into account."
+  [form coor]
+  (if (and (symbol? form)
+           (try
+             (-> (resolve form) meta :ns ns-name (= 'clojure.core))
+             (catch Exception _ nil))
+           (not (contains? &env form)))
+    form
+    `(breakpoint ~form ~coor)))
+
 ;;; Data readers
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/with-meta-safe form {:cider-breakfunction #'breakpoint}))
+  (ins/with-meta-safe form {:cider-breakfunction #'breakpoint-if-not-core}))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
