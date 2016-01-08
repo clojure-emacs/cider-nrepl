@@ -173,19 +173,22 @@
   If an exception is thrown, it is caught and sent to the client, and
   this function returns nil."
   [form]
-  (try
-    (eval `(let ~(vec (mapcat #(list % `(*locals* '~%))
-                              (keys *locals*)))
-             ~form))
-    (catch Exception e
-      ;; Borrowed from interruptible-eval/evaluate.
-      (let [root-ex (#'clojure.main/root-cause e)]
-        (when-not (instance? ThreadDeath root-ex)
-          (debugger-send
-           {:status :eval-error
-            :causes [(let [causes (stacktrace/analyze-causes e *pprint-fn*)]
-                       (when (coll? causes) (last causes)))]})))
-      nil)))
+  (let [ns (ns-name *ns*)]
+    (try
+      (eval `(let ~(vec (mapcat #(list % `(*locals* '~%))
+                                (keys *locals*)))
+               ~form))
+      (catch Exception e
+        ;; Borrowed from `interruptible-eval/evaluate`.
+        (let [root-ex (#'clojure.main/root-cause e)]
+          (when-not (instance? ThreadDeath root-ex)
+            (debugger-send
+             {:status :eval-error
+              :causes [(let [causes (stacktrace/analyze-causes e *pprint-fn*)]
+                         (when (coll? causes) (last causes)))]})))
+        nil)
+      (finally
+        (in-ns ns)))))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.
