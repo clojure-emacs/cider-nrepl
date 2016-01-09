@@ -1,6 +1,6 @@
 (ns cider.nrepl.print-method
   (:require [clojure.string :as s])
-  (:import [clojure.lang AFunction MultiFn Namespace]
+  (:import [clojure.lang AFunction Atom MultiFn Namespace]
            java.io.Writer))
 
 ;; Extending `print-method` defined in clojure.core, to provide
@@ -24,6 +24,13 @@
      (if *pretty-objects*
        (do ~@(map #(list '.write 'w %) strings))
        (#'clojure.core/print-object ~arg ~'w))))
+
+;;; Atoms
+;; Ex: #atom[{:foo :bar} 0x54274a2b]
+(def-print-method Atom c
+  "#atom["
+  (print-str @c)
+  (format " 0x%x]" (System/identityHashCode c)))
 
 ;;; Function objects
 ;; Ex: #function[cider.nrepl.print-method/multifn-name]
