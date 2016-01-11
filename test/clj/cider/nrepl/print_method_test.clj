@@ -6,7 +6,7 @@
 (defn dummy-fn [o])
 
 (deftest print-atoms
-  (is (re-find #"#atom\[ 0x[a-z0-9]+\]" (pr-str (atom ""))))
+  (is (re-find #"#atom\[\"\" 0x[a-z0-9]+\]" (pr-str (atom ""))))
   (is (re-find #"#atom\[nil 0x[a-z0-9]+\]" (pr-str (atom nil))))
   (is (re-find #"#atom\[\{:foo :bar\} 0x[a-z0-9]+\]" (pr-str (atom {:foo :bar}))))
   (is (re-find #"#atom\[#function\[clojure.core/\+\] 0x[a-z0-9]+\]" (pr-str (atom +)))))
