@@ -29,7 +29,7 @@
 ;; Ex: #atom[{:foo :bar} 0x54274a2b]
 (def-print-method Atom c
   "#atom["
-  (print-str @c)
+  (pr-str @c)
   (format " 0x%x]" (System/identityHashCode c)))
 
 ;;; Function objects
