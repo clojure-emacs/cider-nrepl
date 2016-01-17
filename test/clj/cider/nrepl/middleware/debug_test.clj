@@ -4,8 +4,17 @@
             [clojure.tools.nrepl.transport :as t]
             [cider.nrepl.middleware.debug  :as d]))
 
+(deftest coord<
+  (are [a b] (and (d/coord< a b)
+                  (not (d/coord< b a)))
+    [1] []
+    [0] [1]
+    [1] [2]
+    [1 2] [1 3]
+    [1 0] [1]))
+
 (deftest skip-breaks
-  (binding [d/*skip-breaks* (atom true)]
+  (binding [d/*skip-breaks* (atom [:all])]
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
 
@@ -13,7 +22,7 @@
     (is (not (#'d/skip-breaks? [])))
     (is (not (#'d/skip-breaks? nil)))
 
-    (#'d/skip-breaks! [1 2])
+    (#'d/skip-breaks! :deeper [1 2])
     (is (not (#'d/skip-breaks? [])))
     (is (not (#'d/skip-breaks? [1 2])))
     (is (not (#'d/skip-breaks? [2 2 1])))
@@ -61,12 +70,12 @@
   (with-redefs [t/send (send-override :next)]
     (is (= 'value (#'d/read-debug-command 'value {}))))
   (binding [*msg* {:session (atom {})}
-            d/*skip-breaks* (atom true)]
+            d/*skip-breaks* (atom [:all])]
     (with-redefs [t/send (send-override :continue)]
       (is (= 'value (#'d/read-debug-command 'value {})))
       (is (#'d/skip-breaks? nil))))
   (binding [*msg* {:session (atom {})}
-            d/*skip-breaks* (atom true)]
+            d/*skip-breaks* (atom [:all])]
     (with-redefs [t/send (send-override :out)]
       (is (= 'value (#'d/read-debug-command 'value {:coor [1 2 3]})))
       (is (#'d/skip-breaks? [1 2 3]))

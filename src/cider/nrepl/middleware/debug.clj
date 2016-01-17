@@ -62,25 +62,49 @@
   Its value is discarded at the end each eval session."
   nil)
 
+(defn coord<
+  "Return true if coordinate x comes before y.
+  Here, \"comes before\" means that a sexp at coord x is evaluated
+  before a sexp at coord y (assuming a trivial code-flow)."
+  [x y]
+  (if (seq x)
+    (if (seq y)
+      (let [fa (first x)
+            fb (first y)]
+        (if (= fa fb)
+          (recur (rest x) (rest y))
+          (< fa fb)))
+      ;; If coord `x` goes deeper than `y`, then is `x < y`.
+      true)
+    false))
+
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
-  If *skip-breaks* is true, return true.
-  If *skip-breaks* is a vector of integers, return true if coordinates
-  are deeper than this vector."
+  If the first element of `*skip-breaks*` is :all, return true.
+
+  Otherwise, the first element should be :deeper or :before.
+  If :deeper, return true if the given coordinates are deeper than the
+  rest of `*skip-breaks*`. If :before, return true if they represent a
+  place before the rest."
   [coordinates]
-  (when-let [sb @*skip-breaks*]
-    (or
-     ;; From :continue, skip everything.
-     (true? sb)
-     ;; From :out, skip some breaks.
-     (let [parent (take (count sb) coordinates)]
-       (and (= sb parent)
-            (> (count coordinates) (count parent)))))))
+  (when-let [[mode & skip-coords] @*skip-breaks*]
+    (case mode
+      ;; From :continue, skip everything.
+      :all    true
+      ;; From :out, skip some breaks.
+      :deeper (let [parent (take (count skip-coords) coordinates)]
+                (and (= skip-coords parent)
+                     (> (count coordinates) (count parent))))
+      ;; From :here, skip some breaks.
+      :before (coord< coordinates skip-coords))))
 
 (defn skip-breaks!
-  "Set the value of *skip-breaks* for the top-level breakpoint."
-  [bool-or-vec]
-  (reset! *skip-breaks* bool-or-vec))
+  "Set the value of *skip-breaks* for the top-level breakpoint.
+  If bool-or-vec is a vector, mode should be :deeper or :before (see
+  `skip-breaks?`). Otherwise mode should be :all or false."
+  [mode & [bool-or-vec]]
+  (reset! *skip-breaks* (when mode
+                          (cons mode bool-or-vec))))
 
 (defn- abort!
   "Stop current eval thread.
@@ -93,7 +117,7 @@
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
     ;; the user won't be offered the :quit option if there's no *msg*.
-    (skip-breaks! true)))
+    (skip-breaks! :all)))
 
 ;;; Politely borrowed from clj-debugger.
 (defn- sanitize-env
@@ -205,9 +229,11 @@
   This `read-debug-command` is passed `value` and the `extras` map
   with the result of the inspection `assoc`ed in."
   [value extras page-size inspect-value]
-  (let [i (pr-str (:rendered (swap-inspector! @debugger-message
-                                              #(-> (assoc % :page-size page-size)
-                                                   (inspect/start inspect-value)))))]
+  (let [i (binding [*print-length* nil
+                    *print-level* nil]
+            (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
+                 (swap-inspector! @debugger-message)
+                 :rendered pr-str))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
@@ -229,17 +255,22 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :continue :out :inspect :locals :inject :eval :quit]
+  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :quit]
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
-        {:keys [code response page-size] :or {page-size 32}} (if (map? response-raw) response-raw
-                                                                 {:response response-raw})
+
+        {:keys [code coord response page-size] :or {page-size 32}}
+        (if (map? response-raw) response-raw
+            {:response response-raw})
         extras (dissoc extras :inspect)]
     (case response
       :next     value
-      :continue (do (skip-breaks! true) value)
-      :out      (do (skip-breaks! (butlast (:coor extras))) value)
+      :continue (do (skip-breaks! :all) value)
+      :out      (do (skip-breaks! :deeper (butlast (:coor extras)))
+                    value)
+      :here     (do (skip-breaks! :before coord)
+                    value)
       :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
                      (inspect-then-read-command value extras page-size))
@@ -260,7 +291,7 @@
        (cond
          (skip-breaks? ~coor) val#
          (not (seq @debugger-message)) (do (println "Debugger not initialized")
-                                           (skip-breaks! true)
+                                           (skip-breaks! :all)
                                            val#)
          :else (read-debug-command
                 val#
