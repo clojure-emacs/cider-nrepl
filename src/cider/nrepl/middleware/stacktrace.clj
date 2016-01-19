@@ -65,7 +65,7 @@
   to `clojure.lang.Compiler` or `clojure.tools.nrepl.*` as `:tooling` to
   distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [tool-regex #"clojure.lang.Compiler|clojure.tools.nrepl"
+  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(update-in % [:flags] (comp set conj) :tooling)
         [user & tools] (partition-by (complement tool?) frames)]
