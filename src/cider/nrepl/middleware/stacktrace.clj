@@ -67,9 +67,10 @@
   [frames]
   (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
-        flag  #(update-in % [:flags] (comp set conj) :tooling)
-        [user & tools] (partition-by (complement tool?) frames)]
-    (concat user (map flag (apply concat tools)))))
+        flag  #(if (tool? %)
+                 (update-in % [:flags] (comp set conj) :tooling)
+                 %)]
+    (map flag frames)))
 
 (defn flag-duplicates
   "Where a parent and child frame represent substantially the same source
