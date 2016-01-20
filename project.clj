@@ -50,7 +50,7 @@
                                   [leiningen-core "2.5.3"]]}
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC5"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
 
