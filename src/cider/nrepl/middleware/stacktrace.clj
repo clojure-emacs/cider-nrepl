@@ -65,7 +65,7 @@
   to `clojure.lang.Compiler` or `clojure.tools.nrepl.*` as `:tooling` to
   distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [tool-regex #"clojure.lang.Compiler|clojure.tools.nrepl"
+  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(update-in % [:flags] (comp set conj) :tooling)
         [user & tools] (partition-by (complement tool?) frames)]
@@ -113,7 +113,7 @@
   [{:keys [class message] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
     (let [[_ msg file line column]
-          (re-find #".*?: (.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
+          (re-find #"(.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
       (assoc cause
              :message msg :file file
              :path (relative-path file)

@@ -167,19 +167,22 @@
   If an exception is thrown, it is caught and sent to the client, and
   this function returns nil."
   [form]
-  (try
-    (eval `(let ~(vec (mapcat #(list % `(*locals* '~%))
-                              (keys *locals*)))
-             ~form))
-    (catch Exception e
-      ;; Borrowed from interruptible-eval/evaluate.
-      (let [root-ex (#'clojure.main/root-cause e)]
-        (when-not (instance? ThreadDeath root-ex)
-          (debugger-send
-           {:status :eval-error
-            :causes [(let [causes (stacktrace/analyze-causes e 50 50)]
-                       (when (coll? causes) (last causes)))]})))
-      nil)))
+  (let [ns (ns-name *ns*)]
+    (try
+      (eval `(let ~(vec (mapcat #(list % `(*locals* '~%))
+                                (keys *locals*)))
+               ~form))
+      (catch Exception e
+        ;; Borrowed from `interruptible-eval/evaluate`.
+        (let [root-ex (#'clojure.main/root-cause e)]
+          (when-not (instance? ThreadDeath root-ex)
+            (debugger-send
+             {:status :eval-error
+              :causes [(let [causes (stacktrace/analyze-causes e 50 50)]
+                         (when (coll? causes) (last causes)))]})))
+        nil)
+      (finally
+        (in-ns ns)))))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.
@@ -196,9 +199,11 @@
   This `read-debug-command` is passed `value` and the `extras` map
   with the result of the inspection `assoc`ed in."
   [value extras page-size inspect-value]
-  (let [i (pr-str (:rendered (swap-inspector! @debugger-message
-                                              #(-> (assoc % :page-size page-size)
-                                                   (inspect/start inspect-value)))))]
+  (let [i (binding [*print-length* nil
+                    *print-level* nil]
+            (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
+                 (swap-inspector! @debugger-message)
+                 :rendered pr-str))]
     (read-debug-command value (assoc extras :inspect i))))
 
 (defn read-debug-command
@@ -262,12 +267,24 @@
                            :file file, :line line, :column column})
                        :debug-value (pr-short val#)))))))
 
+(defmacro breakpoint-if-not-core
+  "Wrap form in a breakpoint unless it is a symbol that resolves to `clojure.core`.
+  This takes the namespace shadowing and local vars into account."
+  [form coor]
+  (if (and (symbol? form)
+           (try
+             (-> (resolve form) meta :ns ns-name (= 'clojure.core))
+             (catch Exception _ nil))
+           (not (contains? &env form)))
+    form
+    `(breakpoint ~form ~coor)))
+
 ;;; Data readers
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/with-meta-safe form {:cider-breakfunction #'breakpoint}))
+  (ins/with-meta-safe form {:cider-breakfunction #'breakpoint-if-not-core}))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.

@@ -21,20 +21,6 @@
 
 ;;; We'll probably want to expand this variable. It is used to
 ;;; determine uninteresting symbols.
-(def core-publics
-  "Set of all public symbols from the clojure.core namespace."
-  (into #{} (map second (ns-publics 'clojure.core))))
-
-(defn- interesting-symbol?
-  "Non-nil if the value of symbol might be interesting.
-  These are symbols we wrap breakpoints around. An example of
-  uninsteresting symbols is a keyword or the name of a built-in
-  function."
-  [symbol]
-  (not (or (keyword? symbol)
-           (when-let [resolved (ns-resolve *ns* symbol)]
-             (core-publics resolved)))))
-
 (defn with-meta-safe
   "Non-throwing version of (vary-meta obj merge meta)."
   [obj meta]
@@ -143,7 +129,7 @@
 ;;; form-types and special cases. The idea here is that we walk
 ;;; through collections and function arguments looking for interesting
 ;;; things around which we'll wrap a breakpoint. Interesting things
-;;; are most function-forms and vars satisfying `interesting-symbol?`.
+;;; are most function-forms and vars.
 (defn- instrument-function-call
   "Instrument a regular function call sexp.
   This must be a sexp that starts with a symbol which is not a macro
@@ -224,9 +210,7 @@
   (condp #(%1 %2) form
     ;; Function call, macro call, or special form.
     listy? (doall (instrument-function-like-form form))
-    symbol? (if (interesting-symbol? form)
-              (with-break form)
-              form)
+    symbol? (with-break form)
     ;; Other coll types are safe, so we go inside them and only
     ;; instrument what's interesting.
     ;; Do we also need to check for seq?

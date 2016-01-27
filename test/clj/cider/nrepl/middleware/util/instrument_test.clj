@@ -33,14 +33,6 @@
     {}
     #{}))
 
-(deftest interesting-symbol?
-  (are [x] (not (#'t/interesting-symbol? x))
-    'map 'range 'inc 'dec
-    :batman :scarecrow)
-  (are [x] (#'t/interesting-symbol? x)
-    'killer-croc
-    'hannah-montana))
-
 (def bp-tracker (atom #{}))
 (defmacro bp [value coor]
   (swap! bp-tracker conj [value coor])
