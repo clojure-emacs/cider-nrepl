@@ -338,8 +338,7 @@
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (m/merge-meta form
-    {:cider-breakfunction #'breakpoint-if-not-core}))
+  (ins/tag-form form #'breakpoint-if-not-core))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.

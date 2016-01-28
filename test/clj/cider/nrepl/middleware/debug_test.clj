@@ -4,6 +4,8 @@
             [clojure.tools.nrepl.transport :as t]
             [cider.nrepl.middleware.debug  :as d]))
 
+(def ^:const bfkey :cider.nrepl.middleware.util.instrument/breakfunction)
+
 (deftest coord<
   (are [a b] (and (d/coord< a b)
                   (not (d/coord< b a)))
@@ -163,26 +165,26 @@
       (is (string? (:inspect m))))))
 
 (deftest debug-reader
-  (is (empty? (remove #(:cider-breakfunction (meta %))
+  (is (empty? (remove #(bfkey (meta %))
                       (d/debug-reader '[a b c]))))
-  (is (:cider-breakfunction (meta (d/debug-reader '[a b c]))))
-  (is (= (count (remove #(:cider-breakfunction (meta %))
+  (is (bfkey (meta (d/debug-reader '[a b c]))))
+  (is (= (count (remove #(bfkey (meta %))
                         (d/debug-reader '[a :b 10])))
          2)))
 
 (deftest breakpoint-reader
-  (is (:cider-breakfunction (meta (d/breakpoint-reader '[a b c]))))
+  (is (bfkey (meta (d/breakpoint-reader '[a b c]))))
   (is (= '[a :b 10 "ok"]
-         (remove #(:cider-breakfunction (meta %)) (d/breakpoint-reader '[a :b 10 "ok"]))))
+         (remove #(bfkey (meta %)) (d/breakpoint-reader '[a :b 10 "ok"]))))
   ;; Just don't error
   (is (map d/breakpoint-reader '[a :b 10 "ok"])))
 
 (deftest reader-macros
   (binding [*data-readers* {'dbg d/debug-reader}]
     ;; Reader macro variants
-    (is (empty? (remove #(:cider-breakfunction (meta %)) (read-string "#dbg [a b c]"))))
-    (is (:cider-breakfunction (meta (read-string "#dbg [a b c]"))))
-    (is (= (count (remove #(:cider-breakfunction (meta %)) (read-string "#dbg [a :b 10]")))
+    (is (empty? (remove #(bfkey (meta %)) (read-string "#dbg [a b c]"))))
+    (is (bfkey (meta (read-string "#dbg [a b c]"))))
+    (is (= (count (remove #(bfkey (meta %)) (read-string "#dbg [a :b 10]")))
            2))))
 
 (deftest pr-short

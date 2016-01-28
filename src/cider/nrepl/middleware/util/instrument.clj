@@ -58,7 +58,7 @@
   (let [ns (if (instance? clojure.lang.Namespace ns) ns
                (find-ns (symbol ns)))]
     (->> (ns-interns ns)
-         (filter (comp :cider-instrumented meta second))
+         (filter (comp ::instrumented meta second))
          (map first))))
 
 (defn- instrument-special-form
@@ -78,10 +78,10 @@
             '#{def} (let [sym (first args)]
                       (list* (m/merge-meta sym
                                (instrument (or (meta sym) {}))
-                               {:cider-instrumented true})
+                               {::instrumented true})
                              (map instrument (rest args))))
             '#{set!} (list (m/merge-meta (first args)
-                             {:cider-instrumented true})
+                             {::instrumented true})
                            (instrument (second args)))
             '#{loop* let* letfn*} (cons (-> (fn [i x] (if (odd? i) (instrument x) x))
                                             (map-indexed (first args))
@@ -137,27 +137,30 @@
 (defn with-break
   "Return form wrapped in a breakpoint.
   If function is given, use it to instrument form before wrapping. The
-  breakpoint is given by the form's :cider-breakfunction metadata."
+  breakpoint is given by the form's ::breakfunction metadata."
   ([function form]
    (with-break (m/merge-meta (function form) (meta form))))
   ([form]
-   (let [{:keys [cider-coor cider-breakfunction]} (meta form)]
+   (let [{coor ::coor,
+          bf   ::breakfunction} (meta form)]
      (when verbose-debug
-       (println "[DBG]" (not (not cider-breakfunction)) cider-coor form))
-     (if (and cider-breakfunction (seq cider-coor))
-       (list cider-breakfunction form cider-coor)
+       (println "[DBG]" (not (not bf)) coor form))
+     (cond
+       (and bf (seq coor))
+       (list bf form coor)
        ;; If the form is a list and has no metadata, maybe it was
        ;; destroyed by a macro. Try guessing the coor by looking at
        ;; the first element. This fixes `->`, for instance.
-       (if (listy? form)
-         (let [{:keys [cider-coor cider-breakfunction]} (meta (first form))
-               coor (if (= (last cider-coor) 0)
-                      (pop cider-coor)
-                      cider-coor)]
-           (if (and cider-breakfunction (seq cider-coor))
-             (list cider-breakfunction form coor)
-             form))
-         form)))))
+       (listy? form)
+       (let [{coor ::coor,
+              bf   ::breakfunction} (meta (first form))
+             coor (if (= (last coor) 0)
+                    (pop coor)
+                    coor)]
+         (if (and bf (seq coor))
+           (list bf form coor)
+           form))
+       :else form))))
 
 (defn- contains-recur?
   "Return true if form is not a `loop` and a `recur` is found in it."
@@ -195,7 +198,7 @@
 
 (defn instrument
   "Walk through form and return it instrumented with breakpoints.
-  Only forms with a :cider-breakfunction metadata will be
+  Only forms with a ::breakfunction metadata will be
   instrumented, and even then only if it makes sense (e.g., the
   binding names in a let form are never instrumented).
   See `read-and-instrument` for more information."
@@ -214,7 +217,7 @@
 ;;;; ## Pre-instrumentation
 ;;; The following functions are used to populate with metadata and
 ;;; macroexpand code before instrumenting it. This is where we
-;;; calculate all the :cider-coor vectors. See `read-and-instrument`.
+;;; calculate all the ::coor vectors. See `read-and-instrument`.
 (defn walk-indexed
   "Walk through form calling (f coor element).
   The value of coor is a vector of indices representing element's
@@ -241,15 +244,24 @@
                       :else form)]
      (f coor (m/merge-meta result (meta form))))))
 
+(defn tag-form
+  "Tag form to be instrumented with breakfunction.
+  This sets the ::breakfunction metadata of form, which can then be
+  used by `instrument-tagged-code`. See this function for the meaning
+  of breakfunction."
+  [form breakfunction]
+  (m/merge-meta form {::breakfunction breakfunction}))
+
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
   It is expected that something in `form` will contain a
-  :cider-breakfunction metadata, whose value should be a function or
-  macro. It should take two arguments, the form being evaluated, and a
-  coordinates vector (see below).
+  ::breakfunction metadata, whose value should be a var holding a
+  macro. This macro should take three arguments, the form being
+  evaluated, a coordinates vector (see below), and the original
+  form (before macroexpansion).
 
   This function walks through the code attaching to objects
-  the :cider-coor metadata, which is a vector specifing its position
+  the ::coor metadata, which is a vector specifing its position
   in the top-level form. As an example, a coordinate vector of [3 2 0]
   means:
     - enter this sexp and move forward three times,
@@ -264,7 +276,7 @@
        ;; Fill the form with metadata. This will later tell us which
        ;; of the final (post-expansion) forms correspond to user
        ;; code (and where it came from).
-       (walk-indexed (fn [i f] (m/merge-meta f {:cider-coor i})))
+       (walk-indexed (fn [i f] (m/merge-meta f {::coor i})))
        ;; Expand so we don't have to deal with macros.
        (m/macroexpand-all)
        ;; Go through everything again, and instrument any form with
