@@ -85,10 +85,8 @@
                          (second args)
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
-                      (list* (if (meta sym)
-                               (with-meta-safe sym (assoc (instrument (meta sym))
-                                                          :cider-instrumented true))
-                               sym)
+                      (list* (with-meta-safe sym (assoc (instrument (or (meta sym) {}))
+                                                        :cider-instrumented true))
                              (map instrument (rest args))))
             '#{set!} (list (with-meta-safe (first args) {:cider-instrumented true})
                            (instrument (second args)))
