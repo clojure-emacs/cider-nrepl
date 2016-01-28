@@ -7,6 +7,7 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
+            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.misc :as misc]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
@@ -337,7 +338,8 @@
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/with-meta-safe form {:cider-breakfunction #'breakpoint-if-not-core}))
+  (m/merge-meta form
+    {:cider-breakfunction #'breakpoint-if-not-core}))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.

@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.util.instrument
   "Generic instrumentation for clojure code"
   {:author "Artur Malabarba"}
-  (:require [clojure.walk :as walk]))
+  (:require [cider.nrepl.middleware.util.meta :as m]
+            [clojure.walk :as walk]))
 
 ;;;; # Instrumentation
 ;;; The following code is responsible for automatic instrumentation.
@@ -18,13 +19,6 @@
   '#{def fn* deftype* reify* quote
      catch finally
      monitor-enter monitor-exit})
-
-(defn with-meta-safe
-  "Non-throwing version of (vary-meta obj merge meta)."
-  [obj meta]
-  (try
-    (vary-meta obj merge meta)
-    (catch Exception e obj)))
 
 ;;; Surprisingly, (list? `(inc 1)) is false.
 (defn- listy?
@@ -51,8 +45,7 @@
 (defn- instrument-coll
   "Instrument a collection."
   [coll]
-  (with-meta-safe
-    (walk/walk instrument identity coll)
+  (m/merge-meta (walk/walk instrument identity coll)
     (meta coll)))
 
 (defn instrument-case-map
@@ -83,17 +76,21 @@
                          (second args)
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
-                      (list* (with-meta-safe sym (assoc (instrument (or (meta sym) {}))
-                                                        :cider-instrumented true))
+                      (list* (m/merge-meta sym
+                               (instrument (or (meta sym) {}))
+                               {:cider-instrumented true})
                              (map instrument (rest args))))
-            '#{set!} (list (with-meta-safe (first args) {:cider-instrumented true})
+            '#{set!} (list (m/merge-meta (first args)
+                             {:cider-instrumented true})
                            (instrument (second args)))
-            '#{loop* let* letfn*} (cons (vec (map-indexed (fn [i x] (if (odd? i) (instrument x) x))
-                                                          (first args)))
+            '#{loop* let* letfn*} (cons (-> (fn [i x] (if (odd? i) (instrument x) x))
+                                            (map-indexed (first args))
+                                            vec)
                                         (instrument-coll (rest args)))
             '#{reify* deftype*} (map #(if (listy? %)
                                         (let [[a1 a2 & ar] %]
-                                          (with-meta-safe (list* a1 a2 (instrument-coll ar)) (meta %)))
+                                          (m/merge-meta (list* a1 a2 (instrument-coll ar))
+                                            (meta %)))
                                         %)
                                      args)
             ;; `fn*` has several possible syntaxes.
@@ -105,7 +102,7 @@
                         :else              (map #(if (listy? %)
                                                    (-> (first %)
                                                        (cons (instrument-coll (rest %)))
-                                                       (with-meta-safe (meta %)))
+                                                       (m/merge-meta (meta %)))
                                                    %)
                                                 args)))
             '#{catch} `(~@(take 2 args)
@@ -142,7 +139,7 @@
   If function is given, use it to instrument form before wrapping. The
   breakpoint is given by the form's :cider-breakfunction metadata."
   ([function form]
-   (with-break (with-meta-safe (function form) (meta form))))
+   (with-break (m/merge-meta (function form) (meta form))))
   ([form]
    (let [{:keys [cider-coor cider-breakfunction]} (meta form)]
      (when verbose-debug
@@ -242,22 +239,7 @@
                       (seq? form)  (doall (map-inner form))
                       (coll? form) (into (empty form) (map-inner form))
                       :else form)]
-     (f coor (with-meta-safe result (meta form))))))
-
-(defn macroexpand-all
-  "Like clojure.walk/macroexpand-all, but preserves and macroexpands
-  metadata."
-  [form]
-  (let [md (meta form)
-        expanded (walk/walk macroexpand-all
-                            identity
-                            (if (seq? form) (macroexpand form) form))]
-    (if md
-      ;; Macroexpand the metadata too, because sometimes metadata
-      ;; contains, for example, functions. This is the case for
-      ;; deftest forms.
-      (with-meta-safe expanded (macroexpand-all md))
-      expanded)))
+     (f coor (m/merge-meta result (meta form))))))
 
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
@@ -282,9 +264,9 @@
        ;; Fill the form with metadata. This will later tell us which
        ;; of the final (post-expansion) forms correspond to user
        ;; code (and where it came from).
-       (walk-indexed (fn [i f] (with-meta-safe f {:cider-coor i})))
+       (walk-indexed (fn [i f] (m/merge-meta f {:cider-coor i})))
        ;; Expand so we don't have to deal with macros.
-       (macroexpand-all)
+       (m/macroexpand-all)
        ;; Go through everything again, and instrument any form with
        ;; debug metadata.
        (instrument)
