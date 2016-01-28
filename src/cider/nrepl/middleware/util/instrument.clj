@@ -19,8 +19,6 @@
      catch finally
      monitor-enter monitor-exit})
 
-;;; We'll probably want to expand this variable. It is used to
-;;; determine uninteresting symbols.
 (defn with-meta-safe
   "Non-throwing version of (vary-meta obj merge meta)."
   [obj meta]
