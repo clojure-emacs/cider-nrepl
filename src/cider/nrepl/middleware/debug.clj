@@ -323,14 +323,14 @@
 (defmacro breakpoint-if-not-core
   "Wrap form in a breakpoint unless it is a symbol that resolves to `clojure.core`.
   This takes the namespace shadowing and local vars into account."
-  [form coor]
+  [form & rest]
   (if (and (symbol? form)
            (try
              (-> (resolve form) meta :ns ns-name (= 'clojure.core))
              (catch Exception _ nil))
            (not (contains? &env form)))
     form
-    `(breakpoint ~form ~coor)))
+    `(breakpoint ~form ~@rest)))
 
 ;;; Data readers
 ;; Set in `src/data_readers.clj`.
