@@ -83,15 +83,18 @@
   "True if the breakpoint at coordinates should be skipped.
   If the first element of `*skip-breaks*` is :all, return true.
 
-  Otherwise, the first element should be :deeper or :before.
+  Otherwise, the first element should be :deeper, :before, or :trace.
   If :deeper, return true if the given coordinates are deeper than the
-  rest of `*skip-breaks*`. If :before, return true if they represent a
-  place before the rest."
+  rest of `*skip-breaks*`.
+  If :before, return true if they represent a place before the rest.
+  If :trace, return false."
   [coordinates]
   (when-let [[mode & skip-coords] @*skip-breaks*]
     (case mode
       ;; From :continue, skip everything.
       :all    true
+      ;; From :trace, never skip.
+      :trace  false
       ;; From :out, skip some breaks.
       :deeper (let [parent (take (count skip-coords) coordinates)]
                 (and (= skip-coords parent)
@@ -272,7 +275,7 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :stacktrace :quit]
+  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :stacktrace :trace :quit]
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
@@ -295,13 +298,21 @@
       :eval     (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                   (read-debug-command value (assoc extras :debug-value (pr-short return))))
       :stacktrace (stack-then-read-command value extras)
+      :trace    (do (skip-breaks! :trace) value)
       :quit     (abort!))))
+
+(defn print-step-indented [depth form value]
+  (print (apply str (repeat (dec depth) "| ")))
+  (binding [*print-length* 4
+            *print-level*  2]
+    (pr form))
+  (println "=>" (pr-short value)))
 
 ;;; ## High-level functions
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
-  [form coor]
+  [form coor original-form]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
              *locals*      ~(sanitize-env &env)
              *pprint-fn*   (:pprint-fn *msg*)]
@@ -311,6 +322,10 @@
          (not (seq @debugger-message)) (do (println "Debugger not initialized")
                                            (skip-breaks! :all)
                                            val#)
+         ;; The length of `coor` is a good indicator of current code
+         ;; depth.
+         (= (first @*skip-breaks*) :trace) (do (print-step-indented ~(count coor) '~original-form val#)
+                                               val#)
          :else (read-debug-command
                 val#
                 ;; This *msg* is evaluated at compile-time, so it's

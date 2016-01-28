@@ -44,6 +44,9 @@
   (-> #(t/tag-form % #'bp)
       (walk/postwalk form)
       t/instrument-tagged-code
+      ;; A final macroexpand-all to cause the `bp` macro above to
+      ;; execute. In regular usage, this would be a complete
+      ;; expand+eval done by the Clojure compiler.
       m/macroexpand-all)
   ;; Replace #'bp with 'bp for easier print and comparison.
   (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
@@ -77,28 +80,28 @@
        (= x 1) true
        false   never
        :else   final)
-    '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x [1 1]) 1) [1]]}))
+    '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x [1 1] x) 1) [1]]}))
 
 (deftest instrument-recur
   (is (= (breakpoint-tester '(loop [x '(1 2)]
                                (if (seq x)
                                  (recur (rest x))
                                  x)))
-         '#{[(rest (bp x [2 2 1 1])) [2 2 1]]
+         '#{[(rest (bp x [2 2 1 1] x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
             [x [2 3]]
-            [(seq (bp x [2 1 1])) [2 1]]}))
+            [(seq (bp x [2 1 1] x)) [2 1]]}))
 
   (is (= (breakpoint-tester '(fn [x]
                                (if (seq x)
                                  (recur (rest x))
                                  x)))
-         '#{[(rest (bp x [2 2 1 1])) [2 2 1]]
+         '#{[(rest (bp x [2 2 1 1] x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
             [x [2 3]]
-            [(seq (bp x [2 1 1])) [2 1]]})))
+            [(seq (bp x [2 1 1] x)) [2 1]]})))
 
 (deftest instrument-reify
   (is (= (breakpoint-tester '(reify Transport
@@ -108,21 +111,21 @@
                                    (inspect-reply msg response)
                                    (.send transport response))
                                  this)))
-         '#{[(. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]]
+         '#{[(. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3]]
             [response [3 2 1 1]]
-            [(if (bp (contains? (bp response [3 2 1 1]) :value) [3 2 1])
-               (bp (inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2])
-               (bp (. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]))
+            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value))
+               (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response))
+               (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response)))
              [3 2]]
             [response [3 2 2 2]]
             [response [3 2 3 2]]
             [transport [2 2 1]]
-            [(inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2]]
+            [(inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2]]
             [transport [3 2 3 1]]
             [this [3 3]]
             [msg [3 2 2 1]]
-            [(contains? (bp response [3 2 1 1]) :value) [3 2 1]]
-            [(. (bp transport [2 2 1]) recv) [2 2]]})))
+            [(contains? (bp response [3 2 1 1] response) :value) [3 2 1]]
+            [(. (bp transport [2 2 1] transport) recv) [2 2]]})))
 
 (deftest instrument-function-call
   (is (empty? (breakpoint-tester '(System/currentTimeMillis))))
@@ -131,8 +134,8 @@
              (let [start-time (System/currentTimeMillis)]
                (Thread/sleep 1000)
                (- (System/currentTimeMillis) start-time))))
-         '#{[(let* [start-time (bp (. System currentTimeMillis) [3 1 1])] (bp (. Thread sleep 1000) [3 2]) (bp (- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3])) [3]]
-            [(- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]]
+         '#{[(let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3]]
+            [(- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3]]
             [(. System currentTimeMillis) [3 1 1]]
             [(. Thread sleep 1000) [3 2]]
             [start-time [3 3 2]]

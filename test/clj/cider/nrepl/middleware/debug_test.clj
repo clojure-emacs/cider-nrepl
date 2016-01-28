@@ -127,16 +127,16 @@
         (is (= "HI" (:message (last (:causes @resp)))))))))
 
 (deftest initialize
-  (reset! d/debugger-message nil)
-  (let [resp (atom nil)]
-    (with-redefs [t/send (fn [_ response] (reset! resp response))]
-      (#'d/initialize {:hi true}))
-    (is (= @d/debugger-message {:hi true}))
-    (is (not (:status @resp))))
-  (let [resp (atom nil)]
-    (with-redefs [t/send (fn [_ response] (reset! resp response))]
-      (#'d/initialize {:hi true}))
-    (is (:status @resp))))
+  (with-redefs [d/debugger-message (atom nil)]
+    (let [resp (atom nil)]
+      (with-redefs [t/send (fn [_ response] (reset! resp response))]
+        (#'d/initialize {:hi true}))
+      (is (= @d/debugger-message {:hi true}))
+      (is (not (:status @resp))))
+    (let [resp (atom nil)]
+      (with-redefs [t/send (fn [_ response] (reset! resp response))]
+        (#'d/initialize {:hi true}))
+      (is (:status @resp)))))
 
 (deftest locals-for-message
   (let [x 1
@@ -200,20 +200,20 @@
 (deftest breakpoint
   ;; Map merging
   (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
-                d/debugger-message (atom [:fake])]
-    (binding [*msg* {:session (atom {}) :code :code, :id :id,
-                     :file :file, :line :line, :column :column}]
-      (let [m (eval '(cider.nrepl.middleware.debug/breakpoint (inc 10) [6]))]
+                d/debugger-message   (atom [:fake])
+                d/*skip-breaks*      (atom nil)]
+    (binding [*msg* {:session (atom {}) :code :code, :id     :id,
+                     :file    :file,    :line :line, :column :column}]
+      (let [m (eval `(d/breakpoint (inc 10) [6] ~'(inc 10)))]
         (are [k v] (= (k m) v)
-          :value 11
+          :value       11
           :debug-value "11"
-          :coor [6]
-          :file :file
-          :line :line
-          :column :column
-          :code :code
+          :coor        [6]
+          :file        :file
+          :line        :line
+          :column      :column
+          :code        :code
           :original-id :id))
       ;; Locals capturing
-      (reset! @#'d/debugger-message nil)
-      (is (= (eval '(let [x 10] (cider.nrepl.middleware.debug/breakpoint cider.nrepl.middleware.debug/*locals* [])))
+      (is (= (:value (eval `(let [~'x 10] (d/breakpoint d/*locals* [] nil))))
              '{x 10})))))

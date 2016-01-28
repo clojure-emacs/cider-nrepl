@@ -135,23 +135,25 @@
    (with-break (m/merge-meta (function form) (meta form))))
   ([form]
    (let [{coor ::coor,
+          orig ::original-form,
           bf   ::breakfunction} (meta form)]
      (when verbose-debug
-       (println "[DBG]" (not (not bf)) coor form))
+       (println "[DBG]" (not (not bf)) coor (or orig form)))
      (cond
        (and bf (seq coor))
-       (list bf form coor)
+       (list bf form coor orig)
        ;; If the form is a list and has no metadata, maybe it was
        ;; destroyed by a macro. Try guessing the coor by looking at
        ;; the first element. This fixes `->`, for instance.
        (listy? form)
        (let [{coor ::coor,
+              orig ::original-form,
               bf   ::breakfunction} (meta (first form))
              coor (if (= (last coor) 0)
                     (pop coor)
                     coor)]
          (if (and bf (seq coor))
-           (list bf form coor)
+           (list bf form coor orig)
            form))
        :else form))))
 
@@ -265,18 +267,20 @@
   and wraps in a breakpoint any form that contains the previously
   attached metadata."
   [form]
-  (->> form
-       ;; Fill the form with metadata. This will later tell us which
-       ;; of the final (post-expansion) forms correspond to user
-       ;; code (and where it came from).
-       (walk-indexed (fn [i f] (m/merge-meta f {::coor i})))
-       ;; Expand so we don't have to deal with macros.
-       (m/macroexpand-all)
-       ;; Go through everything again, and instrument any form with
-       ;; debug metadata.
-       (instrument)
-       (#(do (when verbose-debug (println "[DBG]" %))
-             %))))
+  ;; Fill the form with metadata. This will later tell us which of the
+  ;; final (post-expansion) forms correspond to user code (and where
+  ;; it came from).
+  (-> (walk-indexed (fn [i f] (m/merge-meta f {::coor i}))
+                    form)
+      ;; Expand so we don't have to deal with macros.
+      (m/macroexpand-all ::original-form)
+      ;; Go through everything again, and instrument any form with
+      ;; debug metadata.
+      (instrument)
+      (#(do (when verbose-debug
+              (println "[DBG]" %)
+              (flush))
+            %))))
 
 (defn list-instrumented-defs [ns]
   (let [ns (if (instance? clojure.lang.Namespace ns) ns
