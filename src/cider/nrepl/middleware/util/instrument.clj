@@ -79,12 +79,11 @@
         ;; play it safe and use a `try`.
         (try
           (condp #(%1 %2) name
-            '#{if do recur throw finally try new monitor-exit monitor-enter}
-            (instrument-coll args)
+            '#{if do recur throw finally try new monitor-exit monitor-enter} (instrument-coll args)
             '#{quote & var clojure.core/import*} args
-            '#{.} `(~(instrument (first args))
-                    ~(second args)
-                    ~@(instrument-coll (rest (rest args))))
+            '#{.} (list* (instrument (first args))
+                         (second args)
+                         (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
                       (list* (if (meta sym)
                                (with-meta-safe sym (assoc (instrument (meta sym))
@@ -98,20 +97,21 @@
                                         (instrument-coll (rest args)))
             '#{reify* deftype*} (map #(if (listy? %)
                                         (let [[a1 a2 & ar] %]
-                                          (with-meta-safe `(~a1 ~a2 ~@(instrument-coll ar)) (meta %)))
+                                          (with-meta-safe (list* a1 a2 (instrument-coll ar)) (meta %)))
                                         %)
                                      args)
             ;; `fn*` has several possible syntaxes.
             '#{fn*} (let [[a1 & [a2 & ar :as a1r]] args]
                       (cond
-                        (vector? a1) (cons a1 (instrument-coll a1r))
-                        (and (symbol? a1) (vector? a2)) `(~a1 ~a2 ~@(instrument-coll ar))
-                        :else
-                        (map #(if (listy? %)
-                                (with-meta-safe (cons (first %) (instrument-coll (rest %)))
-                                  (meta %))
-                                %)
-                             args)))
+                        (vector? a1)       (cons a1 (instrument-coll a1r))
+                        (and (symbol? a1)
+                             (vector? a2)) (list* a1 a2 (instrument-coll ar))
+                        :else              (map #(if (listy? %)
+                                                   (-> (first %)
+                                                       (cons (instrument-coll (rest %)))
+                                                       (with-meta-safe (meta %)))
+                                                   %)
+                                                args)))
             '#{catch} `(~@(take 2 args)
                         ~@(instrument-coll (drop 2 args)))
             ;; Anyone know what a2 and a3 represent? They were always 0 on my tests.
@@ -120,7 +120,7 @@
           (catch Exception e
             (binding [*print-length* 4
                       *print-level*  2]
-              (println "Failed to instrument" name (doall args)
+              (println "Failed to instrument" name args
                        ", please file a bug report: " e))
             args))))
 

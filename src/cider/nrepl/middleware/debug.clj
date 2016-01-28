@@ -302,8 +302,8 @@
   Sends a response to the message stored in debugger-message."
   [form coor]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
-             *locals* ~(sanitize-env &env)
-             *pprint-fn* (:pprint-fn *msg*)]
+             *locals*      ~(sanitize-env &env)
+             *pprint-fn*   (:pprint-fn *msg*)]
      (let [val# ~form]
        (cond
          (skip-breaks? ~coor) val#
