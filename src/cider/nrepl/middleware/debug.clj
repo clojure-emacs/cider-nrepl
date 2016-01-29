@@ -359,7 +359,9 @@
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
         fake-reader (fn [x] (reset! has-debug? true) nil)]
-    (binding [*data-readers* (assoc *data-readers* 'dbg fake-reader 'break fake-reader)]
+    (binding [*data-readers* (->> (repeat fake-reader)
+                                  (interleave '[dbg break])
+                                  (apply assoc *data-readers*))]
       (try
         (read-string code)
         (catch Exception e)))
