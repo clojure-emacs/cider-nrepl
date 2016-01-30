@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.util.instrument-test
   (:require [cider.nrepl.middleware.debug :as d]
             [cider.nrepl.middleware.util.instrument :as t]
+            [cider.nrepl.middleware.util.meta :as m]
             [clojure.repl :as repl]
             [clojure.test :refer :all]
             [clojure.walk :as walk]))
@@ -34,17 +35,18 @@
     #{}))
 
 (def bp-tracker (atom #{}))
-(defmacro bp [value coor]
+(defmacro bp [value coor & _]
   (swap! bp-tracker conj [value coor])
   value)
 
 (defn breakpoint-tester [form]
-  (with-redefs [d/breakpoint-reader
-                (fn [x] (t/with-meta-safe x {:cider-breakfunction #'bp}))]
-    (reset! bp-tracker #{})
-    (t/macroexpand-all (#'t/instrument-tagged-code (#'d/debug-reader form)))
-    ;; Replace #'bp with 'bp for easier print and comparison.
-    (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker)))
+  (reset! bp-tracker #{})
+  (-> #(t/tag-form % #'bp)
+      (walk/postwalk form)
+      t/instrument-tagged-code
+      m/macroexpand-all)
+  ;; Replace #'bp with 'bp for easier print and comparison.
+  (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
 
 (deftest instrument-clauses
   (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
@@ -106,19 +108,20 @@
                                    (inspect-reply msg response)
                                    (.send transport response))
                                  this)))
-         '#{[this [3 3]]
-            [(contains? (bp response [3 2 1 1]) :value) [3 2 1]]
-            [msg [3 2 2 1]]
-            [(inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2]]
-            [(. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]]
+         '#{[(. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]]
+            [response [3 2 1 1]]
             [(if (bp (contains? (bp response [3 2 1 1]) :value) [3 2 1])
                (bp (inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2])
-               (bp (. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3])) [3 2]]
-            [transport [3 2 3 1]]
-            [transport [2 2 1]]
-            [response [3 2 3 2]]
-            [response [3 2 1 1]]
+               (bp (. (bp transport [3 2 3 1]) send (bp response [3 2 3 2])) [3 2 3]))
+             [3 2]]
             [response [3 2 2 2]]
+            [response [3 2 3 2]]
+            [transport [2 2 1]]
+            [(inspect-reply (bp msg [3 2 2 1]) (bp response [3 2 2 2])) [3 2 2]]
+            [transport [3 2 3 1]]
+            [this [3 3]]
+            [msg [3 2 2 1]]
+            [(contains? (bp response [3 2 1 1]) :value) [3 2 1]]
             [(. (bp transport [2 2 1]) recv) [2 2]]})))
 
 (deftest instrument-function-call
@@ -128,15 +131,12 @@
              (let [start-time (System/currentTimeMillis)]
                (Thread/sleep 1000)
                (- (System/currentTimeMillis) start-time))))
-         '#{[(- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]]
-            [start-time [3 3 2]]
-            [(. Thread sleep 1000) [3 2]]
-            [(. System currentTimeMillis) [3 3 1]]
+         '#{[(let* [start-time (bp (. System currentTimeMillis) [3 1 1])] (bp (. Thread sleep 1000) [3 2]) (bp (- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3])) [3]]
+            [(- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]]
             [(. System currentTimeMillis) [3 1 1]]
-            [(let* [start-time (bp (. System currentTimeMillis) [3 1 1])]
-                   (bp (. Thread sleep 1000) [3 2])
-                   (bp (- (bp (. System currentTimeMillis) [3 3 1]) (bp start-time [3 3 2])) [3 3]))
-             [3]]})))
+            [(. Thread sleep 1000) [3 2]]
+            [start-time [3 3 2]]
+            [(. System currentTimeMillis) [3 3 1]]})))
 
 (deftest instrument-try
   ;; No breakpoints around `catch`, `finally`, `Exception`, or `e`.
@@ -145,7 +145,6 @@
                                (catch Exception e z)
                                (finally y)))
          '#{[y [3 1]]
-            [(try (bp x [1]) (catch Exception e (bp z [2 3])) (finally (bp y [3 1]))) []]
             [x [1]]
             [z [2 3]]})))
 
@@ -157,11 +156,11 @@
 
 (deftest instrument-set!
   (is (= (breakpoint-tester '(set! foo (bar)))
-         '#{[(set! foo (bp (bar) [2])) []] [(bar) [2]]}))
+         '#{[(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (. inst field) (bar)))
-         '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]}))
+         '#{[(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (.field inst) (bar)))
-         '#{[(set! (. inst field) (bp (bar) [2])) []] [(bar) [2]]})))
+         '#{[(bar) [2]]})))
 
 (deftest instrument-deftest
   (binding [*ns* (the-ns 'cider.nrepl.middleware.util.instrument-test)]
