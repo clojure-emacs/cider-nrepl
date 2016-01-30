@@ -348,15 +348,25 @@
                 val# (assoc *extras* :coor ~coor
                             :debug-value (pr-short val#)))))))
 
-(defmacro breakpoint-if-not-core
-  "Wrap form in a breakpoint unless it is a symbol that resolves to `clojure.core`.
-  This takes the namespace shadowing and local vars into account."
+(def irrelevant-return-value-forms
+  "Set of special-forms whose return value we don't care about.
+  When instrumenting, these will not be wrapped in a breakpoint."
+  '#{def fn* deftype* reify* monitor-enter monitor-exit})
+
+(defmacro breakpoint-if-interesting
+  "Wrap form in a breakpoint if it looks interesting.
+  Uninteresting forms are symbols that resolve to `clojure.core`
+  (taking locals into account), and sexps whose head is present in
+  `irrelevant-return-value-forms`."
   [form & rest]
-  (if (and (symbol? form)
-           (try
-             (-> (resolve form) meta :ns ns-name (= 'clojure.core))
-             (catch Exception _ nil))
-           (not (contains? &env form)))
+  (if (or (and (symbol? form)
+               (not (contains? &env form))
+               (try
+                 (-> (resolve form) meta :ns
+                     ns-name (= 'clojure.core))
+                 (catch Exception _ nil)))
+          (and (seq? form)
+               (irrelevant-return-value-forms (first form))))
     form
     `(breakpoint ~form ~@rest)))
 
@@ -365,7 +375,7 @@
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/tag-form form #'breakpoint-if-not-core))
+  (ins/tag-form form #'breakpoint-if-interesting))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.

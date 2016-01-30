@@ -13,12 +13,13 @@
 ;;;    - distinguishing between the different collections.
 
 ;;;; ## Auxiliary defs
-(def irrelevant-return-value-forms
-  "Set of macros whose return value we don't care about.
-  When instrumenting, these will not be wrapped in a breakpoint."
-  '#{def fn* deftype* reify* quote
-     catch finally
-     monitor-enter monitor-exit})
+(def dont-break-forms
+  "Set of special-forms that we don't wrap breakpoints around.
+  These are either forms that don't do anything interesting (like
+  `quote`) or forms that just can't be wrapped (like `catch` and
+  `finally`)."
+  ;; `recur` needs to be handled separately.
+  '#{quote catch finally})
 
 ;;;; ## Instrumentation
 ;;; The top-level instrumenting function is `read-and-instrument`. See
@@ -161,10 +162,10 @@
 (defn- dont-break?
   "Return true if it's NOT ok to wrap form in a breakpoint.
   Expressions we don't want to wrap are those listed in
-  `irrelevant-return-value-forms` and anything containing a `recur`
+  `dont-break-forms` and anything containing a `recur`
   form (unless it's inside a `loop`)."
   [[name :as form]]
-  (or (irrelevant-return-value-forms name)
+  (or (dont-break-forms name)
       (contains-recur? form)))
 
 (defn- instrument-function-like-form

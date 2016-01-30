@@ -2,9 +2,19 @@
   (:require [clojure.test :refer :all]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.transport :as t]
-            [cider.nrepl.middleware.debug  :as d]))
+            [cider.nrepl.middleware.debug  :as d]
+            [clojure.walk :as walk]))
 
 (def ^:const bfkey :cider.nrepl.middleware.util.instrument/breakfunction)
+
+(deftest irrelevant-return-value
+  (are [x] (let [exp (clojure.walk/macroexpand-all x)]
+             (= exp (clojure.walk/macroexpand-all `(d/breakpoint-if-interesting ~exp [] nil))))
+    '(defn name "" [] (inc 2))
+    '(defn- name "" [] (inc 2))
+    '(def name "")
+    '(fn name [] (inc 2))
+    '(fn* name ([] (inc 2)))))
 
 (deftest coord<
   (are [a b] (and (d/coord< a b)

@@ -7,12 +7,6 @@
             [clojure.walk :as walk]))
 
 (deftest dont-break?
-  (are [x] (#'t/dont-break? (walk/macroexpand-all x))
-    '(defn name "" [] (inc 2))
-    '(defn- name "" [] (inc 2))
-    '(def name "")
-    '(fn name [] (inc 2))
-    '(fn* name ([] (inc 2))))
   (are [x] (#'t/dont-break? x)
     '(if 1 (recur (inc 2)) 0))
   (are [x] (not (#'t/dont-break? (walk/macroexpand-all x)))
@@ -73,7 +67,8 @@
                                (if (seq x)
                                  (recur (rest x))
                                  x)))
-         '#{[(rest (bp x [2 2 1 1] x)) [2 2 1]]
+         '#{[(loop* [x '(1 2)] (if (bp (seq (bp x [2 1 1] x)) [2 1] (seq x)) (recur (bp (rest (bp x [2 2 1 1] x)) [2 2 1] (rest x))) (bp x [2 3] x))) []]
+            [(rest (bp x [2 2 1 1] x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
             [x [2 3]]
@@ -99,14 +94,12 @@
                                  this)))
          '#{[(. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3]]
             [response [3 2 1 1]]
-            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value))
-               (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response))
-               (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response)))
-             [3 2]]
+            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2]]
             [response [3 2 2 2]]
             [response [3 2 3 2]]
             [transport [2 2 1]]
             [(inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2]]
+            [(reify* [Transport] (recv [this] (bp (. (bp transport [2 2 1] transport) recv) [2 2] (. transport recv))) (send [this response] (bp (if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (. transport send response))) [3 2] (if (contains? response :value) (inspect-reply msg response) (. transport send response))) (bp this [3 3] this))) []]
             [transport [3 2 3 1]]
             [this [3 3]]
             [msg [3 2 2 1]]
@@ -114,7 +107,6 @@
             [(. (bp transport [2 2 1] transport) recv) [2 2]]})))
 
 (deftest instrument-function-call
-  (is (empty? (breakpoint-tester '(System/currentTimeMillis))))
   (is (= (breakpoint-tester
           '(defn test-fn []
              (let [start-time (System/currentTimeMillis)]
@@ -122,6 +114,7 @@
                (- (System/currentTimeMillis) start-time))))
          '#{[(let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3]]
             [(- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3]]
+            [(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) [3 1 1] (. System currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (. Thread sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (. System currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (. System currentTimeMillis) start-time))) [3] (let* [start-time (. System currentTimeMillis)] (. Thread sleep 1000) (- (. System currentTimeMillis) start-time)))))) []]
             [(. System currentTimeMillis) [3 1 1]]
             [(. Thread sleep 1000) [3 2]]
             [start-time [3 3 2]]
@@ -135,23 +128,30 @@
                                (finally y)))
          '#{[y [3 1]]
             [x [1]]
-            [z [2 3]]})))
+            [z [2 3]]
+            [(try (bp x [1] x) (catch Exception e (bp z [2 3] z)) (finally (bp y [3 1] y))) []]})))
 
 (deftest instrument-def
   (is (= (breakpoint-tester '(def foo (bar)))
-         '#{[(bar) [2]]}))
+         '#{[(def foo (bp (bar) [2] (bar))) []]
+            [(bar) [2]]}))
   (is (= (breakpoint-tester '(def foo "foo doc" (bar)))
-         '#{[(bar) [3]]})))
+         '#{[(def foo "foo doc" (bp (bar) [3] (bar))) []]
+            [(bar) [3]]})))
 
 (deftest instrument-set!
   (is (= (breakpoint-tester '(set! foo (bar)))
-         '#{[(bar) [2]]}))
+         '#{[(set! foo (bp (bar) [2] (bar))) []]
+            [(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (. inst field) (bar)))
-         '#{[(bar) [2]]}))
+         '#{[(set! (. inst field) (bp (bar) [2] (bar))) []]
+            [(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (.field inst) (bar)))
-         '#{[(bar) [2]]})))
+         '#{[(set! (. inst field) (bp (bar) [2] (bar))) []]
+            [(bar) [2]]})))
 
 (deftest instrument-deftest
   (binding [*ns* (the-ns 'cider.nrepl.middleware.util.instrument-test)]
     (is (= (breakpoint-tester '(deftest foo (bar)))
-           '#{[(bar) [2]]}))))
+           '#{[(def foo (fn* ([] (clojure.test/test-var (var foo))))) []]
+              [(bar) [2]]}))))
