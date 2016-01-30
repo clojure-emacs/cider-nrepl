@@ -20,14 +20,6 @@
      catch finally
      monitor-enter monitor-exit})
 
-;;; Surprisingly, (list? `(inc 1)) is false.
-(defn- listy?
-  "Check if `x` is a list, LazySeq or Cons."
-  [x]
-  (or (list? x)
-      (instance? clojure.lang.LazySeq x)
-      (instance? clojure.lang.Cons x)))
-
 ;;;; ## Instrumentation
 ;;; The top-level instrumenting function is `read-and-instrument`. See
 ;;; its doc for more information.
@@ -80,7 +72,7 @@
                                             (map-indexed (first args))
                                             vec)
                                         (instrument-coll (rest args)))
-            '#{reify* deftype*} (map #(if (listy? %)
+            '#{reify* deftype*} (map #(if (seq? %)
                                         (let [[a1 a2 & ar] %]
                                           (m/merge-meta (list* a1 a2 (instrument-coll ar))
                                             (meta %)))
@@ -92,7 +84,7 @@
                         (vector? a1)       (cons a1 (instrument-coll a1r))
                         (and (symbol? a1)
                              (vector? a2)) (list* a1 a2 (instrument-coll ar))
-                        :else              (map #(if (listy? %)
+                        :else              (map #(if (seq? %)
                                                    (-> (first %)
                                                        (cons (instrument-coll (rest %)))
                                                        (m/merge-meta (meta %)))
@@ -145,7 +137,7 @@
        ;; If the form is a list and has no metadata, maybe it was
        ;; destroyed by a macro. Try guessing the coor by looking at
        ;; the first element. This fixes `->`, for instance.
-       (listy? form)
+       (seq? form)
        (let [{coor ::coor,
               orig ::original-form,
               bf   ::breakfunction} (meta (first form))
@@ -160,7 +152,7 @@
 (defn- contains-recur?
   "Return true if form is not a `loop` and a `recur` is found in it."
   [form]
-  (if (listy? form)
+  (if (seq? form)
     (case (first form)
       recur true
       loop  false
@@ -200,7 +192,7 @@
   [form]
   (condp #(%1 %2) form
     ;; Function call, macro call, or special form.
-    listy? (doall (instrument-function-like-form form))
+    seq? (doall (instrument-function-like-form form))
     symbol? (with-break form)
     ;; Other coll types are safe, so we go inside them and only
     ;; instrument what's interesting.

@@ -20,20 +20,6 @@
     '(inc 1)
     '(inc 2)))
 
-(deftest listy?
-  (are [x] (#'t/listy? x)
-    '()
-    `()
-    '(a)
-    (second `[b (inc 1)])
-    (map inc (range)))
-
-  (are [x] (not (#'t/listy? x))
-    nil
-    []
-    {}
-    #{}))
-
 (def bp-tracker (atom #{}))
 (defmacro bp [value coor & _]
   (swap! bp-tracker conj [value coor])
