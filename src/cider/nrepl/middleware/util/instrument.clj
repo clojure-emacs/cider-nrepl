@@ -48,7 +48,7 @@
   (m/merge-meta (walk/walk instrument identity coll)
     (meta coll)))
 
-(defn instrument-case-map
+(defn- instrument-case-map
   "Instrument the map that is 5th arg in a `case*`."
   [args]
   (into {} (map (fn [[k [v1 v2]]] [k [v1 (instrument v2)]])
@@ -127,7 +127,7 @@
 
 (def verbose-debug false)
 
-(defn with-break
+(defn- with-break
   "Return form wrapped in a breakpoint.
   If function is given, use it to instrument form before wrapping. The
   breakpoint is given by the form's ::breakfunction metadata."
@@ -191,7 +191,7 @@
       ;; function name and instrument the args.
       (with-break instrument-function-call form))))
 
-(defn instrument
+(defn- instrument
   "Walk through form and return it instrumented with breakpoints.
   Only forms with a ::breakfunction metadata will be
   instrumented, and even then only if it makes sense (e.g., the
@@ -213,7 +213,7 @@
 ;;; The following functions are used to populate with metadata and
 ;;; macroexpand code before instrumenting it. This is where we
 ;;; calculate all the ::coor vectors. See `read-and-instrument`.
-(defn walk-indexed
+(defn- walk-indexed
   "Walk through form calling (f coor element).
   The value of coor is a vector of indices representing element's
   address in the form. Unlike `clojure.walk/walk`, all metadata of
