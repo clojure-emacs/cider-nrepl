@@ -247,6 +247,11 @@
   [form breakfunction]
   (m/merge-meta form {::breakfunction breakfunction}))
 
+(defn tag-form-recursively
+  "Like `tag-form` but also tag all forms inside the given form."
+  [form breakfunction]
+  (walk/postwalk #(tag-form % breakfunction) form))
+
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
   It is expected that something in `form` will contain a
