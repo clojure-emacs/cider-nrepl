@@ -15,7 +15,7 @@
     '(fn* name ([] (inc 2))))
   (are [x] (#'t/dont-break? x)
     '(if 1 (recur (inc 2)) 0))
-  (are [x] (not (#'t/dont-break? x))
+  (are [x] (not (#'t/dont-break? (walk/macroexpand-all x)))
     '(loop [] (if 1 (recur (inc 2)) 0))
     '(inc 1)
     '(inc 2)))

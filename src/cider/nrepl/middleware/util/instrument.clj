@@ -155,7 +155,7 @@
   (if (seq? form)
     (case (first form)
       recur true
-      loop  false
+      loop* false
       (some contains-recur? (rest form)))))
 
 (defn- dont-break?
