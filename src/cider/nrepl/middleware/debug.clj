@@ -148,12 +148,16 @@
   this map (identified by a key), and will `dissoc` it afterwards."
   (atom {}))
 
+(def ^:dynamic *extras*
+  "Bound by `with-debug-bindings` to a modified version of the original `*msg*`."
+  {})
+
 (def ^:dynamic *locals*
-  "Bound by the `breakpoint` macro to the local &env."
+  "Bound by `with-debug-bindings` to a map from local symbols to values."
   {})
 
 (def ^:dynamic *pprint-fn*
-  "Bound by the `breakpoint` macro to the pretty-printing function determined by
+  "Bound by `with-debug-bindings` to the pretty-printing function determined by
   the `wrap-pprint-fn` middleware."
   nil)
 
@@ -309,32 +313,40 @@
   (println "=>" (pr-short value)))
 
 ;;; ## High-level functions
+(defmacro with-debug-bindings
+  "Run body with a debug environment.
+  This means `debugger-message` is guaranteed to be set, and
+  `*pprint-fn*`, `*locals*`, and `*skip-breaks*` are guaranteed to be
+  bound to reasonable values (on this thread). An exception will be
+  thrown if `debugger-message` wasn't set."
+  [& body]
+  `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
+             *locals*      ~(sanitize-env &env)
+             ;; This *msg* is evaluated at compile-time, so it's the
+             ;; message that instrumented the function, not the
+             ;; message that led to its evaluation.
+             *extras*      ~(let [{:keys [code id file line column]} *msg*]
+                              {:code code, :original-id id, :file file, :line line, :column column})
+             *pprint-fn*   (:pprint-fn *msg*)]
+     (when (not (seq @debugger-message))
+       (throw (Exception. "Debugger not initialized")))
+     ~@body))
+
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
   [form coor original-form]
-  `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
-             *locals*      ~(sanitize-env &env)
-             *pprint-fn*   (:pprint-fn *msg*)]
+  `(with-debug-bindings
      (let [val# ~form]
        (cond
          (skip-breaks? ~coor) val#
-         (not (seq @debugger-message)) (do (println "Debugger not initialized")
-                                           (skip-breaks! :all)
-                                           val#)
          ;; The length of `coor` is a good indicator of current code
          ;; depth.
          (= (first @*skip-breaks*) :trace) (do (print-step-indented ~(count coor) '~original-form val#)
                                                val#)
          :else (read-debug-command
-                val#
-                ;; This *msg* is evaluated at compile-time, so it's
-                ;; the message that instrumented the function, not the
-                ;; message that led to its evaluation.
-                (assoc ~(let [{:keys [code id file line column]} *msg*]
-                          {:code code, :original-id id, :coor coor
-                           :file file, :line line, :column column})
-                       :debug-value (pr-short val#)))))))
+                val# (assoc *extras* :coor ~coor
+                            :debug-value (pr-short val#)))))))
 
 (defmacro breakpoint-if-not-core
   "Wrap form in a breakpoint unless it is a symbol that resolves to `clojure.core`.
