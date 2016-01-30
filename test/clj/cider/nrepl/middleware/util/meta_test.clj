@@ -21,7 +21,7 @@
       [1 2 3] '(1 2 3)
       {1 2} #{1 2 3})))
 
-(deftest merge-meta
+(deftest strip-meta
   (testing "Always safe and preserves object"
     (are [form] (let [x form]
                   (= x (m/strip-meta (m/merge-meta x {:random 'meta}))))
