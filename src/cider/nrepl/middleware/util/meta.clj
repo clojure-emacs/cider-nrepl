@@ -14,12 +14,18 @@
     (apply vary-meta obj merge metamaps)
     (catch Exception e obj)))
 
+(defn strip-meta [form]
+  (if (meta form)
+    (with-meta form nil)
+    form))
+
 (defn macroexpand-all
   "Like clojure.walk/macroexpand-all, but preserves and macroexpands
-  metadata."
-  [form]
+  metadata. Also store the original form (unexpanded and stripped of
+  metadata) in the metadata of the expanded form under original-key."
+  [form & [original-key]]
   (let [md (meta form)
-        expanded (walk/walk macroexpand-all
+        expanded (walk/walk #(macroexpand-all % original-key)
                             identity
                             (if (seq? form) (macroexpand form) form))]
     (if md
@@ -27,10 +33,7 @@
       ;; contains, for example, functions. This is the case for
       ;; deftest forms.
       (merge-meta expanded
-        (macroexpand-all md))
+        (macroexpand-all md)
+        (when original-key
+          {original-key (strip-meta form)}))
       expanded)))
-
-(defn strip-meta [form]
-  (if (meta form)
-    (with-meta form nil)
-    form))
