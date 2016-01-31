@@ -262,13 +262,15 @@
        transport (response-for msg (u/err-info e :info-error))))))
 
 (defn extract-eldoc [info]
-  (if (contains? info :candidates)
-    (->> (:candidates info)
-         vals
-         (mapcat :arglists)
-         distinct
-         (sort-by count))
-    (:arglists info)))
+  (cond
+    (:special-form info) (->> (:forms info)
+                              (map vec))
+    (contains? info :candidates) (->> (:candidates info)
+                                      vals
+                                      (mapcat :arglists)
+                                      distinct
+                                      (sort-by count))
+    :else (:arglists info)))
 
 (defn format-eldoc [raw-eldoc]
   (map #(mapv str %) raw-eldoc))
