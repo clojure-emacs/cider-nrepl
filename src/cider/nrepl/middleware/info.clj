@@ -265,11 +265,11 @@
   (cond
     (:special-form info) (->> (:forms info)
                               (map vec))
-    (contains? info :candidates) (->> (:candidates info)
-                                      vals
-                                      (mapcat :arglists)
-                                      distinct
-                                      (sort-by count))
+    (:candidates info) (->> (:candidates info)
+                            vals
+                            (mapcat :arglists)
+                            distinct
+                            (sort-by count))
     :else (:arglists info)))
 
 (defn format-eldoc [raw-eldoc]
