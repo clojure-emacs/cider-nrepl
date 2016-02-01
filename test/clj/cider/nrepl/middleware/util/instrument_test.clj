@@ -1,8 +1,6 @@
 (ns cider.nrepl.middleware.util.instrument-test
-  (:require [cider.nrepl.middleware.debug :as d]
-            [cider.nrepl.middleware.util.instrument :as t]
+  (:require [cider.nrepl.middleware.util.instrument :as t]
             [cider.nrepl.middleware.util.meta :as m]
-            [clojure.repl :as repl]
             [clojure.test :refer :all]
             [clojure.walk :as walk]))
 
@@ -21,9 +19,9 @@
 
 (defn breakpoint-tester [form]
   (reset! bp-tracker #{})
-  (-> #(t/tag-form % #'bp)
-      (walk/postwalk form)
+  (-> (t/tag-form-recursively form #'bp)
       t/instrument-tagged-code
+      ;; (#(do (prn %) %))
       ;; A final macroexpand-all to cause the `bp` macro above to
       ;; execute. In regular usage, this would be a complete
       ;; expand+eval done by the Clojure compiler.
@@ -94,14 +92,14 @@
                                  this)))
          '#{[(. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3]]
             [response [3 2 1 1]]
-            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2]]
             [response [3 2 2 2]]
             [response [3 2 3 2]]
+            [(reify* [Transport] (recv [this] (bp (. (bp transport [2 2 1] transport) recv) [2 2] (.recv transport))) (send [this response] (bp (if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2] (if (contains? response :value) (inspect-reply msg response) (.send transport response))) (bp this [3 3] this))) []]
             [transport [2 2 1]]
             [(inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2]]
-            [(reify* [Transport] (recv [this] (bp (. (bp transport [2 2 1] transport) recv) [2 2] (. transport recv))) (send [this response] (bp (if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (. transport send response))) [3 2] (if (contains? response :value) (inspect-reply msg response) (. transport send response))) (bp this [3 3] this))) []]
             [transport [3 2 3 1]]
             [this [3 3]]
+            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2]]
             [msg [3 2 2 1]]
             [(contains? (bp response [3 2 1 1] response) :value) [3 2 1]]
             [(. (bp transport [2 2 1] transport) recv) [2 2]]})))
@@ -112,9 +110,9 @@
              (let [start-time (System/currentTimeMillis)]
                (Thread/sleep 1000)
                (- (System/currentTimeMillis) start-time))))
-         '#{[(let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3]]
+         '#{[(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3] (let [start-time (System/currentTimeMillis)] (Thread/sleep 1000) (- (System/currentTimeMillis) start-time)))))) []]
+            [(let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3]]
             [(- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3]]
-            [(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) [3 1 1] (. System currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (. Thread sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (. System currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (. System currentTimeMillis) start-time))) [3] (let* [start-time (. System currentTimeMillis)] (. Thread sleep 1000) (- (. System currentTimeMillis) start-time)))))) []]
             [(. System currentTimeMillis) [3 1 1]]
             [(. Thread sleep 1000) [3 2]]
             [start-time [3 3 2]]

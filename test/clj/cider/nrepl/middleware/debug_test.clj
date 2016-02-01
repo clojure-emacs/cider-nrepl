@@ -29,13 +29,17 @@
   (binding [d/*skip-breaks* (atom [:all])]
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
+    (is (#'d/skip-breaks? [1 2]))
+    (is (#'d/skip-breaks? [2 2 1]))
 
     (#'d/skip-breaks! false)
-    (is (not (#'d/skip-breaks? [])))
-    (is (not (#'d/skip-breaks? nil)))
+    (is (#'d/skip-breaks? []))
+    (is (#'d/skip-breaks? nil))
+    (is (not (#'d/skip-breaks? [1 2])))
+    (is (not (#'d/skip-breaks? [2 2 1])))
 
     (#'d/skip-breaks! :deeper [1 2])
-    (is (not (#'d/skip-breaks? [])))
+    (is (#'d/skip-breaks? []))
     (is (not (#'d/skip-breaks? [1 2])))
     (is (not (#'d/skip-breaks? [2 2 1])))
     (is (#'d/skip-breaks? [1 2 3]))))
@@ -224,6 +228,10 @@
           :column      :column
           :code        :code
           :original-id :id))
+      (reset! d/debugger-message [:fake])
       ;; Locals capturing
-      (is (= (:value (eval `(let [~'x 10] (d/breakpoint d/*locals* [] nil))))
+      (is (= (:value (eval `(let [~'x 10] (d/breakpoint d/*locals* [1] nil))))
+             '{x 10}))
+      ;; Top-level sexps are not debugged, just returned.
+      (is (= (eval `(let [~'x 10] (d/breakpoint d/*locals* [] nil)))
              '{x 10})))))

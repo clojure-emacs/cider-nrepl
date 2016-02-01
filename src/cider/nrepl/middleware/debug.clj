@@ -89,18 +89,22 @@
   If :before, return true if they represent a place before the rest.
   If :trace, return false."
   [coordinates]
-  (when-let [[mode & skip-coords] @*skip-breaks*]
-    (case mode
-      ;; From :continue, skip everything.
-      :all    true
-      ;; From :trace, never skip.
-      :trace  false
-      ;; From :out, skip some breaks.
-      :deeper (let [parent (take (count skip-coords) coordinates)]
-                (and (= skip-coords parent)
-                     (> (count coordinates) (count parent))))
-      ;; From :here, skip some breaks.
-      :before (coord< coordinates skip-coords))))
+  (if (seq coordinates)
+    (when-let [[mode & skip-coords] @*skip-breaks*]
+      (case mode
+        ;; From :continue, skip everything.
+        :all    true
+        ;; From :trace, never skip.
+        :trace  false
+        ;; From :out, skip some breaks.
+        :deeper (let [parent (take (count skip-coords) coordinates)]
+                  (and (= skip-coords parent)
+                       (> (count coordinates) (count parent))))
+        ;; From :here, skip some breaks.
+        :before (coord< coordinates skip-coords)))
+    ;; We don't breakpoint top-level sexps, because their return value
+    ;; is already displayed anyway.
+    true))
 
 (defn skip-breaks!
   "Set the value of *skip-breaks* for the top-level breakpoint.

@@ -133,7 +133,7 @@
      (when verbose-debug
        (println "[DBG]" (not (not bf)) coor (or orig form)))
      (cond
-       (and bf (seq coor))
+       (and bf coor)
        (list bf form coor orig)
        ;; If the form is a list and has no metadata, maybe it was
        ;; destroyed by a macro. Try guessing the coor by looking at
@@ -145,7 +145,7 @@
              coor (if (= (last coor) 0)
                     (pop coor)
                     coor)]
-         (if (and bf (seq coor))
+         (if (and bf coor)
            (list bf form coor orig)
            form))
        :else form))))
