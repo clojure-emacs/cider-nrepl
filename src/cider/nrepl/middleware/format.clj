@@ -12,11 +12,16 @@
 
 (defn format-code-reply
   [{:keys [transport code] :as msg}]
-  (transport/send
-   transport
-   (response-for msg
-                 :formatted-code (fmt/reformat-string code)
-                 :status :done)))
+  (try
+    (transport/send
+     transport
+     (response-for msg
+                   :formatted-code (fmt/reformat-string code)
+                   :status :done))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (err-info e :format-code-error))))))
 
 (defn- read-edn
   "Returns a vector of EDN forms, read from the string s."
@@ -67,5 +72,6 @@
    "format-edn"
    {:doc "Reformats the given EDN data, returning the result as a string."
     :requires {"edn" "The data to format."}
-    :optional {"right-margin" "The maximum column width of the formatted result."}
+    :optional {"print-right-margin" "The maximum column width of the formatted result."
+               "pprint-fn" "Fully qualified name of the print function to be used."}
     :returns {"formatted-edn" "The formatted data."}}}})
