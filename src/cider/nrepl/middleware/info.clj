@@ -264,7 +264,9 @@
 (defn extract-eldoc [info]
   (cond
     (:special-form info) (->> (:forms info)
-                              (map vec))
+                              ;; :forms contains a vector of sequences or symbols
+                              ;; which we have to convert the format employed by :arglists
+                              (map #(if (coll? %) (vec %) (vector %))))
     (:candidates info) (->> (:candidates info)
                             vals
                             (mapcat :arglists)

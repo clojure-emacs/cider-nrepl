@@ -125,7 +125,10 @@
 ;;;; eldoc
 (def test-eldoc-info {:arglists '([x] [x y])})
 
-(def test-eldoc-info-special-form {:forms ['(if test then else?)]
+(def test-eldoc-info-special-form {:forms ['(.instanceMember instance args*)
+                                           '(.instanceMember Classname args*)
+                                           '(Classname/staticMethod args* )
+                                           'Classname/staticField]
                                    :special-form true})
 
 (def test-eldoc-info-candidates
@@ -138,7 +141,10 @@
   (is (= (info/extract-eldoc test-eldoc-info-candidates)
          '([] [x] [x y z])))
   (is (= (info/extract-eldoc test-eldoc-info-special-form)
-         ['(if test then else?)])))
+         '([.instanceMember instance args*]
+           [.instanceMember Classname args*]
+           [Classname/staticMethod args*]
+           [Classname/staticField]))))
 
 (deftest test-format-eldoc
   (is (= (info/format-eldoc (info/extract-eldoc test-eldoc-info)) '(["x"] ["x" "y"])))
@@ -148,7 +154,7 @@
 (deftest test-eldoc
   (is (info/eldoc {:ns "clojure.core" :symbol "map"}))
   (is (info/eldoc {:ns "clojure.core" :symbol ".toString"}))
-  (is (info/eldoc {:ns "clojure.core" :symbol "if"}))
+  (is (info/eldoc {:ns "clojure.core" :symbol "."}))
   (is (not (info/eldoc {:ns "clojure.core" :symbol (gensym "non-existing")}))))
 
 (deftest test-var-meta
