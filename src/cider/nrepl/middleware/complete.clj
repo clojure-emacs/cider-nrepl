@@ -39,8 +39,13 @@
 
 (defn doc-reply
   [{:keys [transport] :as msg}]
-  (let [results (completion-doc msg)]
-    (transport/send transport (response-for msg :completion-doc results :status :done))))
+  (try
+    (let [results (completion-doc msg)]
+      (transport/send transport (response-for msg :completion-doc results :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :completion-doc-error))))))
 
 (defn wrap-complete
   "Middleware that looks up possible functions for the given (partial) symbol."
