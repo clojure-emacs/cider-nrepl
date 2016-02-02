@@ -63,6 +63,7 @@
 
              :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
                       :cljfmt {:indents {as-> [[:inner 0]]
+                                         with-debug-bindings [[:inner 0]]
                                          merge-meta [[:inner 0]]}}}
 
              :eastwood {:plugins [[jonase/eastwood "0.2.3"]]
