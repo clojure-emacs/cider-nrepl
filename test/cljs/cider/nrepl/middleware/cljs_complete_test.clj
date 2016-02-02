@@ -38,3 +38,9 @@
           candidate (first (:completions response))]
       (is (= '("[psym & doc+methods]") (:arglists candidate)))
       (is (string? (:doc candidate))))))
+
+(deftest cljs-complete-doc
+  (let [response (session/message {:op "complete-doc" :symbol "tru"})]
+    (is (= (:status response) #{"done"}))
+    (is (empty? (:completion-doc response))
+        "Can't handle CLJS yet.")))
