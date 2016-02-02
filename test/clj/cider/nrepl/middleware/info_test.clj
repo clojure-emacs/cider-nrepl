@@ -127,7 +127,7 @@
 
 (def test-eldoc-info-special-form {:forms ['(.instanceMember instance args*)
                                            '(.instanceMember Classname args*)
-                                           '(Classname/staticMethod args* )
+                                           '(Classname/staticMethod args*)
                                            'Classname/staticField]
                                    :special-form true})
 
