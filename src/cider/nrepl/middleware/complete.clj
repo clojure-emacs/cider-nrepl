@@ -9,7 +9,7 @@
             [cljs-tooling.complete :as cljs-complete]))
 
 (defn complete
-  [{:keys [symbol ns context extra-metadata] :as msg}]
+  [{:keys [ns symbol context extra-metadata] :as msg}]
   (let [ns (u/as-sym ns)
         prefix (str symbol)
         extra-metadata (set (map keyword extra-metadata))]
@@ -22,7 +22,7 @@
                                         :extra-metadata extra-metadata}))))
 
 (defn completion-doc
-  [{:keys [symbol ns] :as msg}]
+  [{:keys [ns symbol] :as msg}]
   (when-not (cljs/grab-cljs-env msg)
     (jvm-complete/documentation (str symbol) (u/as-sym ns))))
 
@@ -62,14 +62,14 @@
   {:handles
    {"complete"
     {:doc "Return a list of symbols matching the specified (partial) symbol."
-     :requires {"symbol" "The symbol to lookup"
-                "ns" "The symbol's namespace"
+     :requires {"ns" "The symbol's namespace"
+                "symbol" "The symbol to lookup"
                 "session" "The current session"}
      :optional {"context" "Completion context for compliment."
                 "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
      :returns {"completions" "A list of possible completions"}}
     "complete-doc"
     {:doc "Retrieve documentation suitable for display in completion popup"
-     :requires {"symbol" "The symbol to lookup"
-                "ns" "The symbol's namespace"}
+     :requires {"ns" "The symbol's namespace"
+                "symbol" "The symbol to lookup"}
      :returns {"completion-doc" "Symbol's documentation"}}}}))
