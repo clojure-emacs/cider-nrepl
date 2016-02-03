@@ -323,14 +323,16 @@
   `*pprint-fn*`, `*locals*`, and `*skip-breaks*` are guaranteed to be
   bound to reasonable values (on this thread). An exception will be
   thrown if `debugger-message` wasn't set."
-  [& body]
+  {:style/indent 1}
+  [coor & body]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
              *locals*      ~(sanitize-env &env)
              ;; This *msg* is evaluated at compile-time, so it's the
              ;; message that instrumented the function, not the
              ;; message that led to its evaluation.
              *extras*      ~(let [{:keys [code id file line column]} *msg*]
-                              {:code code, :original-id id, :file file, :line line, :column column})
+                              {:code code, :original-id id, :file file,
+                               :line line, :column column,  :coor coor})
              *pprint-fn*   (:pprint-fn *msg*)]
      (when (not (seq @debugger-message))
        (throw (Exception. "Debugger not initialized")))
@@ -340,17 +342,19 @@
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
   [form coor original-form]
-  `(with-debug-bindings
+  `(with-debug-bindings ~coor
      (let [val# ~form]
        (cond
          (skip-breaks? ~coor) val#
          ;; The length of `coor` is a good indicator of current code
          ;; depth.
-         (= (first @*skip-breaks*) :trace) (do (print-step-indented ~(count coor) '~original-form val#)
-                                               val#)
-         :else (read-debug-command
-                val# (assoc *extras* :coor ~coor
-                            :debug-value (pr-short val#)))))))
+         (= (first @*skip-breaks*) :trace)
+         (do (print-step-indented ~(count coor) '~original-form val#)
+             val#)
+         ;; Nothing special. Here's the actual breakpoint logic.
+         :else (->> (pr-short val#)
+                    (assoc *extras* :debug-value)
+                    (read-debug-command val#))))))
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
