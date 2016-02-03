@@ -29,7 +29,8 @@
   "Metadata keys that are useful to us.
   This is used so that we don't crowd the ns cache with useless or
   redudant information, such as :name and :ns."
-  [:indent :cider-instrumented :deprecated :macro :arglists :test
+  [:indent :deprecated :macro :arglists :test
+   :cider.nrepl.middleware.util.instrument/breakfunction
    :style/indent :clojure.tools.trace/traced])
 
 (defn relevant-meta
