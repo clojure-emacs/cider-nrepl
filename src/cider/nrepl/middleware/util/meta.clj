@@ -35,5 +35,7 @@
       (merge-meta expanded
         (macroexpand-all md)
         (when original-key
-          {original-key (strip-meta form)}))
+          ;; We have to quote this, or it will get evaluated by
+          ;; Clojure (even though it's inside meta).
+          {original-key (list 'quote (strip-meta form))}))
       expanded)))

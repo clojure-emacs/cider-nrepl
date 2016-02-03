@@ -128,7 +128,7 @@
    (with-break (m/merge-meta (function form) (meta form))))
   ([form]
    (let [{coor ::coor,
-          orig ::original-form,
+          [_ orig] ::original-form,
           bf   ::breakfunction} (meta form)]
      (when verbose-debug
        (println "[DBG]" (not (not bf)) coor (or orig form)))
@@ -140,7 +140,7 @@
        ;; the first element. This fixes `->`, for instance.
        (seq? form)
        (let [{coor ::coor,
-              orig ::original-form,
+              [_ orig] ::original-form,
               bf   ::breakfunction} (meta (first form))
              coor (if (= (last coor) 0)
                     (pop coor)
