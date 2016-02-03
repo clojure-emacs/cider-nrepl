@@ -385,7 +385,7 @@
   "#dbg reader. Mark all forms in `form` for breakpointing.
   `form` itself is also marked."
   [form]
-  (walk/postwalk breakpoint-reader form))
+  (ins/tag-form-recursively form #'breakpoint-if-interesting))
 
 (defn instrument-and-eval [form]
   (eval (ins/instrument-tagged-code form)))

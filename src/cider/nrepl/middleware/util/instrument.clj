@@ -243,7 +243,8 @@
 (defn tag-form-recursively
   "Like `tag-form` but also tag all forms inside the given form."
   [form breakfunction]
-  (walk/postwalk #(tag-form % breakfunction) form))
+  ;; Don't use `postwalk` because it destroys previous metadata.
+  (walk-indexed #(tag-form %2 breakfunction) form))
 
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
