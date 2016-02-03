@@ -30,6 +30,7 @@
                                                      cider.nrepl.middleware.classpath/wrap-classpath
                                                      cider.nrepl.middleware.complete/wrap-complete
                                                      cider.nrepl.middleware.debug/wrap-debug
+                                                     cider.nrepl.middleware.enlighten/wrap-enlighten
                                                      cider.nrepl.middleware.format/wrap-format
                                                      cider.nrepl.middleware.info/wrap-info
                                                      cider.nrepl.middleware.inspect/wrap-inspect
