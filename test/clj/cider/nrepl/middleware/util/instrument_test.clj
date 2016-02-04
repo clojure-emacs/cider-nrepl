@@ -14,12 +14,13 @@
 
 (def bp-tracker (atom #{}))
 (defmacro bp [value coor & _]
-  (swap! bp-tracker conj [value coor])
+  (swap! bp-tracker conj [value (:coor coor)])
   value)
 
 (defn breakpoint-tester [form]
   (reset! bp-tracker #{})
-  (-> (t/tag-form-recursively form #'bp)
+  (-> (m/strip-meta form)
+      (t/tag-form-recursively #'bp)
       t/instrument-tagged-code
       ;; (#(do (prn %) %))
       ;; A final macroexpand-all to cause the `bp` macro above to
@@ -58,29 +59,29 @@
        (= x 1) true
        false   never
        :else   final)
-    '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x [1 1] x) 1) [1]]}))
+    '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x {:coor [1 1]} x) 1) [1]]}))
 
 (deftest instrument-recur
   (is (= (breakpoint-tester '(loop [x '(1 2)]
                                (if (seq x)
                                  (recur (rest x))
                                  x)))
-         '#{[(loop* [x '(1 2)] (if (bp (seq (bp x [2 1 1] x)) [2 1] (seq x)) (recur (bp (rest (bp x [2 2 1 1] x)) [2 2 1] (rest x))) (bp x [2 3] x))) []]
-            [(rest (bp x [2 2 1 1] x)) [2 2 1]]
+         '#{[(loop* [x '(1 2)] (if (bp (seq (bp x {:coor [2 1 1]} x)) {:coor [2 1]} (seq x)) (recur (bp (rest (bp x {:coor [2 2 1 1]} x)) {:coor [2 2 1]} (rest x))) (bp x {:coor [2 3]} x))) []]
+            [(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
             [x [2 3]]
-            [(seq (bp x [2 1 1] x)) [2 1]]}))
+            [(seq (bp x {:coor [2 1 1]} x)) [2 1]]}))
 
   (is (= (breakpoint-tester '(fn [x]
                                (if (seq x)
                                  (recur (rest x))
                                  x)))
-         '#{[(rest (bp x [2 2 1 1] x)) [2 2 1]]
+         '#{[(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
             [x [2 3]]
-            [(seq (bp x [2 1 1] x)) [2 1]]})))
+            [(seq (bp x {:coor [2 1 1]} x)) [2 1]]})))
 
 (deftest instrument-reify
   (is (= (breakpoint-tester '(reify Transport
@@ -90,19 +91,19 @@
                                    (inspect-reply msg response)
                                    (.send transport response))
                                  this)))
-         '#{[(. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3]]
+         '#{[(. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) [3 2 3]]
             [response [3 2 1 1]]
             [response [3 2 2 2]]
             [response [3 2 3 2]]
-            [(reify* [Transport] (recv [this] (bp (. (bp transport [2 2 1] transport) recv) [2 2] (.recv transport))) (send [this response] (bp (if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2] (if (contains? response :value) (inspect-reply msg response) (.send transport response))) (bp this [3 3] this))) []]
+            [(reify* [Transport] (recv [this] (bp (. (bp transport {:coor [2 2 1]} transport) recv) {:coor [2 2]} (.recv transport))) (send [this response] (bp (if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) {:coor [3 2]} (if (contains? response :value) (inspect-reply msg response) (.send transport response))) (bp this {:coor [3 3]} this))) []]
             [transport [2 2 1]]
-            [(inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2]]
+            [(inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) [3 2 2]]
             [transport [3 2 3 1]]
             [this [3 3]]
-            [(if (bp (contains? (bp response [3 2 1 1] response) :value) [3 2 1] (contains? response :value)) (bp (inspect-reply (bp msg [3 2 2 1] msg) (bp response [3 2 2 2] response)) [3 2 2] (inspect-reply msg response)) (bp (. (bp transport [3 2 3 1] transport) send (bp response [3 2 3 2] response)) [3 2 3] (.send transport response))) [3 2]]
+            [(if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) [3 2]]
             [msg [3 2 2 1]]
-            [(contains? (bp response [3 2 1 1] response) :value) [3 2 1]]
-            [(. (bp transport [2 2 1] transport) recv) [2 2]]})))
+            [(contains? (bp response {:coor [3 2 1 1]} response) :value) [3 2 1]]
+            [(. (bp transport {:coor [2 2 1]} transport) recv) [2 2]]})))
 
 (deftest instrument-function-call
   (is (= (breakpoint-tester
@@ -110,9 +111,9 @@
              (let [start-time (System/currentTimeMillis)]
                (Thread/sleep 1000)
                (- (System/currentTimeMillis) start-time))))
-         '#{[(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3] (let [start-time (System/currentTimeMillis)] (Thread/sleep 1000) (- (System/currentTimeMillis) start-time)))))) []]
-            [(let* [start-time (bp (. System currentTimeMillis) [3 1 1] (System/currentTimeMillis))] (bp (. Thread sleep 1000) [3 2] (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3] (- (System/currentTimeMillis) start-time))) [3]]
-            [(- (bp (. System currentTimeMillis) [3 3 1] (System/currentTimeMillis)) (bp start-time [3 3 2] start-time)) [3 3]]
+         '#{[(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) {:coor [3]} (let [start-time (System/currentTimeMillis)] (Thread/sleep 1000) (- (System/currentTimeMillis) start-time)))))) []]
+            [(let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) [3]]
+            [(- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) [3 3]]
             [(. System currentTimeMillis) [3 1 1]]
             [(. Thread sleep 1000) [3 2]]
             [start-time [3 3 2]]
@@ -127,25 +128,25 @@
          '#{[y [3 1]]
             [x [1]]
             [z [2 3]]
-            [(try (bp x [1] x) (catch Exception e (bp z [2 3] z)) (finally (bp y [3 1] y))) []]})))
+            [(try (bp x {:coor [1]} x) (catch Exception e (bp z {:coor [2 3]} z)) (finally (bp y {:coor [3 1]} y))) []]})))
 
 (deftest instrument-def
   (is (= (breakpoint-tester '(def foo (bar)))
-         '#{[(def foo (bp (bar) [2] (bar))) []]
+         '#{[(def foo (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
   (is (= (breakpoint-tester '(def foo "foo doc" (bar)))
-         '#{[(def foo "foo doc" (bp (bar) [3] (bar))) []]
+         '#{[(def foo "foo doc" (bp (bar) {:coor [3]} (bar))) []]
             [(bar) [3]]})))
 
 (deftest instrument-set!
   (is (= (breakpoint-tester '(set! foo (bar)))
-         '#{[(set! foo (bp (bar) [2] (bar))) []]
+         '#{[(set! foo (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (. inst field) (bar)))
-         '#{[(set! (. inst field) (bp (bar) [2] (bar))) []]
+         '#{[(set! (. inst field) (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
   (is (= (breakpoint-tester '(set! (.field inst) (bar)))
-         '#{[(set! (. inst field) (bp (bar) [2] (bar))) []]
+         '#{[(set! (. inst field) (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]})))
 
 (deftest instrument-deftest

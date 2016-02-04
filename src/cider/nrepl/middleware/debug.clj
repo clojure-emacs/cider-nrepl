@@ -324,15 +324,20 @@
   bound to reasonable values (on this thread). An exception will be
   thrown if `debugger-message` wasn't set."
   {:style/indent 1}
-  [coor & body]
+  [extras & body]
   `(binding [*skip-breaks* (or *skip-breaks* (atom nil))
              *locals*      ~(sanitize-env &env)
              ;; This *msg* is evaluated at compile-time, so it's the
              ;; message that instrumented the function, not the
              ;; message that led to its evaluation.
              *extras*      ~(let [{:keys [code id file line column]} *msg*]
-                              {:code code, :original-id id, :file file,
-                               :line line, :column column,  :coor coor})
+                              (-> {:code code, :original-id id, :file file,
+                                   :line line, :column column}
+                                  (merge extras)
+                                  ;; There's an nrepl bug where the column starts counting at 1 if it's
+                                  ;; after the first line. Since this is a top-level sexp, a (= col 1)
+                                  ;; is much more likely to be wrong than right.
+                                  (update :column #(if (= % 1) 0 %))))
              *pprint-fn*   (:pprint-fn *msg*)]
      (when (not (seq @debugger-message))
        (throw (Exception. "Debugger not initialized")))
@@ -341,15 +346,15 @@
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
-  [form coor original-form]
-  `(with-debug-bindings ~coor
+  [form extras original-form]
+  `(with-debug-bindings ~extras
      (let [val# ~form]
        (cond
-         (skip-breaks? ~coor) val#
+         (skip-breaks? ~extras) val#
          ;; The length of `coor` is a good indicator of current code
          ;; depth.
          (= (first @*skip-breaks*) :trace)
-         (do (print-step-indented ~(count coor) '~original-form val#)
+         (do (print-step-indented ~(count (:coor extras)) '~original-form val#)
              val#)
          ;; Nothing special. Here's the actual breakpoint logic.
          :else (->> (pr-short val#)
