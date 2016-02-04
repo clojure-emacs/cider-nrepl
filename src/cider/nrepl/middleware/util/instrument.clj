@@ -63,11 +63,11 @@
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
                       (list* (m/merge-meta sym
-                               (instrument (or (meta sym) {}))
-                               {::instrumented true})
+                               ;; Instrument the metadata, because
+                               ;; that's where tests are stored.
+                               (instrument (or (meta sym) {})))
                              (map instrument (rest args))))
-            '#{set!} (list (m/merge-meta (first args)
-                             {::instrumented true})
+            '#{set!} (list (first args)
                            (instrument (second args)))
             '#{loop* let* letfn*} (cons (-> (fn [i x] (if (odd? i) (instrument x) x))
                                             (map-indexed (first args))
