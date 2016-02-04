@@ -285,5 +285,5 @@
   (let [ns (if (instance? clojure.lang.Namespace ns) ns
                (find-ns (symbol ns)))]
     (->> (ns-interns ns)
-         (filter (comp ::instrumented meta second))
+         (filter (comp ::breakfunction meta second))
          (map first))))
