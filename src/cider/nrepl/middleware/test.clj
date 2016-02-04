@@ -4,6 +4,7 @@
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as st]
             [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.namespace :as ns]
             [clojure.pprint :as pp]
             [clojure.test :as test]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -38,8 +39,8 @@
   (atom nil))
 
 (defn report-reset! []
-  (reset! current-report {:summary {:var 0 :test 0 :pass 0 :fail 0 :error 0}
-                          :results {} :ns nil}))
+  (reset! current-report {:summary {:ns 0 :var 0 :test 0 :pass 0 :fail 0 :error 0}
+                          :results {} :testing-ns nil}))
 
 ;; In the case of test errors, line number is obtained by searching the
 ;; stacktrace for the originating function. The search target will be the
@@ -63,7 +64,7 @@
   and 'testing' context. Retain any exception. Pretty-print expected/actual."
   [ns v m]
   (let [c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
-        i (count (get (@current-report :results) (:name (meta v))))
+        i (count (get-in (@current-report :results) [ns (:name (meta v))]))
         t (:type m)]
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
@@ -84,15 +85,16 @@
   and updates the `current-report` atom to reflect test results and summary
   statistics."
   [m]
-  (let [ns (:ns @current-report)
+  (let [ns (ns-name (get m :ns (:testing-ns @current-report)))
         v  (last test/*testing-vars*)
         update! (partial swap! current-report update-in)]
     (condp get (:type m)
-      #{:begin-test-ns}     (do (update! [:ns] (constantly (ns-name (:ns m)))))
+      #{:begin-test-ns}     (do (update! [:testing-ns] (constantly ns))
+                                (update! [:summary :ns] inc))
       #{:begin-test-var}    (do (update! [:summary :var] inc))
       #{:pass :fail :error} (do (update! [:summary :test] inc)
                                 (update! [:summary (:type m)] inc)
-                                (update! [:results (:name (meta v))]
+                                (update! [:results ns (:name (meta v))]
                                          (fnil conj []) (test-result ns v m)))
       nil)))
 
@@ -151,7 +153,6 @@
   in the namespace. On completion, return a map of test results."
   [ns vars]
   (binding [test/report report]
-    (report-reset!)
     (test/do-report {:type :begin-test-ns, :ns ns})
     (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
       (test-hook)
@@ -159,6 +160,29 @@
                         (vals (ns-interns ns)))))
     (test/do-report {:type :end-test-ns, :ns ns})
     @current-report))
+
+(defn test-nss
+  "Call `test-ns` for each entry in map `m`, in which keys are namespace symbols
+  and values are var symbols to be tested in that namespace (or `nil` to test
+  all vars). Symbols are first resolved to their corresponding objects."
+  [m]
+  (report-reset!)
+  (doall (map (fn [[ns vars]]
+                (->> (map (partial ns-resolve ns) vars)
+                     (filter identity)
+                     (test-ns (the-ns ns))))
+              m))
+  @current-report)
+
+
+;;; ## Metadata Utils
+
+(defn has-tests?
+  "Return a truthy value if the namespace has any `:test` metadata."
+  [ns]
+  (seq (filter (comp :test meta val)
+               (ns-interns (the-ns ns)))))
+
 
 ;;; ## Middleware
 
@@ -175,14 +199,14 @@
   `(let [session# (:session ~msg)]
      ;; Before tools.nrepl-0.2.10, `queue-eval` was private.
      (@#'ie/queue-eval session# (:executor ~msg)
-                       (fn []
-                         (alter-meta! session# assoc
-                                      :thread (Thread/currentThread)
-                                      :eval-msg ~msg)
-                         (binding [ie/*msg* ~msg]
-                           (with-bindings @session#
-                             ~@body)
-                           (alter-meta! session# dissoc :thread :eval-msg))))))
+      (fn []
+        (alter-meta! session# assoc
+                     :thread (Thread/currentThread)
+                     :eval-msg ~msg)
+        (binding [ie/*msg* ~msg]
+          (with-bindings @session#
+            ~@body)
+          (alter-meta! session# dissoc :thread :eval-msg))))))
 
 (defn handle-test
   "Run tests in the specified namespace and return results. This accepts a set
@@ -190,13 +214,45 @@
   retrieval and to enable re-running of failed/erring tests."
   [{:keys [ns tests session transport] :as msg}]
   (with-interruptible-eval msg
-    (if-let [ns (try (doto (symbol ns) require) (catch Exception _))]
-      (let [report (->> (map #(ns-resolve ns (symbol %)) tests)
-                        (filter identity)
-                        (test-ns (the-ns ns)))]
-        (swap! results update-in [ns] merge (:results report))
+    (if-let [ns (ns/ensure-namespace ns)]
+      (let [nss {ns (map u/as-sym tests)}
+            report (test-nss nss)]
+        (reset! results (:results report))
         (t/send transport (response-for msg (u/transform-value report))))
       (t/send transport (response-for msg :status :namespace-not-found)))
+    (t/send transport (response-for msg :status :done))))
+
+(defn handle-test-all
+  "Run all tests in the project. If `load?` is truthy, all project namespaces
+  are loaded; otherwise, only tests in presently loaded namespaces are run.
+  Results are cached for exception retrieval and to enable re-running of
+  failed/erring tests."
+  [{:keys [load? session transport] :as msg}]
+  (with-interruptible-eval msg
+    (let [nss (zipmap (->> (if load?
+                             (ns/load-project-namespaces)
+                             (ns/loaded-project-namespaces))
+                           (filter has-tests?))
+                      (repeat nil))
+          report (test-nss nss)]
+      (reset! results (:results report))
+      (t/send transport (response-for msg (u/transform-value report))))
+    (t/send transport (response-for msg :status :done))))
+
+(defn handle-retest
+  "Rerun all tests that did not pass when last run. Results are cached for
+  exception retrieval and to enable re-running of failed/erring tests."
+  [{:keys [session transport] :as msg}]
+  (with-interruptible-eval msg
+    (let [nss (reduce (fn [ret [ns tests]]
+                        (let [problems (filter (comp #{:fail :error} :type)
+                                               (mapcat val tests))
+                              vars (distinct (map :var problems))]
+                          (if (seq vars) (assoc ret ns vars) ret)))
+                      {} @results)
+          report (test-nss nss)]
+      (reset! results (:results report))
+      (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
 
 (defn handle-stacktrace
@@ -212,17 +268,6 @@
         (t/send transport (response-for msg :status :no-error)))
       (t/send transport (response-for msg :status :done)))))
 
-(defn handle-retest
-  "Rerun tests in the specified namespace that did not pass when last run. This
-  behaves exactly as the `test` op, but passes the set of `tests` having
-  previous failures/errors."
-  [{:keys [ns session] :as msg}]
-  (with-interruptible-eval msg
-    (let [problems (->> (mapcat val (get @results (u/as-sym ns)))
-                        (filter (comp #{:fail :error} :type)))
-          retests (distinct (map :var problems))]
-      (handle-test (assoc msg :tests retests)))))
-
 ;; Before tools.nrepl-0.2.10, `default-executor` was private and
 ;; before 0.2.9 it didn't even exist.
 (def default-executor (delay (if-let [def (resolve 'ie/default-executor)]
@@ -236,6 +281,7 @@
     (fn [{:keys [op] :as msg}]
       (case op
         "test"            (handle-test (assoc msg :executor executor))
+        "test-all"        (handle-test-all (assoc msg :executor executor))
         "test-stacktrace" (handle-stacktrace (assoc msg :executor executor))
         "retest"          (handle-retest (assoc msg :executor executor))
         (handler msg)))))
@@ -246,6 +292,8 @@
  {:requires #{#'session #'pprint/wrap-pprint-fn}
   :expects #{#'pr-values}
   :handles {"test"            {:doc (:doc (meta #'handle-test))
+                               :optional pprint/wrap-pprint-fn-optional-arguments}
+            "test-all"        {:doc (:doc (meta #'handle-test-all))
                                :optional pprint/wrap-pprint-fn-optional-arguments}
             "test-stacktrace" {:doc (:doc (meta #'handle-stacktrace))
                                :optional pprint/wrap-pprint-fn-optional-arguments}
