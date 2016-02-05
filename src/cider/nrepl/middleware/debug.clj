@@ -346,15 +346,15 @@
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
-  [form extras original-form]
+  [form {:keys [coor] :as extras} original-form]
   `(with-debug-bindings ~extras
      (let [val# ~form]
        (cond
-         (skip-breaks? ~extras) val#
+         (skip-breaks? ~coor) val#
          ;; The length of `coor` is a good indicator of current code
          ;; depth.
          (= (first @*skip-breaks*) :trace)
-         (do (print-step-indented ~(count (:coor extras)) '~original-form val#)
+         (do (print-step-indented ~(count coor) '~original-form val#)
              val#)
          ;; Nothing special. Here's the actual breakpoint logic.
          :else (->> (pr-short val#)
