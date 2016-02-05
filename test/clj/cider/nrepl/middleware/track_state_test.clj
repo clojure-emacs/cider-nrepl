@@ -85,25 +85,30 @@
          {:arglists "([a b] [a] [])"}))
   (is (= (:macro (st/relevant-meta (meta #'deftest)))
          "true"))
-  (alter-meta! #'update-vals merge {:indent 1 :cider-instrumented 2 :something-else 3})
-  (is (= (st/relevant-meta (meta #'update-vals))
-         {:cider-instrumented "2", :indent "1",
-          :test (pr-str (:test (meta #'update-vals)))})))
+  (let [m (meta #'update-vals)]
+    (alter-meta! #'update-vals merge {:indent 1 :cider-instrumented 2 :something-else 3})
+    (is (= (st/relevant-meta (meta #'update-vals))
+           {:indent "1", :test (pr-str (:test (meta #'update-vals)))}))
+    (alter-meta! #'update-vals (fn [x y] y) m)))
 
 (deftest ns-as-map
   (is (empty? (st/ns-as-map nil)))
-  (alter-meta! #'update-vals
-               merge {:indent 1 :cider-instrumented 2 :something-else 3})
-  (let [{:keys [interns aliases] :as ns} (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
-    (is (> (count interns) 5))
-    (is (map? interns))
-    (is (interns 'ns-as-map))
-    (is (:test (interns 'ns-as-map)))
-    (is (= (into #{} (keys (interns 'update-vals)))
-           #{:cider-instrumented :indent :test}))
-    (is (> (count aliases) 2))
-    (is (= (aliases 'st)
-           'cider.nrepl.middleware.track-state)))
+  (let [m (meta #'update-vals)]
+    (->> (interleave st/relevant-meta-keys (range))
+         (apply hash-map)
+         (alter-meta! #'update-vals merge))
+    (let [{:keys [interns aliases] :as ns}
+          (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+      (is (> (count interns) 5))
+      (is (map? interns))
+      (is (interns 'ns-as-map))
+      (is (:test (interns 'ns-as-map)))
+      (is (= (into #{} (keys (interns 'update-vals)))
+             (into #{} st/relevant-meta-keys)))
+      (is (> (count aliases) 2))
+      (is (= (aliases 'st)
+             'cider.nrepl.middleware.track-state)))
+    (alter-meta! #'update-vals (fn [x y] y) m))
   (with-redefs [st/track-ns? (constantly nil)]
     (let [{:keys [interns aliases] :as ns}
           (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
