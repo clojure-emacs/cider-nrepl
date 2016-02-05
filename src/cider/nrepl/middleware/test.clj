@@ -167,11 +167,10 @@
   all vars). Symbols are first resolved to their corresponding objects."
   [m]
   (report-reset!)
-  (doall (map (fn [[ns vars]]
-                (->> (map (partial ns-resolve ns) vars)
-                     (filter identity)
-                     (test-ns (the-ns ns))))
-              m))
+  (doseq [[ns vars] m]
+    (->> (map (partial ns-resolve ns) vars)
+         (filter identity)
+         (test-ns (the-ns ns))))
   @current-report)
 
 

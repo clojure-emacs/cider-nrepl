@@ -83,6 +83,23 @@
             [x [2 3]]
             [(seq (bp x {:coor [2 1 1]} x)) [2 1]]})))
 
+;; Factor this into a separate variable, otherwise Eastwood fails with
+;; "method code too large".
+(def reify-result
+  '#{[(. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) [3 2 3]]
+     [response [3 2 1 1]]
+     [response [3 2 2 2]]
+     [response [3 2 3 2]]
+     [(reify* [Transport] (recv [this] (bp (. (bp transport {:coor [2 2 1]} transport) recv) {:coor [2 2]} (.recv transport))) (send [this response] (bp (if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) {:coor [3 2]} (if (contains? response :value) (inspect-reply msg response) (.send transport response))) (bp this {:coor [3 3]} this))) []]
+     [transport [2 2 1]]
+     [(inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) [3 2 2]]
+     [transport [3 2 3 1]]
+     [this [3 3]]
+     [(if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) [3 2]]
+     [msg [3 2 2 1]]
+     [(contains? (bp response {:coor [3 2 1 1]} response) :value) [3 2 1]]
+     [(. (bp transport {:coor [2 2 1]} transport) recv) [2 2]]})
+
 (deftest instrument-reify
   (is (= (breakpoint-tester '(reify Transport
                                (recv [this] (.recv transport))
@@ -91,19 +108,7 @@
                                    (inspect-reply msg response)
                                    (.send transport response))
                                  this)))
-         '#{[(. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) [3 2 3]]
-            [response [3 2 1 1]]
-            [response [3 2 2 2]]
-            [response [3 2 3 2]]
-            [(reify* [Transport] (recv [this] (bp (. (bp transport {:coor [2 2 1]} transport) recv) {:coor [2 2]} (.recv transport))) (send [this response] (bp (if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) {:coor [3 2]} (if (contains? response :value) (inspect-reply msg response) (.send transport response))) (bp this {:coor [3 3]} this))) []]
-            [transport [2 2 1]]
-            [(inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) [3 2 2]]
-            [transport [3 2 3 1]]
-            [this [3 3]]
-            [(if (bp (contains? (bp response {:coor [3 2 1 1]} response) :value) {:coor [3 2 1]} (contains? response :value)) (bp (inspect-reply (bp msg {:coor [3 2 2 1]} msg) (bp response {:coor [3 2 2 2]} response)) {:coor [3 2 2]} (inspect-reply msg response)) (bp (. (bp transport {:coor [3 2 3 1]} transport) send (bp response {:coor [3 2 3 2]} response)) {:coor [3 2 3]} (.send transport response))) [3 2]]
-            [msg [3 2 2 1]]
-            [(contains? (bp response {:coor [3 2 1 1]} response) :value) [3 2 1]]
-            [(. (bp transport {:coor [2 2 1]} transport) recv) [2 2]]})))
+         reify-result)))
 
 (deftest instrument-function-call
   (is (= (breakpoint-tester
