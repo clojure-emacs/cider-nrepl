@@ -218,7 +218,7 @@
                 d/*skip-breaks*      (atom nil)]
     (binding [*msg* {:session (atom {}) :code :code, :id     :id,
                      :file    :file,    :line :line, :column :column}]
-      (let [m (eval `(d/breakpoint (inc 10) [6] ~'(inc 10)))]
+      (let [m (eval `(d/breakpoint (inc 10) {:coor [6]} ~'(inc 10)))]
         (are [k v] (= (k m) v)
           :value       11
           :debug-value "11"
@@ -230,8 +230,8 @@
           :original-id :id))
       (reset! d/debugger-message [:fake])
       ;; Locals capturing
-      (is (= (:value (eval `(let [~'x 10] (d/breakpoint d/*locals* [1] nil))))
+      (is (= (:value (eval `(let [~'x 10] (d/breakpoint d/*locals* {:coor [1]} nil))))
              '{x 10}))
       ;; Top-level sexps are not debugged, just returned.
-      (is (= (eval `(let [~'x 10] (d/breakpoint d/*locals* [] nil)))
+      (is (= (eval `(let [~'x 10] (d/breakpoint d/*locals* {:coor []} nil)))
              '{x 10})))))
