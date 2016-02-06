@@ -410,7 +410,7 @@
   (let [has-debug? (atom false)
         fake-reader (fn [x] (reset! has-debug? true) nil)]
     (binding [*data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg break])
+                                  (interleave '[dbg break light])
                                   (apply assoc *data-readers*))]
       (try
         (read-string code)
