@@ -39,6 +39,25 @@ matrix:
     - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
       jdk: oraclejdk8
 
+  exclude:
+    # Only test openjdk against the latest Clojure stable.
+    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
+      jdk: openjdk7
+    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
+      jdk: openjdk7
+    - env: TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
+      jdk: openjdk7
+    - env: TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
+      jdk: openjdk7
+
+    # Testing Clojure master is about foreseeing incompatible changes,
+    # not about uncovering incompatibilities with specific jdk
+    # versions, so a single build (oraclejdk8) should be enough.
+    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
+      jdk: oraclejdk7
+    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
+      jdk: oraclejdk7
+
 notifications:
   webhooks:
     urls:
