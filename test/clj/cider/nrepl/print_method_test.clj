@@ -11,6 +11,24 @@
   (is (re-find #"#atom\[\{:foo :bar\} 0x[a-z0-9]+\]" (pr-str (atom {:foo :bar}))))
   (is (re-find #"#atom\[#function\[clojure.core/\+\] 0x[a-z0-9]+\]" (pr-str (atom +)))))
 
+(deftest print-idrefs
+  (let [f (future (Thread/sleep 200) 1)
+        p (promise)
+        d (delay 1)
+        a (agent 1)]
+    (are [o r] (re-find r (pr-str o))
+      a #"#agent\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
+      d #"#delay\[\{:status :pending, :val nil\} 0x[a-z0-9]+\]"
+      f #"#future\[\{:status :pending, :val nil\} 0x[a-z0-9]+\]"
+      p #"#promise\[\{:status :pending, :val nil\} 0x[a-z0-9]+\]")
+    (Thread/sleep 300)
+    @d
+    (deliver p 1)
+    (are [o r] (re-find r (pr-str o))
+      f #"#future\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
+      d #"#delay\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
+      p #"#promise\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]")))
+
 (deftest print-functions
   (are [f s] (= (pr-str f) s)
     print-functions "#function[cider.nrepl.print-method-test/print-functions]"
