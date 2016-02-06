@@ -58,6 +58,14 @@ matrix:
     - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
       jdk: oraclejdk7
 
+  # "fast_finish" means "don't wait for the allowed failures".
+  fast_finish: true
+  allow_failures:
+    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
+    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
+    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
+    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
+
 notifications:
   webhooks:
     urls:
