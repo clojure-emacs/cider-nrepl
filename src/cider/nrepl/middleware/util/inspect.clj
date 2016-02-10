@@ -386,5 +386,3 @@
 (defn inspect-print [x]
   (doseq [component (:rendered (inspect-render (fresh) x))]
     (inspect-print-component component)))
-
-
