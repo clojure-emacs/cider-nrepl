@@ -427,11 +427,11 @@
 (defn- initialize
   "Initialize the channel used for debug-input requests."
   [{:keys [print-length print-level] :as msg}]
-  ;; Workaround for https://github.com/clojure-emacs/cider/issues/1462
-  (when-let [v (resolve 'boot.core/load-data-readers!)]
-    (@v))
   (when (map? @debugger-message)
     (debugger-send :status :done))
+  ;; Workaround for https://github.com/clojure-emacs/cider/issues/1462
+  (#'clojure.core/load-data-readers)
+  (set! *data-readers* (.getRawRoot #'*data-readers*))
   ;; The above is just bureaucracy. The below is important.
   (reset! @#'print-length print-length)
   (reset! @#'print-level print-level)
