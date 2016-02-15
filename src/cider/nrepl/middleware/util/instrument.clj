@@ -115,8 +115,10 @@
   nor a special form.
   This includes regular function forms, like `(range 10)`, and also
   includes calls to Java methods, like `(System/currentTimeMillis)`."
-  [[name & args]]
-  (cons name (instrument-coll args)))
+  [[name & args :as fncall]]
+  (with-meta
+    (cons name (instrument-coll args))
+    (meta fncall)))
 
 (def verbose-debug false)
 
