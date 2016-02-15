@@ -410,7 +410,7 @@
   (let [has-debug? (atom false)
         fake-reader (fn [x] (reset! has-debug? true) nil)]
     (binding [*data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg break])
+                                  (interleave '[dbg break light])
                                   (apply assoc *data-readers*))]
       (try
         (read-string code)
@@ -429,6 +429,9 @@
   [{:keys [print-length print-level] :as msg}]
   (when (map? @debugger-message)
     (debugger-send :status :done))
+  ;; Workaround for https://github.com/clojure-emacs/cider/issues/1462
+  (#'clojure.core/load-data-readers)
+  (set! *data-readers* (.getRawRoot #'*data-readers*))
   ;; The above is just bureaucracy. The below is important.
   (reset! @#'print-length print-length)
   (reset! @#'print-level print-level)
