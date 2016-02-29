@@ -3,18 +3,24 @@ sudo: false
 cache:
   directories:
     - $HOME/.m2
+install:
+  - wget -c https://raw.githubusercontent.com/technomancy/leiningen/2.6.1/bin/lein -O lein-261
+  - chmod 755 lein-261
+  - ./lein-261
+before_script:
+  - ./lein-261 --version
 script:
-  - lein2 source-deps
+  - ./lein-261 source-deps
   - $TEST_CMD
 env:
-  - TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
+  - TEST_CMD="./lein-261 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="./lein-261 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
 
-  - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein2 with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
+  - TEST_CMD="./lein-261 with-profile +1.8,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="./lein-261 with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
 
-  - TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
+  - TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-cljs test"
 jdk:
   - openjdk7
   - oraclejdk7
@@ -23,52 +29,52 @@ matrix:
   include:
     - env:
         - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
-        - TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
+        - TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
       jdk: oraclejdk8
 
     - env:
         - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
-        - TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
+        - TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
       after_success: curl -F json_file=@target/coverage/coveralls.json https://coveralls.io/api/v1/jobs
       jdk: oraclejdk8
 
-    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
       jdk: oraclejdk8
 
-    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
       jdk: oraclejdk8
 
   exclude:
     # Only test openjdk against the latest Clojure stable.
-    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
+    - env: TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-clj test"
       jdk: openjdk7
-    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
+    - env: TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-cljs test"
       jdk: openjdk7
-    - env: TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+plugin.mranderson/config,+test-clj test"
       jdk: openjdk7
-    - env: TEST_CMD="lein2 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
       jdk: openjdk7
 
     # Testing Clojure master is about foreseeing incompatible changes,
     # not about uncovering incompatibilities with specific jdk
     # versions, so a single build (oraclejdk8) should be enough.
-    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-clj test"
+    - env: TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-clj test"
       jdk: oraclejdk7
-    - env: TEST_CMD="lein2 with-profile +master,+plugin.mranderson/config,+test-cljs test"
+    - env: TEST_CMD="./lein-261 with-profile +master,+plugin.mranderson/config,+test-cljs test"
       jdk: oraclejdk7
 
   # "fast_finish" means "don't wait for the allowed failures".
   fast_finish: true
   allow_failures:
-    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
-    - env: TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
+    - env: TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
     - env:
         - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
-        - TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
+        - TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
     - env:
         - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
-        - TEST_CMD="lein2 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
+        - TEST_CMD="./lein-261 with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
 
 notifications:
   webhooks:
