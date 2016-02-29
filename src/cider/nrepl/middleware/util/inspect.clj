@@ -85,48 +85,64 @@
        s/join
        (format fmt)))
 
-(defn inspect-value
-  ([value]
-   (cond (atom? value) (pr-str value)
+(defn value-types [value]
+  (cond
+    (atom? value) :atom
+    (and (instance? Seqable value) (empty? value)) :seq-empty
+    (and (map? value) (< (count value) 5))         :map
+    (map? value)                                   :map-long
+    (and (vector? value) (< (count value) 5))      :vector
+    (vector? value)                                :vector-long
+    (and (list? value) (< (count value) 5))        :list
+    (list? value)                                  :list-long
+    (and (set? value) (< (count value) 5))         :set
+    (set? value)                                   :set-long
+    :else (or (:inspector-tag (meta value))
+              (type value))))
 
-         (and (instance? Seqable value) (empty? value))
-         (pr-str value)
+(defmulti inspect-value #'value-types)
 
-         (and (map? value) (< (count value) 5))
-         (->> value
-              (map (fn [[k v]]
-                     (str (inspect-value k) " " (inspect-value v))))
-              (interpose ", ")
-              s/join
-              (format "{ %s }"))
+(defmethod inspect-value :atom [value]
+  (pr-str value))
 
-         (map? value)
-         (str "{ " (ffirst value) " "
-              (inspect-value (second (first value))) ", ... }")
+(defmethod inspect-value :seq-empty [value]
+  (pr-str value))
 
-         (and (vector? value) (< (count value) 5))
-         (safe-pr-seq value "[ %s ]")
+(defmethod inspect-value :map [value]
+  (->> value
+       (map (fn [[k v]]
+              (str (inspect-value k) " " (inspect-value v))))
+       (interpose ", ")
+       s/join
+       (format "{ %s }")))
 
-         (vector? value)
-         (safe-pr-seq (take 5 value) "[ %s ... ]")
+(defmethod inspect-value :map-long [value]
+  (str "{ " (ffirst value) " "
+       (inspect-value (second (first value))) ", ... }"))
 
-         (and (list? value) (< (count value) 5))
-         (safe-pr-seq value "( %s )")
+(defmethod inspect-value :vector [value]
+  (safe-pr-seq value "[ %s ]"))
 
-         (list? value)
-         (safe-pr-seq (take 5 value) "( %s ... )")
+(defmethod inspect-value :vector-long [value]
+  (safe-pr-seq (take 5 value) "[ %s ... ]"))
 
-         (and (set? value) (< (count value) 5))
-         (safe-pr-seq value "#{ %s }")
+(defmethod inspect-value :list [value]
+  (safe-pr-seq value "( %s )"))
 
-         (set? value)
-         (safe-pr-seq (take 5 value) "#{ %s ... }")
+(defmethod inspect-value :list-long [value]
+  (safe-pr-seq (take 5 value) "( %s ... )"))
 
-         (instance? java.lang.Class value)
-         (pr-str value)
+(defmethod inspect-value :set [value]  
+  (safe-pr-seq value "#{ %s }"))
 
-         :default
-         (str value))))
+(defmethod inspect-value :set-long [value]  
+  (safe-pr-seq (take 5 value) "#{ %s ... }"))
+
+(defmethod inspect-value java.lang.Class [value]  
+  (pr-str value))
+
+(defmethod inspect-value :default [value]  
+  (str value))
 
 (defn render-onto [inspector coll]
   (update-in inspector [:rendered] concat coll))
