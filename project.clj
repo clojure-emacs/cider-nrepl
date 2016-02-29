@@ -17,7 +17,7 @@
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
                  ^:source-dep [org.clojure/tools.reader "0.10.0"]]
-  :plugins [[thomasa/mranderson "0.4.6"]]
+  :plugins [[thomasa/mranderson "0.4.7"]]
   :exclusions [org.clojure/clojure]
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
