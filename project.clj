@@ -12,7 +12,7 @@
                  ^:source-dep [fipp "0.6.3"]
                  ^:source-dep [compliment "0.2.7"]
                  ^:source-dep [cljs-tooling "0.2.0"]
-                 ^:source-dep [cljfmt "0.3.0"]
+                 ^:source-dep [cljfmt "0.4.1"]
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.2.11"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
@@ -62,7 +62,7 @@
 
              :cloverage {:plugins [[lein-cloverage "1.0.7-SNAPSHOT"]]}
 
-             :cljfmt {:plugins [[lein-cljfmt "0.3.0"]]
+             :cljfmt {:plugins [[lein-cljfmt "0.4.1"]]
                       :cljfmt {:indents {as-> [[:inner 0]]
                                          with-debug-bindings [[:inner 0]]
                                          merge-meta [[:inner 0]]}}}
