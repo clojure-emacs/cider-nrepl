@@ -55,7 +55,7 @@
 (defn ns-path [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-path-cljs cljs-env ns)
-    (misc/ns-path ns)))
+    (ns/ns-path ns)))
 
 (defn ns-list-reply
   [{:keys [transport] :as msg}]

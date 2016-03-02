@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.java :as java]
+            [cider.nrepl.middleware.util.namespace :as ns]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.repl :as repl]
             [cljs-tooling.info :as cljs-info]
@@ -58,7 +59,7 @@
   (if (and ns (or (not file)
                   (re-find #"/form-init[^/]*$" file)))
     (-> (dissoc meta-map :line)
-        (assoc :file (u/ns-path ns)))
+        (assoc :file (ns/ns-path ns)))
     meta-map))
 
 (defn var-meta
