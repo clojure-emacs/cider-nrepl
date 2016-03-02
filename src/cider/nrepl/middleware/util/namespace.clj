@@ -55,12 +55,14 @@
 (defn loaded-project-namespaces
   "Return all loaded namespaces defined in the current project."
   []
-  (sort (filter (set (map ns-name (all-ns)))
-                (project-namespaces))))
+  (->> (project-namespaces)
+       (filter (set (map ns-name (all-ns))))
+       sort))
 
 (defn load-project-namespaces
   "Require and return all namespaces validly defined in the current project."
   []
-  (sort (filter identity
-                (map ensure-namespace
-                     (project-namespaces)))))
+  (->> (project-namespaces)
+       (map ensure-namespace)
+       (filter identity)
+       sort))
