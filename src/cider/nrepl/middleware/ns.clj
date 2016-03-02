@@ -1,32 +1,13 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as misc]
+            [cider.nrepl.middleware.util.namespace :as ns]
             [cljs-tooling.info :as cljs-info]
             [cljs-tooling.util.analysis :as cljs-analysis]
             [clojure.tools.nrepl
              [middleware :refer [set-descriptor!]]
              [misc :refer [response-for]]
              [transport :as transport]]))
-
-(defn inlined-dependency?
-  "Returns true if the namespace matches one of our, or eastwood's,
-  inlined dependencies."
-  [namespace]
-  (let [ns-name (str (ns-name namespace))]
-    (or
-     ;; rewritten by mranderson
-     (.startsWith ns-name "deps.")
-     (.startsWith ns-name "mranderson")
-     (.startsWith ns-name "cider.inlined-deps")
-     ;; rewritten by dolly
-     (.startsWith ns-name "eastwood.copieddeps"))))
-
-(defn ns-list-clj []
-  (->> (all-ns)
-       (remove inlined-dependency?)
-       (map ns-name)
-       (map name)
-       (sort)))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -64,7 +45,7 @@
 (defn ns-list [msg]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-list-cljs cljs-env)
-    (ns-list-clj)))
+    (ns/loaded-namespaces)))
 
 (defn ns-vars [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]

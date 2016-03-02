@@ -6,7 +6,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
             [cider.nrepl.middleware.util.misc :as u]
-            [cider.nrepl.middleware.ns :as ns]))
+            [cider.nrepl.middleware.util.namespace :as ns]))
 
 ;;; ## Overview
 ;; This middleware provides regular expression search across namespaces for

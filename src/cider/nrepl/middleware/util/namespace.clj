@@ -30,6 +30,28 @@
                          (str %)))
        (mapcat ns-find/find-namespaces-in-dir)))
 
+(defn inlined-dependency?
+  "Returns true if the namespace matches one of our, or eastwood's,
+  inlined dependencies."
+  [namespace]
+  (let [ns-name (str (ns-name namespace))]
+    (or
+     ;; rewritten by mranderson
+     (.startsWith ns-name "deps.")
+     (.startsWith ns-name "mranderson")
+     (.startsWith ns-name "cider.inlined-deps")
+     ;; rewritten by dolly
+     (.startsWith ns-name "eastwood.copieddeps"))))
+
+(defn loaded-namespaces
+  "Return all loaded namespaces, except those coming from inlined dependencies."
+  []
+  (->> (all-ns)
+       (remove inlined-dependency?)
+       (map ns-name)
+       (map name)
+       (sort)))
+
 (defn loaded-project-namespaces
   "Return all loaded namespaces defined in the current project."
   []
