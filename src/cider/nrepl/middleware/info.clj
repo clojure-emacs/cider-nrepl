@@ -111,8 +111,8 @@
         (assoc m
                :url (if (contains? m :url)
                       (when (:url m)
-                        (str "http://clojure.org/" (:url m)))
-                      (str "http://clojure.org/special_forms#" (:name m))))))
+                        (str "https://clojure.org/" (:url m)))
+                      (str "https://clojure.org/special_forms#" (:name m))))))
     (catch NoClassDefFoundError _)
     (catch Exception _)))
 
