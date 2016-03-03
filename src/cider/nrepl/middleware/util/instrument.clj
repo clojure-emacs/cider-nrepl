@@ -35,19 +35,27 @@
 ;;; each argument separately.
 (declare instrument)
 
-(defn- instrument-coll
+(defmacro definstrumenter
+  "Defines a private function for instrumenting forms.
+  This is like `defn-`, except the metadata of the return value is
+  merged with that of the first input argument."
+  [& args]
+  (let [[d name f] (macroexpand `(defn- ~@args))]
+    `(def ~name
+       (fn [x#] (m/merge-meta (~f x#) (meta x#))))))
+
+(definstrumenter instrument-coll
   "Instrument a collection."
   [coll]
-  (m/merge-meta (walk/walk instrument identity coll)
-    (meta coll)))
+  (walk/walk instrument identity coll))
 
-(defn- instrument-case-map
+(definstrumenter instrument-case-map
   "Instrument the map that is 5th arg in a `case*`."
   [args]
   (into {} (map (fn [[k [v1 v2]]] [k [v1 (instrument v2)]])
                 args)))
 
-(defn- instrument-special-form
+(definstrumenter instrument-special-form
   "Instrument form representing a macro call or special-form."
   [[name & args :as form]]
   (cons name
@@ -63,9 +71,9 @@
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
                       (list* (m/merge-meta sym
-                               ;; Instrument the metadata, because
-                               ;; that's where tests are stored.
-                               (instrument (or (meta sym) {})))
+                                           ;; Instrument the metadata, because
+                                           ;; that's where tests are stored.
+                                           (instrument (or (meta sym) {})))
                              (map instrument (rest args))))
             '#{set!} (list (first args)
                            (instrument (second args)))
@@ -76,7 +84,7 @@
             '#{reify* deftype*} (map #(if (seq? %)
                                         (let [[a1 a2 & ar] %]
                                           (m/merge-meta (list* a1 a2 (instrument-coll ar))
-                                            (meta %)))
+                                                        (meta %)))
                                         %)
                                      args)
             ;; `fn*` has several possible syntaxes.
@@ -109,16 +117,14 @@
 ;;; through collections and function arguments looking for interesting
 ;;; things around which we'll wrap a breakpoint. Interesting things
 ;;; are most function-forms and vars.
-(defn- instrument-function-call
+(definstrumenter instrument-function-call
   "Instrument a regular function call sexp.
   This must be a sexp that starts with a symbol which is not a macro
   nor a special form.
   This includes regular function forms, like `(range 10)`, and also
   includes calls to Java methods, like `(System/currentTimeMillis)`."
   [[name & args :as fncall]]
-  (with-meta
-    (cons name (instrument-coll args))
-    (meta fncall)))
+  (cons name (instrument-coll args)))
 
 (def verbose-debug false)
 
@@ -126,8 +132,6 @@
   "Return form wrapped in a breakpoint.
   If function is given, use it to instrument form before wrapping. The
   breakpoint is given by the form's ::breakfunction metadata."
-  ([function form]
-   (with-break (m/merge-meta (function form) (meta form))))
   ([form]
    (let [{extras ::extras,
           [_ orig] ::original-form,
@@ -176,15 +180,15 @@
   (if-not (symbol? name)
     ;; If the car is not a symbol, nothing fancy is going on and we
     ;; can instrument everything.
-    (with-break instrument-coll form)
+    (with-break (instrument-coll form))
     (if (special-symbol? name)
       ;; If special form, thread with care.
       (if (dont-break? form)
         (instrument-special-form form)
-        (with-break instrument-special-form form))
+        (with-break (instrument-special-form form)))
       ;; Otherwise, probably just a function. Just leave the
       ;; function name and instrument the args.
-      (with-break instrument-function-call form))))
+      (with-break (instrument-function-call form)))))
 
 (defn- instrument
   "Walk through form and return it instrumented with breakpoints.
