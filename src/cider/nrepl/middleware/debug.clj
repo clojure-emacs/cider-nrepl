@@ -79,6 +79,10 @@
       true)
     false))
 
+(defn- seq= [a b]
+  ;; To deal with, eg: (= () nil) => true
+  (= (seq a) (seq b)))
+
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
   If the first element of `*skip-breaks*` is :all, return true.
@@ -98,7 +102,7 @@
         :trace  false
         ;; From :out, skip some breaks.
         :deeper (let [parent (take (count skip-coords) coordinates)]
-                  (and (= skip-coords parent)
+                  (and (seq= skip-coords parent)
                        (> (count coordinates) (count parent))))
         ;; From :here, skip some breaks.
         :before (coord< coordinates skip-coords)))
@@ -343,23 +347,39 @@
        (throw (Exception. "Debugger not initialized")))
      ~@body))
 
+(defmacro breakpoint-implementation [form {:keys [coor]} original-form]
+  `(let [val# ~form]
+     (cond
+       (skip-breaks? ~coor) val#
+       ;; The length of `coor` is a good indicator of current code
+       ;; depth.
+       (= (first @*skip-breaks*) :trace)
+       (do (print-step-indented ~(count coor) '~original-form val#)
+           val#)
+       ;; Nothing special. Here's the actual breakpoint logic.
+       :else (->> (pr-short val#)
+                  (assoc *extras* :debug-value)
+                  (read-debug-command val#)))))
+
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
   Sends a response to the message stored in debugger-message."
   [form {:keys [coor] :as extras} original-form]
-  `(with-debug-bindings ~extras
-     (let [val# ~form]
-       (cond
-         (skip-breaks? ~coor) val#
-         ;; The length of `coor` is a good indicator of current code
-         ;; depth.
-         (= (first @*skip-breaks*) :trace)
-         (do (print-step-indented ~(count coor) '~original-form val#)
-             val#)
-         ;; Nothing special. Here's the actual breakpoint logic.
-         :else (->> (pr-short val#)
-                    (assoc *extras* :debug-value)
-                    (read-debug-command val#))))))
+  (let [has-condition? (contains? (meta form) :break/when)
+        condition      (:break/when (meta form))
+        parent-coor    (vec (butlast coor))]
+    (if has-condition?
+      `(with-debug-bindings ~extras
+         ;; If there is a condition and it is falsy, we need to skip
+         ;; the current level (:deeper than parent coor), but only
+         ;; once. Next time, we need to test the condition again.
+         (binding [*skip-breaks* (if ~condition
+                                   *skip-breaks*
+                                   (atom [:deeper ~@parent-coor]))]
+           (breakpoint-implementation ~form ~extras ~original-form)))
+      `(with-debug-bindings ~extras
+         (breakpoint-implementation ~form ~extras ~original-form)))))
+
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
