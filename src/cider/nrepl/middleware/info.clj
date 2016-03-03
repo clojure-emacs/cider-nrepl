@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.info
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojure.java.javadoc :as javadoc]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.java :as java]
             [cider.nrepl.middleware.util.namespace :as ns]
@@ -209,6 +210,11 @@
   [path]
   {:javadoc
    (or (resource-full-path path)
+       (some (let [classname (.replaceAll path "/" ".")]
+               (fn [[prefix url]]
+                 (when (.startsWith classname prefix)
+                   (str url path))))
+             @javadoc/*remote-javadocs*)
        (when (re-find #"^(java|javax|org.omg|org.w3c.dom|org.xml.sax)/" path)
          (format "http://docs.oracle.com/javase/%s/docs/api/%s"
                  u/java-api-version path))
