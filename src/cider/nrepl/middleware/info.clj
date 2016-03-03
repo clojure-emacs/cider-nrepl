@@ -220,6 +220,8 @@
                  u/java-api-version path))
        path)})
 
+(javadoc/add-remote-javadoc "com.amazonaws." "http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/")
+
 (declare format-response)
 
 (defn format-nested
