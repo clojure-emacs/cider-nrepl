@@ -5,6 +5,13 @@
 A collection of [nREPL](https://github.com/clojure/tools.nrepl) middleware designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
 
+If you're just a user trying to get started with CIDER, then you
+probably don't want to read this. You should follow the steps in
+[CIDER's Readme](https://github.com/clojure-emacs/cider) instead.
+
+If you're trying to use cider-nrepl for some other purpose, the
+sections below outline how to include it in a project.
+
 ## Usage
 
 ### Prerequisites
