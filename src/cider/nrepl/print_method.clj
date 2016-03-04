@@ -81,8 +81,8 @@
         nil           class-name))))
 
 ;; `deref-as-map` is a private function, so let's be careful.
-(when (resolve 'clojure.core/deref-as-map)
+(when-let [f (resolve 'clojure.core/deref-as-map)]
   (def-print-method clojure.lang.IDeref c
     "#" (deref-name c) "["
-    (pr-str (#'clojure.core/deref-as-map c))
+    (pr-str (f c))
     (format " 0x%x]" (System/identityHashCode c))))
