@@ -229,8 +229,8 @@
   [info]
   (if-let [candidates (:candidates info)]
     (assoc info :candidates
-           (into {} (for [[k v] candidates]
-                      [k (format-response v)])))
+           (zipmap (keys candidates)
+                   (->> (vals candidates) (map format-response))))
     info))
 
 (defn blacklist
@@ -244,7 +244,7 @@
   (when info
     (-> info
         (merge (when-let [ns (:ns info)]
-                 (:ns (str ns)))
+                 {:ns (str ns)})
                (when-let [args (:arglists info)]
                  {:arglists-str (pr-str args)})
                (when-let [forms (:forms info)]

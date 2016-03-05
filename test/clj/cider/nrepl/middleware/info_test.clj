@@ -1,8 +1,12 @@
 (ns cider.nrepl.middleware.info-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.data]
+            [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.repl :as repl]
-            [cider.nrepl.middleware.info :as info]))
+            [clojure.set :as set]
+            [cider.nrepl.middleware.info :as info]
+            [cider.nrepl.middleware.util.misc :as util]
+            [cider.nrepl.test-session :as session]))
 
 (defn file
   [x]
@@ -22,7 +26,8 @@
   (is (= (class (file "test/clj/cider/nrepl/middleware/info_test.clj"))
          java.net.URL))
   (is (relative "clojure/core.clj"))
-  (is (nil? (relative "notclojure/core.clj"))))
+  (is (nil? (relative "notclojure/core.clj")))
+  (is (nil? (info/resource-path "jar:file:fake.jar!/fake/file.clj"))))
 
 (deftest test-boot-resource-path
   (let [tmp-dir-name (System/getProperty "java.io.tmpdir")
@@ -41,7 +46,15 @@
         (is (= (.getPath (file tmp-file-name))
                tmp-file-path))
         (finally
-          (System/clearProperty "fake.class.path"))))))
+          (System/clearProperty "fake.class.path"))))
+    (testing "when classpath is a jar"
+      (let [tmp-jar-path "jar:file:fake/clojure.jar"]
+        (try
+          (System/setProperty "fake.class.path" tmp-jar-path)
+          (is (= (-> (#'cider.nrepl.middleware.info/boot-class-loader) .getURLs last str)
+                 "file:fake/clojure.jar"))
+          (finally
+            (System/clearProperty "fake.class.path")))))))
 
 (deftype T [])
 
@@ -56,7 +69,7 @@
 
   (is (not (info/info-clj 'clojure.core (gensym "non-existing"))))
   (is (not (info/info-clj 'cider.nrepl.middleware.info-test (gensym "non-existing")))
-      "Check that deftype T (which returns nil for .getPackage), doesn't throw")
+      "Check that deftype T (which returns nil for .getPackage), doesn't throw") ;; TODO: This doesn't seem to test Type/Protocol resolution as stated?
 
   (is (= (the-ns 'clojure.core) (:ns (info/info-clj 'cider.nrepl.middleware.info 'str))))
 
@@ -162,6 +175,213 @@
   (is (:file (info/var-meta #'info/var-meta)))
   (is (re-find #"cider-nrepl" (:file (#'info/maybe-add-file {:ns (find-ns 'cider.nrepl.middleware.info)}))))
   (is (not (re-find #"/form-init[^/]*$" (:file (info/var-meta (eval '(do (in-ns 'cider.nrepl.middleware.info) (def pok 10)))))))))
+
+(deftest javadoc-info-unit-test
+  (testing "Get an HTTP URL for a Sun/Oracle Javadoc"
+    (let [reply (info/javadoc-info "java/lang/StringBuilder.html#capacity()")
+          url   (:javadoc reply)
+          jv    util/java-api-version
+          base  "http://docs.oracle.com/javase/%s/docs/api/java/lang/StringBuilder.html#capacity()"
+          exp   (format base jv)]
+      (is (= url exp))))
+
+  (testing "Get general URL for a clojure javadoc"
+    (let [reply    (info/javadoc-info "clojure/java/io.clj")
+          url      (:javadoc reply)
+          url-type (class url)
+          exp-type java.net.URL]
+      (is (= url-type exp-type))))
+
+  (testing "Get fall through URL type for other Javadocs (external libs?)"
+    (let [reply (info/javadoc-info "http://some/other/url")
+          url (:javadoc reply)]
+      (is (= url "http://some/other/url")))))
+
+(deftest find-cljx-source-unit-test
+  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "http://fake.com"))]
+    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
+
+  (with-redefs [info/resource-full-path (fn [& _] false)]
+    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
+
+  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "file://fakehome"))]
+    (is (nil? (info/find-cljx-source "cider/nrepl/test_session.clj")))))
+
+;; Used below in an integration test
+(def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
+
+(use-fixtures :each session/session-fixture)
+(deftest integration-tests
+  (testing "info op"
+    (testing "get info of a clojure.core macro"
+      (let [response (session/message {:op "info" :symbol "as->" :ns "user"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:ns response) "clojure.core"))
+        (is (= (:name response) "as->"))
+        (is (= (:arglists-str response) "([expr name & forms])"))
+        (is (= (:macro response) "true"))
+        (is (.startsWith (:doc response) "Binds name to expr, evaluates"))))
+
+    (testing "get info of a java method"
+      (let [response (session/message {:op "info"
+                                       :class "java.lang.StringBuilder"
+                                       :member "capacity"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:class response) "java.lang.StringBuilder"))
+        (is (= (:member response) "capacity"))
+        (is (= (:arglists-str response) "([this])"))
+        (is (= (:argtypes response) []))
+        (is (= (:returns response) "int"))
+        (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
+        (is (.startsWith (:javadoc response) "http://docs.oracle.com/javase"))))
+
+    (testing "get info on the dot-operator"
+      (let [response (session/message {:op "info" :symbol "." :ns "user"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:name response) "."))
+        (is (= (:url response) "https://clojure.org/java_interop#dot"))
+        (is (= (:special-form response) "true"))
+        (is (.startsWith (:doc response) "The instance member form works"))
+        (is (.startsWith (:forms-str response) "  (.instanceMember instance args*)\n  (.instanceMember"))))
+
+    (testing "get info of a clojure non-core file, located in a jar"
+      (let [response (session/message {:op "info" :symbol "resource" :ns "clojure.java.io"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:name response) "resource"))
+        (is (= (:resource response) "clojure/java/io.clj"))
+        (is (= (:ns response) "clojure.java.io"))
+        (is (= (:arglists-str response) "([n] [n loader])"))
+        (is (.startsWith (:doc response) "Returns the URL for a named"))
+        (is (.startsWith (:file response) "jar:file:"))))
+
+    (testing "nested members"
+      (let [response   (session/message {:op "info" :ns (ns-name *ns*) :symbol "toString"})
+            candidates (:candidates response)
+            individual (:java.lang.Exception candidates)]
+        (is (contains? candidates :java.lang.NoSuchFieldException))
+        (is (contains? candidates :java.lang.Package))
+        (is (contains? candidates :java.lang.LinkageError))
+
+        (is (= (:throws individual) []))
+        (is (= (:member individual) "toString"))
+        (is (= (:modifiers individual) "#{:public}"))))
+
+    (testing "Boot support"
+      (try
+        (System/setProperty "fake.class.path" (System/getProperty "java.class.path"))
+        (let [response (session/message {:op "info" :symbol "as->" :ns "user"})]
+          (is (= (:status response) #{"done"}))
+          (is (= (:ns response) "clojure.core"))
+          (is (= (:name response) "as->"))
+          (is (= (:arglists-str response) "([expr name & forms])"))
+          (is (= (:macro response) "true"))
+          (is (.startsWith (:doc response) "Binds name to expr, evaluates")))        
+        (finally
+          (System/clearProperty "fake.class.path"))))
+
+    (testing "get protocol info"
+      (let [reply       (session/message {:op "info"
+                                          :ns "cider.nrepl.middleware.info-test"
+                                          :symbol "junk-protocol-client"})
+            status      (:status reply)
+            client-name (:name reply)
+            file        (:file reply)
+            protocol    (:protocol reply)
+            ns          (:ns reply)]
+        (is (= status #{"done"}))
+        (is (= client-name "junk-protocol-client"))
+        (is (.endsWith file "clojure/data.clj"))
+        (is (= protocol "#'clojure.data/Diff"))
+        (is (= ns "cider.nrepl.middleware.info-test")))))
+
+  (testing "eldoc op"
+    (let [response (session/message {:op "eldoc" :symbol "+" :ns "user"})]
+      (is (= (:status response) #{"done"}))
+      (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]])))
+
+    (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
+      (is (= (:status response) #{"done"}))
+      (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]])))
+
+    (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
+      (is (= (:status response) #{"done"})))
+
+    ;;TODO: Since this is an eldoc java op, shouldn't the args should be :class and :member?
+    (let [response (session/message {:op "eldoc" :symbol "toString" :ns (ns-name *ns*)})]
+      (is (set/subset? #{[] ["this"] ["int"] ["this" "char"]} (set (:eldoc response)))))))
+
+(deftest missing-info
+  (testing "ensure info returns a no-info packet if symbol not found"
+    (let [response (session/message {:op "info" :symbol "awoeijfxcvb" :ns "user"})]
+      (is (= (:status response) #{"no-info" "done"}))))
+
+  (testing "ensure info returns a no-info packet if ns not found"
+    (let [response (session/message {:op "info" :symbol "+" :ns "fakefakefake"})]
+      (is (= (:status response) #{"no-info" "done"}))))
+
+  (testing "ensure info returns a no-info packet if class not found"
+    (let [response (session/message {:op "info" :class "awoeijfxcvb" :member "toString"})]
+      (is (= (:status response) #{"no-info" "done"}))))
+
+  (testing "ensure info returns a no-info packet if member not found"
+    (let [response (session/message {:op "info" :class "java.lang.Exception" :member "fakefakefake"})]
+      (is (= (:status response) #{"no-info" "done"})))))
+
+(deftest missing-eldoc
+  (testing "ensure eldoc returns a no-eldoc packet if symbol not found"
+    (let [response (session/message {:op "eldoc" :symbol "awoeijfxcvb" :ns "user"})]
+      (is (= (:status response) #{"no-eldoc" "done"}))))
+
+  (testing "ensure eldoc returns a no-eldoc packet if ns not found"
+    (let [response (session/message {:op "eldoc" :symbol "+" :ns "fakefakefake"})]
+      (is (= (:status response) #{"no-eldoc" "done"}))))
+
+  (testing "ensure eldoc returns a no-eldoc packet if class not found"
+    (let [response (session/message {:op "eldoc" :class "awoeijfxcvb" :member "toString"})]
+      (is (= (:status response) #{"no-eldoc" "done"}))))
+
+  (testing "ensure eldoc returns a no-eldoc packet if member not found"
+    (let [response (session/message {:op "eldoc" :class "java.lang.Exception" :member "fakefakefake"})]
+      (is (= (:status response) #{"no-eldoc" "done"})))))
+
+(deftest error-handling
+  (testing "handle the exception thrown if no member provided to a java class info query"
+    (let [response (session/message {:op "info" :class "test"})]
+      (is (= (:status response) #{"info-error" "done"}))
+      (is (= (:ex response) "class java.lang.Exception"))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+
+  (testing "handle the exception thrown if no member provided to a java class eldoc query"
+    (let [response (session/message {:op "eldoc" :class "test"})]
+      (is (= (:status response) #{"eldoc-error" "done"}))
+      (is (= (:ex response) "class java.lang.Exception"))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+
+  (testing "handle the exception thrown if no class provided to a java member info query"
+    (let [response (session/message {:op "info" :member "test"})]
+      (is (= (:status response) #{"info-error" "done"}))
+      (is (= (:ex response) "class java.lang.Exception"))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+
+  (testing "handle the exception thrown if no class provided to a java member eldoc query"
+    (let [response (session/message {:op "eldoc" :member "test"})]
+      (is (= (:status response) #{"eldoc-error" "done"}))
+      (is (= (:ex response) "class java.lang.Exception"))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+
+  (testing "handle the exception thrown if there's a mocked info retrieval error"
+    (with-redefs [info/info (fn [& _] (throw (Exception. "info-exception")))]
+      (let [response (session/message {:op "info" :symbol "test" :ns "user"})]
+        (is (= (:status response) #{"info-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: info-exception")))))
+
+  (testing "handle the exception thrown if there's a mocked eldoc retreival error "
+    (with-redefs [info/eldoc (fn [& _] (throw (Exception. "eldoc-exception")))]
+      (let [response (session/message {:op "eldoc" :symbol "test" :ns "user"})]
+        (is (= (:status response) #{"eldoc-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: eldoc-exception"))))))
 
 ;; Following comment is a fake. It mimics CLJX generated files.
 
