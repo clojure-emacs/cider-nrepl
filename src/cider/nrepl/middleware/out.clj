@@ -17,42 +17,50 @@
 
 ;;; OutStream
 (defonce original-out *out*)
+(defonce original-err *err*)
 
 (declare tracked-sessions-map)
 (declare unsubscribe-session)
 
 (defmacro with-out-binding
   "Run body with v bound to the output stream of each msg in msg-seq.
-  Also run body with v bound to `original-out`."
-  [[v msg-seq] & body]
-  `(do (let [~(with-meta v {:tag Writer}) original-out]
+  Also run body with v bound to `original-out`.
+  type is either :out or :err."
+  [[v msg-seq type] & body]
+  `(do (let [~(with-meta v {:tag Writer}) (case ~type
+                                            :out #'original-out
+                                            :err #'original-err)]
          ~@body)
        (doseq [{:keys [~'session] :as ~'msg} ~msg-seq]
-         (let [~(with-meta v {:tag Writer}) (get @~'session #'*out*)]
+         (let [~(with-meta v {:tag Writer}) (get @~'session
+                                                 (case ~type
+                                                   :out #'*out*
+                                                   :err #'*err*))]
            (try (binding [ie/*msg* ~'msg]
                   ~@body)
                 ;; If a channel is faulty, dissoc it.
                 (catch Exception ~'e
                   (unsubscribe-session ~'session)))))))
 
-(defn fork-out
+(defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
   operations are forwarded to all output bindings in the sessions of
   messages in addition to the server's usual PrintWriter (saved in
-  `original-out`)."
-  [messages]
+  `original-out` or `original-err`).
+  type is either :out or :err."
+  [messages type]
   (PrintWriter. (proxy [Writer] []
                   (close [] (.flush ^Writer this))
                   (write
                     ([x]
-                     (with-out-binding [out messages]
-                       (.write out x)))
+                     (with-out-binding [printer messages type]
+                       (.write printer x)))
                     ([x ^Integer off ^Integer len]
-                     (with-out-binding [out messages]
-                       (.write out x off len))))
+                     (with-out-binding [printer messages type]
+                       (.write printer x off len))))
                   (flush []
-                    (with-out-binding [out messages]
-                      (.flush out))))
+                    (with-out-binding [printer messages type]
+                      (.flush printer))))
                 true))
 
 ;;; Known eval sessions
@@ -62,7 +70,7 @@
   (atom {}))
 
 (defn tracked-sessions-map-watch [_ _ _ new-state]
-  (let [o (fork-out (vals new-state))]
+  (let [o (forking-printer (vals new-state) :out)]
     ;; FIXME: This won't apply to Java loggers unless we also
     ;; `setOut`, but for that we need to convert a `PrintWriter` to a
     ;; `PrintStream` (or maybe just not use a `PrintWriter` above).
