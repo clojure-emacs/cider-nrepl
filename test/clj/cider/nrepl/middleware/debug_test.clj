@@ -26,23 +26,25 @@
     [1 0] [1]))
 
 (deftest skip-breaks
-  (binding [d/*skip-breaks* (atom [:all])]
+  (binding [d/*skip-breaks* (atom {:mode :all})]
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
     (is (#'d/skip-breaks? [1 2]))
     (is (#'d/skip-breaks? [2 2 1]))
 
-    (#'d/skip-breaks! false)
+    (#'d/skip-breaks! nil)
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
     (is (not (#'d/skip-breaks? [1 2])))
     (is (not (#'d/skip-breaks? [2 2 1])))
 
-    (#'d/skip-breaks! :deeper [1 2])
-    (is (#'d/skip-breaks? []))
-    (is (not (#'d/skip-breaks? [1 2])))
-    (is (not (#'d/skip-breaks? [2 2 1])))
-    (is (#'d/skip-breaks? [1 2 3]))))
+    (let [code "(foo (bar blah x))"]
+      (#'d/skip-breaks! :deeper [1 2] code)
+      (binding [d/*extras* {:code code}]
+        (is (#'d/skip-breaks? []))
+        (is (not (#'d/skip-breaks? [1 2])))
+        (is (not (#'d/skip-breaks? [2 2 1])))
+        (is (#'d/skip-breaks? [1 2 3]))))))
 
 (defn- send-override-msg
   [trans {:keys [key] :as msg}]
@@ -86,12 +88,12 @@
   (with-redefs [t/send (send-override :next)]
     (is (= 'value (#'d/read-debug-command 'value {}))))
   (binding [*msg* {:session (atom {})}
-            d/*skip-breaks* (atom [:all])]
+            d/*skip-breaks* (atom {:mode :all})]
     (with-redefs [t/send (send-override :continue)]
       (is (= 'value (#'d/read-debug-command 'value {})))
       (is (#'d/skip-breaks? nil))))
   (binding [*msg* {:session (atom {})}
-            d/*skip-breaks* (atom [:all])]
+            d/*skip-breaks* (atom {:mode :all})]
     (with-redefs [t/send (send-override :out)]
       (is (= 'value (#'d/read-debug-command 'value {:coor [1 2 3]})))
       (is (#'d/skip-breaks? [1 2 3]))
