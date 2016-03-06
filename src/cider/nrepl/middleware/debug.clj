@@ -228,7 +228,10 @@
                          (when (coll? causes) (last causes)))]})))
         nil)
       (finally
-        (in-ns ns)))))
+        (try
+          (in-ns ns)
+          ;; See https://github.com/clojure-emacs/cider/issues/1604
+          (catch IllegalStateException _))))))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.
