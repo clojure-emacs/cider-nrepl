@@ -93,8 +93,9 @@
     (map? value)                                   :map-long
     (and (vector? value) (< (count value) 5))      :vector
     (vector? value)                                :vector-long
-    (and (list? value) (< (count value) 5))        :list
-    (list? value)                                  :list-long
+    (and (seq? value) (not (counted? value)))      :lazy-seq
+    (and (seq? value) (< (count value) 5))         :list
+    (seq? value)                                   :list-long
     (and (set? value) (< (count value) 5))         :set
     (set? value)                                   :set-long
     :else (or (:inspector-tag (meta value))
@@ -125,6 +126,12 @@
 
 (defmethod inspect-value :vector-long [value]
   (safe-pr-seq (take 5 value) "[ %s ... ]"))
+
+(defmethod inspect-value :lazy-seq [value]
+  (let [first-six (take 6 value)]
+    (if (= (count first-six) 6)
+      (safe-pr-seq (take 5 value) "( %s ... )")
+      (safe-pr-seq first-six "( %s )"))))
 
 (defmethod inspect-value :list [value]
   (safe-pr-seq value "( %s )"))
