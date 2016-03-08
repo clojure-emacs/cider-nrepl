@@ -23,4 +23,7 @@
       "[ 1 2 3 ]" [1 2 3]
       "{ :a 1, :b 2 }" {:a 1 :b 2}
       "#{ :a }" #{:a}
+      "( 1 1 1 1 1 ... )" (repeat 1)
+      "[ ( 1 1 1 1 1 ... ) ]" [(repeat 1)]
+      "( 1 2 3 )" (lazy-seq '(1 2 3))
       "#<MyTestType test1>" (MyTestType. "test1"))))
