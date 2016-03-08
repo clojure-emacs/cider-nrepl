@@ -210,14 +210,17 @@
   [path]
   {:javadoc
    (or (resource-full-path path)
+       ;; [bug#308] `*remote-javadocs*` is outdated WRT Java
+       ;; 8, so we try our own thing first.
+       (when (re-find #"^(java|javax|org.omg|org.w3c.dom|org.xml.sax)/" path)
+         (format "http://docs.oracle.com/javase/%s/docs/api/%s"
+                 u/java-api-version path))
+       ;; If that didn't work, _then_ we fallback on `*remote-javadocs*`.
        (some (let [classname (.replaceAll path "/" ".")]
                (fn [[prefix url]]
                  (when (.startsWith classname prefix)
                    (str url path))))
              @javadoc/*remote-javadocs*)
-       (when (re-find #"^(java|javax|org.omg|org.w3c.dom|org.xml.sax)/" path)
-         (format "http://docs.oracle.com/javase/%s/docs/api/%s"
-                 u/java-api-version path))
        path)})
 
 (javadoc/add-remote-javadoc "com.amazonaws." "http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/")
