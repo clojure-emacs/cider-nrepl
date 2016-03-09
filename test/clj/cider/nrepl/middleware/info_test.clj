@@ -16,6 +16,21 @@
   [x]
   (:resource (info/file-info x)))
 
+(deftest test-javadoc-url
+  (testing "java 1.7"
+    (is (= "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#charAt(int)"
+           (with-redefs [util/java-api-version "7"]
+             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
+                 (info/format-response)
+                 (get "javadoc"))))))
+
+  (testing "java 1.8"
+    (is (= "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#charAt-int-"
+           (with-redefs [util/java-api-version "8"]
+             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
+                 (info/format-response)
+                 (get "javadoc")))))))
+
 (deftest test-resource-path
   (is (= (class (file (subs (str (clojure.java.io/resource "clojure/core.clj")) 4)))
          java.net.URL))

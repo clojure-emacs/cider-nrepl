@@ -1,5 +1,7 @@
 (ns cider.nrepl.middleware.util.java-test
   (:require [cider.nrepl.middleware.util.java :refer :all]
+            [cider.nrepl.middleware.util.misc :refer [java-api-version]]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [clojure.java.io :as io]))
 
@@ -125,25 +127,49 @@
       (is (= (:javadoc (class-info 'java.io.Closeable))
              "java/io/Closeable.html")))
 
-    (testing "for a member"
-      (testing "with no args"
-        (is (= (:javadoc (member-info 'java.util.Random 'nextLong))
-               "java/util/Random.html#nextLong()")))
-      (testing "with primitive args"
-        (is (= (:javadoc (member-info 'java.util.Random 'setSeed))
-               "java/util/Random.html#setSeed(long)")))
-      (testing "with object args"
-        (is (= (:javadoc (member-info 'java.lang.String 'contains))
-               "java/lang/String.html#contains(java.lang.CharSequence)")))
-      (testing "with array args"
-        (is (= (:javadoc (member-info 'java.lang.Thread 'enumerate))
-               "java/lang/Thread.html#enumerate(java.lang.Thread[])")))
-      (testing "with multiple args"
-        (is (= (:javadoc (member-info 'java.util.ArrayList 'subList))
-               "java/util/ArrayList.html#subList(int,%20int)")))
-      (testing "with generic type erasure"
-        (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
-               "java/util/Hashtable.html#putAll(java.util.Map)"))))))
+    (let [java-version (Integer/parseInt java-api-version)]
+      (if (< java-version 8)
+        ;;Testing for pre-JDK 1.8 URLs
+        (testing "for a member"
+          (testing "with no args"
+            (is (= (:javadoc (member-info 'java.util.Random 'nextLong))
+                   "java/util/Random.html#nextLong()")))
+          (testing "with primitive args"
+            (is (= (:javadoc (member-info 'java.util.Random 'setSeed))
+                   "java/util/Random.html#setSeed(long)")))
+          (testing "with object args"
+            (is (= (:javadoc (member-info 'java.lang.String 'contains))
+                   "java/lang/String.html#contains(java.lang.CharSequence)")))
+          (testing "with array args"
+            (is (= (:javadoc (member-info 'java.lang.Thread 'enumerate))
+                   "java/lang/Thread.html#enumerate(java.lang.Thread[])")))
+          (testing "with multiple args"
+            (is (= (:javadoc (member-info 'java.util.ArrayList 'subList))
+                   "java/util/ArrayList.html#subList(int,%20int)")))
+          (testing "with generic type erasure"
+            (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
+                   "java/util/Hashtable.html#putAll(java.util.Map)"))))
+
+        ;;Testing for post-JDK 1.8 URLs
+        (testing "for a member"
+          (testing "with no args"
+            (is (= (:javadoc (member-info 'java.util.Random 'nextLong))
+                   "java/util/Random.html#nextLong--")))
+          (testing "with primitive args"
+            (is (= (:javadoc (member-info 'java.util.Random 'setSeed))
+                   "java/util/Random.html#setSeed-long-")))
+          (testing "with object args"
+            (is (= (:javadoc (member-info 'java.lang.String 'contains))
+                   "java/lang/String.html#contains-java.lang.CharSequence-")))
+          (testing "with array args"
+            (is (= (:javadoc (member-info 'java.lang.Thread 'enumerate))
+                   "java/lang/Thread.html#enumerate-java.lang.Thread:A-")))
+          (testing "with multiple args"
+            (is (= (:javadoc (member-info 'java.util.ArrayList 'subList))
+                   "java/util/ArrayList.html#subList-int-int-")))
+          (testing "with generic type erasure"
+            (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
+                   "java/util/Hashtable.html#putAll-java.util.Map-"))))))))
 
 (deftest test-class-resolution
   (let [ns (ns-name *ns*)]
