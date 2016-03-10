@@ -98,30 +98,38 @@
 
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
-  If the mode of `*skip-breaks*` is :all, return true.
 
-  Otherwise, the mode should be :deeper, :before, or :trace.
-  If :deeper, return true if the given coordinates are deeper than the
-  coordinates stored in `*skip-breaks*`.
-  If :before, return true if they represent a place before the coordinates
-  in `*skip-breaks*`.
-  If :trace, return false."
+  The `*skip-breaks*` map stores a `mode`, `coordinates`, the `code` that it
+  applies to, and a `force?` flag. Behaviour depends on the `mode`:
+   - :all - return true, skipping all breaks
+   - :trace - return false, skip nothing
+   - :deeper - return true if the given coordinates are deeper than the
+               coordinates stored in `*skip-breaks*`, in the same code
+   - :before - return true if the given coordinates represent a place before
+               the coordinates in `*skip-breaks*`, in the same code
+
+  For :deeper and :before, if we are not in the same code (i.e. we have stepped
+  into another instrumented function), then return the value of `force?`."
   [coordinates]
   (if (seq coordinates)
-    (when-let [{mode :mode skip-coords :coor code :code} @*skip-breaks*]
-      (case mode
-        ;; From :continue, skip everything.
-        :all    true
-        ;; From :trace, never skip.
-        :trace  false
-        ;; From :out, skip some breaks.
-        :deeper (let [parent (take (count skip-coords) coordinates)]
-                  (and (= code (:code *extras*))
-                       (seq= skip-coords parent)
-                       (> (count coordinates) (count parent))))
-        ;; From :here, skip some breaks.
-        :before (and (= code (:code *extras*))
-                     (coord< coordinates skip-coords))))
+    (when-let [{mode :mode skip-coords :coor
+                code-to-skip :code force? :force?} @*skip-breaks*]
+      (let [same-defn? (identical? code-to-skip (:code *extras*))]
+        (case mode
+          ;; From :continue, skip everything.
+          :all    true
+          ;; From :trace, never skip.
+          :trace  false
+          ;; From :out, skip some breaks.
+          :deeper (if same-defn?
+                    (let [parent (take (count skip-coords) coordinates)]
+                      (and (seq= skip-coords parent)
+                           (> (count coordinates) (count parent))))
+                    force?)
+          ;; From :here, skip some breaks.
+          :before (if same-defn?
+                    (coord< coordinates skip-coords)
+                    force?))))
     ;; We don't breakpoint top-level sexps, because their return value
     ;; is already displayed anyway.
     true))
@@ -130,16 +138,16 @@
   "Set the value of *skip-breaks* for the top-level breakpoint.
   Additional arguments depend on mode, and should be:
    - empty for :all or :trace
-   - coordinates and code for :deeper or :before
+   - coordinates, code, and force for :deeper or :before
   See `skip-breaks?`."
   ([mode]
-   (skip-breaks! mode nil nil))
-  ([mode coor code]
+   (skip-breaks! mode nil nil nil))
+  ([mode coor code force?]
    (reset! *skip-breaks*
            (case mode
              (nil false)       nil
              (:all :trace)     {:mode mode}
-             (:deeper :before) {:mode mode :coor coor :code code}))))
+             (:deeper :before) {:mode mode :coor coor :code code :force? force?}))))
 
 (defn- abort!
   "Stop current eval thread.
@@ -305,16 +313,16 @@
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
 
-        {:keys [code coord response page-size] :or {page-size 32}}
+        {:keys [code coord response page-size force?] :or {page-size 32}}
         (if (map? response-raw) response-raw
             {:response response-raw})
         extras (dissoc extras :inspect)]
     (case response
       :next     value
       :continue (do (skip-breaks! :all) value)
-      :out      (do (skip-breaks! :deeper (butlast (:coor extras)) (:code extras))
+      :out      (do (skip-breaks! :deeper (butlast (:coor extras)) (:code extras) force?)
                     value)
-      :here     (do (skip-breaks! :before coord (:code extras))
+      :here     (do (skip-breaks! :before coord (:code extras) force?)
                     value)
       :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
@@ -388,7 +396,10 @@
          ;; once. Next time, we need to test the condition again.
          (binding [*skip-breaks* (if ~condition
                                    *skip-breaks*
-                                   (atom {:mode :deeper :coor ~parent-coor :code ~(:code *msg*)}))]
+                                   (atom {:mode   :deeper
+                                          :coor   ~parent-coor
+                                          :code   ~(:code *msg*)
+                                          :force? false}))]
            (breakpoint-implementation ~form ~extras ~original-form)))
       `(with-debug-bindings ~extras
          (breakpoint-implementation ~form ~extras ~original-form)))))

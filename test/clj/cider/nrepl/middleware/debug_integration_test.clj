@@ -94,11 +94,13 @@
      (nrepl-send {:op :debug-input :input ~(str op) :key (current-key)})))
 
 (def-debug-op :next)
-(def-debug-op :out)
 (def-debug-op :continue)
 
-(defmethod debugger-send :here [_ coor]
-  (nrepl-send {:op :debug-input :input (str {:response :here :coord coor}) :key (current-key)}))
+(defmethod debugger-send :out [_ & [force?]]
+  (nrepl-send {:op :debug-input :input (str {:response :out :force? force?}) :key (current-key)}))
+
+(defmethod debugger-send :here [_ coor & [force?]]
+  (nrepl-send {:op :debug-input :input (str {:response :here :coord coor :force? force?}) :key (current-key)}))
 
 (defmacro debugger-expect [expected]
   ;; This is a macro so that failed assertions will show at the right
@@ -273,33 +275,110 @@
   (<-- {:status ["done"]})
 
   ;; Then eval some code that calls the function
-  (let [code "#dbg
+  (--> :eval "#dbg
               (let [i 7]
                 (foo (inc i))
-                (dec i))"]
-    (--> :eval code)
+                (dec i))")
 
-    ;; 1) should break at the `i` in `(foo (inc i))`
-    (<-- {:debug-value "7" :coor [2 1 1] :locals [["i" "7"]]})
-    
-    ;; 2) Do a `:here` op at the end of `(dec i)`, skipping over the
-    ;; call to foo.
-    (--> :here [3])
+  ;; 1) should break at the `i` in `(foo (inc i))`
+  (<-- {:debug-value "7" :coor [2 1 1] :locals [["i" "7"]]})
+  
+  ;; 2) Do a `:here` op at the end of `(dec i)`, skipping over the
+  ;; call to foo.
+  (--> :here [3])
 
-    ;; 3) The debugger should stop in `foo`
-    (<-- {:debug-value "8" :coor [3 2] :locals [["x" "8"]]})
-    (--> :next)
-    (<-- {:debug-value "18" :coor [3] :locals [["x" "8"]]})
-    (--> :next)
+  ;; 3) The debugger should stop in `foo`
+  (<-- {:debug-value "8" :coor [3 2] :locals [["x" "8"]]})
+  (--> :next)
+  (<-- {:debug-value "18" :coor [3] :locals [["x" "8"]]})
+  (--> :next)
 
-    ;; 4) Then, once out of foo, should jump to the point where we did
-    ;; the `:here` op.
-    (<-- {:debug-value "6" :coor [3]})
-    (--> :next)
+  ;; 4) Then, once out of foo, should jump to the point where we did
+  ;; the `:here` op.
+  (<-- {:debug-value "6" :coor [3]})
+  (--> :next)
 
-    ;; 5) return value of the `let`
-    (<-- {:value "6"})
-    (<-- {:status ["done"]})))
+  ;; 5) return value of the `let`
+  (<-- {:value "6"})
+  (<-- {:status ["done"]}))
+
+
+;;; Tests for force-step operations
+
+(deftest force-step-out-past-instrumented-fn
+  ;; When we force-step out of a form, instrumented functions that are
+  ;; called should not be debugged.
+
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
+  ;; First, create an instrumented function
+  (--> :eval
+       "#dbg
+        (defn foo [x]
+          (+ 10 x))")
+  (<-- {:value "#'user.test.debug/foo"})
+  (<-- {:status ["done"]})
+
+  ;; Then eval some code that calls the function
+  (--> :eval
+       "#dbg
+        (let [i 4]
+          (inc i)
+          (foo i))")
+
+  ;; 1) should break at the `i` and then the `(inc i)`
+  (<-- {:debug-value "4" :coor [2 1] :locals [["i" "4"]]})
+  (--> :next)
+  (<-- {:debug-value "5" :coor [2] :locals [["i" "4"]]})
+
+  ;; 2) Now force-step out, to skip stepping through the rest of the
+  ;; `let` form, including the call to `foo`.
+  (--> :out true)
+
+  ;; 3) The debugger should not stop in `foo`, even though it is
+  ;; instrumented, but should go straight to the value of the let
+  ;; form.
+  (<-- {:value "14"})
+  (<-- {:status ["done"]}))
+
+(deftest force-here-past-instrumented-fn
+  ;; When we do force-here operation that jumps past a call to an
+  ;; instrumented function, the function should not be debugged.
+
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
+  ;; First, create an instrumented function
+  (--> :eval
+       "#dbg
+        (defn foo [x]
+          (+ 10 x))")
+  (<-- {:value "#'user.test.debug/foo"})
+  (<-- {:status ["done"]})
+
+  ;; Then eval some code that calls the function
+  (--> :eval
+       "#dbg
+        (let [i 5]
+          (foo (inc i))
+          (dec i))")
+
+  ;; 1) should break at the `i` in `(foo (inc i))`
+  (<-- {:debug-value "5" :coor [2 1 1] :locals [["i" "5"]]})
+
+  ;; 2) Now do a force-here to `(dec i)`
+  (--> :here [3] true)
+
+  ;; 3) The debugger should not stop in `foo`, even though it is
+  ;; instrumented, but should stop after `(dec i)`.
+  (<-- {:debug-value "4" :coor [3]})
+  (--> :next)
+  
+  (<-- {:value "4"})
+  (<-- {:status ["done"]}))
 
 
 ;;; Tests for conditional breakpoints
