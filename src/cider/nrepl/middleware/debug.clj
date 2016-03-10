@@ -448,14 +448,13 @@
       (try
         (read-string code)
         (catch Exception e)))
-    (binding [*skip-breaks* (atom nil)]
-      (if @has-debug?
-        ;; Technically, `instrument-and-eval` acts like a regular eval
-        ;; if there are no debugging macros. But we still only use it
-        ;; when we know it's necessary.
-        (assoc msg :eval "cider.nrepl.middleware.debug/instrument-and-eval")
-        ;; If there was no reader macro, fallback on regular eval.
-        msg))))
+    (if @has-debug?
+      ;; Technically, `instrument-and-eval` acts like a regular eval
+      ;; if there are no debugging macros. But we still only use it
+      ;; when we know it's necessary.
+      (assoc msg :eval "cider.nrepl.middleware.debug/instrument-and-eval")
+      ;; If there was no reader macro, fallback on regular eval.
+      msg)))
 
 (defn- initialize
   "Initialize the channel used for debug-input requests."
