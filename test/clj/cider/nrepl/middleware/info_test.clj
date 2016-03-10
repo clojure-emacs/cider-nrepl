@@ -6,7 +6,8 @@
             [clojure.set :as set]
             [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.misc :as util]
-            [cider.nrepl.test-session :as session]))
+            [cider.nrepl.test-session :as session])
+  (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))
 
 (defn file
   [x]
@@ -83,8 +84,8 @@
   (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
 
   (is (not (info/info-clj 'clojure.core (gensym "non-existing"))))
-  (is (not (info/info-clj 'cider.nrepl.middleware.info-test (gensym "non-existing")))
-      "Check that deftype T (which returns nil for .getPackage), doesn't throw") ;; TODO: This doesn't seem to test Type/Protocol resolution as stated?
+  (is (info/info-clj 'cider.nrepl.middleware.info-test 'T)
+      "Check that deftype T (which returns nil for .getPackage), doesn't throw")
 
   (is (= (the-ns 'clojure.core) (:ns (info/info-clj 'cider.nrepl.middleware.info 'str))))
 
@@ -193,12 +194,17 @@
 
 (deftest javadoc-info-unit-test
   (testing "Get an HTTP URL for a Sun/Oracle Javadoc"
-    (let [reply (info/javadoc-info "java/lang/StringBuilder.html#capacity()")
-          url   (:javadoc reply)
-          jv    util/java-api-version
-          base  "http://docs.oracle.com/javase/%s/docs/api/java/lang/StringBuilder.html#capacity()"
-          exp   (format base jv)]
-      (is (= url exp))))
+    (testing "Javadoc 1.7 format"
+      (let [reply      (info/javadoc-info "java/lang/StringBuilder.html#capacity()")
+            url        (:javadoc reply)
+            exp-suffix "/docs/api/java/lang/StringBuilder.html#capacity()"]
+        (is (.endsWith url exp-suffix))))
+
+    (testing "Javadoc 1.8 format"
+      (let [reply      (info/javadoc-info "java/lang/StringBuilder.html#capacity--")
+            url        (:javadoc reply)
+            exp-suffix "/docs/api/java/lang/StringBuilder.html#capacity--"]
+        (is (.endsWith url exp-suffix)))))
 
   (testing "Get general URL for a clojure javadoc"
     (let [reply    (info/javadoc-info "clojure/java/io.clj")
@@ -206,6 +212,11 @@
           url-type (class url)
           exp-type java.net.URL]
       (is (= url-type exp-type))))
+
+  (testing "Get URL for commonly used Java libraries via the *remote-javadocs* mechanism"
+    (let [reply    (info/javadoc-info "com/amazonaws/services/lambda/AWSLambdaClient.html#listFunctions()")
+          url      (:javadoc reply)]
+      (is (= url "http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/lambda/AWSLambdaClient.html#listFunctions()"))))
 
   (testing "Get fall through URL type for other Javadocs (external libs?)"
     (let [reply (info/javadoc-info "http://some/other/url")
@@ -225,17 +236,90 @@
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
 
+(defn testing-function
+  "This is used for testing"
+  [a b c]
+  (+ a b c))
+
+(defmacro testing-macro
+  "a macro for testing"
+  [pred a b]
+  `(if (not ~pred) ~a ~b))
+
 (use-fixtures :each session/session-fixture)
 (deftest integration-tests
   (testing "info op"
-    (testing "get info of a clojure.core macro"
-      (let [response (session/message {:op "info" :symbol "as->" :ns "user"})]
+    (testing "get info of a clojure function"
+      (let [response (session/message {:op "info" :symbol "testing-function" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:status response) #{"done"}))
-        (is (= (:ns response) "clojure.core"))
-        (is (= (:name response) "as->"))
-        (is (= (:arglists-str response) "([expr name & forms])"))
+        (is (= (:ns response) "cider.nrepl.middleware.info-test"))
+        (is (= (:name response) "testing-function"))
+        (is (= (:arglists-str response) "([a b c])"))
+        (is (nil? (:macro response)))
+        (is (= (:doc response) "This is used for testing"))))
+
+    (testing "get info of a clojure macro"
+      (let [response (session/message {:op "info" :symbol "testing-macro" :ns "cider.nrepl.middleware.info-test"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:ns response) "cider.nrepl.middleware.info-test"))
+        (is (= (:name response) "testing-macro"))
+        (is (= (:arglists-str response) "([pred a b])"))
         (is (= (:macro response) "true"))
-        (is (.startsWith (:doc response) "Binds name to expr, evaluates"))))
+        (is (= (:doc response) "a macro for testing"))))
+
+    (testing "get info of a java instance method with return value"
+      (let [response (session/message {:op "info"
+                                       :class "cider.nrepl.test.TestClass"
+                                       :member "getInt"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:class response) "cider.nrepl.test.TestClass"))
+        (is (= (:member response) "getInt"))
+        (is (= (:arglists-str response) "([this])"))
+        (is (= (:argtypes response) []))
+        (is (= (:returns response) "int"))
+        (is (= (:modifiers response) "#{:public}"))
+        (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#getInt")))
+
+      (testing "JDK 1.7 Javadoc URL style"
+        (with-redefs [util/java-api-version "7"]
+          (let [response (session/message {:op "info"
+                                           :class "cider.nrepl.test.TestClass"
+                                           :member "getInt"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt()")))))
+
+      (testing "JDK 1.8 Javadoc URL style"
+        (with-redefs [util/java-api-version "8"]
+          (let [response (session/message {:op "info"
+                                           :class "cider.nrepl.test.TestClass"
+                                           :member "getInt"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt--"))))))
+
+    (testing "get info of a private java class method, void return"
+      (let [response (session/message {:op "info"
+                                       :class "cider.nrepl.test.TestClass"
+                                       :member "doSomething"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:class response) "cider.nrepl.test.TestClass"))
+        (is (= (:member response) "doSomething"))
+        (is (= (:arglists-str response) "([int int java.lang.String])"))
+        (is (= (:argtypes response) ["int" "int" "java.lang.String"]))
+        (is (= (:returns response) "void"))
+        (is (= (:modifiers response) "#{:private :static}"))
+        (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething")))
+
+      (testing "JDK 1.7 Javadoc URL style"
+        (with-redefs [util/java-api-version "7"]
+          (let [response (session/message {:op "info"
+                                           :class "cider.nrepl.test.TestClass"
+                                           :member "doSomething"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething(int,%20int,%20java.lang.String)")))))
+
+      (testing "JDK 1.8 Javadoc URL style"
+        (with-redefs [util/java-api-version "8"]
+          (let [response (session/message {:op "info"
+                                           :class "cider.nrepl.test.TestClass"
+                                           :member "doSomething"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething-int-int-java.lang.String-"))))))
 
     (testing "get info of a java method"
       (let [response (session/message {:op "info"
@@ -248,7 +332,21 @@
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
-        (is (.startsWith (:javadoc response) "http://docs.oracle.com/javase"))))
+        (is (.startsWith (:javadoc response) "http://docs.oracle.com/javase")))
+
+      (testing "JDK 1.7 Javadoc URL style"
+        (with-redefs [util/java-api-version "7"]
+          (let [response (session/message {:op "info"
+                                           :class "java.lang.StringBuilder"
+                                           :member "capacity"})]
+            (is (= (:javadoc response) "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#capacity()")))))
+
+      (testing "JDK 1.8 Javadoc URL style"
+        (with-redefs [util/java-api-version "8"]
+          (let [response (session/message {:op "info"
+                                           :class "java.lang.StringBuilder"
+                                           :member "capacity"})]
+            (is (= (:javadoc response) "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--"))))))
 
     (testing "get info on the dot-operator"
       (let [response (session/message {:op "info" :symbol "." :ns "user"})]
@@ -310,20 +408,26 @@
         (is (= ns "cider.nrepl.middleware.info-test")))))
 
   (testing "eldoc op"
-    (let [response (session/message {:op "eldoc" :symbol "+" :ns "user"})]
-      (is (= (:status response) #{"done"}))
-      (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]])))
+    (testing "clojure function"
+      (let [response (session/message {:op "eldoc" :symbol "+" :ns "user"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))))
 
-    (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
-      (is (= (:status response) #{"done"}))
-      (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]])))
+    (testing "clojure special form"
+      (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]]))))
 
-    (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
-      (is (= (:status response) #{"done"})))
+    (testing "clojure dot operator"
+      (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
+        (is (= (:status response) #{"done"}))))
 
-    ;;TODO: Since this is an eldoc java op, shouldn't the args should be :class and :member?
-    (let [response (session/message {:op "eldoc" :symbol "toString" :ns (ns-name *ns*)})]
-      (is (set/subset? #{[] ["this"] ["int"] ["this" "char"]} (set (:eldoc response)))))))
+    (testing "java method eldoc lookup, internal testing methods"
+      (let [response (session/message {:op "eldoc" :symbol "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
+        (is (= #{["this"] ;;TestClass
+                 ["int" "java.lang.String" "boolean"] ;;AnotherTestClass
+                 ["this" "byte[]" "java.lang.Object[]" "java.util.List"]} ;;YetAnotherTest
+               (set (:eldoc response))))))))
 
 (deftest missing-info
   (testing "ensure info returns a no-info packet if symbol not found"
