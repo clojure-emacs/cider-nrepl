@@ -57,10 +57,23 @@
 ;;;; ## Internal breakpoint logic
 ;;; Variables and functions used for navigating between breakpoints.
 (def ^:dynamic *skip-breaks*
-  "Boolean or vector to determine whether to skip a breakpoint.
+  "Map used to determine whether to skip a breakpoint.
   Don't set or examine this directly, it is bound in the session
   binding map, use `skip-breaks!` and `skip-breaks?` instead.
   Its value is discarded at the end each eval session."
+  nil)
+
+(def ^:dynamic *extras*
+  "Bound by `with-debug-bindings` to a modified version of the original `*msg*`."
+  {})
+
+(def ^:dynamic *locals*
+  "Bound by `with-debug-bindings` to a map from local symbols to values."
+  {})
+
+(def ^:dynamic *pprint-fn*
+  "Bound by `with-debug-bindings` to the pretty-printing function determined by
+  the `wrap-pprint-fn` middleware."
   nil)
 
 (defn coord<
@@ -85,16 +98,17 @@
 
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
-  If the first element of `*skip-breaks*` is :all, return true.
+  If the mode of `*skip-breaks*` is :all, return true.
 
-  Otherwise, the first element should be :deeper, :before, or :trace.
+  Otherwise, the mode should be :deeper, :before, or :trace.
   If :deeper, return true if the given coordinates are deeper than the
-  rest of `*skip-breaks*`.
-  If :before, return true if they represent a place before the rest.
+  coordinates stored in `*skip-breaks*`.
+  If :before, return true if they represent a place before the coordinates
+  in `*skip-breaks*`.
   If :trace, return false."
   [coordinates]
   (if (seq coordinates)
-    (when-let [[mode & skip-coords] @*skip-breaks*]
+    (when-let [{mode :mode skip-coords :coor code :code} @*skip-breaks*]
       (case mode
         ;; From :continue, skip everything.
         :all    true
@@ -102,21 +116,30 @@
         :trace  false
         ;; From :out, skip some breaks.
         :deeper (let [parent (take (count skip-coords) coordinates)]
-                  (and (seq= skip-coords parent)
+                  (and (= code (:code *extras*))
+                       (seq= skip-coords parent)
                        (> (count coordinates) (count parent))))
         ;; From :here, skip some breaks.
-        :before (coord< coordinates skip-coords)))
+        :before (and (= code (:code *extras*))
+                     (coord< coordinates skip-coords))))
     ;; We don't breakpoint top-level sexps, because their return value
     ;; is already displayed anyway.
     true))
 
 (defn skip-breaks!
   "Set the value of *skip-breaks* for the top-level breakpoint.
-  If bool-or-vec is a vector, mode should be :deeper or :before (see
-  `skip-breaks?`). Otherwise mode should be :all or false."
-  [mode & [bool-or-vec]]
-  (reset! *skip-breaks* (when mode
-                          (cons mode bool-or-vec))))
+  Additional arguments depend on mode, and should be:
+   - empty for :all or :trace
+   - coordinates and code for :deeper or :before
+  See `skip-breaks?`."
+  ([mode]
+   (skip-breaks! mode nil nil))
+  ([mode coor code]
+   (reset! *skip-breaks*
+           (case mode
+             (nil false)       nil
+             (:all :trace)     {:mode mode}
+             (:deeper :before) {:mode mode :coor coor :code code}))))
 
 (defn- abort!
   "Stop current eval thread.
@@ -155,19 +178,6 @@
   input requests. `read-debug` will halt until it finds its input in
   this map (identified by a key), and will `dissoc` it afterwards."
   (atom {}))
-
-(def ^:dynamic *extras*
-  "Bound by `with-debug-bindings` to a modified version of the original `*msg*`."
-  {})
-
-(def ^:dynamic *locals*
-  "Bound by `with-debug-bindings` to a map from local symbols to values."
-  {})
-
-(def ^:dynamic *pprint-fn*
-  "Bound by `with-debug-bindings` to the pretty-printing function determined by
-  the `wrap-pprint-fn` middleware."
-  nil)
 
 (def print-length (atom nil))
 (def print-level (atom nil))
@@ -302,9 +312,9 @@
     (case response
       :next     value
       :continue (do (skip-breaks! :all) value)
-      :out      (do (skip-breaks! :deeper (butlast (:coor extras)))
+      :out      (do (skip-breaks! :deeper (butlast (:coor extras)) (:code extras))
                     value)
-      :here     (do (skip-breaks! :before coord)
+      :here     (do (skip-breaks! :before coord (:code extras))
                     value)
       :locals   (inspect-then-read-command value extras page-size *locals*)
       :inspect  (->> (read-debug-eval-expression "Inspect value: " extras code)
@@ -356,7 +366,7 @@
        (skip-breaks? ~coor) val#
        ;; The length of `coor` is a good indicator of current code
        ;; depth.
-       (= (first @*skip-breaks*) :trace)
+       (= (:mode @*skip-breaks*) :trace)
        (do (print-step-indented ~(count coor) '~original-form val#)
            val#)
        ;; Nothing special. Here's the actual breakpoint logic.
@@ -378,7 +388,7 @@
          ;; once. Next time, we need to test the condition again.
          (binding [*skip-breaks* (if ~condition
                                    *skip-breaks*
-                                   (atom [:deeper ~@parent-coor]))]
+                                   (atom {:mode :deeper :coor ~parent-coor :code ~(:code *msg*)}))]
            (breakpoint-implementation ~form ~extras ~original-form)))
       `(with-debug-bindings ~extras
          (breakpoint-implementation ~form ~extras ~original-form)))))
@@ -438,14 +448,13 @@
       (try
         (read-string code)
         (catch Exception e)))
-    (binding [*skip-breaks* (atom nil)]
-      (if @has-debug?
-        ;; Technically, `instrument-and-eval` acts like a regular eval
-        ;; if there are no debugging macros. But we still only use it
-        ;; when we know it's necessary.
-        (assoc msg :eval "cider.nrepl.middleware.debug/instrument-and-eval")
-        ;; If there was no reader macro, fallback on regular eval.
-        msg))))
+    (if @has-debug?
+      ;; Technically, `instrument-and-eval` acts like a regular eval
+      ;; if there are no debugging macros. But we still only use it
+      ;; when we know it's necessary.
+      (assoc msg :eval "cider.nrepl.middleware.debug/instrument-and-eval")
+      ;; If there was no reader macro, fallback on regular eval.
+      msg)))
 
 (defn- initialize
   "Initialize the channel used for debug-input requests."

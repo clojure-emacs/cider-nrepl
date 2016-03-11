@@ -38,7 +38,7 @@
     (transport/send *transport* msg)))
 
 (defn nrepl-recv []
-  (let [msg (transport/recv *transport* 1000)]
+  (let [msg (transport/recv *transport* 200)]
     (dbg "<==" msg)
     msg))
 
@@ -64,7 +64,7 @@
   nil)
 
 (defn current-key []
-  (.poll *debugger-key* 1000 TimeUnit/MILLISECONDS))
+  (.poll *debugger-key* 200 TimeUnit/MILLISECONDS))
 
 (defn with-debug-session* [f]
   ;; This is necessary because the debugger currenly uses some mutable
@@ -213,49 +213,93 @@
     (<-- {:value "8"})
     (<-- {:status ["done"]})))
 
-(comment
-  ;; FIXME: fails. Confirm whether this test's expectations are correct
-  (deftest call-instrumented-fn-when-stepping-out
-    ;; When we step out of a form, instrumented functions that are
-    ;; called should still be debugged.
+(deftest call-instrumented-fn-when-stepping-out
+  ;; When we step out of a form, instrumented functions that are
+  ;; called should still be debugged.
 
-    (--> :eval "(ns user.test.debug)")
-    (<-- {:ns "user.test.debug"})
-    (<-- {:status ["done"]})
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
 
-    ;; First, create an instrumented function
-    (--> :eval
-         "#dbg
+  ;; First, create an instrumented function
+  (--> :eval
+       "#dbg
         (defn foo [x]
-          (inc x))")
-    (<-- {:value "#'user.test.conditional-break/foo"})
-    (<-- {:status ["done"]})
+          (+ 10 x))")
+  (<-- {:value "#'user.test.debug/foo"})
+  (<-- {:status ["done"]})
 
-    ;; Then eval some code that calls the function
-    (--> :eval
-         "#dbg
+  ;; Then eval some code that calls the function
+  (--> :eval
+       "#dbg
         (let [i 0]
           (inc i)
           (foo i))")
 
-    ;; 1) should break in the `let` form at `i` and `(inc i)`
-    (<-- {:debug-value "0" :coor [2 1] :locals [["i" "0"]]})
-    (--> :next)
-    (<-- {:debug-value "1" :coor [2] :locals [["i" "0"]]})
+  ;; 1) should break in the `let` form at `i` and `(inc i)`
+  (<-- {:debug-value "0" :coor [2 1] :locals [["i" "0"]]})
+  (--> :next)
+  (<-- {:debug-value "1" :coor [2] :locals [["i" "0"]]})
 
-    ;; 2) Step out, to skip stepping through the rest of the `let` form,
-    ;; including the call to `foo`.
-    (--> :out)
+  ;; 2) Step out, to skip stepping through the rest of the `let` form,
+  ;; including the call to `foo`.
+  (--> :out)
+
+  ;; 3) The debugger should stop in `foo`
+  (<-- {:debug-value "0" :coor [3 2] :locals [["x" "0"]]})
+  (--> :next)
+  (<-- {:debug-value "10" :coor [3] :locals [["x" "0"]]})
+  (--> :next)
+
+  ;; 4) return value of the `let`
+  (<-- {:value "10"})
+  (<-- {:status ["done"]}))
+
+(deftest call-instrumented-fn-when-doing-here-op
+  ;; When we jump ahead by doing a `:here`, instrumented functions
+  ;; that are called from the skipped-over code should still be
+  ;; debugged.
+
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
+  ;; First, create an instrumented function
+  (--> :eval
+       "#dbg
+        (defn foo [x]
+          (+ 10 x))")
+  (<-- {:value "#'user.test.debug/foo"})
+  (<-- {:status ["done"]})
+
+  ;; Then eval some code that calls the function
+  (let [code "#dbg
+              (let [i 7]
+                (foo (inc i))
+                (dec i))"]
+    (--> :eval code)
+
+    ;; 1) should break at the `i` in `(foo (inc i))`
+    (<-- {:debug-value "7" :coor [2 1 1] :locals [["i" "7"]]})
+    
+    ;; 2) Do a `:here` op at the end of `(dec i)`, skipping over the
+    ;; call to foo.
+    (--> :here [3])
 
     ;; 3) The debugger should stop in `foo`
-    (<-- {:debug-value "0" :coor [3 1] :locals [["x" "0"]]})
+    (<-- {:debug-value "8" :coor [3 2] :locals [["x" "8"]]})
     (--> :next)
-    (<-- {:debug-value "1" :coor [3] :locals [["x" "0"]]})
+    (<-- {:debug-value "18" :coor [3] :locals [["x" "8"]]})
     (--> :next)
 
-    ;; 4) return value of the `let`
-    (<-- {:value "1" :coor []})
-    (--> :next)))
+    ;; 4) Then, once out of foo, should jump to the point where we did
+    ;; the `:here` op.
+    (<-- {:debug-value "6" :coor [3]})
+    (--> :next)
+
+    ;; 5) return value of the `let`
+    (<-- {:value "6"})
+    (<-- {:status ["done"]})))
 
 
 ;;; Tests for conditional breakpoints
@@ -296,51 +340,50 @@
   (<-- {:value "(1 2 3)"})
   (<-- {:status ["done"]}))
 
-(comment
-  ;; FIXME: fails. Verify that this test's expectations make sense
-  (deftest call-instrumented-fn-from-skipped-break
-    ;; When breaks are skipped due to a false conditional, instrumented
-    ;; functions called from withing the skipped form should still be
-    ;; debugged.
+(deftest call-instrumented-fn-from-skipped-break
+  ;; When breaks are skipped due to a false conditional, instrumented
+  ;; functions called from withing the skipped form should still be
+  ;; debugged.
 
-    (--> :eval "(ns user.test.conditional-break)")
-    (<-- {:ns "user.test.conditional-break"})
-    (<-- {:status ["done"]})
+  (--> :eval "(ns user.test.conditional-break)")
+  (<-- {:ns "user.test.conditional-break"})
+  (<-- {:status ["done"]})
 
-    ;; First, create an instrumented function
-    (--> :eval
-         "#dbg
+  ;; First, create an instrumented function
+  (--> :eval
+       "#dbg
         (defn foo [x]
           (inc x))")
-    (<-- {:value "#'user.test.conditional-break/foo"})
-    (<-- {:status ["done"]})
+  (<-- {:value "#'user.test.conditional-break/foo"})
+  (<-- {:status ["done"]})
 
-    ;; Then call the function from code with a conditional breakpoint
-    (--> :eval
-         "(for [i [1 2]]
+  ;; Then call the function from code with a conditional breakpoint
+  (--> :eval
+       "(for [i [1 2]]
           #dbg ^{:break/when (even? i)}
           (foo i))")
 
-    ;; 1) should break in `foo` at `x` and `(inc x)`
-    (<-- {:debug-value "1" :coor [3 1] :locals [["x" "1"]]})
-    (--> :next)
-    (<-- {:debug-value "2" :coor [3] :locals [["x" "1"]]})
-    (--> :next)
+  ;; 1) should break in `foo` at `x` and `(inc x)`
+  (<-- {:debug-value "1" :coor [3 1] :locals [["x" "1"]]})
+  (--> :next)
+  (<-- {:debug-value "2" :coor [3] :locals [["x" "1"]]})
+  (--> :next)
 
-    ;; 2) then, should break in the for when i is 2
-    (<-- {:debug-value "2" :coor [2 1] :locals [["i" "2"]]})
-    (--> :next)
+  ;; 2) then, should break in the for when i is 2
+  (<-- {:debug-value "2" :coor [2 1] :locals [["i" "2"]]})
+  (--> :next)
 
-    ;; 3) then step into `foo` again
-    (<-- {:debug-value "2" :coor [3 1] :locals [["x" "2"]]})
-    (--> :next)
-    (<-- {:debug-value "3" :coor [3] :locals [["x" "2"]]})
-    (--> :next)
+  ;; 3) then step into `foo` again
+  (<-- {:debug-value "2" :coor [3 1] :locals [["x" "2"]]})
+  (--> :next)
+  (<-- {:debug-value "3" :coor [3] :locals [["x" "2"]]})
+  (--> :next)
 
-    ;; 4) final breakpoint, on the return value of `(foo 2)`
-    (<-- {:debug-value "3" :coor [2] :locals [["i" "2"]]})
-    (--> :next)
+  ;; 4) final breakpoint, on the return value of `(foo 2)`
+  (<-- {:debug-value "3" :coor [2] :locals [["i" "2"]]})
+  (--> :next)
 
-    ;; and done
-    (<-- {:value "(2 3)"})
-    (<-- {:status ["done"]})))
+  ;; and done
+  (<-- {:value "(2 3)"})
+  (<-- {:status ["done"]}))
+
