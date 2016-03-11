@@ -55,7 +55,8 @@
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
 
-             :test-clj {:test-paths ["test/clj"]}
+             :test-clj {:test-paths ["test/clj"]
+                        :java-source-paths ["test/java"]}
              :test-cljs {:test-paths ["test/cljs"]
                          :dependencies [[com.cemerick/piggieback "0.2.1"]
                                         [org.clojure/clojurescript "1.7.189"]]}
