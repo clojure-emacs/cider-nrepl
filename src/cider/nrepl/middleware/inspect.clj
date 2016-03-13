@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.inspect
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
+            [cider.nrepl.middleware.util.misc :as u]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
@@ -48,47 +49,75 @@
 
 (defn pop-reply
   [{:keys [transport] :as msg}]
-  (let [inspector (swap-inspector! msg inspect/up)]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg inspect/up)]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-pop-error))))))
 
 (defn push-reply
   [{:keys [idx transport] :as msg}]
-  (let [idx (Integer/parseInt idx)
-        inspector (swap-inspector! msg inspect/down idx)]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg inspect/down idx)]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-push-error))))))
 
 (defn refresh-reply
   [{:keys [transport] :as msg}]
-  (let [inspector (swap-inspector! msg #(or % (inspect/fresh)))]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg #(or % (inspect/fresh)))]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-refresh-error))))))
 
 (defn next-page-reply
   [{:keys [transport] :as msg}]
-  (let [inspector (swap-inspector! msg inspect/next-page)]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg inspect/next-page)]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-next-page-error))))))
 
 (defn prev-page-reply
   [{:keys [transport] :as msg}]
-  (let [inspector (swap-inspector! msg inspect/prev-page)]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg inspect/prev-page)]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-prev-page-error))))))
 
 (defn set-page-size-reply
   [{:keys [page-size transport] :as msg}]
-  (let [page-size (Integer/parseInt page-size)
-        inspector (swap-inspector! msg inspect/set-page-size page-size)]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector) :status :done))))
+  (try
+    (let [inspector (swap-inspector! msg inspect/set-page-size page-size)]
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector) :status :done)))
+    (catch Exception e
+      (transport/send
+       transport
+       (response-for msg (u/err-info e :inspect-set-page-size-error))))))
 
 (defn wrap-inspect
   "Middleware that adds a value inspector option to the eval op. Passing a

@@ -44,6 +44,7 @@
   "Drill down to an indexed object referred to by the previously
    rendered value"
   [inspector idx]
+  {:pre [(integer? idx)]}
   (let [new (get (:index inspector) idx)
         val (:value inspector)]
     (-> (update-in inspector [:stack] conj val)
@@ -65,6 +66,7 @@
   "Set the page size in pagination mode to the specified value. Current page
   will be reset to zero."
   [inspector new-page-size]
+  {:pre [(integer? new-page-size) (pos? new-page-size)]}
   (inspect-render (assoc inspector
                          :page-size new-page-size
                          :current-page 0)))
