@@ -124,20 +124,32 @@
                                           :print-meta "true"})))))
 
   (testing "non-resolvable pprint-fn"
-    (let [response (session/message {:op :eval
-                                     :code "nil"
-                                     :pprint "true"
-                                     :pprint-fn "foo/bar"})]
-      (is (:ex response))
-      (is (:err response))
-      (is (:root-ex response))
-      (is (= #{"eval-error" "done"} (:status response))))
+    (testing "non-existing ns"
+      (let [response (session/message {:op :eval
+                                       :code "nil"
+                                       :pprint "true"
+                                       :pprint-fn "never-used-ns-example/pprint"})]
+        (is (= (:status response) #{"eval-error" "done"}))
+        (is (= (:ex response) "class java.lang.IllegalArgumentException"))
+        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
+        (is (.startsWith (:err response) "IllegalArgumentException No such namespace: nev"))))
 
-    (let [response (session/message {:op :eval
-                                     :code "nil"
-                                     :pprint "true"
-                                     :pprint-fn nil})]
-      (is (:ex response))
-      (is (:err response))
-      (is (:root-ex response))
-      (is (= #{"eval-error" "done"} (:status response))))))
+    (testing "non-existing Var"
+      (let [response (session/message {:op :eval
+                                       :code "nil"
+                                       :pprint "true"
+                                       :pprint-fn "clojure.core/never-used-pprint-example"})]
+        (is (= (:status response) #{"eval-error" "done"}))
+        (is (= (:ex response) "class java.lang.IllegalArgumentException"))
+        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
+        (is (.startsWith (:err response) "IllegalArgumentException clojure.core/never-used"))))
+
+    (testing "nil input"
+      (let [response (session/message {:op :eval
+                                       :code "nil"
+                                       :pprint "true"
+                                       :pprint-fn nil})]
+        (is (= (:status response) #{"eval-error" "done"}))
+        (is (= (:ex response) "class java.lang.NullPointerException"))
+        (is (= (:root-ex response) "class java.lang.NullPointerException"))
+        (is (.startsWith (:err response) "NullPointerException   clojure.lang.Var.find"))))))

@@ -107,6 +107,6 @@
     (let [{:keys [err ex status]} (session/message {:op "format-edn"
                                                     :edn "{:b 2 :c 3 :a 1}"
                                                     :pprint-fn "fake.nrepl.middleware.pprint/puget-pprint"})]
-      (is (.startsWith err "java.lang.IllegalArgumentException: fake"))
+      (is (.startsWith err "java.lang.IllegalArgumentException: No such namespace: fa"))
       (is (= "class java.lang.IllegalArgumentException" ex))
       (is (= #{"done" "edn-read-error"} status)))))

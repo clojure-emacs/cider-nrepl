@@ -23,12 +23,9 @@
 
 (defn- resolve-pprint-fn
   [sym]
-  (let [var (some-> sym u/as-sym resolve)]
-
-    (when (or (nil? var) (not (var? var)))
-      (throw (IllegalArgumentException. (format "%s is not resolvable as a var" sym))))
-
-    @var))
+  (if-let [pp-fn (-> sym u/as-sym find-var)]
+    pp-fn
+    (throw (IllegalArgumentException. (format "%s is not resolvable to a var" sym)))))
 
 (defn wrap-pprint-fn
   "Middleware that provides a common interface for other middlewares that need
@@ -100,12 +97,17 @@
   "Middleware that adds a pretty-printing option to the eval op.
   Passing a non-nil value in the `:pprint` slot will cause eval to call
   clojure.pprint/pprint on its result. The `:right-margin` slot can be used to
-  bind `*clojure.pprint/*print-right-margin*` during the evaluation."
+  bind `*clojure.pprint/*print-right-margin*` during the evaluation. (N.B., the
+  encoding used to transmit the request map `msg` across the wire will
+  convert presumably falsey values into truthy values. If you don't
+  want something to be pretty printed, remove the `:pprint` key
+  entirely from your request map, don't try and set the value to nil,
+  false, or string representations of the above)."
   [handler]
   (fn [{:keys [op pprint] :as msg}]
-    (handler (cond-> msg
-               (and (= op "eval") pprint)
-               (assoc :transport (pprint-transport msg))))))
+    (handler (if (and pprint (= op "eval"))
+               (assoc msg :transport (pprint-transport msg))
+               msg))))
 
 (set-descriptor!
  #'wrap-pprint
