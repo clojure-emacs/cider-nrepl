@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.inspect-test
-  (:require [cider.nrepl.middleware.util.inspect :as inspect]
+  (:require [cider.nrepl.middleware.inspect :as i]
+            [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
@@ -187,16 +188,16 @@
   (testing "pushing an empty inspector index renders nil"
     (is (= nil-result
            (:value (session/message {:op "inspect-push"
-                                     :idx "1"}))))))
+                                     :idx 1}))))))
 
 (deftest push-empty-idempotent-integration-test
   (testing "pushing an empty inspector index is idempotent"
     (is (= nil-result
            (:value (do
                      (session/message {:op "inspect-push"
-                                       :idx "1"})
+                                       :idx 1})
                      (session/message {:op "inspect-push"
-                                       :idx "1"})))))))
+                                       :idx 1})))))))
 
 (deftest refresh-empty-integration-test
   (testing "refreshing an empty inspector renders nil"
@@ -211,17 +212,61 @@
                      (session/message {:op "inspect-refresh"})))))))
 
 (deftest exception-integration-test
-  (let [exception-response (session/message {:op "eval"
-                                             :inspect "true"
-                                             :code "(first 1)"})]
+  (testing "eval op error handling"
+    (let [exception-response (session/message {:op "eval"
+                                               :inspect "true"
+                                               :code "(first 1)"})]
 
-    (testing "exprs that throw exceptions return an `ex` slot"
-      (is (= "class java.lang.IllegalArgumentException"
-             (:ex exception-response))))
+      (testing "exprs that throw exceptions return an `ex` slot"
+        (is (= "class java.lang.IllegalArgumentException"
+               (:ex exception-response))))
 
-    (testing "exprs that throw exceptions return an `err` slot"
-      (is (.startsWith (:err exception-response)
-                       "IllegalArgumentException")))))
+      ;;TODO: The :err slot is missing when running this through the Cider test-runner
+      (testing "exprs that throw exceptions return an `err` slot"
+        (is (.startsWith (:err exception-response)
+                         "IllegalArgumentException")))))
+
+  (testing "inspect-pop error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "pop exception")))]
+      (let [response (session/message {:op "inspect-pop"})]
+        (is (= (:status response) #{"inspect-pop-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: pop exception")))))
+
+  (testing "inspect-push error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "push exception")))]
+      (let [response (session/message {:op "inspect-push" :idx 1})]
+        (is (= (:status response) #{"inspect-push-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: push exception")))))
+
+  (testing "inspect-refresh error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "refresh exception")))]
+      (let [response (session/message {:op "inspect-refresh"})]
+        (is (= (:status response) #{"inspect-refresh-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: refresh exception")))))
+
+  (testing "inspect-next-page error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-page exception")))]
+      (let [response (session/message {:op "inspect-next-page"})]
+        (is (= (:status response) #{"inspect-next-page-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: next-page exception")))))
+
+  (testing "inspect-prev-page error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "prev-page exception")))]
+      (let [response (session/message {:op "inspect-prev-page"})]
+        (is (= (:status response) #{"inspect-prev-page-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: prev-page exception")))))
+
+  (testing "inspect-set-page-size error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "page-size exception")))]
+      (let [response (session/message {:op "inspect-set-page-size" :page-size 10})]
+        (is (= (:status response) #{"inspect-set-page-size-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (.startsWith (:err response) "java.lang.Exception: page-size exception"))))))
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"
@@ -245,7 +290,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx "1"})))))))
+                                       :idx 1})))))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
@@ -264,7 +309,7 @@
                                        :inspect "true"
                                        :code "(map identity (range 35))"})
                      (session/message {:op "inspect-set-page-size"
-                                       :page-size "5"})
+                                       :page-size 5})
                      (session/message {:op "inspect-next-page"})
                      (session/message {:op "inspect-prev-page"})))))))
 
@@ -276,7 +321,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx "1"})
+                                       :idx 1})
                      (session/message {:op "inspect-pop"})))))))
 
 (deftest refresh-integration-test
@@ -306,7 +351,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx "1"})
+                                       :idx 1})
                      (session/message {:op "inspect-refresh"})))))))
 
 (deftest session-binding-integration-test
@@ -319,3 +364,48 @@
                      (session/message {:op "eval"
                                        :inspect "true"
                                        :code "*1"})))))))
+
+(deftest page-size-integration-test
+  (testing "page size can be changed in the eval op itself"
+    (let [normal-page-size (session/message {:op "eval"
+                                             :inspect "true"
+                                             :code "(range 100)"})
+          normal-page-2    (session/message {:op "inspect-next-page"})
+
+          small-page-size  (session/message {:op "eval"
+                                             :inspect "true"
+                                             :code "(range 100)"
+                                             :page-size 5})
+          small-page-2     (session/message {:op "inspect-next-page"})
+
+          extract-text     #(-> % :value first)]
+      (is (re-find #"Page size: 32, showing page: 1 of 4"
+                   (extract-text normal-page-size)))
+      (is (re-find #"Page size: 5, showing page: 1 of 20"
+                   (extract-text small-page-size)))
+
+      (is (re-find #"Page size: 32, showing page: 2 of 4"
+                   (extract-text normal-page-2)))
+      (is (re-find #"Page size: 5, showing page: 2 of 20"
+                   (extract-text small-page-2)))))
+
+  (testing "page size can be changed via the inspect-set-page-size op"
+    (let [normal-page-size (session/message {:op "eval"
+                                             :inspect "true"
+                                             :code "(range 100)"})
+          normal-page-2    (session/message {:op "inspect-next-page"})
+
+          small-page-size  (session/message {:op "inspect-set-page-size"
+                                             :page-size 5})
+          small-page-2     (session/message {:op "inspect-next-page"})
+
+          extract-text     #(-> % :value first)]
+      (is (re-find #"Page size: 32, showing page: 1 of 4"
+                   (extract-text normal-page-size)))
+      (is (re-find #"Page size: 5, showing page: 1 of 20"
+                   (extract-text small-page-size)))
+
+      (is (re-find #"Page size: 32, showing page: 2 of 4"
+                   (extract-text normal-page-2)))
+      (is (re-find #"Page size: 5, showing page: 2 of 20"
+                   (extract-text small-page-2))))))

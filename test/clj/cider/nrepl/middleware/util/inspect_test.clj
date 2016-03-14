@@ -3,7 +3,7 @@
             [clojure.test :refer :all]))
 
 (defprotocol IMyTestType
-   (^String get-name [this]))
+  (^String get-name [this]))
 
 (deftype MyTestType [name]
   IMyTestType
