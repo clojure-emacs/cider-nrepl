@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.misc :as misc]
+            [cider.nrepl.middleware.util.misc :refer [err-info]]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cljs-tooling.info :as cljs-info]
             [cljs-tooling.util.analysis :as cljs-analysis]
@@ -59,25 +59,41 @@
 
 (defn ns-list-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :ns-list (ns-list msg)))
-  (transport/send transport (response-for msg :status :done)))
+  (try
+    (transport/send transport
+                    (response-for msg :ns-list (ns-list msg) :status :done))
+    (catch Exception e
+      (transport/send transport
+                      (response-for msg (err-info e :ns-list-reply-error))))))
 
 (defn ns-list-vars-by-name-reply
   [{:keys [transport name] :as msg}]
-  (->> (ns-list-vars-by-name (symbol name))
-       pr-str
-       (response-for msg :status :done :var-list)
-       (transport/send transport)))
+  (try
+    (->> (ns-list-vars-by-name (symbol name))
+         pr-str
+         (response-for msg :status :done :var-list)
+         (transport/send transport))
+    (catch Exception e
+      (transport/send transport
+                      (response-for msg (err-info e :ns-list-vars-by-name-reply-error))))))
 
 (defn ns-vars-reply
   [{:keys [transport] :as msg}]
-  (transport/send transport (response-for msg :ns-vars (ns-vars msg)))
-  (transport/send transport (response-for msg :status :done)))
+  (try
+    (transport/send transport
+                    (response-for msg :ns-vars (ns-vars msg) :status :done))
+    (catch Exception e
+      (transport/send transport
+                      (response-for msg (err-info e :ns-vars-reply-error))))))
 
 (defn- ns-path-reply
   [{:keys [transport ns] :as msg}]
-  (transport/send transport (response-for msg :path (ns-path msg)))
-  (transport/send transport (response-for msg :status :done)))
+  (try
+    (transport/send transport
+                    (response-for msg :path (ns-path msg) :status :done))
+    (catch Exception e
+      (transport/send transport
+                      (response-for msg (err-info e :ns-path-reply-error))))))
 
 (defn wrap-ns
   "Middleware that provides ns listing/browsing functionality."
