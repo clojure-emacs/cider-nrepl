@@ -7,7 +7,6 @@
             [clojure.java.io :as io])
   (:import java.util.jar.JarFile))
 
-
 ;;; Namespace Loading
 
 (defn ensure-namespace
@@ -16,7 +15,6 @@
   [ns]
   (try (doto (symbol ns) require)
        (catch Exception _)))
-
 
 ;;; Project Namespaces
 ;; These methods search project sources on the classpath. Non-classpath source
