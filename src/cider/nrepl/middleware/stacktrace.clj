@@ -3,6 +3,7 @@
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.storage :as c-store]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -156,10 +157,10 @@
 ;;; ## Middleware
 
 (defn wrap-stacktrace-reply
-  [{:keys [session transport pprint-fn] :as msg}]
-  ;; no stacktrace support for cljs currently - they are printed by piggieback anyway
-  (if-let [e (and (not (cljs/grab-cljs-env msg))
-                  (@session #'*e))]
+  [{:keys [session transport pprint-fn storage-key] :as msg}]
+  (if-let [e (cond (cljs/grab-cljs-env msg) nil   ;; no cljs stacktraces (printed by piggieback)
+                   storage-key (c-store/query! storage-key) ;; stored Exceptions for sync-calls
+                   :else (@session #'*e))] ;; bound *e for non-sync "eval" calls
     (doseq [cause (analyze-causes e pprint-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
@@ -170,8 +171,8 @@
   info for the most recent exception."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (= "stacktrace" op)
-      (wrap-stacktrace-reply msg)
+    (case op
+      "stacktrace" (wrap-stacktrace-reply msg)
       (handler msg))))
 
 ;; nREPL middleware descriptor info
@@ -183,5 +184,6 @@
    :handles {"stacktrace"
              {:doc (str "Return messages describing each cause and stack frame "
                         "of the most recent exception.")
-              :optional pprint/wrap-pprint-fn-optional-arguments
-              :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
+              :optional (merge pprint/wrap-pprint-fn-optional-arguments
+                               {"storage-key" "The hash key for the Exception you're looking for if not looking for `*e`"})
+              :returns {"status" "\"done\", or \"no-error\" if no Exception in `*e` or the storage map."}}}}))
