@@ -104,6 +104,5 @@
 
   (testing "Handles a real error caused by an improper regular expression"
     (let [response (session/message {:op "apropos" :query "*illegal"})]
-      (is (= (:status response) #{"apropos-error" "done"}))
-      (is (= (:ex response) "class java.util.regex.PatternSyntaxException"))
-      (is (.startsWith (:err response) "java.util.regex.PatternSyntaxException: Dangling")))))
+      (is (= (:status response) #{"apropos-regexp-error" "done"}))
+      (is (.startsWith (:error-msg response) "Dangling")))))

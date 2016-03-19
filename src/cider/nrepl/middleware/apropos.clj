@@ -86,6 +86,10 @@
   (try
     (let [results (find-symbols ns query search-ns docs? privates? case-sensitive?)]
       (t/send transport (response-for msg :apropos-matches results :status :done)))
+    (catch java.util.regex.PatternSyntaxException e
+      (t/send
+       transport
+       (response-for msg :status #{:done :apropos-regexp-error} :error-msg (.getMessage e))))
     (catch Exception e
       (t/send
        transport
