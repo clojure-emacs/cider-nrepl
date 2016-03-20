@@ -39,7 +39,7 @@
     (is (not (#'d/skip-breaks? [2 2 1])))
 
     (let [code "(foo (bar blah x))"]
-      (#'d/skip-breaks! :deeper [1 2] code)
+      (#'d/skip-breaks! :deeper [1 2] code nil)
       (binding [d/*extras* {:code code}]
         (is (#'d/skip-breaks? []))
         (is (not (#'d/skip-breaks? [1 2])))
