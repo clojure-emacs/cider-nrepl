@@ -200,8 +200,11 @@
 (defn debugger-send
   "Send a response through debugger-message."
   [& r]
-  (transport/send (:transport @debugger-message)
-                  (apply response-for @debugger-message r)))
+  (try
+    (transport/send (:transport @debugger-message)
+                    (apply response-for @debugger-message r))
+    (catch java.net.SocketException _
+      (reset! debugger-message nil))))
 
 (defn- read-debug
   "Like `read`, but reply is sent through `debugger-message`.
