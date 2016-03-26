@@ -95,6 +95,15 @@
       (transport/send transport
                       (response-for msg (err-info e :ns-path-reply-error))))))
 
+(defn- ns-load-all-reply
+  [{:keys [transport ns] :as msg}]
+  (try
+    (transport/send transport
+                    (response-for msg :loaded-ns (ns/load-project-namespaces) :status :done))
+    (catch Exception e
+      (transport/send transport
+                      (response-for msg (err-info e :ns-load-all-error))))))
+
 (defn wrap-ns
   "Middleware that provides ns listing/browsing functionality."
   [handler]
@@ -104,6 +113,7 @@
       "ns-list-vars-by-name" (ns-list-vars-by-name-reply msg)
       "ns-vars" (ns-vars-reply msg)
       "ns-path" (ns-path-reply msg)
+      "ns-load-all" (ns-load-all-reply msg)
       (handler msg))))
 
 (set-descriptor!
@@ -124,4 +134,7 @@
     "ns-path"
     {:doc "Returns the path to the file containing ns."
      :requires {"ns" "The namespace to find."}
-     :return {"status" "done" "path" "The path to the file containing ns."}}}}))
+     :return {"status" "done" "path" "The path to the file containing ns."}}
+    "ns-load-all"
+    {:doc "Loads all project namespaces."
+     :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}}}))

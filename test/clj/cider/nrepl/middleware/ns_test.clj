@@ -48,6 +48,11 @@
     (is (.endsWith ns-path "cider/nrepl/middleware/ns.clj"))
     (is (.endsWith core-path "clojure/core.clj"))))
 
+(deftest ns-load-all-integration-test
+  (let [loaded-ns (:loaded-ns (session/message {:op "ns-load-all"}))]
+    (is (sequential? loaded-ns))
+    (is (every? string? loaded-ns))))
+
 (deftest test-ns-list-vars-by-name
   (is (= (first (ns-list-vars-by-name 'test-ns-list-vars-by-name))
          #'cider.nrepl.middleware.ns-test/test-ns-list-vars-by-name))
