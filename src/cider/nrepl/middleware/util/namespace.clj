@@ -28,8 +28,7 @@
   "Find all namespaces defined in source paths within the current project."
   []
   (->> (cp/classpath-directories)
-       (filter #(re-find (re-pattern (str "^" project-root))
-                         (str %)))
+       (filter #(.startsWith (str %) project-root))
        (mapcat ns-find/find-namespaces-in-dir)))
 
 (defn inlined-dependency?
