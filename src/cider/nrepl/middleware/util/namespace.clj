@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.util.namespace
   "Utilities for resolving and loading namespaces"
-  (:require [clojure.java.classpath :as cp]
+  (:require [cider.nrepl.middleware.util.misc :as u]
+            [clojure.java.classpath :as cp]
             [clojure.tools.namespace
              [file :as ns-file]
              [find :as ns-find]]
@@ -19,6 +20,10 @@
 ;;; Project Namespaces
 ;; These methods search project sources on the classpath. Non-classpath source
 ;; files, documentation code, etc within the project directory are ignored.
+(def jar-namespaces
+  (->> (cp/classpath-jarfiles)
+       (mapcat ns-find/find-namespaces-in-jarfile)
+       (into #{})))
 
 (def project-root
   (str (System/getProperty "user.dir")

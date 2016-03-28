@@ -3,7 +3,8 @@
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.ns :as ns]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.misc :as misc]
+            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.java.classpath :as cp]
             [clojure.tools.namespace.find :as ns-find]
@@ -51,14 +52,6 @@
                               [sym (relevant-meta the-meta)]))))))))
 
 ;;; Namespaces
-(def jar-namespaces
-  (->> (cp/classpath-jarfiles)
-       (mapcat ns-find/find-namespaces-in-jarfile)
-       (into #{})))
-
-(defn track-ns? [ns-name]
-  (not (jar-namespaces ns-name)))
-
 (defn ns-as-map [object]
   (cond
     ;; Clojure Namespaces
@@ -161,9 +154,9 @@
         ;; Remove all jar namespaces.
         project-ns-map (fast-reduce (fn [acc ns]
                                       (let [name (ns-name-fn ns)]
-                                        (if (track-ns? name)
-                                          (assoc! acc name ns)
-                                          acc)))
+                                        (if (namespace/jar-namespaces name)
+                                          acc
+                                          (assoc! acc name ns))))
                                     (if cljs
                                       (vals (cljs-ana/all-ns cljs))
                                       (all-ns)))
@@ -174,7 +167,7 @@
     (try (->> (response-for
                msg :status :state
                :repl-type (if cljs :cljs :clj)
-               :changed-namespaces (misc/transform-value changed-ns-map))
+               :changed-namespaces (u/transform-value changed-ns-map))
               (transport/send (:transport msg)))
          ;; We run async, so the connection might have been closed in
          ;; the mean time.
