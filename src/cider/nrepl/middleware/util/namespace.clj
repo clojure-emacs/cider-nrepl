@@ -32,9 +32,12 @@
 (defn project-namespaces
   "Find all namespaces defined in source paths within the current project."
   []
-  (->> (cp/classpath-directories)
-       (filter #(.startsWith (str %) project-root))
-       (mapcat ns-find/find-namespaces-in-dir)))
+  (if (u/boot-project?)
+    ;; This has false positives, but it's the best we can do in boot.
+    (remove jar-namespaces (all-ns))
+    (->> (cp/classpath-directories)
+         (filter #(.startsWith (str %) project-root))
+         (mapcat ns-find/find-namespaces-in-dir))))
 
 (defn inlined-dependency?
   "Returns true if the namespace matches one of our, or eastwood's,
