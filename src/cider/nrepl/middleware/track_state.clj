@@ -85,12 +85,11 @@
                    (update-vals #(relevant-meta (meta %))))}))
 
 (defn calculate-changed-ns-map
-  "Return a map of namespaces that changed between new and old-map.
-  new is a list of namespaces objects, as returned by `all-ns`.
-  old-map is a map from namespace names to namespace data, which is
-  the same format of map returned by this function. old-map can also
-  be nil, which is the same as an empty map."
-  [new old-map]
+  "Return a map of namespaces that changed between new-map and old-map.
+  new-map and old-map are maps from namespace names to namespace data,
+  which is the same format of map returned by this function. old-map
+  can also be nil, which is the same as an empty map."
+  [new-map old-map]
   (into (if (or (seq old-map)
                 (not clojure-core-map))
           {}
@@ -98,21 +97,15 @@
           ;; but we don't want to track changes. So we add it in when
           ;; the old-data is nil (meaning this is the first message).
           {'clojure.core clojure-core-map})
-        (keep (fn [the-ns]
-                (let [the-ns-name (if (instance? Namespace the-ns)
-                                    (ns-name the-ns)
-                                    (:name the-ns))]
-                  (when-let [data (and (track-ns? the-ns-name)
-                                       (ns-as-map the-ns))]
-                    (when-not (= (get old-map the-ns-name) data)
-                      [the-ns-name data])))))
-        new))
+        (keep (fn [[the-ns-name the-ns]]
+                (when-let [data (ns-as-map the-ns)]
+                  (when-not (= (get old-map the-ns-name) data)
+                    [the-ns-name data]))))
+        new-map))
 
 ;;; State management
 (defn merge-used-aliases
-  "Return a map of namespaces aliased by a namespace in new-ns-map.
-  Maps from symbols (namespace names) to namespace objects.
-  Skip any namespaces already present in new-ns-map or old-ns-map.
+  "Return new-ns-map merged with all of its direct dependencies.
   val-fn a function that returns namespace objects when called with
   namespace names."
   [^clojure.lang.PersistentHashMap new-ns-map
@@ -137,6 +130,12 @@
          (fn [_ e]
            (println "Exception updating the ns-cache" e))))
 
+(defn fast-reduce
+  "Like (reduce f {} coll), but faster.
+  Inside f, use `assoc!` and `conj!` instead of `assoc` and `conj`."
+  [f coll]
+  (persistent! (reduce f (transient {}) coll)))
+
 (defn update-and-send-cache
   "Send a reply to msg with state information assoc'ed.
   old-data is the ns-cache that needs to be updated (the one
@@ -152,17 +151,26 @@
   client."
   [old-data msg]
   (let [cljs (cljs/grab-cljs-env msg)
-        ;; See what has changed compared to the cache. If the cache
-        ;; was empty, everything is considered to have changed (and
-        ;; the cache will then be filled).
-        changed-ns-map (-> (if cljs
-                             (vals (cljs-ana/all-ns cljs))
-                             (all-ns))
-                           (calculate-changed-ns-map old-data))
         find-ns-fn (if cljs
                      #(cljs-ana/find-ns cljs %)
                      find-ns)
-        changed-ns-map (merge-used-aliases changed-ns-map (or old-data {}) find-ns-fn)]
+        ;; See what has changed compared to the cache. If the cache
+        ;; was empty, everything is considered to have changed (and
+        ;; the cache will then be filled).
+        ns-name-fn (if cljs :name ns-name)
+        ;; Remove all jar namespaces.
+        project-ns-map (fast-reduce (fn [acc ns]
+                                      (let [name (ns-name-fn ns)]
+                                        (if (track-ns? name)
+                                          (assoc! acc name ns)
+                                          acc)))
+                                    (if cljs
+                                      (vals (cljs-ana/all-ns cljs))
+                                      (all-ns)))
+        changed-ns-map (-> project-ns-map
+                           ;; Add back namespaces that the project depends on.
+                           (merge-used-aliases (or old-data {}) find-ns-fn)
+                           (calculate-changed-ns-map old-data))]
     (try (->> (response-for
                msg :status :state
                :repl-type (if cljs :cljs :clj)
