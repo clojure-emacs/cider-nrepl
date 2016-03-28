@@ -91,20 +91,22 @@
   the same format of map returned by this function. old-map can also
   be nil, which is the same as an empty map."
   [new old-map]
-  (->> new
-       (into (cond-> {}
-               ;; We want to inform the client of what's in clojure.core,
-               ;; but we don't want to track changes. So we add it in when
-               ;; the old-data is nil (meaning this is the first message).
-               (and (not old-map) clojure-core-map) (assoc 'clojure.core clojure-core-map))
-             (keep (fn [the-ns]
-                     (let [the-ns-name (if (instance? Namespace the-ns)
-                                         (ns-name the-ns)
-                                         (:name the-ns))]
-                       (when-let [data (and (track-ns? the-ns-name)
-                                            (ns-as-map the-ns))]
-                         (when-not (= (get old-map the-ns-name) data)
-                           [the-ns-name data]))))))))
+  (into (if (or (seq old-map)
+                (not clojure-core-map))
+          {}
+          ;; We want to inform the client of what's in clojure.core,
+          ;; but we don't want to track changes. So we add it in when
+          ;; the old-data is nil (meaning this is the first message).
+          {'clojure.core clojure-core-map})
+        (keep (fn [the-ns]
+                (let [the-ns-name (if (instance? Namespace the-ns)
+                                    (ns-name the-ns)
+                                    (:name the-ns))]
+                  (when-let [data (and (track-ns? the-ns-name)
+                                       (ns-as-map the-ns))]
+                    (when-not (= (get old-map the-ns-name) data)
+                      [the-ns-name data])))))
+        new))
 
 ;;; State management
 (defn calculate-used-aliases
