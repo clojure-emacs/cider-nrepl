@@ -12,11 +12,6 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]))
 
-(defn- boot-project? []
-  ;; fake.class.path under boot contains the original directories with source
-  ;; files, see https://github.com/boot-clj/boot/issues/249
-  (not (nil? (System/getProperty "fake.class.path"))))
-
 (defn- boot-class-loader
   "Creates a class-loader that knows original source files paths in Boot project."
   []
@@ -33,7 +28,7 @@
     (new java.net.URLClassLoader (into-array java.net.URL urls))))
 
 (defn- resource-full-path [relative-path]
-  (if (boot-project?)
+  (if (u/boot-project?)
     (io/resource relative-path (boot-class-loader))
     (io/resource relative-path)))
 
