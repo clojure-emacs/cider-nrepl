@@ -109,22 +109,24 @@
         new))
 
 ;;; State management
-(defn calculate-used-aliases
-  "Return a seq of namespaces aliased by a namespace in new-ns-map.
-  The elements are symbols (namespace names).
-  Skip any namespaces already present in new-ns-map or old-ns-map."
+(defn merge-used-aliases
+  "Return a map of namespaces aliased by a namespace in new-ns-map.
+  Maps from symbols (namespace names) to namespace objects.
+  Skip any namespaces already present in new-ns-map or old-ns-map.
+  val-fn a function that returns namespace objects when called with
+  namespace names."
   [^clojure.lang.PersistentHashMap new-ns-map
-   ^clojure.lang.PersistentHashMap old-ns-map]
+   ^clojure.lang.PersistentHashMap old-ns-map
+   val-fn]
   (->> (vals new-ns-map)
        (map :aliases)
        (mapcat vals)
        (reduce (fn [acc name]
                  (if (or (get acc name)
-                         (get old-ns-map name)
-                         (get new-ns-map name))
+                         (get old-ns-map name))
                    acc
-                   (conj acc name)))
-               [])))
+                   (assoc acc name (ns-as-map (val-fn name)))))
+               new-ns-map)))
 
 (def ns-cache
   "Cache of the namespace info that has been sent to each session.
@@ -160,10 +162,7 @@
         find-ns-fn (if cljs
                      #(cljs-ana/find-ns cljs %)
                      find-ns)
-        used-aliases (->> (calculate-used-aliases changed-ns-map (or old-data {}))
-                          (map #(vector % (ns-as-map (find-ns-fn %))))
-                          (into {}))
-        changed-ns-map (merge changed-ns-map used-aliases)]
+        changed-ns-map (merge-used-aliases changed-ns-map (or old-data {}) find-ns-fn)]
     (try (->> (response-for
                msg :status :state
                :repl-type (if cljs :cljs :clj)
