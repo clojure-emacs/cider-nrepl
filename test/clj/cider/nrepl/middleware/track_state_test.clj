@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.track-state-test
   (:require [cider.nrepl.middleware.track-state :as st]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.namespace :as namespace]
             [clojure.test :refer :all]
             [clojure.tools.nrepl.transport :as t])
   (:import clojure.tools.nrepl.transport.Transport))
@@ -21,12 +22,9 @@
            nil
            (catch Exception e true))))
 
-(deftest track-ns?
-  (is (not (some st/track-ns? st/jar-namespaces))))
-
 (deftest update-and-send-cache
   (let [sent-value (atom nil)]
-    (with-redefs [st/track-ns? (constantly true)
+    (with-redefs [namespace/jar-namespaces #{}
                   t/send (fn [t m] (reset! sent-value m))]
       (let [new-data (st/update-and-send-cache nil msg)]
         (is (map? new-data))
@@ -109,10 +107,9 @@
       (is (= (aliases 'st)
              'cider.nrepl.middleware.track-state)))
     (alter-meta! #'update-vals (fn [x y] y) m))
-  (with-redefs [st/track-ns? (constantly nil)]
-    (let [{:keys [interns aliases] :as ns}
-          (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
-      (is interns))))
+  (let [{:keys [interns aliases] :as ns}
+        (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+    (is interns)))
 
 (deftest ns-as-map-cljs
   (let [cljs-ns {:use-macros {'sym-0 #'test-fn}
@@ -127,9 +124,9 @@
                      sym-2 {}}))))
 
 (deftest calculate-used-aliases
-  (is (contains? (into #{} (st/calculate-used-aliases some-ns-map nil))
+  (is (contains? (st/merge-used-aliases some-ns-map nil ns-name)
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (into #{} (st/calculate-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil}))
+  (is (contains? (st/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name)
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (into #{} (st/calculate-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil))
+  (is (contains? (st/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name)
                  'cider.nrepl.middleware.track-state)))
