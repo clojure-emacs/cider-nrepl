@@ -1,20 +1,21 @@
 (ns cider.nrepl.middleware.debug
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+  (:require [cider.nrepl.middleware.info :as info]
+            [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.misc :as misc]
+            [clojure.java.io :as io]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport]
-            [clojure.walk :as walk])
-  (:import [clojure.lang Compiler$LocalBinding]))
+            [cider.nrepl.middleware.util.misc :as u])
+  (:import [clojure.lang Compiler$LocalBinding LineNumberingPushbackReader]))
 
 (defn random-uuid-str []
   (letfn [(hex [] (format "%x" (rand-int 15)))
@@ -190,6 +191,8 @@
 (def print-length (atom nil))
 (def print-level (atom nil))
 
+(defonce step-in-to-next? (atom false))
+
 (defn pr-short
   "Like `pr-str` but limited in length and depth."
   [x]
@@ -311,7 +314,7 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :continue :out :here :inspect :locals :inject :eval :stacktrace :trace :quit]
+  (let [commands (cond->> [:next :in :continue :out :here :inspect :locals :inject :eval :stacktrace :trace :quit]
                    (not (map? *msg*)) (remove #{:quit})
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
@@ -320,8 +323,10 @@
         (if (map? response-raw) response-raw
             {:response response-raw})
         extras (dissoc extras :inspect)]
+    (reset! step-in-to-next? false)
     (case response
       :next     value
+      :in       (do (reset! step-in-to-next? true) value)
       :continue (do (skip-breaks! :all) value)
       :out      (do (skip-breaks! :deeper (butlast (:coor extras)) (:code extras) force?)
                     value)
@@ -343,6 +348,110 @@
             *print-level*  2]
     (pr form))
   (println "=>" (pr-short value)))
+
+(defn read-var
+  "Find the source of the var `v`.
+  Return a map of the var's metadata (:file, :line, :column, etc.) as well as:
+    - :form : The form, as read by `clojure.core/read`, and
+    - :code : The source code of the form
+  Return nil if the source of the var cannot be found."
+  ;; TODO - maybe this function should go in info.clj?
+  [v]
+  (when-let [{:keys [file line column] :as var-meta} (info/var-meta v)]
+    ;; file can be either absolute (eg: functions that have been eval-ed with
+    ;; C-M-x), or relative to some path on the classpath.
+    (when-let [res (or (io/resource file)
+                       (let [f (io/file file)]
+                         (when (.exists f)
+                           f)))]
+      (with-open [rdr (LineNumberingPushbackReader. (io/reader res))]
+        ;; Skip to the right line
+        (dotimes [_ (dec line)]
+          (.readLine rdr))
+
+        ;; Reader that collects the code as a string. Adapted from
+        ;; clojure.repl/source.
+        (let [text     (StringBuilder.)
+              collect? (atom false)
+              pbr      (proxy [LineNumberingPushbackReader] [rdr]
+                         (read []
+                           (let [i (proxy-super read)]
+                             (when @collect?
+                               (.append text (char i)))
+                             i))
+                         (unread [c]
+                           (when @collect?
+                             (.deleteCharAt text (dec (.length text))))
+                           (proxy-super unread c)))
+              ;; Fix bogus column number of 1, which really means 0
+              column   (if (= 1 column) 0 column)]
+
+          ;; Give it the right line and column number. We can just set the
+          ;; line number directly, but there is no setColumnNumber method, so
+          ;; we have to hack it a bit.
+          (.setLineNumber pbr (.getLineNumber rdr))
+          (dotimes [_ column]
+            (.read pbr))
+
+          ;; Now start collecting the code
+          (reset! collect? true)
+
+          (let [form (read {} pbr)
+                code (str text)]
+            (assoc var-meta
+                   :form form
+                   :code code)))))))
+
+(declare debug-reader)
+
+(defn instrument-var-for-step-in
+  "Attach an instrumented version of the function in `v` as metadata to `v`,
+  leaving the contents of the var uninstrumented."
+  [v]
+  (when-not (::instrumented (meta v))
+    (when-let [{:keys [ns file form] :as var-meta} (read-var v)]
+      (let [full-path (misc/transform-value (:file (info/file-info file)))]
+        (binding [*ns*   ns
+                  *file* file
+                  *msg*  (-> *msg*
+                             (merge var-meta)
+                             (assoc :file full-path))]
+          (-> form
+              debug-reader
+              ins/instrument-tagged-code
+              eval)
+          (let [instrumented @v]
+            (eval form)
+            (alter-meta! v assoc ::instrumented instrumented)))))))
+
+(defn step-in?
+  "Return true if we can and should step in to the function in the var `v`.
+  The \"should\" part is determined by the value in `step-in-to-next?`, which
+  gets set to true by the user sending the \"step in\" command."
+  [v coor]
+  (when (and @step-in-to-next?
+             (not (skip-breaks? coor))
+             (not= :trace (:mode @*skip-breaks*))
+             (not (::ins/breakfunction (meta v))))
+    (try
+      (instrument-var-for-step-in v)
+      true
+      (catch Exception e
+        ;; TODO - how do we inform the user that we failed?
+        false))))
+
+(defn looks-step-innable?
+  "Decide whether a form looks like a call to a function that we could
+  instrument and step into."
+  [form]
+  (when (and (seq? form) (symbol? (first form)))
+    (let [v (resolve (first form))      ; Note: special forms resolve to nil
+          m (meta v)]
+      ;; We do not go so far as to actually try to read the code of the function
+      ;; at this point, which is at macroexpansion time.
+      (and v
+           (not (:macro m))
+           (not (:inline m))))))
 
 ;;; ## High-level functions
 (defmacro with-debug-bindings
@@ -372,18 +481,29 @@
      ~@body))
 
 (defmacro breakpoint-implementation [form {:keys [coor]} original-form]
-  `(let [val# ~form]
-     (cond
-       (skip-breaks? ~coor) val#
-       ;; The length of `coor` is a good indicator of current code
-       ;; depth.
-       (= (:mode @*skip-breaks*) :trace)
-       (do (print-step-indented ~(count coor) '~original-form val#)
-           val#)
-       ;; Nothing special. Here's the actual breakpoint logic.
-       :else (->> (pr-short val#)
-                  (assoc *extras* :debug-value)
-                  (read-debug-command val#)))))
+  (let [val-form (if (looks-step-innable? form)
+                   (let [[fn-sym & args] form]
+                     ;; Evaluate args first, delaying the decision of whether or
+                     ;; not to step in until the last possible moment.
+                     `(let [args# [~@args]
+                            step-in?# (step-in? (var ~fn-sym) ~coor)]
+                        (apply (if step-in?#
+                                 (::instrumented (meta (var ~fn-sym)))
+                                 ~fn-sym)
+                               args#)))
+                   form)]
+    `(let [val# ~val-form]
+       (cond
+         (skip-breaks? ~coor) val#
+         ;; The length of `coor` is a good indicator of current code
+         ;; depth.
+         (= (:mode @*skip-breaks*) :trace)
+         (do (print-step-indented ~(count coor) '~original-form val#)
+             val#)
+         ;; Nothing special. Here's the actual breakpoint logic.
+         :else                (->> (pr-short val#)
+                                   (assoc *extras* :debug-value)
+                                   (read-debug-command val#))))))
 
 (defmacro breakpoint
   "Send the result of form and its coordinates to the client.
