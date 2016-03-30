@@ -64,7 +64,8 @@
         ;; play it safe and use a `try`.
         (try
           (condp #(%1 %2) name
-            '#{if do recur throw finally try new monitor-exit monitor-enter} (instrument-coll args)
+            '#{if do recur throw finally try monitor-exit monitor-enter} (instrument-coll args)
+            '#{new} (cons (first args) (instrument-coll (rest args)))
             '#{quote & var clojure.core/import*} args
             '#{.} (list* (instrument (first args))
                          (second args)
