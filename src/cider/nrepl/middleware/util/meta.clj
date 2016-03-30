@@ -27,7 +27,12 @@
   (let [md (meta form)
         expanded (walk/walk #(macroexpand-all % original-key)
                             identity
-                            (if (seq? form) (macroexpand form) form))]
+                            (if (seq? form)
+                              ;; Without this, `macroexpand-all`
+                              ;; throws if called on `defrecords`.
+                              (try (macroexpand form)
+                                   (catch ClassNotFoundException e form))
+                              form))]
     (if md
       ;; Macroexpand the metadata too, because sometimes metadata
       ;; contains, for example, functions. This is the case for

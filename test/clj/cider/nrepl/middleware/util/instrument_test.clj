@@ -30,6 +30,16 @@
   ;; Replace #'bp with 'bp for easier print and comparison.
   (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
 
+(deftest instrument-defrecord-and-new
+  (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
+    '(defrecord TestRec [arg arg2]
+       java.lang.Iterable
+       (iterator [this] (inc 1)))
+    '#{[(inc 1) [4 2]]}
+
+    '(new java.lang.Integer 1)
+    '#{[(new java.lang.Integer 1) []]}))
+
 (deftest instrument-clauses
   (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
     '(cond-> value
