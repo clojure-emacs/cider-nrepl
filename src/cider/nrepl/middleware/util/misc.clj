@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.util.misc
   (:require [clojure.string :as str]
-            [clojure.stacktrace :as stacktrace]))
+            [clojure.stacktrace :as stacktrace]
+            [cider.nrepl.middleware.util.storage :as c-store]))
 
 (defn boot-project? []
   ;; fake.class.path under boot contains the original directories with source
@@ -65,7 +66,10 @@
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
 
 (defn err-info
-  [ex status]
-  {:ex (str (class ex))
-   :err (with-out-str (stacktrace/print-cause-trace ex))
-   :status #{status :done}})
+  [ex & statuses]
+  (let [ex-key (.hashCode ex)]
+    (c-store/add! ex-key ex)
+    {:ex (str (class ex))
+     :err (with-out-str (stacktrace/print-cause-trace ex))
+     :status (set (conj statuses :done))
+     :storage-key ex-key}))

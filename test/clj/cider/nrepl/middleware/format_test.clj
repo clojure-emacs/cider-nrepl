@@ -80,10 +80,11 @@
       (is (= #{"done"} status))))
 
   (testing "format-edn returns an error if the given EDN is malformed"
-    (let [{:keys [err status]} (session/message {:op "format-edn"
-                                                 :edn unmatched-delimiter-edn-sample})]
+    (let [{:keys [err status] :as response} (session/message {:op "format-edn"
+                                                              :edn unmatched-delimiter-edn-sample})]
       (is (= #{"edn-read-error" "done"} status))
-      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))))
+      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))
+      (is (:storage-key response))))
 
   (testing "format-edn respects the :print-right-margin slot"
     (let [wide-edn-sample     "[1 2 3 4 5 6       7 8     9    0]"
@@ -104,9 +105,22 @@
       (is (= #{"done"} status))))
 
   (testing "format-edn returns an error if the :pprint-fn is unresolvable"
-    (let [{:keys [err ex status]} (session/message {:op "format-edn"
-                                                    :edn "{:b 2 :c 3 :a 1}"
-                                                    :pprint-fn "fake.nrepl.middleware.pprint/puget-pprint"})]
+    (let [{:keys [err ex status] :as response} (session/message {:op "format-edn"
+                                                                 :edn "{:b 2 :c 3 :a 1}"
+                                                                 :pprint-fn "fake.nrepl.middleware.pprint/puget-pprint"})]
       (is (.startsWith err "java.lang.IllegalArgumentException: No such namespace: fa"))
       (is (= "class java.lang.IllegalArgumentException" ex))
-      (is (= #{"done" "edn-read-error"} status)))))
+      (is (= #{"done" "edn-read-error"} status))
+      (is (:storage-key response)))))
+
+(deftest test-format-edn-stacktrace-processing
+  (testing "Simulates storage of an Exception so that we can analyze the stacktraces of sync'ed calls"
+    (let [format-resp      (session/message {:op "format-edn" :edn "{1 2 3"})
+          ex-key           (:storage-key format-resp)
+          stacktr-resp     (session/message {:op "stacktrace" :storage-key ex-key})
+          empty-store-resp (session/message {:op "stacktrace" :storage-key ex-key})]
+      (is (= "clojure.lang.ExceptionInfo" (:class stacktr-resp)))
+      (is (= "EOF while reading" (:message stacktr-resp)))
+      (is (:stacktrace stacktr-resp))
+      (is (= #{"done"} (:status stacktr-resp)))
+      (is (= #{"no-error" "done"} (:status empty-store-resp))))))
