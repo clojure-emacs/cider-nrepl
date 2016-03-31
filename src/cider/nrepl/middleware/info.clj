@@ -3,14 +3,18 @@
             [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.java :as java]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.repl :as repl]
             [cljs-tooling.info :as cljs-info]
-            [clojure.tools.nrepl.transport :as transport]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]))
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
+
+(defn- boot-project? []
+  ;; fake.class.path under boot contains the original directories with source
+  ;; files, see https://github.com/boot-clj/boot/issues/249
+  (not (nil? (System/getProperty "fake.class.path"))))
 
 (defn- boot-class-loader
   "Creates a class-loader that knows original source files paths in Boot project."
@@ -258,16 +262,10 @@
         u/transform-value)))
 
 (defn info-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (if-let [var-info (format-response (info msg))]
-      (transport/send
-       transport (response-for msg var-info {:status :done}))
-      (transport/send
-       transport (response-for msg {:status #{:no-info :done}})))
-    (catch Exception e
-      (transport/send
-       transport (response-for msg (u/err-info e :info-error))))))
+  [msg]
+  (if-let [var-info (format-response (info msg))]
+    var-info
+    {:status :no-info}))
 
 (defn extract-eldoc [info]
   (cond
@@ -291,25 +289,17 @@
     (format-eldoc raw-eldoc)))
 
 (defn eldoc-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (if-let [var-eldoc (eldoc msg)]
-      (transport/send
-       transport (response-for msg {:eldoc var-eldoc :status :done}))
-      (transport/send
-       transport (response-for msg {:status #{:no-eldoc :done}})))
-    (catch Exception e
-      (transport/send
-       transport (response-for msg (u/err-info e :eldoc-error))))))
+  [msg]
+  (if-let [var-eldoc (eldoc msg)]
+    {:eldoc var-eldoc}
+    {:status :no-eldoc}))
 
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (cond
-      (= "info" op) (info-reply msg)
-      (= "eldoc" op) (eldoc-reply msg)
-      :else (handler msg))))
+  (with-safe-transport handler
+    "info" info-reply
+    "eldoc" eldoc-reply))
 
 (set-descriptor!
  #'wrap-info

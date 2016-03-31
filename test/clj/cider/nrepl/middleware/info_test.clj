@@ -468,39 +468,45 @@
     (let [response (session/message {:op "info" :class "test"})]
       (is (= (:status response) #{"info-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no member provided to a java class eldoc query"
     (let [response (session/message {:op "eldoc" :class "test"})]
       (is (= (:status response) #{"eldoc-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no class provided to a java member info query"
     (let [response (session/message {:op "info" :member "test"})]
       (is (= (:status response) #{"info-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no class provided to a java member eldoc query"
     (let [response (session/message {:op "eldoc" :member "test"})]
       (is (= (:status response) #{"eldoc-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))))
+      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if there's a mocked info retrieval error"
     (with-redefs [info/info (fn [& _] (throw (Exception. "info-exception")))]
       (let [response (session/message {:op "info" :symbol "test" :ns "user"})]
         (is (= (:status response) #{"info-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: info-exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: info-exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "handle the exception thrown if there's a mocked eldoc retreival error "
     (with-redefs [info/eldoc (fn [& _] (throw (Exception. "eldoc-exception")))]
       (let [response (session/message {:op "eldoc" :symbol "test" :ns "user"})]
         (is (= (:status response) #{"eldoc-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: eldoc-exception"))))))
+        (is (.startsWith (:err response) "java.lang.Exception: eldoc-exception"))
+        (is (:pp-stacktrace response))))))
 
 ;; Following comment is a fake. It mimics CLJX generated files.
 

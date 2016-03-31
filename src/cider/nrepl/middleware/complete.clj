@@ -1,9 +1,8 @@
 (ns cider.nrepl.middleware.complete
   (:require [clojure.string :as s]
-            [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.misc :as u]
             [compliment.core :as jvm-complete]
             [cljs-tooling.complete :as cljs-complete]))
@@ -26,35 +25,19 @@
   (when-not (cljs/grab-cljs-env msg)
     (jvm-complete/documentation (str symbol) (u/as-sym ns))))
 
-(defn complete-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg :completions (complete msg) :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :completion-error))))))
+(defn complete-reply [msg]
+  {:completions (complete msg)})
 
 (defn doc-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (let [results (completion-doc msg)]
-      (transport/send transport (response-for msg :completion-doc results :status :done)))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :completion-doc-error))))))
+  [msg]
+  {:completion-doc (completion-doc msg)})
 
 (defn wrap-complete
   "Middleware that looks up possible functions for the given (partial) symbol."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (cond
-      (= "complete" op) (complete-reply msg)
-      (= "complete-doc" op) (doc-reply msg)
-      :else (handler msg))))
+  (with-safe-transport handler
+    "complete" complete-reply
+    "complete-doc" doc-reply))
 
 (set-descriptor!
  #'wrap-complete

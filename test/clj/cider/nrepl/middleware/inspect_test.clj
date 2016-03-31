@@ -231,42 +231,48 @@
       (let [response (session/message {:op "inspect-pop"})]
         (is (= (:status response) #{"inspect-pop-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: pop exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: pop exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "inspect-push error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "push exception")))]
       (let [response (session/message {:op "inspect-push" :idx 1})]
         (is (= (:status response) #{"inspect-push-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: push exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: push exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "inspect-refresh error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "refresh exception")))]
       (let [response (session/message {:op "inspect-refresh"})]
         (is (= (:status response) #{"inspect-refresh-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: refresh exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: refresh exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "inspect-next-page error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-page exception")))]
       (let [response (session/message {:op "inspect-next-page"})]
         (is (= (:status response) #{"inspect-next-page-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: next-page exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: next-page exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "inspect-prev-page error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "prev-page exception")))]
       (let [response (session/message {:op "inspect-prev-page"})]
         (is (= (:status response) #{"inspect-prev-page-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: prev-page exception")))))
+        (is (.startsWith (:err response) "java.lang.Exception: prev-page exception"))
+        (is (:pp-stacktrace response)))))
 
   (testing "inspect-set-page-size error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "page-size exception")))]
       (let [response (session/message {:op "inspect-set-page-size" :page-size 10})]
         (is (= (:status response) #{"inspect-set-page-size-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: page-size exception"))))))
+        (is (.startsWith (:err response) "java.lang.Exception: page-size exception"))
+        (is (:pp-stacktrace response))))))
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"

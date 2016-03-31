@@ -1,13 +1,12 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.misc :refer [err-info]]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cljs-tooling.info :as cljs-info]
             [cljs-tooling.util.analysis :as cljs-analysis]
             [clojure.tools.nrepl
              [middleware :refer [set-descriptor!]]
-             [misc :refer [response-for]]
-             [transport :as transport]]))
+             [misc :refer [response-for]]]))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -57,64 +56,32 @@
     (ns-path-cljs cljs-env ns)
     (ns/ns-path ns)))
 
-(defn ns-list-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send transport
-                    (response-for msg :ns-list (ns-list msg) :status :done))
-    (catch Exception e
-      (transport/send transport
-                      (response-for msg (err-info e :ns-list-reply-error))))))
+(defn ns-list-reply [msg]
+  {:ns-list (ns-list msg)})
 
-(defn ns-list-vars-by-name-reply
-  [{:keys [transport name] :as msg}]
-  (try
-    (->> (ns-list-vars-by-name (symbol name))
-         pr-str
-         (response-for msg :status :done :var-list)
-         (transport/send transport))
-    (catch Exception e
-      (transport/send transport
-                      (response-for msg (err-info e :ns-list-vars-by-name-reply-error))))))
+(defn ns-list-vars-by-name-reply [{:keys [name] :as msg}]
+  {:var-list (pr-str (ns-list-vars-by-name (symbol name)))})
 
 (defn ns-vars-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send transport
-                    (response-for msg :ns-vars (ns-vars msg) :status :done))
-    (catch Exception e
-      (transport/send transport
-                      (response-for msg (err-info e :ns-vars-reply-error))))))
+  [msg]
+  {:ns-vars (ns-vars msg)})
 
-(defn- ns-path-reply
-  [{:keys [transport ns] :as msg}]
-  (try
-    (transport/send transport
-                    (response-for msg :path (ns-path msg) :status :done))
-    (catch Exception e
-      (transport/send transport
-                      (response-for msg (err-info e :ns-path-reply-error))))))
+(defn- ns-path-reply [msg]
+  {:path (ns-path msg)})
 
 (defn- ns-load-all-reply
-  [{:keys [transport ns] :as msg}]
-  (try
-    (transport/send transport
-                    (response-for msg :loaded-ns (ns/load-project-namespaces) :status :done))
-    (catch Exception e
-      (transport/send transport
-                      (response-for msg (err-info e :ns-load-all-error))))))
+  [msg]
+  {:loaded-ns (ns/load-project-namespaces)})
 
 (defn wrap-ns
   "Middleware that provides ns listing/browsing functionality."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "ns-list" (ns-list-reply msg)
-      "ns-list-vars-by-name" (ns-list-vars-by-name-reply msg)
-      "ns-vars" (ns-vars-reply msg)
-      "ns-path" (ns-path-reply msg)
-      "ns-load-all" (ns-load-all-reply msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "ns-list" ns-list-reply
+    "ns-list-vars-by-name" ns-list-vars-by-name-reply
+    "ns-vars" ns-vars-reply
+    "ns-path" ns-path-reply
+    "ns-load-all" ns-load-all-reply))
 
 (set-descriptor!
  #'wrap-ns

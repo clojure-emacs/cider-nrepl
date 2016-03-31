@@ -158,8 +158,7 @@
 (defn wrap-stacktrace-reply
   [{:keys [session transport pprint-fn] :as msg}]
   ;; no stacktrace support for cljs currently - they are printed by piggieback anyway
-  (if-let [e (and (not (cljs/grab-cljs-env msg))
-                  (@session #'*e))]
+  (if-let [e (when-not (cljs/grab-cljs-env msg) (@session #'*e))]
     (doseq [cause (analyze-causes e pprint-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
@@ -170,8 +169,8 @@
   info for the most recent exception."
   [handler]
   (fn [{:keys [op] :as msg}]
-    (if (= "stacktrace" op)
-      (wrap-stacktrace-reply msg)
+    (case op
+      "stacktrace" (wrap-stacktrace-reply msg)
       (handler msg))))
 
 ;; nREPL middleware descriptor info

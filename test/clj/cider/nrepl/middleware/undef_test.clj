@@ -57,4 +57,10 @@
     (is (= #{"done" "undef-error"}
            (:status (session/message {:op "undef"}))
            (:status (session/message {:op "undef" :ns "user"}))
-           (:status (session/message {:op "undef" :symbol "x"}))))))
+           (:status (session/message {:op "undef" :symbol "x"})))))
+
+  (testing "error handling"
+    (let [response (session/message {:op "undef"})]
+      (is (:pp-stacktrace response))
+      (is (:err response))
+      (is (:ex response)))))

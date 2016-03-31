@@ -1,11 +1,9 @@
 (ns cider.nrepl.middleware.apropos
   "Search symbols and docs matching a regular expression"
   {:author "Jeff Valk"}
-  (:require [clojure.string :as str]
+  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+            [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as t]
-            [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.namespace :as ns]))
 
 ;;; ## Overview
@@ -82,26 +80,14 @@
 (defn handle-apropos
   "Return a sequence of vars whose name matches the query pattern, or if
   specified, having the pattern in their docstring."
-  [{:keys [ns query search-ns docs? privates? case-sensitive? transport] :as msg}]
-  (try
-    (let [results (find-symbols ns query search-ns docs? privates? case-sensitive?)]
-      (t/send transport (response-for msg :apropos-matches results :status :done)))
-    (catch java.util.regex.PatternSyntaxException e
-      (t/send
-       transport
-       (response-for msg :status #{:done :apropos-regexp-error} :error-msg (.getMessage e))))
-    (catch Exception e
-      (t/send
-       transport
-       (response-for msg (u/err-info e :apropos-error))))))
+  [{:keys [ns query search-ns docs? privates? case-sensitive?] :as msg}]
+  {:apropos-matches (find-symbols ns query search-ns docs? privates? case-sensitive?)})
 
 (defn wrap-apropos
   "Middleware that handles apropos requests"
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (if (= op "apropos")
-      (handle-apropos msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "apropos" handle-apropos))
 
 ;; nREPL middleware descriptor info
 (set-descriptor!

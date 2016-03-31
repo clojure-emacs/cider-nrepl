@@ -80,10 +80,11 @@
       (is (= #{"done"} status))))
 
   (testing "format-edn returns an error if the given EDN is malformed"
-    (let [{:keys [err status]} (session/message {:op "format-edn"
-                                                 :edn unmatched-delimiter-edn-sample})]
-      (is (= #{"edn-read-error" "done"} status))
-      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))))
+    (let [{:keys [err status] :as response} (session/message {:op "format-edn"
+                                                              :edn unmatched-delimiter-edn-sample})]
+      (is (= #{"format-edn-error" "done"} status))
+      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))
+      (is (:pp-stacktrace response))))
 
   (testing "format-edn respects the :print-right-margin slot"
     (let [wide-edn-sample     "[1 2 3 4 5 6       7 8     9    0]"
@@ -104,9 +105,10 @@
       (is (= #{"done"} status))))
 
   (testing "format-edn returns an error if the :pprint-fn is unresolvable"
-    (let [{:keys [err ex status]} (session/message {:op "format-edn"
-                                                    :edn "{:b 2 :c 3 :a 1}"
-                                                    :pprint-fn "fake.nrepl.middleware.pprint/puget-pprint"})]
+    (let [{:keys [err ex status] :as response} (session/message {:op "format-edn"
+                                                                 :edn "{:b 2 :c 3 :a 1}"
+                                                                 :pprint-fn "fake.nrepl.middleware.pprint/puget-pprint"})]
       (is (.startsWith err "java.lang.IllegalArgumentException: No such namespace: fa"))
       (is (= "class java.lang.IllegalArgumentException" ex))
-      (is (= #{"done" "edn-read-error"} status)))))
+      (is (= #{"done" "format-edn-error"} status))
+      (is (:pp-stacktrace response)))))

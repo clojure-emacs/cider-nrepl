@@ -9,6 +9,7 @@
   guarantee that the channel that sent the clone message will properly
   handle output replies."
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [clojure.string :as s]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
@@ -81,27 +82,23 @@
 
 (defn subscribe-session
   "Add msg to `tracked-sessions-map`."
-  [{:keys [op session] :as msg}]
-  (try
-    (when-let [session (:id (meta session))]
-      (swap! tracked-sessions-map assoc session
-             (select-keys msg [:transport :session :id])))
-    (catch Exception e nil)))
+  [{:keys [session] :as msg}]
+  (when-let [session (:id (meta session))]
+    (swap! tracked-sessions-map assoc session
+           (select-keys msg [:transport :session :id]))
+    {:out-subscribe session}))
 
 (defn unsubscribe-session
   "Remove session from `tracked-sessions-map`."
   [session]
-  (swap! tracked-sessions-map dissoc
-         (if-let [m (meta session)]
-           (:id m)
-           session)))
+  (let [removed (if-let [m (meta session)] (:id m) session)]
+    (swap! tracked-sessions-map dissoc removed)
+    {:out-unsubscribe removed}))
 
 (defn wrap-out [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "out-subscribe" (subscribe-session msg)
-      "out-unsubscribe" (unsubscribe-session msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "out-subscribe" subscribe-session
+    "out-unsubscribe" unsubscribe-session))
 
 (set-descriptor!
  #'wrap-out

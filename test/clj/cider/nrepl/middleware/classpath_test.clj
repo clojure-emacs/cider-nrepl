@@ -17,5 +17,5 @@
     (let [response   (session/message {:op "classpath"})]
       (is (= (:status response) #{"done" "classpath-error"}))
       (is (.startsWith (:err response) "java.lang.Exception: cp error"))
-      (is (= (:ex response) "class java.lang.Exception")))))
-
+      (is (= (:ex response) "class java.lang.Exception"))
+      (is (:pp-stacktrace response)))))
