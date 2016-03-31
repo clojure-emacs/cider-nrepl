@@ -169,3 +169,19 @@
     (is (= (breakpoint-tester '(deftest foo (bar)))
            '#{[(def foo (fn* ([] (clojure.test/test-var (var foo))))) []]
               [(bar) [2]]}))))
+
+(defmacro ns-embedding-macro []
+  ;; clojure.tools.logging does this:
+  `(identity ~*ns*))
+
+(deftest test-namespace-embedded-in-code
+  ;; Instrumentation used to fail if:
+  ;;  - a macro embedded a namespace in a form (eg: ~*ns*), and
+  ;;  - the namespace had metadata (eg: a docstring), and
+  ;;  - you tried to instrument a function that contained a call to the macro
+  ;; This is because Namespace objects implement IMeta, but not IObj.
+  (let [an-ns (create-ns (with-meta 'foo.bar {:doc "ns docstring"}))]
+    (binding [*ns* an-ns]
+      (breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x))
+      ;; If the above did not throw, then we pass
+      (is true))))
