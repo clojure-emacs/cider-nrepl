@@ -16,7 +16,9 @@
 
 (defn strip-meta [form]
   (if (meta form)
-    (with-meta form nil)
+    (try
+      (with-meta form nil)
+      (catch Exception e form))
     form))
 
 (defn macroexpand-all
