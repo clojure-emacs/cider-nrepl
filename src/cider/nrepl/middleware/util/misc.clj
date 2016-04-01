@@ -32,6 +32,8 @@
 
 (defmethod transform-value :default [v] (str v))
 
+(defmethod transform-value java.math.BigDecimal [v] (str v "M"))
+
 (defmethod transform-value Number [v] v)
 
 (defmethod transform-value nil [v] nil)
@@ -63,6 +65,8 @@
 
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
+
+(prefer-method transform-value java.math.BigDecimal Number)
 
 (defn err-info
   [ex status]

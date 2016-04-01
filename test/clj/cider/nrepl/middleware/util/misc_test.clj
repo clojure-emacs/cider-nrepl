@@ -9,8 +9,9 @@
                                 :e false
                                 :f [:g :h :i]
                                 :j 4
-                                :k nil))
-         '{"a" "b", "c" "d", "e" "false", "f" ("g" "h" "i"), "j" 4, "k" nil}))
+                                :k nil
+                                :l 10.1M))
+         '{"a" "b", "c" "d", "e" "false", "f" ("g" "h" "i"), "j" 4, "k" nil, "l" "10.1M"}))
   (is (-> (misc/transform-value {:k (java.io.File. ".")})
           (get "k")
           java.io.File.
