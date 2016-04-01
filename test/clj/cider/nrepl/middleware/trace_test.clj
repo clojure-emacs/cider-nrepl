@@ -1,35 +1,72 @@
 (ns cider.nrepl.middleware.trace-test
-  (:require [cider.nrepl.test-transport :refer :all]
-            [cider.nrepl.middleware.trace :refer :all]
-            [clojure.test :refer :all]))
+  (:require [cider.nrepl.middleware.trace :refer :all]
+            [cider.nrepl.test-session :as session]
+            [clojure.test :refer :all]
+            [cider.test-ns.first-test-ns]))
 
-(deftest test-toogle-trace-var-op
-  (let [transport (test-transport)]
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "zipmap"})
-    (is (= (messages transport) [{:var-name "#'clojure.core/zipmap" :var-status "traced" :status #{:done}}]))
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "zipmap"})
-    (is (= (messages transport) [{:var-name "#'clojure.core/zipmap" :var-status "traced" :status #{:done}}
-                                 {:var-name "#'clojure.core/zipmap" :var-status "untraced" :status #{:done}}]))))
+(use-fixtures :each session/session-fixture)
 
-(deftest test-toogle-trace-var-op-missing-var
-  (let [transport (test-transport)]
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "mappp"})
-    (is (= (messages transport) [{:var-status "not-found" :status #{:toggle-trace-error :done}}]))))
+(deftest test-toggle-trace-var
+  (testing "toggling"
+    (is (= {:var-name "#'clojure.core/zipmap" :var-status "traced"}
+           (toggle-trace-var {:ns "clojure.core" :sym "zipmap"})))
+    (is (= {:var-name "#'clojure.core/zipmap" :var-status "untraced"}
+           (toggle-trace-var {:ns "clojure.core" :sym "zipmap"}))))
 
-(deftest test-toogle-trace-var-op-not-traceable-var
-  (let [transport (test-transport)]
-    (toggle-trace-var {:transport transport :ns "clojure.core" :sym "and"})
-    (is (= (messages transport) [{:var-name "#'clojure.core/and" :var-status "not-traceable" :status #{:done}}]))))
+  (testing "misses"
+    (testing "toggle-trace-var-op unresolvable, should return `not-found`"
+      (is (= {:var-status "not-found" :status #{:toggle-trace-error :done}}
+             (toggle-trace-var {:ns "clojure.core" :sym "mappp"}))))
 
-(deftest test-toogle-trace-ns-op
-  (let [transport (test-transport)]
-    (toggle-trace-ns {:transport transport :ns "clojure.core"})
-    (is (= (messages transport) [{:ns-status "traced" :status #{:done}}]))
-    (toggle-trace-ns {:transport transport :ns "clojure.core"})
-    (is (= (messages transport) [{:ns-status "traced" :status #{:done}}
-                                 {:ns-status "untraced" :status #{:done}}]))))
+    (testing "toogle-trace-var-op not traceable var, should return `not-traceable`"
+      (is (= {:var-name "#'clojure.core/and" :var-status "not-traceable"}
+             (toggle-trace-var {:ns "clojure.core" :sym "and"}))))))
 
-(deftest test-toogle-trace-ns-op-missing-ns
-  (let [transport (test-transport)]
-    (toggle-trace-ns {:transport transport :ns "clojure.corex"})
-    (is (= (messages transport) [{:ns-status "not-found" :status #{:toggle-trace-error :done}}]))))
+(deftest test-toggle-trace-ns
+  (testing "toogling"
+    (is (= {:ns-status "traced"}
+           (toggle-trace-ns {:ns "clojure.core"})))
+    (is (= {:ns-status "untraced"}
+           (toggle-trace-ns {:ns "clojure.core"}))))
+
+  (testing "toogle-trace-ns-op missing ns should return `not-found`"
+    (is (= {:ns-status "not-found"}
+           (toggle-trace-ns {:ns "clojure.corex"})))))
+
+(deftest integration-tests-var
+  (testing "toggling"
+    (let [on  (session/message {:op "toggle-trace-var"
+                                :ns "cider.test-ns.first-test-ns"
+                                :sym "same-name-testing-function"})
+          off (session/message {:op "toggle-trace-var"
+                                :ns "cider.test-ns.first-test-ns"
+                                :sym "same-name-testing-function"})]
+      (is (= (:status on) (:status off) #{"done"}))
+      (is (= (:var-name on) (:var-name off) "#'cider.test-ns.first-test-ns/same-name-testing-function"))
+      (is (= (:var-status on) "traced"))
+      (is (= (:var-status off) "untraced"))))
+
+  (testing "unresolvable"
+    (let [var-err (session/message {:op "toggle-trace-var"
+                                    :ns "cider.test-ns.first-test-ns"
+                                    :sym "missing"})
+          ns-err  (session/message {:op "toggle-trace-var"
+                                    :ns "cider.test-ns.no-such-ns"
+                                    :sym "same-name-testing-function"})]
+      (is (= (:status var-err) (:status ns-err) #{"toggle-trace-error" "done"}))
+      (is (:var-status var-err) "not-found"))))
+
+(deftest integration-test-ns
+  (testing "toggling"
+    (let [on  (session/message {:op "toggle-trace-ns"
+                                :ns "cider.test-ns.first-test-ns"})
+          off (session/message {:op "toggle-trace-ns"
+                                :ns "cider.test-ns.first-test-ns"})]
+      (is (= (:status on) (:status off) #{"done"}))
+      (is (= (:ns-status on) "traced"))
+      (is (= (:ns-status off) "untraced")))
+
+    (let [ns-err (session/message {:op "toggle-trace-ns"
+                                   :ns "cider.test-ns.missing"})]
+      (is (= (:status ns-err)  #{"done"}))
+      (is (= (:ns-status ns-err) "not-found")))))

@@ -14,3 +14,17 @@
     (is (= #{"done"} (:status response)))
     (is (not (empty? (:resources-list response))))
     (is (not (empty? (filter #(re-matches #"test\.txt" %) (:resources-list response)))))))
+
+(deftest test-resource-op-error-handling
+  (with-redefs [r/resource-path (fn [& _] (throw (Exception. "resource")))]
+    (let [response (session/message {:op "resource" :name "test.txt"})]
+      (is (= "class java.lang.Exception" (:ex response)))
+      (is (= #{"done" "resource-error"} (:status response)))
+      (is (:pp-stacktrace response)))))
+
+(deftest test-resources-list-op-error-handling
+  (with-redefs [r/resources-list (fn [& _] (throw (Exception. "resources list")))]
+    (let [response (session/message {:op "resources-list"})]
+      (is (= "class java.lang.Exception" (:ex response)))
+      (is (= #{"done" "resources-list-error"} (:status response)))
+      (is (:pp-stacktrace response)))))

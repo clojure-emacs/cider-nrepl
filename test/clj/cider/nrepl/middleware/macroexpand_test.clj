@@ -46,12 +46,13 @@
       (is (= #{"done"} status))))
 
   (testing "invalid expander"
-    (let [{:keys [err ex status]} (session/message {:op "macroexpand"
-                                                    :expander "foo"
-                                                    :code "(defn x [] nil)"})]
+    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "macroexpand"
+                                                                  :expander "foo"
+                                                                  :code "(defn x [] nil)"})]
       (is err)
       (is ex)
-      (is (= #{"done" "macroexpand-error"} status)))))
+      (is (= #{"done" "macroexpand-error"} status))
+      (is pp-stacktrace))))
 
 ;; Tests for the three possible values of the display-namespaces option:
 ;; "qualified", "none" and "tidy"
@@ -110,12 +111,13 @@
       (is (= #{"done"} status))))
 
   (testing "invalid display-namespaces"
-    (let [{:keys [err ex status]} (session/message {:op "macroexpand"
-                                                    :code "(defn x [] nil)"
-                                                    :display-namespaces "foo"})]
+    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "macroexpand"
+                                                                  :code "(defn x [] nil)"
+                                                                  :display-namespaces "foo"})]
       (is err)
       (is ex)
-      (is (= #{"done" "macroexpand-error"} status)))))
+      (is (= #{"done" "macroexpand-error"} status))
+      (is pp-stacktrace))))
 
 (deftest print-meta-option
   (testing "macroexpand-1 expander with print-meta: true"

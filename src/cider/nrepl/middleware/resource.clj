@@ -1,9 +1,7 @@
 (ns cider.nrepl.middleware.resource
   (:require [clojure.java.io :as io]
-            [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport] :as err]
             [compliment.sources.resources :as r]))
 
 (defn resource-path [name]
@@ -13,40 +11,18 @@
 (defn resources-list []
   (r/resources-by-prefix ""))
 
-(defn resource-reply
-  [{:keys [name transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg
-                   :resource-path (resource-path name)
-                   :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :resource-error))))))
+(defn resource-reply [{:keys [name] :as msg}]
+  {:resource-path (resource-path name)})
 
-(defn resources-list-reply
-  [{:keys [name transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg
-                   :resources-list (resources-list)
-                   :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :resources-list-error))))))
+(defn resources-list-reply [msg]
+  {:resources-list (resources-list)})
 
 (defn wrap-resource
   "Middleware that provides the path to resource."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "resource" (resource-reply msg)
-      "resources-list" (resources-list-reply msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "resource" resource-reply
+    "resources-list" resources-list-reply))
 
 (set-descriptor!
  #'wrap-resource

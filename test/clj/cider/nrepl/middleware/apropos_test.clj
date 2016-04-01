@@ -100,9 +100,11 @@
       (let [response (session/message {:op "apropos" :query "doesn't matter"})]
         (is (= (:status response) #{"apropos-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: boom")))))
+        (is (.startsWith (:err response) "java.lang.Exception: boom"))
+        (is (:pp-stacktrace response)))))
 
   (testing "Handles a real error caused by an improper regular expression"
     (let [response (session/message {:op "apropos" :query "*illegal"})]
-      (is (= (:status response) #{"apropos-regexp-error" "done"}))
-      (is (.startsWith (:error-msg response) "Dangling")))))
+      (is (= (:status response) #{"apropos-error" "done"}))
+      (is (.startsWith (:err response) "java.util.regex.PatternSyntaxException: Dangling"))
+      (is (:pp-stacktrace response)))))

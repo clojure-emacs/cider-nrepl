@@ -1,27 +1,16 @@
 (ns cider.nrepl.middleware.format
   (:refer-clojure :exclude [read-string])
-  (:require [cider.nrepl.middleware.util.misc :refer [err-info]]
+  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.pprint :as pprint]
             [cljfmt.core :as fmt]
             [clojure.string :as string]
-            [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.reader.edn :as edn]
             [clojure.tools.reader.reader-types :as readers]))
 
 (defn format-code-reply
-  [{:keys [transport code] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg
-                   :formatted-code (fmt/reformat-string code)
-                   :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (err-info e :format-code-error))))))
+  [{:keys [code] :as msg}]
+  {:formatted-code (fmt/reformat-string code)})
 
 (defn- read-edn
   "Returns a vector of EDN forms, read from the string s."
@@ -35,31 +24,22 @@
           (recur (conj forms form)))))))
 
 (defn- format-edn
-  [{:keys [edn pprint-fn] :as msg}]
+  [edn pprint-fn]
   (->> (read-edn edn)
        (map #(with-out-str (pprint-fn %)))
        string/join
        string/trim))
 
 (defn format-edn-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg :formatted-edn (format-edn msg) :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (err-info e :edn-read-error))))))
+  [{:keys [edn pprint-fn] :as msg}]
+  {:formatted-edn (format-edn edn pprint-fn)})
 
 (defn wrap-format
   "Middleware that provides code formatting."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "format-code" (format-code-reply msg)
-      "format-edn" (format-edn-reply msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "format-code" format-code-reply
+    "format-edn"  format-edn-reply))
 
 (set-descriptor!
  #'wrap-format

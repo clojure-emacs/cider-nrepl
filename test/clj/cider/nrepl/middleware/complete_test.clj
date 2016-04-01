@@ -72,12 +72,14 @@
     (with-redefs [c/complete (fn [& _] (throw (Exception. "complete-exc")))]
       (let [response (session/message {:op "complete" :ns "doesn't matter" :symbol "fake"})]
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"completion-error" "done"}))
-        (is (.startsWith (:err response) "java.lang.Exception: complete-exc")))))
+        (is (= (:status response) #{"complete-error" "done"}))
+        (is (.startsWith (:err response) "java.lang.Exception: complete-exc"))
+        (is (:pp-stacktrace response)))))
 
   (testing "complete-doc op error handling"
     (with-redefs [c/completion-doc (fn [& _] (throw (Exception. "complete-doc-exc")))]
       (let [response (session/message {:op "complete-doc" :symbol "doesn't matter"})]
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"completion-doc-error" "done"}))
-        (is (.startsWith (:err response) "java.lang.Exception: complete-doc-exc"))))))
+        (is (= (:status response) #{"complete-doc-error" "done"}))
+        (is (.startsWith (:err response) "java.lang.Exception: complete-doc-exc"))
+        (is (:pp-stacktrace response))))))

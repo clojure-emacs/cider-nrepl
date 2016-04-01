@@ -65,7 +65,8 @@
       (let [response (session/message {:op "ns-list"})]
         (is (.startsWith (:err response) "java.lang.Exception: ns-list error"))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"ns-list-reply-error" "done"})))))
+        (is (= (:status response) #{"ns-list-error" "done"}))
+        (is (:pp-stacktrace response)))))
 
   (testing "ns-list-vars-by-name op error handling"
     (with-redefs [cider-ns/ns-list-vars-by-name (fn [& _] (throw (Exception. "ns-list-vars-by-name error")))]
@@ -73,7 +74,8 @@
                                        :name "testing-function"})]
         (is (.startsWith (:err response) "java.lang.Exception: ns-list-vars-by-name error"))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"ns-list-vars-by-name-reply-error" "done"})))))
+        (is (= (:status response) #{"ns-list-vars-by-name-error" "done"}))
+        (is (:pp-stacktrace response)))))
 
   (testing "ns-vars op error handling"
     (with-redefs [cider-ns/ns-vars (fn [& _] (throw (Exception. "ns-vars error")))]
@@ -81,7 +83,8 @@
                                        :name "testing-function"})]
         (is (.startsWith (:err response) "java.lang.Exception: ns-vars error"))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"ns-vars-reply-error" "done"})))))
+        (is (= (:status response) #{"ns-vars-error" "done"}))
+        (is (:pp-stacktrace response)))))
 
   (testing "ns-path op error handling"
     (with-redefs [cider-ns/ns-path (fn [& _] (throw (Exception. "ns-path error")))]
@@ -89,4 +92,5 @@
                                        :name "testing-function"})]
         (is (.startsWith (:err response) "java.lang.Exception: ns-path error"))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"ns-path-reply-error" "done"}))))))
+        (is (= (:status response) #{"ns-path-error" "done"}))
+        (is (:pp-stacktrace response))))))

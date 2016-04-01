@@ -1,33 +1,19 @@
 (ns cider.nrepl.middleware.classpath
-  (:require [clojure.java.classpath :as cp]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport]
-            [cider.nrepl.middleware.util.misc :as u]))
+  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+            [clojure.java.classpath :as cp]
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
 
 (defn classpath []
   (map str (cp/classpath)))
 
-(defn classpath-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg
-                   :classpath (classpath)
-                   :status :done))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :classpath-error))))))
+(defn classpath-reply [msg]
+  {:classpath (classpath)})
 
 (defn wrap-classpath
   "Middleware that provides the java classpath."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (if (= "classpath" op)
-      (classpath-reply msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "classpath" classpath-reply))
 
 (set-descriptor!
  #'wrap-classpath

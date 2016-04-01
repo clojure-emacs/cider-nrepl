@@ -2,12 +2,12 @@
   "Macroexpansion middleware."
   {:author "Bozhidar Batsov"}
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.misc :as u]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.pprint :as pp]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.reader :as reader]
             [clojure.walk :as walk])
   (:import [clojure.lang Var]))
@@ -199,25 +199,14 @@
       (binding [*print-meta* (boolean print-meta)]
         (pp/write expansion :dispatch pp/code-dispatch)))))
 
-(defn macroexpansion-reply
-  [{:keys [transport] :as msg}]
-  (try
-    (transport/send
-     transport
-     (response-for msg {:expansion (macroexpansion msg)
-                        :status :done}))
-    (catch Exception e
-      (transport/send
-       transport
-       (response-for msg (u/err-info e :macroexpand-error))))))
+(defn macroexpansion-reply [msg]
+  {:expansion (macroexpansion msg)})
 
 (defn wrap-macroexpand
   "Middleware that provides a macroexpand op."
   [handler]
-  (fn [{:keys [op] :as msg}]
-    (if (= op "macroexpand")
-      (macroexpansion-reply msg)
-      (handler msg))))
+  (with-safe-transport handler
+    "macroexpand" [macroexpansion-reply :macroexpand-error]))
 
 (set-descriptor!
  #'wrap-macroexpand
