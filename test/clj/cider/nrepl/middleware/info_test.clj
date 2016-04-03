@@ -181,10 +181,10 @@
          '([] ["x"] ["x" "y" "z"]))))
 
 (deftest test-eldoc
-  (is (info/eldoc {:ns "clojure.core" :symbol "map"}))
-  (is (info/eldoc {:ns "clojure.core" :symbol ".toString"}))
-  (is (info/eldoc {:ns "clojure.core" :symbol "."}))
-  (is (not (info/eldoc {:ns "clojure.core" :symbol (gensym "non-existing")}))))
+  (is (info/eldoc (info/info {:ns "clojure.core" :symbol "map"})))
+  (is (info/eldoc (info/info {:ns "clojure.core" :symbol ".toString"})))
+  (is (info/eldoc (info/info {:ns "clojure.core" :symbol "."})))
+  (is (not (info/eldoc (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
 
 (deftest test-var-meta
   ;; Test files can't be found on the class path.
@@ -388,7 +388,7 @@
           (is (= (:name response) "as->"))
           (is (= (:arglists-str response) "([expr name & forms])"))
           (is (= (:macro response) "true"))
-          (is (.startsWith (:doc response) "Binds name to expr, evaluates")))        
+          (is (.startsWith (:doc response) "Binds name to expr, evaluates")))
         (finally
           (System/clearProperty "fake.class.path"))))
 
@@ -411,7 +411,9 @@
     (testing "clojure function"
       (let [response (session/message {:op "eldoc" :symbol "+" :ns "user"})]
         (is (= (:status response) #{"done"}))
-        (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))))
+        (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))
+        (is (= (:ns response) "clojure.core"))
+        (is (= (:name response) "+"))))
 
     (testing "clojure special form"
       (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
