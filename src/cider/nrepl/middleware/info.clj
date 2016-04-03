@@ -284,15 +284,19 @@
   (map #(mapv str %) raw-eldoc))
 
 (defn eldoc
-  [msg]
-  (if-let [raw-eldoc (extract-eldoc (info msg))]
+  [info]
+  (if-let [raw-eldoc (extract-eldoc info)]
     (format-eldoc raw-eldoc)))
 
 (defn eldoc-reply
   [msg]
-  (if-let [var-eldoc (eldoc msg)]
-    {:eldoc var-eldoc}
-    {:status :no-eldoc}))
+  (let [info (info msg)
+        var-eldoc (eldoc info)]
+    (if var-eldoc
+      {:eldoc var-eldoc
+       :name (:name info)
+       :ns (:ns info)}
+      {:status :no-eldoc})))
 
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
