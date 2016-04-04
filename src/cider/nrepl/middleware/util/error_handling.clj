@@ -6,7 +6,10 @@
             [clojure.stacktrace :as stacktrace]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [cider.nrepl.middleware.stacktrace :as cider-stacktrace]))
+            [cider.nrepl.middleware.stacktrace :as cider-stacktrace]
+            [clojure.walk :as walk])
+  (:import java.io.InputStream
+           clojure.lang.RT))
 
 ;;; UTILITY FUNCTIONS
 
@@ -70,6 +73,40 @@
         (coll? input)  :status-coll
         (keyword? input) :status-item))
 
+(defn- shallow-bencodable?
+  "Returns false if `item`'s type can't be bencoded as defined by the
+  algorithm in `clojure.tools.nrepl.bencode/write-bencode`. Does not
+  examine the elements of a collection to ensure that the enclosed
+  elements are also bencodable, and so you probably actually want to
+  use `deep-bencodable-or-fail` or write something similar."
+  [item] 
+  (cond
+    (instance? (RT/classForName "[B") item) :bytes
+    (instance? InputStream item) :input-stream
+    (integer? item) :integer
+    (string? item)  :string
+    (symbol? item)  :named
+    (keyword? item) :named
+    (map? item)     :map
+    (or (nil? item) (coll? item) (.isArray (class item))) :list
+    :else false))
+
+(defn- deep-bencodable-or-fail
+  "Walks through the data structure provided by `item` and returns
+  true if it -- and all nested elements -- are bencodable as defined
+  by the algorithm in `clojure.tools.nrepl.bencode/write-bencode`. If
+  any part of `input` is not bencodable, will throw an
+  `IllegalArgumentException`. See `cider-nrepl` bug #332 at
+  https://github.com/clojure-emacs/cider-nrepl/issues/332 for further
+  details."
+  [item]
+  (walk/prewalk
+   #(if (shallow-bencodable? %)
+      %
+      (throw (IllegalArgumentException. (format "Can't bencode %s: %s" (.getName (class %)) %))))
+   item)
+  true) ;; Need to actually return truthy since `nil` is bencodable
+
 ;;; ERROR HANDLER - see selector docstring
 
 (defmulti error-handler selector)
@@ -95,8 +132,14 @@
 
 (defmulti op-handler selector)
 
-(defmethod op-handler :inline-reply [answer msg]
+(defmethod op-handler :inline-reply
+  [answer msg]
   (let [terminal-status (set/union #{:done} (normalize-status (:status answer)))]
+    ;; Check the bencodability of `answer` (the current transport can
+    ;; only send non-bencodable data if stored under the `:value`
+    ;; key). If non-bencodable elements exist, throw an exception.
+    (deep-bencodable-or-fail (dissoc answer :value))
+    ;; If bencodable, create a terminated reply message.
     (response-for msg (assoc answer :status terminal-status))))
 
 (defmethod op-handler :function [f msg]
