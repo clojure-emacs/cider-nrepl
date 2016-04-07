@@ -423,7 +423,7 @@
                (not (contains? &env form))
                (try
                  (-> (resolve form) meta :ns
-                     ns-name (= 'clojure.core))
+                     ns-name #{'clojure.core 'schema.core})
                  (catch Exception _ nil)))
           (and (seq? form)
                (irrelevant-return-value-forms (first form))))
