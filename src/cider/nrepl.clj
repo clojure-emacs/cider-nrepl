@@ -19,7 +19,8 @@
             [cider.nrepl.middleware.test]
             [cider.nrepl.middleware.trace]
             [cider.nrepl.middleware.track-state]
-            [cider.nrepl.middleware.undef]))
+            [cider.nrepl.middleware.undef]
+            [cider.nrepl.middleware.version]))
 
 (def cider-middleware
   "A vector containing all CIDER middleware."
@@ -42,7 +43,8 @@
     cider.nrepl.middleware.test/wrap-test
     cider.nrepl.middleware.trace/wrap-trace
     cider.nrepl.middleware.track-state/wrap-tracker
-    cider.nrepl.middleware.undef/wrap-undef])
+    cider.nrepl.middleware.undef/wrap-undef
+    cider.nrepl.middleware.version/wrap-version])
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."
