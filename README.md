@@ -59,7 +59,8 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.test/wrap-test
                   cider.nrepl.middleware.trace/wrap-trace
                   cider.nrepl.middleware.out/wrap-out
-                  cider.nrepl.middleware.undef/wrap-undef]}
+                  cider.nrepl.middleware.undef/wrap-undef
+                  cider.nrepl.middleware.version/wrap-version]}
 
 ```
 
@@ -146,6 +147,7 @@ Middleware        | Op(s)      | Description
 `wrap-trace`      | `toggle-trace-var`/`toggle-trace-ns` | Toggle tracing of a given var or ns.
 `wrap-out`        | | Echo the server's output stream to client sessions.
 `wrap-undef`      | `undef`    | Undefine a var.
+`wrap-version`    | `cider-version` | The CIDER-nREPL version map.
 
 ## Release policy
 
