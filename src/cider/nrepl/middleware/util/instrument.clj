@@ -67,7 +67,7 @@
             '#{if do recur throw finally try monitor-exit monitor-enter} (instrument-coll args)
             '#{new} (cons (first args) (instrument-coll (rest args)))
             '#{quote & var clojure.core/import*} args
-            '#{.} (list* (instrument (first args))
+            '#{.} (list* (first args)
                          (second args)
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
