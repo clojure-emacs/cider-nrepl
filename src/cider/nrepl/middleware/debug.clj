@@ -294,6 +294,20 @@
                               last :stacktrace)}]})
   (read-debug-command value extras))
 
+(def debug-commands
+  {"c" :continue
+   "e" :eval
+   "h" :here
+   "i" :in
+   "j" :inject
+   "l" :locals
+   "n" :next
+   "o" :out
+   "p" :inspect
+   "q" :quit
+   "s" :stacktrace
+   "t" :trace})
+
 (defn read-debug-command
   "Read and take action on a debugging command.
   Ask for one of the following debug commands using `read-debug`:
@@ -314,8 +328,8 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> [:next :in :continue :out :here :inspect :locals :inject :eval :stacktrace :trace :quit]
-                   (not (map? *msg*)) (remove #{:quit})
+  (let [commands (cond->> debug-commands
+                   (not (map? *msg*)) (dissoc "q")
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
 
