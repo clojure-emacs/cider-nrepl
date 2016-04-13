@@ -3,7 +3,8 @@
             [clojure.test :refer :all]
             [clojure.tools.nrepl :as nrepl]
             [clojure.tools.nrepl.server :as nrepl.server]
-            [clojure.tools.nrepl.transport :as transport])
+            [clojure.tools.nrepl.transport :as transport]
+            [clojure.java.io :as io])
   (:import java.util.UUID
            [java.util.concurrent TimeUnit LinkedBlockingQueue]))
 
@@ -95,6 +96,7 @@
 
 (def-debug-op :next)
 (def-debug-op :continue)
+(def-debug-op :in)
 
 (defmethod debugger-send :out [_ & [force?]]
   (nrepl-send {:op :debug-input :input (str {:response :out :force? force?}) :key (current-key)}))
@@ -466,3 +468,105 @@
   (<-- {:value "(2 3)"})
   (<-- {:status ["done"]}))
 
+(deftest step-in-to-function-in-current-project
+  ;; We use misc/as-sym just because it's a simple function that's part of the
+  ;; current project, and we want to ensure that the debugger can find and
+  ;; instrument the code of a function that lives in a regular file on the
+  ;; classpath (as opposed to, for example, in a jar, which is tested later).
+  (--> :eval "(ns user.test.step-in
+                (:require [cider.nrepl.middleware.util.misc :as misc]))")
+  (<-- {:ns "user.test.step-in"})
+  (<-- {:status ["done"]})
+
+  (--> :eval
+       "#dbg
+        (defn foo [s]
+          (misc/as-sym s))")
+  (<-- {:value "#'user.test.step-in/foo"})
+  (<-- {:status ["done"]})
+
+  (testing "step in"
+    (--> :eval "(foo \"bar\")")
+    (<-- {:debug-value "\"bar\""})
+    (--> :in)
+
+    (let [misc-file (str "file:" (.getAbsolutePath (io/file "src/cider/nrepl/middleware/util/misc.clj")))]
+      ;; Note - if anyone changes misc.clj, this could fail:
+      (<-- {:line        23
+            :column      0
+            :file        misc-file
+            :debug-value "\"bar\""
+            :coor        [3 1 1]
+            :locals      [["x" "\"bar\""]]})
+
+      ;; Step out a couple of times, taking us out of misc/as-sym
+      (--> :out)
+      (<-- {:debug-value "false" :file misc-file})
+      (--> :out)
+      (<-- {:debug-value "bar" :file misc-file})
+
+      ;; Next step should take us back into foo
+      (--> :next)
+      (<-- {:debug-value "bar"})
+      (--> :next)
+      (<-- {:value "bar"})
+      (<-- {:status ["done"]})))
+
+  (testing ":next command should not step in"
+    (--> :eval "(foo \"bar\")")
+    (<-- {:debug-value "\"bar\""})
+    (--> :next)
+    (<-- {:debug-value "bar" :coor [3]}) ; return value of (misc/as-sym ...)
+    (--> :continue)
+    (<-- {:value "bar"})
+    (<-- {:status ["done"]}))
+
+  (testing "stepped-in-to functions are not instrumented"
+    ;; Test that stepped-in-to functions are not instrumented - that is, calling
+    ;; misc/as-sym directly now should not invoke the debugger, even though we
+    ;; were stepping through its code in the test above.
+    (--> :eval "(misc/as-sym \"bar\")")
+    (<-- {:value "bar"})
+    (<-- {:status ["done"]}))
+
+  (testing ":in command acts as :next on non-function"
+    (--> :eval "#dbg (let [s \"blah\"]
+                       s
+                       (misc/as-sym s))")
+    (<-- {:debug-value "\"blah\"" :coor [2]})
+    ;; try to step in to `s`, make sure nothing blows up
+    (--> :in)
+    (<-- {:debug-value "\"blah\"" :coor [3 1]})
+    (--> :continue)
+    (<-- {:value "blah"})
+    (<-- {:status ["done"]})))
+
+(deftest step-in-to-function-in-jar
+  ;; Step into read-string from tools.reader. To do this, we need to find and
+  ;; instrument the source, which is in a jar file.
+  (--> :eval "(ns user.test.step-in
+                (:require [clojure.tools.reader :as reader]))")
+  (<-- {:ns "user.test.step-in"})
+  (<-- {:status ["done"]})
+
+  (--> :eval
+       "#dbg
+        (defn foo [s]
+          (reader/read-string s))")
+  (<-- {:value "#'user.test.step-in/foo"})
+  (<-- {:status ["done"]})
+
+  (--> :eval "(foo \"(x y)\")")
+  (<-- {:debug-value "\"(x y)\""})
+  (--> :in)
+
+  (let [msg  (<-- {:debug-value "\"(x y)\""
+                   :coor [3 1 2]})
+        file (:file msg)]
+    (.startsWith file "jar:file:")
+    (.contains file "/.m2/repository/org/clojure/tools.reader")
+    (.endsWith file "/clojure/tools/reader.clj"))
+
+  (--> :continue)
+  (<-- {:value "(x y)"})
+  (<-- {:status ["done"]}))
