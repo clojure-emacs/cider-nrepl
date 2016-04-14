@@ -90,10 +90,9 @@
           ;; but we don't want to track changes. So we add it in when
           ;; the old-data is nil (meaning this is the first message).
           {'clojure.core clojure-core-map})
-        (keep (fn [[the-ns-name the-ns]]
-                (when-let [data (ns-as-map the-ns)]
-                  (when-not (= (get old-map the-ns-name) data)
-                    [the-ns-name data]))))
+        (keep (fn [[the-ns-name data]]
+                (when-not (= (get old-map the-ns-name) data)
+                  [the-ns-name data])))
         new-map))
 
 ;;; State management
@@ -156,7 +155,7 @@
                                       (let [name (ns-name-fn ns)]
                                         (if (namespace/jar-namespaces name)
                                           acc
-                                          (assoc! acc name ns))))
+                                          (assoc! acc name (ns-as-map ns)))))
                                     (if cljs
                                       (vals (cljs-ana/all-ns cljs))
                                       (all-ns)))
