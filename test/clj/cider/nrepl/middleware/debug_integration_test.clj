@@ -543,30 +543,33 @@
     (<-- {:status ["done"]})))
 
 (deftest step-in-to-function-in-jar
-  ;; Step into clojure.core/shuffle. To do this, we need to find and instrument
-  ;; the source, which is in a jar file.
-  (--> :eval "(ns user.test.step-in)")
+  ;; Step into clojure.tools.nrepl.server/handle*. To do this, we need to find
+  ;; and instrument the source, which is in a jar file. Note that this function
+  ;; is used because it is not marked as a :source-dep, so we can rely on the
+  ;; namespace remaining unmunged, which is important when these tests run on
+  ;; travis CI.
+  (--> :eval "(ns user.test.step-in
+                (:require [clojure.tools.nrepl.server :as server]))")
   (<-- {:ns "user.test.step-in"})
   (<-- {:status ["done"]})
 
   (--> :eval
        "#dbg
-        (defn foo [c]
-          (shuffle c))")
+        (defn foo [m]
+          (server/handle* m identity 23))")
   (<-- {:value "#'user.test.step-in/foo"})
   (<-- {:status ["done"]})
 
-  (--> :eval "(foo (range 2))")
-  (<-- {:debug-value "(0 1)" :coor [3 1]})
+  (--> :eval "(foo {})")
+  (<-- {:debug-value "{}" :coor [3 1]})
   (--> :in)
 
-  (let [msg  (<-- {:debug-value "(0 1)"
-                   :coor [5 1 1 1]})
+  (let [msg  (<-- {:debug-value "{}"
+                   :coor [3 1 1 1]})
         file (:file msg)]
     (.startsWith file "jar:file:")
-    (.endsWith file "/clojure/core.clj"))
+    (.endsWith file "/clojure/tools/nrepl/server.clj"))
 
   (--> :continue)
-  (let [result (read-string (:value (<-- {})))]
-    (is (#{[0 1] [1 0]} result)))
+  (<-- {:value "{:transport 23}"})
   (<-- {:status ["done"]}))

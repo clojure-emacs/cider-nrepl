@@ -438,6 +438,12 @@
             (eval form)
             (alter-meta! v assoc ::instrumented instrumented)))))))
 
+(defn safe-to-debug?
+  "Some namespaces are not safe to debug, because doing so can cause a stack
+  overflow that crashes the nrepl process."
+  [ns]
+  (not (#{'clojure.core} (ns-name ns))))
+
 (defn step-in?
   "Return true if we can and should step in to the function in the var `v`.
   The \"should\" part is determined by the value in `step-in-to-next?`, which
@@ -464,6 +470,7 @@
       ;; We do not go so far as to actually try to read the code of the function
       ;; at this point, which is at macroexpansion time.
       (and v
+           (safe-to-debug? (:ns m))
            (not (:macro m))
            (not (:inline m))))))
 
