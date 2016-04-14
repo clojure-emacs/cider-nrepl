@@ -70,16 +70,6 @@
 
 (deftest read-debug-command
   (reset! @#'d/debugger-message {})
-  ;; Check that :next is the first
-  (with-redefs [t/send (fn [trans {:keys [key input-type]}]
-                         (deliver (@d/promises key) (first input-type)))]
-    (is (= 'value (#'d/read-debug-command 'value {}))))
-
-  ;; Check that :quit is the last
-  (binding [*msg* {:session (atom {})}]
-    (with-redefs [d/abort! (constantly :aborted)
-                  d/read-debug (fn [r c & _] (last c))]
-      (is (= :aborted (#'d/read-debug-command 'value {})))))
 
   ;; Check functionality
   (with-redefs [d/abort! (constantly :aborted)
