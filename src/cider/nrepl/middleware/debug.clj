@@ -328,7 +328,7 @@
   a :code entry, its value is used for operations such as :eval, which
   would otherwise interactively prompt for an expression."
   [value extras]
-  (let [commands (cond->> debug-commands
+  (let [commands (cond-> debug-commands
                    (not (map? *msg*)) (dissoc "q")
                    (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
