@@ -490,14 +490,15 @@
     (<-- {:debug-value "\"bar\""})
     (--> :in)
 
-    (let [misc-file (str "file:" (.getAbsolutePath (io/file "src/cider/nrepl/middleware/util/misc.clj")))]
-      ;; Note - if anyone changes misc.clj, this could fail:
-      (<-- {:line        23
-            :column      0
-            :file        misc-file
-            :debug-value "\"bar\""
-            :coor        [3 1 1]
-            :locals      [["x" "\"bar\""]]})
+    ;; Note - if anyone changes misc.clj, this could fail:
+    (let [msg (<-- {:line        23
+                    :column      0
+                    :debug-value "\"bar\""
+                    :coor        [3 1 1]
+                    :locals      [["x" "\"bar\""]]})
+          misc-file (:file msg)]
+      (is (.endsWith misc-file "/cider/nrepl/middleware/util/misc.clj"))
+      (is (.startsWith misc-file "file:/"))
 
       ;; Step out a couple of times, taking us out of misc/as-sym
       (--> :out)
@@ -542,31 +543,30 @@
     (<-- {:status ["done"]})))
 
 (deftest step-in-to-function-in-jar
-  ;; Step into read-string from tools.reader. To do this, we need to find and
-  ;; instrument the source, which is in a jar file.
-  (--> :eval "(ns user.test.step-in
-                (:require [clojure.tools.reader :as reader]))")
+  ;; Step into clojure.core/shuffle. To do this, we need to find and instrument
+  ;; the source, which is in a jar file.
+  (--> :eval "(ns user.test.step-in)")
   (<-- {:ns "user.test.step-in"})
   (<-- {:status ["done"]})
 
   (--> :eval
        "#dbg
-        (defn foo [s]
-          (reader/read-string s))")
+        (defn foo [c]
+          (shuffle c))")
   (<-- {:value "#'user.test.step-in/foo"})
   (<-- {:status ["done"]})
 
-  (--> :eval "(foo \"(x y)\")")
-  (<-- {:debug-value "\"(x y)\""})
+  (--> :eval "(foo (range 2))")
+  (<-- {:debug-value "(0 1)" :coor [3 1]})
   (--> :in)
 
-  (let [msg  (<-- {:debug-value "\"(x y)\""
-                   :coor [3 1 2]})
+  (let [msg  (<-- {:debug-value "(0 1)"
+                   :coor [5 1 1 1]})
         file (:file msg)]
     (.startsWith file "jar:file:")
-    (.contains file "/.m2/repository/org/clojure/tools.reader")
-    (.endsWith file "/clojure/tools/reader.clj"))
+    (.endsWith file "/clojure/core.clj"))
 
   (--> :continue)
-  (<-- {:value "(x y)"})
+  (let [result (read-string (:value (<-- {})))]
+    (is (#{[0 1] [1 0]} result)))
   (<-- {:status ["done"]}))
