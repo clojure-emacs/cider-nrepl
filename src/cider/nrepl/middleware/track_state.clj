@@ -96,6 +96,12 @@
                     [the-ns-name data]))))
         new-map))
 
+(defn get-aliases [o]
+  (cond
+    (instance? Namespace o) (.getAliases ^Namespace o)
+    (associative? o)        (get o :aliases)
+    :else                   nil))
+
 ;;; State management
 (defn merge-used-aliases
   "Return new-ns-map merged with all of its direct dependencies.
@@ -105,7 +111,7 @@
    ^clojure.lang.PersistentHashMap old-ns-map
    val-fn]
   (->> (vals new-ns-map)
-       (map :aliases)
+       (map get-aliases)
        (mapcat vals)
        (reduce (fn [acc name]
                  (if (or (get acc name)
