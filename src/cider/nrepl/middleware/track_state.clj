@@ -1,19 +1,40 @@
 (ns cider.nrepl.middleware.track-state
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.ns :as ns]
-            [cider.nrepl.middleware.util.cljs :as cljs]
+  (:require [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.inspect :as util.inspect]
             [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
-            [clojure.java.classpath :as cp]
-            [clojure.tools.namespace.find :as ns-find]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport])
-  (:import clojure.lang.Namespace
+  (:import [clojure.lang AFunction MultiFn Namespace]
            clojure.tools.nrepl.transport.Transport
            java.net.SocketException))
+
+(defn used-vars [obj]
+  (let [m (util.inspect/fields-map obj)]
+    (condp instance? obj
+      MultiFn (->> (get m "methodTable")
+                   vals set
+                   (mapcat used-vars)
+                   set)
+      AFunction (->> (vals m)
+                     (keep #(if (symbol? %)
+                              (try
+                                (resolve %)
+                                (catch Exception _))
+                              %))
+                     (filter var?)
+                     set)
+      nil)))
+
+(defn find-usages [var]
+  (for [[ns m] (second (first @ns-cache))
+        [other-var other-var-map] (:interns m)]
+    (if (contains? (:uses other-var-map) var)
+      (println (str "Var " ns "/" other-var) "uses" var))))
 
 (def clojure-core (try (find-ns 'clojure.core)
                        (catch Exception e nil)))
@@ -49,7 +70,9 @@
                         (when (var? the-var)
                           (let [{the-ns :ns :as the-meta} (meta the-var)]
                             (when-not (identical? the-ns clojure-core)
-                              [sym (relevant-meta the-meta)]))))))))
+                              [sym (assoc (relevant-meta the-meta)
+                                          :uses (when-let [root-val (.getRawRoot the-var)]
+                                                  (used-vars root-val)))]))))))))
 
 ;;; Namespaces
 (defn ns-as-map [object]

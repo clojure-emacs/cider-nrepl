@@ -294,22 +294,26 @@
       (render-labeled-value "Class" (class obj))
       (render "Value: " (pr-str obj))))
 
-(defmethod inspect :default [inspector obj]
+(defn fields-map [obj]
   (let [^"[Ljava.lang.reflect.Field;" fields (.getDeclaredFields (class obj))
-        names (map #(.getName ^Field %) fields)
-        get (fn [^Field f]
-              (try (.setAccessible f true)
-                   (catch java.lang.SecurityException e))
-              (try (.get f obj)
-                   (catch java.lang.IllegalAccessException e
-                     "Access denied.")))
-        vals (map get fields)]
-    (-> inspector
-        (render-labeled-value "Type" (class obj))
-        (render-labeled-value "Value" (pr-str obj))
-        (render-ln "---")
-        (render-ln "Fields: ")
-        (render-map-values (zipmap names vals)))))
+        get-val (fn [^Field f]
+                  (try (.setAccessible f true)
+                       (catch java.lang.SecurityException e))
+                  (try (.get f obj)
+                       (catch java.lang.IllegalAccessException e
+                         "Access denied.")))]
+    (->> fields
+         (map #(vector (.getName ^Field %)
+                       (get-val %)))
+         (into {}))))
+
+(defmethod inspect :default [inspector obj]
+  (-> inspector
+      (render-labeled-value "Type" (class obj))
+      (render-labeled-value "Value" (pr-str obj))
+      (render-ln "---")
+      (render-ln "Fields: ")
+      (render-map-values (fields-map obj))))
 
 (defn- render-class-section [inspector obj section]
   (let [method (symbol (str ".get" (name section)))
