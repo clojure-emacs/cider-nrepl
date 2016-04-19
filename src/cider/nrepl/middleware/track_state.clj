@@ -35,7 +35,7 @@
    :style/indent :clojure.tools.trace/traced])
 
 (defn relevant-meta
-  "Return the meta of var, selecting only keys of interest."
+  "Filter the entries in map m by `relevant-meta-keys` and non-nil values."
   [m]
   (->> (select-keys m relevant-meta-keys)
        (filter second)
