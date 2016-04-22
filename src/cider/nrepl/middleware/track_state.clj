@@ -45,8 +45,14 @@
       {:aliases (merge require-macros requires)
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
-       :interns (u/update-vals #(dissoc (m/relevant-meta (meta %)) :test)
-                               (merge defs uses use-macros))})
+       :interns (merge (u/update-vals #(dissoc (m/relevant-meta (:meta %)) :test) defs)
+                       ;; FIXME: `uses` and `use-macros` are maps from
+                       ;; symbols to namespace names:
+                       ;;     {log reagent.debug, dbg reagent.debug}
+                       ;; Since we don’t know the metadata for these
+                       ;; vars, we resign to "guessing" them.
+                       (u/update-vals (constantly {:arglists '([])}) uses)
+                       (u/update-vals (constantly {:arglists '([]) :macro true}) use-macros))})
 
     :else {}))
 
