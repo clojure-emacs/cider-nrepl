@@ -69,13 +69,7 @@
   which is the same format of map returned by this function. old-map
   can also be nil, which is the same as an empty map."
   [new-map old-map]
-  (into (if (or (seq old-map)
-                (not clojure-core-map))
-          {}
-          ;; We want to inform the client of what's in clojure.core,
-          ;; but we don't want to track changes. So we add it in when
-          ;; the old-data is nil (meaning this is the first message).
-          {'clojure.core clojure-core-map})
+  (into {}
         (keep (fn [[the-ns-name data]]
                 (when-not (= (get old-map the-ns-name) data)
                   [the-ns-name data])))
@@ -145,10 +139,17 @@
                                     (if cljs
                                       (vals (cljs-ana/all-ns cljs))
                                       (all-ns)))
+        ;; When a cljs-repl is created, the ns-cache is not empty, so
+        ;; we can't use the technique we use for `clojure.core` below.
+        project-ns-map (if (and cljs (not (contains? old-data 'cljs.core)))
+                         (assoc project-ns-map 'cljs.core
+                                (ns-as-map (cljs-ana/find-ns cljs "cljs.core")))
+                         project-ns-map)
         changed-ns-map (-> project-ns-map
                            ;; Add back namespaces that the project depends on.
                            (merge-used-aliases (or old-data {}) find-ns-fn)
-                           (calculate-changed-ns-map old-data))]
+                           ;; If this is a new REPL, add `clojure.core` manually.
+                           (calculate-changed-ns-map (or old-data {'clojure.core clojure-core-map})))]
     (try (->> (response-for
                msg :status :state
                :repl-type (if cljs :cljs :clj)
