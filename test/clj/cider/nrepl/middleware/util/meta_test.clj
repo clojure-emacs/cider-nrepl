@@ -39,6 +39,23 @@
       [1 2 3] '(1 2 3)
       {1 2} #{1 2 3})))
 
+(defn- test-fn "docstring"
+  ([a b] nil)
+  ([a] nil)
+  ([]))
+
+(deftest relevant-meta
+  (is (= (m/relevant-meta (meta #'test-fn))
+         {:arglists "([a b] [a] [])"}))
+  (is (= (:macro (m/relevant-meta (meta #'deftest)))
+         "true"))
+  (let [m (meta #'strip-meta)]
+    ;; #'strip-meta refers to the deftest, and not the defn
+    (alter-meta! #'strip-meta merge {:indent 1 :cider-instrumented 2 :something-else 3})
+    (is (= (m/relevant-meta (meta #'strip-meta))
+           {:indent "1", :test (pr-str (:test (meta #'strip-meta)))}))
+    (alter-meta! #'strip-meta (fn [x y] y) m)))
+
 (defmacro test-macro [& x]
   `(do ~@x))
 
