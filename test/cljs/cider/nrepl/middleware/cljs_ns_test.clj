@@ -13,9 +13,17 @@
 
   (testing "ns-vars op"
     (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
-                                              :ns "cljs.reader"})]
+                                              :ns "cljs.core"})]
       (is (sequential? ns-vars))
       (is (every? string? ns-vars))))
+
+  (testing "ns-vars-with-meta op"
+    (let [ns-vars-with-meta (:ns-vars-with-meta
+                             (session/message {:op "ns-vars-with-meta"
+                                               :ns "cljs.core"}))]
+      (is (every? (comp map? second) ns-vars-with-meta))
+      (is (= (:+ ns-vars-with-meta)
+             {:arglists "(quote ([] [x] [x y] [x y & more]))"}))))
 
   (testing "ns-path op"
     (let [{:keys [path]} (session/message {:op "ns-path"

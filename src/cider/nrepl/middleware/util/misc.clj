@@ -28,6 +28,20 @@
                   (symbol ns sym)
                   (symbol x))))
 
+(defn update-vals
+  "Update the values of map `m` via the function `f`."
+  [f m]
+  (reduce (fn [acc [k v]]
+            (assoc acc k (f v)))
+          {} m))
+
+(defn update-keys
+  "Update the keys of map `m` via the function `f`."
+  [f m]
+  (reduce (fn [acc [k v]]
+            (assoc acc (f k) v))
+          {} m))
+
 (defmulti transform-value "Transform a value for output" type)
 
 (defmethod transform-value :default [v] (str v))

@@ -1,6 +1,8 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+            [cider.nrepl.middleware.util.meta :as m]
+            [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cljs-tooling.info :as cljs-info]
             [cljs-tooling.util.analysis :as cljs-analysis]
@@ -23,6 +25,13 @@
        (map name)
        sort))
 
+(defn ns-vars-with-meta-clj [ns]
+  (->> (symbol ns)
+       ns-interns
+       (u/update-vals (comp m/relevant-meta meta))
+       (u/update-keys name)
+       (into (sorted-map))))
+
 (defn ns-list-cljs [env]
   (->> (cljs-analysis/all-ns env)
        keys
@@ -35,6 +44,13 @@
        keys
        (map name)
        sort))
+
+(defn ns-vars-with-meta-cljs [env ns]
+  (->> (symbol ns)
+       (cljs-analysis/public-vars env)
+       (u/update-vals (comp m/relevant-meta :meta))
+       (u/update-keys name)
+       (into (sorted-map))))
 
 (defn ns-path-cljs [env ns]
   (->> (symbol ns)
@@ -51,6 +67,11 @@
     (ns-vars-cljs cljs-env ns)
     (ns-vars-clj ns)))
 
+(defn ns-vars-with-meta [{:keys [ns] :as msg}]
+  (if-let [cljs-env (cljs/grab-cljs-env msg)]
+    (ns-vars-with-meta-cljs cljs-env ns)
+    (ns-vars-with-meta-clj ns)))
+
 (defn ns-path [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-path-cljs cljs-env ns)
@@ -66,6 +87,10 @@
   [msg]
   {:ns-vars (ns-vars msg)})
 
+(defn ns-vars-with-meta-reply
+  [msg]
+  {:ns-vars-with-meta (ns-vars-with-meta msg)})
+
 (defn- ns-path-reply [msg]
   {:path (ns-path msg)})
 
@@ -80,6 +105,7 @@
     "ns-list" ns-list-reply
     "ns-list-vars-by-name" ns-list-vars-by-name-reply
     "ns-vars" ns-vars-reply
+    "ns-vars-with-meta" ns-vars-with-meta-reply
     "ns-path" ns-path-reply
     "ns-load-all" ns-load-all-reply))
 
@@ -89,7 +115,7 @@
   {:handles
    {"ns-list"
     {:doc "Return a sorted list of all namespaces."
-     :returns {"status" "done"}}
+     :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}}
     "ns-list-vars-by-name"
     {:doc "Return a list of vars named `name` amongst all namespaces."
      :requires {"name" "The name to use."}
@@ -97,7 +123,11 @@
     "ns-vars"
     {:doc "Returns a sorted list of all vars in a namespace."
      :requires {"ns" "The namespace to browse."}
-     :returns {"status" "done"}}
+     :returns {"status" "done" "ns-vars" "The sorted list of all vars in a namespace."}}
+    "ns-vars-with-meta"
+    {:doc "Returns a map of [var-name] to [var-metadata] for all vars in a namespace."
+     :requires {"ns" "The namespace to use."}
+     :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for all vars in a namespace."}}
     "ns-path"
     {:doc "Returns the path to the file containing ns."
      :requires {"ns" "The namespace to find."}

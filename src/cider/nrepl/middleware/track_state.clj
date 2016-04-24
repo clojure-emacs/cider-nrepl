@@ -4,6 +4,7 @@
   (:require [cider.nrepl.middleware.ns :as ns]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.java.classpath :as cp]
@@ -19,27 +20,6 @@
                        (catch Exception e nil)))
 
 ;;; Auxiliary
-(defn update-vals
-  "Update the keys of map `m` via the function `f`."
-  [f m]
-  (reduce (fn [acc [k v]]
-            (assoc acc k (f v)))
-          {} m))
-
-(def relevant-meta-keys
-  "Metadata keys that are useful to us.
-  This is used so that we don't crowd the ns cache with useless or
-  redudant information, such as :name and :ns."
-  [:indent :deprecated :macro :arglists :test
-   :cider.nrepl.middleware.util.instrument/breakfunction
-   :style/indent :clojure.tools.trace/traced])
-
-(defn relevant-meta
-  "Filter the entries in map m by `relevant-meta-keys` and non-nil values."
-  [m]
-  (->> (select-keys m relevant-meta-keys)
-       (filter second)
-       (update-vals pr-str)))
 
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
@@ -49,14 +29,14 @@
                         (when (var? the-var)
                           (let [{the-ns :ns :as the-meta} (meta the-var)]
                             (when-not (identical? the-ns clojure-core)
-                              [sym (relevant-meta the-meta)]))))))))
+                              [sym (m/relevant-meta the-meta)]))))))))
 
 ;;; Namespaces
 (defn ns-as-map [object]
   (cond
     ;; Clojure Namespaces
     (instance? Namespace object)
-    {:aliases (update-vals ns-name (ns-aliases object))
+    {:aliases (u/update-vals ns-name (ns-aliases object))
      :interns (filter-core-and-get-meta (ns-map object))}
 
     ;; ClojureScript Namespaces
@@ -65,8 +45,8 @@
       {:aliases (merge require-macros requires)
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
-       :interns (update-vals #(dissoc (relevant-meta (meta %)) :test)
-                             (merge defs uses use-macros))})
+       :interns (u/update-vals #(dissoc (m/relevant-meta (meta %)) :test)
+                               (merge defs uses use-macros))})
 
     :else {}))
 
@@ -75,7 +55,7 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (update-vals #(relevant-meta (meta %))))}))
+                   (u/update-vals #(m/relevant-meta (meta %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.

@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.track-state-test
   (:require [cider.nrepl.middleware.track-state :as st]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.namespace :as namespace]
             [clojure.test :refer :all]
             [clojure.tools.nrepl.transport :as t])
@@ -56,16 +57,6 @@
           (is (= repl-type :cljs))
           (is (map? changed-namespaces)))))))
 
-(deftest update-vals
-  (is (= (st/update-vals inc {1 2 3 4 5 6})
-         {1 3 3 5 5 7}))
-  (is (= (st/update-vals range {1 2 3 4 5 6})
-         '{5 (0 1 2 3 4 5), 3 (0 1 2 3), 1 (0 1)}))
-  (is (= (st/update-vals str {:a :b :c :d :e :f})
-         {:e ":f", :c ":d", :a ":b"}))
-  (is (= (st/update-vals odd? {1 2 3 4 5 6})
-         {1 false 3 false 5 false})))
-
 (deftest filter-core-and-get-meta
   (is (= (st/filter-core-and-get-meta {'and #'and, 'b #'map, 'c #'deftest})
          '{c {:macro "true", :arglists "([name & body])"}}))
@@ -78,35 +69,25 @@
   ([a] nil)
   ([]))
 
-(deftest relevant-meta
-  (is (= (st/relevant-meta (meta #'test-fn))
-         {:arglists "([a b] [a] [])"}))
-  (is (= (:macro (st/relevant-meta (meta #'deftest)))
-         "true"))
-  (let [m (meta #'update-vals)]
-    (alter-meta! #'update-vals merge {:indent 1 :cider-instrumented 2 :something-else 3})
-    (is (= (st/relevant-meta (meta #'update-vals))
-           {:indent "1", :test (pr-str (:test (meta #'update-vals)))}))
-    (alter-meta! #'update-vals (fn [x y] y) m)))
-
 (deftest ns-as-map
   (is (empty? (st/ns-as-map nil)))
-  (let [m (meta #'update-vals)]
-    (->> (interleave st/relevant-meta-keys (range))
+  (let [m (meta #'make-transport)]
+    ;; #'make-transport refers to the deftest, and not the defn
+    (->> (interleave m/relevant-meta-keys (range))
          (apply hash-map)
-         (alter-meta! #'update-vals merge))
+         (alter-meta! #'make-transport merge))
     (let [{:keys [interns aliases] :as ns}
           (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
       (is (> (count interns) 5))
       (is (map? interns))
       (is (interns 'ns-as-map))
       (is (:test (interns 'ns-as-map)))
-      (is (= (into #{} (keys (interns 'update-vals)))
-             (into #{} st/relevant-meta-keys)))
+      (is (= (into #{} (keys (interns 'make-transport)))
+             (into #{} m/relevant-meta-keys)))
       (is (> (count aliases) 2))
       (is (= (aliases 'st)
              'cider.nrepl.middleware.track-state)))
-    (alter-meta! #'update-vals (fn [x y] y) m))
+    (alter-meta! #'make-transport (fn [x y] y) m))
   (let [{:keys [interns aliases] :as ns}
         (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
     (is interns)))

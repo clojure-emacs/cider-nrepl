@@ -40,6 +40,17 @@
     (is (sequential? ns-vars))
     (is (every? string? ns-vars))))
 
+(deftest ns-vars-with-meta-integration-test
+  (let [ns-vars-with-meta (:ns-vars-with-meta
+                           (session/message {:op "ns-vars-with-meta"
+                                             :ns "clojure.core"}))]
+    (is (every? (comp map? second) ns-vars-with-meta))
+    (is (= (:+ ns-vars-with-meta)
+           {:arglists "([] [x] [x y] [x y & more])"}))
+    (is (= (:doseq ns-vars-with-meta)
+           {:arglists "([seq-exprs & body])" :macro "true"}))
+    (is (= (:*ns* ns-vars-with-meta) {}))))
+
 (deftest ns-path-integration-test
   (let [ns-path (:path (session/message {:op "ns-path"
                                          :ns "cider.nrepl.middleware.ns"}))
