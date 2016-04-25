@@ -41,7 +41,7 @@
 
 (defn inlined-dependency?
   "Returns true if the namespace matches one of our, or eastwood's,
-  inlined dependencies."
+   inlined dependencies."
   [namespace]
   (let [ns-name (str (ns-name namespace))]
     (or
@@ -52,11 +52,22 @@
      ;; rewritten by dolly
      (.startsWith ns-name "eastwood.copieddeps"))))
 
+(defn internal-namespace?
+  "Returns true if the namespace matches the given prefixes."
+  [namespace & [prefixes]]
+  (let [ns-name (str (ns-name namespace))]
+    (->> prefixes
+         (map re-pattern)
+         (map #(re-find % ns-name))
+         (some (complement nil?)))))
+
 (defn loaded-namespaces
-  "Return all loaded namespaces, except those coming from inlined dependencies."
-  []
+  "Return all loaded namespaces, except those coming from inlined dependencies.
+  `filter-regexps` is used to filter out namespaces matching regexps."
+  [& [filter-regexps]]
   (->> (all-ns)
        (remove inlined-dependency?)
+       (remove #(internal-namespace? % filter-regexps))
        (map ns-name)
        (map name)
        (sort)))

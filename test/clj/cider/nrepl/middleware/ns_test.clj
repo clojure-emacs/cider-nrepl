@@ -16,14 +16,22 @@
 (use-fixtures :each session/session-fixture)
 
 (deftest ns-list-integration-test
-  (let [ns-list (:ns-list (session/message {:op "ns-list"}))]
-    (is (sequential? ns-list))
-    (is (every? string? ns-list))
-    (testing "Removal of namespaces created by source rewriting"
+  (testing "Basic checks"
+    (let [ns-list (:ns-list (session/message {:op "ns-list"}))]
+      (is (sequential? ns-list))
+      (is (every? string? ns-list))))
+
+  (testing "Removal of namespaces created by source rewriting"
+    (let [ns-list (:ns-list (session/message {:op "ns-list"}))]
       (is (not-any? #(or (.startsWith % "deps.")
                          (.startsWith % "mranderson")
                          (.startsWith % "eastwood.copieddeps"))
-                    ns-list)))))
+                    ns-list))))
+
+  (testing "Removal of namespaces with `filter-regexps`"
+    (let [ns-list (:ns-list (session/message {:op "ns-list"
+                                              :filter-regexps [".*nrepl"]}))]
+      (is (not-any? #(re-find #".*nrepl" %) ns-list)))))
 
 (deftest ns-list-vars-by-name-integration-test
   (let [response (session/message {:op "ns-list-vars-by-name"

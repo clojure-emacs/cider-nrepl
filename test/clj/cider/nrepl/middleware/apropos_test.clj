@@ -26,20 +26,24 @@
       (is (= (namespaces ns ns)
              (namespaces nil ns)
              (list (find-ns (symbol ns))))
-          "Should return a list containing only the searched ns."))))
+          "Should return a list containing only the searched ns."))
+
+    (testing "Removal of namespaces with `filter-regexps`"
+      (is (not-any? #(re-find #".*nrepl" (str (ns-name %)))
+                    (namespaces nil nil [".*nrepl"]))))))
 
 (deftest test-search
   (testing "Search results"
-    (is (empty? (find-symbols nil "xxxxxxxx" nil false false false))
+    (is (empty? (find-symbols nil "xxxxxxxx" nil false false false nil))
         "Failing searches should return empty.")
-    (is (= 1 (count (find-symbols nil "handle-apropos" nil false false false)))
+    (is (= 1 (count (find-symbols nil "handle-apropos" nil false false false nil)))
         "Search for specific fn should return it."))
 
   (testing "Symbol vs docstring search"
     ;; Search for the same fn by name and docstring
-    (let [x (first (find-symbols nil "handle-apropos" nil false false false))
+    (let [x (first (find-symbols nil "handle-apropos" nil false false false nil))
           y (first (find-symbols nil "Return a sequence of vars whose name matches"
-                                 nil true false false))]
+                                 nil true false false nil))]
       (is (= (dissoc x :doc)
              (dissoc y :doc))
           "Other than docstring, returned attributes should be the same.")
