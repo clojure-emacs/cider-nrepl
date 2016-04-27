@@ -100,8 +100,8 @@
                  :requires {'sym-4 'some-namespace}}
         {:keys [aliases interns]} (st/ns-as-map cljs-ns)]
     (is (= aliases '{sym-3 some-namespace sym-4 some-namespace}))
-    (is (= interns '{sym-0 {:arglists "([a b] [a] [])"}
-                     sym-1 {}
+    (is (= interns '{sym-0 {:arglists ([]) :macro true}
+                     sym-1 {:arglists ([])}
                      sym-2 {}}))))
 
 (deftest calculate-used-aliases
