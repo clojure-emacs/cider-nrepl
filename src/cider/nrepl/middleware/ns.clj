@@ -57,10 +57,10 @@
        (cljs-info/info env)
        (:file)))
 
-(defn ns-list [msg]
+(defn ns-list [{:keys [filter-regexps] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-list-cljs cljs-env)
-    (ns/loaded-namespaces)))
+    (ns/loaded-namespaces filter-regexps)))
 
 (defn ns-vars [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
@@ -115,7 +115,8 @@
   {:handles
    {"ns-list"
     {:doc "Return a sorted list of all namespaces."
-     :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}}
+     :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
+     :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
     "ns-list-vars-by-name"
     {:doc "Return a list of vars named `name` amongst all namespaces."
      :requires {"name" "The name to use."}

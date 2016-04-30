@@ -41,19 +41,21 @@
   "Return the list of namespaces to be searched, ordered with `ns` first,
   followed by `clojure.*` namespaces, and then all others sorted alphabetically.
   If `search-ns` is specified, the returned list will contain only this
-  namespace."
-  [ns search-ns]
+  namespace. `filter-regexps` is used to filter out namespaces matching regexps."
+  [ns search-ns & [filter-regexps]]
   (let [clojure-ns? #(.startsWith (str (ns-name %)) "clojure.")
         current-ns (find-ns (symbol (or ns "")))]
     (if search-ns
       (list (find-ns (symbol search-ns)))
-      (sort (fn [x y]
-              (cond (= x current-ns) -1
-                    (= y current-ns)  1
-                    (and (clojure-ns? x) (not (clojure-ns? y))) -1
-                    (and (clojure-ns? y) (not (clojure-ns? x)))  1
-                    :else (compare (str x) (str y))))
-            (remove ns/inlined-dependency? (all-ns))))))
+      (->> (all-ns)
+           (sort (fn [x y]
+                   (cond (= x current-ns) -1
+                         (= y current-ns)  1
+                         (and (clojure-ns? x) (not (clojure-ns? y))) -1
+                         (and (clojure-ns? y) (not (clojure-ns? x)))  1
+                         :else (compare (str x) (str y)))))
+           (remove ns/inlined-dependency?)
+           (remove #(ns/internal-namespace? % filter-regexps))))))
 
 (defn find-symbols
   "Find symbols or (optionally) docstrings matching `query` in `search-ns` if
@@ -61,12 +63,12 @@
   and may be case senstive. Types returned correspond to Apropos types.
   Docstring search returns the full doc; symbol search returns an abbreviated
   version."
-  [ns query search-ns docs? privates? case-sensitive?]
+  [ns query search-ns docs? privates? case-sensitive? filter-regexps]
   (let [ns-vars     (if privates? ns-interns ns-publics)
         var-doc*    (if docs? var-doc (partial var-doc 1))
         search-prop (if docs? var-doc var-name)
         regex   (-> (if case-sensitive? query (format "(?i:%s)" query)) re-pattern)]
-    (->> (namespaces ns search-ns)
+    (->> (namespaces ns search-ns filter-regexps)
          (mapcat (comp (partial sort-by var-name) vals ns-vars))
          (filter (comp (partial re-find regex) search-prop))
          (map (fn [v] {:name (var-name v)
@@ -80,8 +82,8 @@
 (defn handle-apropos
   "Return a sequence of vars whose name matches the query pattern, or if
   specified, having the pattern in their docstring."
-  [{:keys [ns query search-ns docs? privates? case-sensitive?] :as msg}]
-  {:apropos-matches (find-symbols ns query search-ns docs? privates? case-sensitive?)})
+  [{:keys [ns query search-ns docs? privates? case-sensitive? filter-regexps] :as msg}]
+  {:apropos-matches (find-symbols ns query search-ns docs? privates? case-sensitive? filter-regexps)})
 
 (defn wrap-apropos
   "Middleware that handles apropos requests"
@@ -96,4 +98,5 @@
   {"apropos"
    {:doc (:doc (meta #'handle-apropos))
     :requires {"query" "The search query."}
+    :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
     :returns {"apropos-matches" "A list of matching symbols."}}}})
