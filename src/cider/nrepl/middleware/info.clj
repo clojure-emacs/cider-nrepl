@@ -267,7 +267,8 @@
     var-info
     {:status :no-info}))
 
-(defn extract-eldoc [info]
+(defn extract-arglists
+  [info]
   (cond
     (:special-form info) (->> (:forms info)
                               ;; :forms contains a vector of sequences or symbols
@@ -280,22 +281,23 @@
                             (sort-by count))
     :else (:arglists info)))
 
-(defn format-eldoc [raw-eldoc]
-  (map #(mapv str %) raw-eldoc))
+(defn format-arglists [raw-arglists]
+  (map #(mapv str %) raw-arglists))
 
-(defn eldoc
-  [info]
-  (if-let [raw-eldoc (extract-eldoc info)]
-    (format-eldoc raw-eldoc)))
+(defn extract-ns-or-class
+  [{:keys [ns class candidates] :as info}]
+  (cond
+    ns {:ns (str ns)}
+    class {:class [(str class)]}
+    candidates {:class (map key candidates)}))
 
 (defn eldoc-reply
   [msg]
-  (let [info (info msg)
-        var-eldoc (eldoc info)]
-    (if var-eldoc
-      {:eldoc var-eldoc
-       :name (:name info)
-       :ns (str (:ns info))}
+  (let [info (info msg)]
+    (if-let [arglists (extract-arglists info)]
+      (merge (extract-ns-or-class info)
+             {:eldoc (format-arglists arglists)
+              :name (:name info)})
       {:status :no-eldoc})))
 
 (defn wrap-info

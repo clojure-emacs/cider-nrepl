@@ -165,26 +165,26 @@
                  Y {:arglists ([x] [x y z])}
                  Z {:arglists ([])}}})
 
-(deftest test-extract-eldoc
-  (is (= (info/extract-eldoc test-eldoc-info) '([x] [x y])))
-  (is (= (info/extract-eldoc test-eldoc-info-candidates)
+(deftest test-extract-arglists
+  (is (= (info/extract-arglists test-eldoc-info) '([x] [x y])))
+  (is (= (info/extract-arglists test-eldoc-info-candidates)
          '([] [x] [x y z])))
-  (is (= (info/extract-eldoc test-eldoc-info-special-form)
+  (is (= (info/extract-arglists test-eldoc-info-special-form)
          '([.instanceMember instance args*]
            [.instanceMember Classname args*]
            [Classname/staticMethod args*]
            [Classname/staticField]))))
 
-(deftest test-format-eldoc
-  (is (= (info/format-eldoc (info/extract-eldoc test-eldoc-info)) '(["x"] ["x" "y"])))
-  (is (= (info/format-eldoc (info/extract-eldoc test-eldoc-info-candidates))
+(deftest test-format-arglists
+  (is (= (info/format-arglists (info/extract-arglists test-eldoc-info)) '(["x"] ["x" "y"])))
+  (is (= (info/format-arglists (info/extract-arglists test-eldoc-info-candidates))
          '([] ["x"] ["x" "y" "z"]))))
 
-(deftest test-eldoc
-  (is (info/eldoc (info/info {:ns "clojure.core" :symbol "map"})))
-  (is (info/eldoc (info/info {:ns "clojure.core" :symbol ".toString"})))
-  (is (info/eldoc (info/info {:ns "clojure.core" :symbol "."})))
-  (is (not (info/eldoc (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
+(deftest test-extract-arglists
+  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "map"})))
+  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol ".toString"})))
+  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "."})))
+  (is (not (info/extract-arglists (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
 
 (deftest test-var-meta
   ;; Test files can't be found on the class path.
@@ -413,6 +413,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))
         (is (= (:ns response) "clojure.core"))
+        (is (not (contains? response :class)))
         (is (= (:name response) "+"))))
 
     (testing "clojure special form"
@@ -423,6 +424,17 @@
     (testing "clojure dot operator"
       (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
         (is (= (:status response) #{"done"}))))
+
+    (testing "java interop method with multiple classes"
+      (let [response (session/message {:op "eldoc" :symbol ".length" :ns "cider.nrepl.middleware.info-test"})]
+        (is (= (:class response)
+               ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"]))
+        (is (not (contains? response :ns)))))
+
+    (testing "java interop method with single class"
+      (let [response (session/message {:op "eldoc" :symbol ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
+        (is (= (:class response) ["java.lang.String"]))
+        (is (not (contains? response :ns)))))
 
     (testing "java method eldoc lookup, internal testing methods"
       (let [response (session/message {:op "eldoc" :symbol "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
@@ -503,7 +515,7 @@
         (is (:pp-stacktrace response)))))
 
   (testing "handle the exception thrown if there's a mocked eldoc retreival error "
-    (with-redefs [info/eldoc (fn [& _] (throw (Exception. "eldoc-exception")))]
+    (with-redefs [info/extract-arglists (fn [& _] (throw (Exception. "eldoc-exception")))]
       (let [response (session/message {:op "eldoc" :symbol "test" :ns "user"})]
         (is (= (:status response) #{"eldoc-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
