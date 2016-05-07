@@ -34,7 +34,7 @@
   []
   (if (u/boot-project?)
     ;; This has false positives, but it's the best we can do in boot.
-    (remove jar-namespaces (all-ns))
+    (map ns-name (remove jar-namespaces (all-ns)))
     (->> (cp/classpath-directories)
          (filter #(.startsWith (str %) project-root))
          (mapcat ns-find/find-namespaces-in-dir))))
