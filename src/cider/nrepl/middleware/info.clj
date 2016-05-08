@@ -291,13 +291,20 @@
     class {:class [(str class)]}
     candidates {:class (map key candidates)}))
 
+(defn extract-name-or-member
+  [{:keys [name member candidates]}]
+  (cond
+    name {:name (str name)}
+    member {:member (str member)}
+    candidates {:member (->> candidates vals (map :member) first str)}))
+
 (defn eldoc-reply
   [msg]
   (let [info (info msg)]
     (if-let [arglists (extract-arglists info)]
       (merge (extract-ns-or-class info)
-             {:eldoc (format-arglists arglists)
-              :name (:name info)})
+             (extract-name-or-member info)
+             {:eldoc (format-arglists arglists)})
       {:status :no-eldoc})))
 
 (defn wrap-info
