@@ -429,11 +429,13 @@
       (let [response (session/message {:op "eldoc" :symbol ".length" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response)
                ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"]))
+        (is (= (:member response) "length"))
         (is (not (contains? response :ns)))))
 
     (testing "java interop method with single class"
       (let [response (session/message {:op "eldoc" :symbol ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response) ["java.lang.String"]))
+        (is (= (:member response) "startsWith"))
         (is (not (contains? response :ns)))))
 
     (testing "java method eldoc lookup, internal testing methods"
