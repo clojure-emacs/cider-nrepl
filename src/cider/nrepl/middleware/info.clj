@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.info
-  (:require [clojure.string :as str]
+  (:require [clojure.edn :as edn]
+            [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
             [cider.nrepl.middleware.util.cljs :as cljs]
@@ -138,6 +139,9 @@
     (update-in info [:file] #(or (find-cljx-source %) %))
     info))
 
+(def see-also-data
+  (edn/read (java.io.PushbackReader. (io/reader "resources/see-also.edn"))))
+
 (defn info-clj
   [ns sym]
   (cond
@@ -166,10 +170,14 @@
   (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (handle-cljx-sources (info-cljs cljs-env symbol ns))
-      (cond (and ns symbol) (handle-cljx-sources (info-clj ns symbol))
-            (and class member) (info-java class member)
-            :else (throw (Exception.
-                          "Either \"symbol\", or (\"class\", \"member\") must be supplied"))))))
+      (let [var-info (cond (and ns symbol) (handle-cljx-sources (info-clj ns symbol))
+                           (and class member) (info-java class member)
+                           :else (throw (Exception.
+                                         "Either \"symbol\", or (\"class\", \"member\") must be supplied")))
+            see-also (get see-also-data (str (:ns var-info) "/" (:name var-info)))]
+        (if see-also
+          (merge {:see-also see-also} var-info)
+          var-info)))))
 
 (defn resource-path
   "If it's a resource, return a tuple of the relative path and the full resource path."
