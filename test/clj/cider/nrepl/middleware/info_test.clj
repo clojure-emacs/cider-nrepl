@@ -405,7 +405,17 @@
         (is (= client-name "junk-protocol-client"))
         (is (.endsWith file "clojure/data.clj"))
         (is (= protocol "#'clojure.data/Diff"))
-        (is (= ns "cider.nrepl.middleware.info-test")))))
+        (is (= ns "cider.nrepl.middleware.info-test"))))
+
+    (testing "see also"
+      (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
+        (is (= (:see-also response)
+               ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt"])))
+      (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
+        (is (nil? (:see-also response))))
+
+      (let [response (session/message {:op "info" :symbol "xyz"})]
+        (is (nil? (:see-also response))))))
 
   (testing "eldoc op"
     (testing "clojure function"
