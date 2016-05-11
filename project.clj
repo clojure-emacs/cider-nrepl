@@ -24,6 +24,8 @@
 
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
 
+  :resource-paths ["resources"]
+
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
