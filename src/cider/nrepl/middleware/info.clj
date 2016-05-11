@@ -140,7 +140,7 @@
     info))
 
 (def see-also-data
-  (edn/read (java.io.PushbackReader. (io/reader "resources/see-also.edn"))))
+  (edn/read-string (slurp (io/resource "see-also.edn"))))
 
 (defn info-clj
   [ns sym]
