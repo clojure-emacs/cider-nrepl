@@ -306,14 +306,20 @@
     member {:member (str member)}
     candidates {:member (->> candidates vals (map :member) first str)}))
 
+(defn extract-eldoc
+  [info]
+  (if-let [arglists (seq (-> info extract-arglists format-arglists))]
+    {:eldoc arglists :type "function"}
+    {:type "variable"}))
+
 (defn eldoc-reply
   [msg]
-  (let [info (info msg)]
-    (if-let [arglists (extract-arglists info)]
-      (merge (extract-ns-or-class info)
-             (extract-name-or-member info)
-             {:eldoc (format-arglists arglists)})
-      {:status :no-eldoc})))
+  (if-let [info (info msg)]
+    (merge (extract-ns-or-class info)
+           (extract-name-or-member info)
+           (extract-eldoc info)
+           {:docstring (:doc info)})
+    {:status :no-eldoc}))
 
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."

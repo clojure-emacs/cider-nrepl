@@ -6,7 +6,8 @@
             [clojure.set :as set]
             [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.misc :as util]
-            [cider.nrepl.test-session :as session])
+            [cider.nrepl.test-session :as session]
+            [cider.test-ns.first-test-ns :as test-ns])
   (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))
 
 (defn file
@@ -424,36 +425,51 @@
         (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))
         (is (= (:ns response) "clojure.core"))
         (is (not (contains? response :class)))
-        (is (= (:name response) "+"))))
+        (is (= (:name response) "+"))
+        (is (= (:type response) "function"))))
 
     (testing "clojure special form"
       (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
         (is (= (:status response) #{"done"}))
-        (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]]))))
+        (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]]))
+        (is (= (:type response) "function"))))
 
     (testing "clojure dot operator"
       (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
-        (is (= (:status response) #{"done"}))))
+        (is (= (:status response) #{"done"}))
+        (is (= (:type response) "function"))))
+
+    (testing "clojure variable"
+      (let [response (session/message {:op "eldoc" :symbol "some-test-var" :ns "cider.test-ns.first-test-ns"})]
+        (is (= (:status response) #{"done"}))
+        (is (= (:docstring response) "This is a test var used to check eldoc returned for a variable."))
+        (is (= (:name response) "some-test-var"))
+        (is (= (:ns response) "cider.test-ns.first-test-ns"))
+        (is (nil? (:eldoc response)))
+        (is (= (:type response) "variable"))))
 
     (testing "java interop method with multiple classes"
       (let [response (session/message {:op "eldoc" :symbol ".length" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response)
                ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"]))
         (is (= (:member response) "length"))
-        (is (not (contains? response :ns)))))
+        (is (not (contains? response :ns)))
+        (is (= (:type response) "function"))))
 
     (testing "java interop method with single class"
       (let [response (session/message {:op "eldoc" :symbol ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response) ["java.lang.String"]))
         (is (= (:member response) "startsWith"))
-        (is (not (contains? response :ns)))))
+        (is (not (contains? response :ns)))
+        (is (= (:type response) "function"))))
 
     (testing "java method eldoc lookup, internal testing methods"
       (let [response (session/message {:op "eldoc" :symbol "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
         (is (= #{["this"] ;;TestClass
                  ["int" "java.lang.String" "boolean"] ;;AnotherTestClass
                  ["this" "byte[]" "java.lang.Object[]" "java.util.List"]} ;;YetAnotherTest
-               (set (:eldoc response))))))))
+               (set (:eldoc response))))
+        (is (= (:type response) "function"))))))
 
 (deftest missing-info
   (testing "ensure info returns a no-info packet if symbol not found"
