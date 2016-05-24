@@ -23,7 +23,8 @@
                                                :ns "cljs.core"}))]
       (is (every? (comp map? second) ns-vars-with-meta))
       (is (= (:+ ns-vars-with-meta)
-             {:arglists "(quote ([] [x] [x y] [x y & more]))"}))))
+             {:arglists "(quote ([] [x] [x y] [x y & more]))"
+              :doc "\"Returns the sum of nums. (+) returns 0.\""}))))
 
   (testing "ns-path op"
     (let [{:keys [path]} (session/message {:op "ns-path"

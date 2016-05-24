@@ -54,10 +54,14 @@
                                              :ns "clojure.core"}))]
     (is (every? (comp map? second) ns-vars-with-meta))
     (is (= (:+ ns-vars-with-meta)
-           {:arglists "([] [x] [x y] [x y & more])"}))
+           {:arglists "([] [x] [x y] [x y & more])"
+            :doc "\"Returns the sum of nums. (+) returns 0. Does not auto-promote\\n  longs, will throw on overflow. See also: +'\""}))
     (is (= (:doseq ns-vars-with-meta)
-           {:arglists "([seq-exprs & body])" :macro "true"}))
-    (is (= (:*ns* ns-vars-with-meta) {}))))
+           {:arglists "([seq-exprs & body])"
+            :macro "true"
+            :doc "\"Repeatedly executes body (presumably for side-effects) with\\n  bindings and filtering as provided by \\\"for\\\".  Does not retain\\n  the head of the sequence. Returns nil.\""}))
+    (is (= (:*ns* ns-vars-with-meta)
+           {:doc "\"A clojure.lang.Namespace object representing the current namespace.\""}))))
 
 (deftest ns-path-integration-test
   (let [ns-path (:path (session/message {:op "ns-path"

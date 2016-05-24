@@ -46,7 +46,8 @@
 
 (deftest relevant-meta
   (is (= (m/relevant-meta (meta #'test-fn))
-         {:arglists "([a b] [a] [])"}))
+         {:arglists "([a b] [a] [])"
+          :doc "\"docstring\""}))
   (is (= (:macro (m/relevant-meta (meta #'deftest)))
          "true"))
   (let [m (meta #'strip-meta)]
