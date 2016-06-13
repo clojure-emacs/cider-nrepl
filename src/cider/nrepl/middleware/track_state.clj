@@ -190,7 +190,8 @@
 (set-descriptor!
  #'wrap-tracker
  (cljs/expects-piggieback
-  {:expects ops-that-can-eval
+  {:requires #{#'clojure.tools.nrepl.middleware.session/session}
+   :expects ops-that-can-eval
    :handles
    {"track-state-middleware"
     {:doc "Enhances the `eval` op by notifying the client of the current REPL state. Currently, only the REPL type (Clojure or ClojureScript) is informed."}}}))
