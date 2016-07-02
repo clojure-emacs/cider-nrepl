@@ -125,6 +125,9 @@
          (instance? java.lang.Class value)
          (pr-str value)
 
+         (nil? value)
+         "nil"
+
          :default
          (str value))))
 
