@@ -17,7 +17,6 @@
                                                   :extra-metadata extra-metadata})
       (jvm-complete/completions prefix {:ns ns
                                         :context context
-                                        :tag-candidates true
                                         :extra-metadata extra-metadata}))))
 
 (defn completion-doc
