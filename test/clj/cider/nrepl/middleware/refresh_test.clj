@@ -16,8 +16,11 @@
 (defn- after-fn []
   (println "after-fn invoked"))
 
+(defn- after-fn-optional-arg [& a]
+  (when a (throw (IllegalArgumentException. "should not have been called with arg")))
+  (println "after with optional argument works"))
 
-(deftest refresh-op
+(deftest refresh-op-test
   (testing "refresh op works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload})]
@@ -30,7 +33,7 @@
       (is (= [] (:reloading response)))
       (is (= #{"done" "ok"} (:status response))))))
 
-(deftest before-arg-test
+(deftest before-fn-test
   (testing "before arg works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
@@ -61,8 +64,7 @@
       (is (:err response))
       (is (:error response)))))
 
-
-(deftest after-arg-test
+(deftest after-fn-test
   (testing "after arg with zero arity works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
@@ -70,6 +72,14 @@
       (is (:reloading response))
       (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
       (is (= "after-fn invoked\n" (:out response)))))
+
+  (testing "after arg with optional arg works"
+    (let [response (session/message {:op "refresh"
+                                     :dirs dirs-to-reload
+                                     :after "cider.nrepl.middleware.refresh-test/after-fn-optional-arg"})]
+      (is (:reloading response))
+      (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
+      (is (= "after with optional argument works\n" (:out response)))))
 
   (testing "bad after arg results in error"
     (let [response (session/message {:op "refresh"
