@@ -18,7 +18,7 @@
   [x]
   (:resource (info/file-info x)))
 
-(deftest test-javadoc-url
+(deftest javadoc-url-test
   (testing "java 1.7"
     (is (= "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#charAt(int)"
            (with-redefs [util/java-api-version "7"]
@@ -33,7 +33,7 @@
                  (info/format-response)
                  (get "javadoc")))))))
 
-(deftest test-resource-path
+(deftest resource-path-test
   (is (= (class (file (subs (str (clojure.java.io/resource "clojure/core.clj")) 4)))
          java.net.URL))
   (is (= (class (file "clojure/core.clj"))
@@ -46,7 +46,7 @@
   (is (nil? (relative "notclojure/core.clj")))
   (is (nil? (info/resource-path "jar:file:fake.jar!/fake/file.clj"))))
 
-(deftest test-boot-resource-path
+(deftest boot-resource-path-test
   (let [tmp-dir-name (System/getProperty "java.io.tmpdir")
         tmp-file-name "boot-test.txt"
         tmp-file-path (str tmp-dir-name (System/getProperty "file.separator") tmp-file-name)]
@@ -75,7 +75,7 @@
 
 (deftype T [])
 
-(deftest test-info
+(deftest info-test
   (is (info/info-clj 'cider.nrepl.middleware.info 'io))
 
   (is (info/info-clj 'cider.nrepl.middleware.info 'info-clj))
@@ -126,7 +126,7 @@
 
   ;; test CLJX resolve
   (is (= "simple/test/workaround.cljx"
-         (-> (info/info-clj 'cider.nrepl.middleware.info-test 'test-info)
+         (-> (info/info-clj 'cider.nrepl.middleware.info-test 'info-test)
              info/handle-cljx-sources
              :file)))
 
@@ -138,7 +138,7 @@
   ;; this is a replacement for (is (not (thrown? ..)))
   (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
 
-(deftest test-response
+(deftest response-test
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
         {:keys [arglists column line added static doc]} (meta v)]
     (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
@@ -176,7 +176,7 @@
            [Classname/staticMethod args*]
            [Classname/staticField]))))
 
-(deftest test-format-arglists
+(deftest format-arglists-test
   (is (= (info/format-arglists (info/extract-arglists test-eldoc-info)) '(["x"] ["x" "y"])))
   (is (= (info/format-arglists (info/extract-arglists test-eldoc-info-candidates))
          '([] ["x"] ["x" "y" "z"]))))
@@ -187,7 +187,7 @@
   (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "."})))
   (is (not (info/extract-arglists (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
 
-(deftest test-var-meta
+(deftest var-meta-test
   ;; Test files can't be found on the class path.
   (is (:file (info/var-meta #'info/var-meta)))
   (is (re-find #"cider-nrepl" (:file (#'info/maybe-add-file {:ns (find-ns 'cider.nrepl.middleware.info)}))))
@@ -248,7 +248,7 @@
   `(if (not ~pred) ~a ~b))
 
 (use-fixtures :each session/session-fixture)
-(deftest integration-tests
+(deftest integration-test
   (testing "info op"
     (testing "get info of a clojure function"
       (let [response (session/message {:op "info" :symbol "testing-function" :ns "cider.nrepl.middleware.info-test"})]
@@ -471,7 +471,7 @@
                (set (:eldoc response))))
         (is (= (:type response) "function"))))))
 
-(deftest missing-info
+(deftest missing-info-test
   (testing "ensure info returns a no-info packet if symbol not found"
     (let [response (session/message {:op "info" :symbol "awoeijfxcvb" :ns "user"})]
       (is (= (:status response) #{"no-info" "done"}))))
@@ -488,7 +488,7 @@
     (let [response (session/message {:op "info" :class "java.lang.Exception" :member "fakefakefake"})]
       (is (= (:status response) #{"no-info" "done"})))))
 
-(deftest missing-eldoc
+(deftest missing-eldoc-test
   (testing "ensure eldoc returns a no-eldoc packet if symbol not found"
     (let [response (session/message {:op "eldoc" :symbol "awoeijfxcvb" :ns "user"})]
       (is (= (:status response) #{"no-eldoc" "done"}))))
@@ -505,7 +505,7 @@
     (let [response (session/message {:op "eldoc" :class "java.lang.Exception" :member "fakefakefake"})]
       (is (= (:status response) #{"no-eldoc" "done"})))))
 
-(deftest error-handling
+(deftest error-handling-test
   (testing "handle the exception thrown if no member provided to a java class info query"
     (let [response (session/message {:op "info" :class "test"})]
       (is (= (:status response) #{"info-error" "done"}))

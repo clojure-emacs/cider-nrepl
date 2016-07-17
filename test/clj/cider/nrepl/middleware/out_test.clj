@@ -16,7 +16,7 @@
 
 (remove-watch o/tracked-sessions-map :update-out)
 
-(deftest maybe-register-session
+(deftest maybe-register-session-test
   (with-redefs [o/tracked-sessions-map (atom {})]
     (o/subscribe-session msg)
     (let [{:keys [transport session id some-other-key]} (@o/tracked-sessions-map (:id the-meta))]

@@ -13,7 +13,7 @@
    :expanded-1   "(loop [] (when (while 1) (recur)))"
    :expanded-all "(loop* [] (if (loop* [] (if 1 (do (recur)))) (do (recur))))"})
 
-(deftest expander-option
+(deftest expander-option-test
   (testing "macroexpand-1 expander works"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand-1"
@@ -70,7 +70,7 @@
      ;; referred ns, with alias
      (is (= my-set (set/intersection (hash-set 1 2 3) (hash-set 2 3 4))))))
 
-(deftest display-namespaces-option
+(deftest display-namespaces-option-test
   (testing "macroexpand-1 expander with display-namespaces: qualified"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand-1"
@@ -119,7 +119,7 @@
       (is (= #{"done" "macroexpand-error"} status))
       (is pp-stacktrace))))
 
-(deftest print-meta-option
+(deftest print-meta-option-test
   (testing "macroexpand-1 expander with print-meta: true"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand-1"

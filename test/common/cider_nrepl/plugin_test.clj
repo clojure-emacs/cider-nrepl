@@ -12,7 +12,7 @@
 (defn- contains-cider-nrepl-middleware? [{{:keys [nrepl-middleware]} :repl-options}]
   (= cider-middleware nrepl-middleware))
 
-(deftest plugin
+(deftest plugin-test
   ;; Suppress output of leiningen.core.main/warn
   (binding [lein/*info* false]
     (with-redefs [plugin/version (constantly "0.11.0")]

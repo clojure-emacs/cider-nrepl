@@ -35,7 +35,7 @@
 
 ;; ## Tests
 
-(deftest test-stacktrace-frames
+(deftest stacktrace-frames-test
   (testing "File types"
     ;; Should be clj and java only.
     (let [ts1 (group-by :type frames1)
@@ -55,7 +55,7 @@
     (is (not-any? #(re-find #"[_$]|(--\d+)" (:fn %))
                   (filter :fn frames2)))))
 
-(deftest test-stacktrace-frame-flags
+(deftest stacktrace-frame-flags-test
   (testing "Flags"
     (testing "for file type"
       ;; Every frame should have its file type added as a flag.
@@ -81,7 +81,7 @@
         (is (every? (fn [[i v]] (dup? v (get ixd2 (dec i))))
                     (filter (comp :dup :flags val) ixd2)))))))
 
-(deftest test-exception-causes
+(deftest exception-causes-test
   (testing "Exception cause unrolling"
     (is (= 2 (count causes1)))
     (is (= 1 (count causes2))))
@@ -90,11 +90,11 @@
     (is (:data (first causes1)))
     (is (not (:data (first causes2))))))
 
-(deftest test-ex-data-filtering
+(deftest ex-data-filtering-test
   (is (= {:a :b :c :d}
          (filtered-ex-data (ex-info "msg" {:a :b :c :d :repl-env :e})))))
 
-(deftest test-cause-data-pretty-printing
+(deftest cause-data-pretty-printing-test
   (testing "print-length"
     (is (= "{:a (0 1 2 ...)}\n"
            (:data (analyze-cause (ex-info "" {:a (range)}) (fn [object]
@@ -109,7 +109,7 @@
     (is (re-find #"Unable to resolve symbol: not-defined in this context"
                  (:message (first causes3))))))
 
-(deftest compilation-errors
+(deftest compilation-errors-test
   (testing "extract-location"
     (is (= {:class "clojure.lang.Compiler$CompilerException"
             :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"

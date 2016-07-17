@@ -7,7 +7,7 @@
             [cider.test-ns first-test-ns second-test-ns third-test-ns]
             [clojure.test :refer :all]))
 
-(deftest test-toogle-ns-vars
+(deftest toogle-ns-vars-test
   (let [ns "clojure.core"]
     (is (= (count (ns-publics (symbol ns))) (count (ns-vars-clj ns))))))
 
@@ -76,13 +76,13 @@
     (is (sequential? loaded-ns))
     (is (every? string? loaded-ns))))
 
-(deftest test-ns-list-vars-by-name
-  (is (= (first (ns-list-vars-by-name 'test-ns-list-vars-by-name))
-         #'cider.nrepl.middleware.ns-test/test-ns-list-vars-by-name))
-  (is (= (count (ns-list-vars-by-name 'test-ns-list-vars-by-name)) 1))
+(deftest ns-list-vars-by-name-test
+  (is (= (first (ns-list-vars-by-name 'ns-list-vars-by-name-test))
+         #'cider.nrepl.middleware.ns-test/ns-list-vars-by-name-test))
+  (is (= (count (ns-list-vars-by-name 'ns-list-vars-by-name-test)) 1))
   (is (not (seq (ns-list-vars-by-name 'all-your-base-are-belong-to-us)))))
 
-(deftest test-error-handling
+(deftest error-handling-test
   (testing "ns-list op error handling"
     (with-redefs [cider-ns/ns-list (fn [& _] (throw (Exception. "ns-list error")))]
       (let [response (session/message {:op "ns-list"})]

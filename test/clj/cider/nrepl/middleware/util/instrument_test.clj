@@ -4,7 +4,7 @@
             [clojure.test :refer :all]
             [clojure.walk :as walk]))
 
-(deftest dont-break?
+(deftest dont-break?-test
   (are [x] (#'t/dont-break? x)
     '(if 1 (recur (inc 2)) 0))
   (are [x] (not (#'t/dont-break? (walk/macroexpand-all x)))
@@ -30,7 +30,7 @@
   ;; Replace #'bp with 'bp for easier print and comparison.
   (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
 
-(deftest instrument-defrecord-and-new
+(deftest instrument-defrecord-and-new-test
   (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
     '(defrecord TestRec [arg arg2]
        java.lang.Iterable
@@ -40,7 +40,7 @@
     '(new java.lang.Integer 1)
     '#{[(new java.lang.Integer 1) []]}))
 
-(deftest instrument-clauses
+(deftest instrument-clauses-test
   (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
     '(cond-> value
        v2 form
@@ -71,7 +71,7 @@
        :else   final)
     '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x {:coor [1 1]} x) 1) [1]]}))
 
-(deftest instrument-recur
+(deftest instrument-recur-test
   (is (= (breakpoint-tester '(loop [x '(1 2)]
                                (if (seq x)
                                  (recur (rest x))
@@ -108,7 +108,7 @@
      [(contains? (bp response {:coor [3 2 1 1]} response) :value) [3 2 1]]
      [(. transport recv) [2 2]]})
 
-(deftest instrument-reify
+(deftest instrument-reify-test
   (is (= (breakpoint-tester '(reify Transport
                                (recv [this] (.recv transport))
                                (send [this response]
@@ -118,7 +118,7 @@
                                  this)))
          reify-result)))
 
-(deftest instrument-function-call
+(deftest instrument-function-call-test
   (is (= (breakpoint-tester
           '(defn test-fn []
              (let [start-time (System/currentTimeMillis)]
@@ -132,7 +132,7 @@
             [start-time [3 3 2]]
             [(. System currentTimeMillis) [3 3 1]]})))
 
-(deftest instrument-try
+(deftest instrument-try-test
   ;; No breakpoints around `catch`, `finally`, `Exception`, or `e`.
   (is (= (breakpoint-tester '(try
                                x
@@ -151,7 +151,7 @@
          '#{[(def foo "foo doc" (bp (bar) {:coor [3]} (bar))) []]
             [(bar) [3]]})))
 
-(deftest instrument-set!
+(deftest instrument-set!-test
   (is (= (breakpoint-tester '(set! foo (bar)))
          '#{[(set! foo (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
@@ -172,7 +172,7 @@
   ;; clojure.tools.logging does this:
   `(identity ~*ns*))
 
-(deftest test-namespace-embedded-in-code
+(deftest namespace-embedded-in-code-test
   ;; Instrumentation used to fail if:
   ;;  - a macro embedded a namespace in a form (eg: ~*ns*), and
   ;;  - the namespace had metadata (eg: a docstring), and

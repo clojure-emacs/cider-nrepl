@@ -12,7 +12,7 @@
   (is (= (var-doc   #'public-var) "Test1. Test2. Test3."))
   (is (= (var-doc 1 #'public-var) "Test1.")))
 
-(deftest test-namespaces
+(deftest namespaces-test
   (let [ns (-> *ns* ns-name str)]
     (testing "Namespace sort order"
       (is (= (-> (namespaces ns nil) first ns-name str)
@@ -32,7 +32,7 @@
       (is (not-any? #(re-find #".*nrepl" (str (ns-name %)))
                     (namespaces nil nil [".*nrepl"]))))))
 
-(deftest test-search
+(deftest search-test
   (testing "Search results"
     (is (empty? (find-symbols nil "xxxxxxxx" nil false false false nil))
         "Failing searches should return empty.")

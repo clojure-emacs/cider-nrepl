@@ -5,7 +5,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest cljs-info
+(deftest cljs-info-test
   (let [response (session/message {:op "info"
                                    :ns "cljs.core"
                                    :symbol "map"})]
@@ -23,7 +23,7 @@
                                            :symbol "non-existent-var"})]
     (is (= #{"no-info" "done"} status))))
 
-(deftest cljs-eldoc
+(deftest cljs-eldoc-test
   (let [response (session/message {:op "eldoc"
                                    :ns "cljs.core"
                                    :symbol "println"})]

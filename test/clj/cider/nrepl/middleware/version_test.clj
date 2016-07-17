@@ -3,7 +3,7 @@
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
-(deftest test-cider-version
+(deftest cider-version-test
   (let [outer-map (#'v/cider-version-reply {})
         version-map (:cider-version outer-map)]
     (is (contains? version-map :major))

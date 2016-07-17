@@ -25,7 +25,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest sanity
+(deftest sanity-test
   (testing "cljs repl is active"
     (let [response (session/message {:op :eval
                                      :code (nrepl/code (js/Object.))})]

@@ -16,7 +16,7 @@
     (is (err/error-handler (fn [m e] {:anon (inc (:id m))}) {:id 5} e))
     (is (err/error-handler {:inline :reply} {:id 5} e))))
 
-(deftest bencode-tests
+(deftest bencode-test
   (testing "shallow-bencodable?"
     (let [bencodable? #'err/shallow-bencodable?]
       (is (bencodable? nil))

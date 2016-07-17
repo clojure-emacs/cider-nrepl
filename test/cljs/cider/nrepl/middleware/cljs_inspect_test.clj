@@ -6,7 +6,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest cljs-inspect
+(deftest cljs-inspect-test
   (let [response (message {:op "eval"
                            :inspect "true"
                            :code "[0 1 2]"})

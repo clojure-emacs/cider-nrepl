@@ -5,7 +5,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest cljs-ns
+(deftest cljs-ns-test
   (testing "ns-list op"
     (let [{:keys [ns-list]} (session/message {:op "ns-list"})]
       (is (sequential? ns-list))

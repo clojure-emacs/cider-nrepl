@@ -16,6 +16,7 @@
 (defn- after-fn []
   (println "after-fn invoked"))
 
+
 (deftest refresh-op
   (testing "refresh op works"
     (let [response (session/message {:op "refresh"
@@ -29,7 +30,7 @@
       (is (= [] (:reloading response)))
       (is (= #{"done" "ok"} (:status response))))))
 
-(deftest before-arg
+(deftest before-arg-test
   (testing "before arg works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
@@ -60,8 +61,9 @@
       (is (:err response))
       (is (:error response)))))
 
-(deftest after-arg
-  (testing "after arg works"
+
+(deftest after-arg-test
+  (testing "after arg with zero arity works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "cider.nrepl.middleware.refresh-test/after-fn"})]
@@ -91,14 +93,14 @@
       (is (:err response))
       (is (:error response)))))
 
-(deftest refresh-all-op
+(deftest refresh-all-op-test
   (testing "refresh-all op works"
     (let [response (session/message {:op "refresh-all"
                                      :dirs dirs-to-reload})]
       (is (seq (:reloading response)))
       (is (= #{"done" "ok"} (:status response))))))
 
-(deftest refresh-clear-op
+(deftest refresh-clear-op-test
   (testing "refresh-clear op works"
     (let [_ (session/message {:op "refresh"
                               :dirs dirs-to-reload})

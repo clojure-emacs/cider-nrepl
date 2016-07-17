@@ -5,13 +5,13 @@
 
 (defn dummy-fn [o])
 
-(deftest print-atoms
+(deftest print-atoms-test
   (is (re-find #"#atom\[\"\" 0x[a-z0-9]+\]" (pr-str (atom ""))))
   (is (re-find #"#atom\[nil 0x[a-z0-9]+\]" (pr-str (atom nil))))
   (is (re-find #"#atom\[\{:foo :bar\} 0x[a-z0-9]+\]" (pr-str (atom {:foo :bar}))))
   (is (re-find #"#atom\[#function\[clojure.core/\+\] 0x[a-z0-9]+\]" (pr-str (atom +)))))
 
-(deftest print-idrefs
+(deftest print-idrefs-test
   (let [f (future (Thread/sleep 200) 1)
         p (promise)
         d (delay 1)
@@ -29,9 +29,9 @@
       d #"#delay\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
       p #"#promise\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]")))
 
-(deftest print-functions
+(deftest print-functions-test
   (are [f s] (= (pr-str f) s)
-    print-functions "#function[cider.nrepl.print-method-test/print-functions]"
+    print-functions-test "#function[cider.nrepl.print-method-test/print-functions-test]"
     dummy-fn "#function[cider.nrepl.print-method-test/dummy-fn]"
     multifn-name "#function[cider.nrepl.print-method/multifn-name]"
     + "#function[clojure.core/+]"
@@ -39,14 +39,14 @@
     / "#function[clojure.core//]"
     fn? "#function[clojure.core/fn?]"))
 
-(deftest print-multimethods
+(deftest print-multimethods-test
   (require 'cider.nrepl.middleware.track-state)
   (let [var (resolve 'print-method)]
     (is (re-find (Pattern/compile (format "#multifn\\[%s 0x[a-z0-9]+\\]"
                                           (:name (meta var))))
                  (pr-str @var)))))
 
-(deftest print-namespaces
+(deftest print-namespaces-test
   (are [f s] (= (pr-str f) s)
     (find-ns 'clojure.core) "#namespace[clojure.core]"
     (find-ns 'cider.nrepl.print-method) "#namespace[cider.nrepl.print-method]"

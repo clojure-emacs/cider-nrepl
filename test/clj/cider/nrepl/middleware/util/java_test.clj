@@ -5,7 +5,7 @@
             [clojure.test :refer :all]
             [clojure.java.io :as io]))
 
-(deftest test-source-info
+(deftest source-info-test
   (let [resolve-src (comp (fnil io/resource "-none-") :file source-info)]
     (when (and jdk-sources jdk-tools)
       (testing "Source file resolution"
@@ -28,7 +28,7 @@
                         [:members 'size])
                 first val :line))))))
 
-(deftest test-map-structure
+(deftest map-structure-test
   (when jdk-tools
     (testing "Parsed map structure = reflected map structure"
       (let [cols #{:file :line :column :doc :argnames :argtypes}
@@ -49,7 +49,7 @@
                       (vals (:members c2)))
                  (every? true?)))))))
 
-(deftest test-class-info
+(deftest class-info-test
   (let [c1 (class-info 'java.lang.Thread)
         c2 (class-info 'java.lang.Thread$State)
         c3 (class-info 'not.actually.AClass)]
@@ -69,7 +69,7 @@
       (testing "that doesn't exist"
         (is (nil? c3))))))
 
-(deftest test-member-info
+(deftest member-info-test
   (let [m1 (member-info 'java.util.AbstractCollection 'size)
         m2 (member-info 'java.util.AbstractCollection 'non-existent-member)
         m3 (member-info 'not.actually.AClass 'nada)
@@ -100,7 +100,7 @@
       (testing "implemented on ancestor superclass"
         (is (not= 'java.lang.Object (:class m7)))))))
 
-(deftest test-arglists
+(deftest arglists-test
   (let [+this (comp #{'this} first)]
     (testing "Arglist prepending of 'this'"
       (testing "for instance methods"
@@ -113,7 +113,7 @@
         (is (not-any? +this (:arglists (member-info 'java.lang.String
                                                     'java.lang.String))))))))
 
-(deftest test-javadoc-urls
+(deftest javadoc-urls-test
   (testing "Javadoc URL"
     (testing "for a class"
       (is (= (:javadoc (class-info 'java.lang.String))
@@ -171,7 +171,7 @@
             (is (= (:javadoc (member-info 'java.util.Hashtable 'putAll))
                    "java/util/Hashtable.html#putAll-java.util.Map-"))))))))
 
-(deftest test-class-resolution
+(deftest class-resolution-test
   (let [ns (ns-name *ns*)]
     (testing "Class resolution"
       (testing "of resolvable classes"
@@ -184,7 +184,7 @@
         (is (nil? (resolve-class ns 'assoc)))
         (is (nil? (resolve-class ns 'clojure.core)))))))
 
-(deftest test-member-resolution
+(deftest member-resolution-test
   (let [ns (ns-name *ns*)]
     (testing "Member resolution"
       (testing "of instance members"
@@ -193,7 +193,7 @@
       (testing "of non-members"
         (is (empty? (resolve-member ns 'notAMember)))))))
 
-(deftest test-symbol-resolution
+(deftest symbol-resolution-test
   (let [ns (ns-name *ns*)]
     (testing "Symbol resolution"
       (testing "of classes/constructors"
