@@ -7,7 +7,7 @@
 
 (def ^:const bfkey :cider.nrepl.middleware.util.instrument/breakfunction)
 
-(deftest irrelevant-return-value
+(deftest irrelevant-return-value-test
   (are [x] (let [exp (clojure.walk/macroexpand-all x)]
              (= exp (clojure.walk/macroexpand-all `(d/breakpoint-if-interesting ~exp [] nil))))
     '(defn name "" [] (inc 2))
@@ -16,7 +16,7 @@
     '(fn name [] (inc 2))
     '(fn* name ([] (inc 2)))))
 
-(deftest coord<
+(deftest coord<-test
   (are [a b] (and (d/coord< a b)
                   (not (d/coord< b a)))
     [1] []
@@ -25,7 +25,7 @@
     [1 2] [1 3]
     [1 0] [1]))
 
-(deftest skip-breaks
+(deftest skip-breaks-test
   (binding [d/*skip-breaks* (atom {:mode :all})]
     (is (#'d/skip-breaks? []))
     (is (#'d/skip-breaks? nil))
@@ -92,7 +92,7 @@
   (with-redefs [t/send (send-override :inject)]
     (is (= :inject (#'d/read-debug-command 'value {})))))
 
-(deftest read-debug-command-eval
+(deftest read-debug-command-eval-test
   (let [replies (atom [:eval 100 :next])]
     (with-redefs [t/send (fn [trans {:keys [key]}]
                            (deliver (@d/promises key) (first @replies))
@@ -106,7 +106,7 @@
   `(binding [d/*locals* ~(#'d/sanitize-env &env)]
      ~value))
 
-(deftest read-debug-eval-expression
+(deftest read-debug-eval-expression-test
   (reset! d/debugger-message {})
   (let [x 1]
     (with-redefs [t/send (send-override '(inc 10))]
@@ -122,7 +122,7 @@
            (with-locals
              (#'d/eval-with-locals '(inc x)))))))
 
-(deftest eval-with-locals-exceptions
+(deftest eval-with-locals-exceptions-test
   (binding [*msg* {:session (atom {})}]
     (let [e (Exception. "HI")
           resp (atom nil)]
@@ -132,7 +132,7 @@
         (is (coll? (:causes @resp)))
         (is (= "HI" (:message (last (:causes @resp)))))))))
 
-(deftest initialize
+(deftest initialize-test
   (with-redefs [d/debugger-message (atom nil)]
     (let [resp (atom nil)]
       (with-redefs [t/send (fn [_ response] (reset! resp response))]
@@ -144,7 +144,7 @@
         (#'d/initialize {:hi true}))
       (is (:status @resp)))))
 
-(deftest locals-for-message
+(deftest locals-for-message-test
   (let [x 1
         to_ignore 0
         to__ignore 0]
@@ -152,7 +152,7 @@
       (is (= '(("x" "1"))
              (#'d/locals-for-message d/*locals*))))))
 
-(deftest eval-expression-with-code
+(deftest eval-expression-with-code-test
   (with-locals
     (is (= (#'d/read-debug-eval-expression
             "Unused prompt" {:some "random", 'meaningless :map} '(inc 1))
@@ -163,14 +163,14 @@
               "Unused prompt" {:some "random", 'meaningless :map} '(inc x))
              11)))))
 
-(deftest inspect-then-read-command
+(deftest inspect-then-read-command-test
   (with-redefs [d/debugger-message (atom {:session (atom {})})
                 d/read-debug-command vector]
     (let [[v m] (#'d/inspect-then-read-command :value {} 32 10)]
       (is (= v :value))
       (is (string? (:inspect m))))))
 
-(deftest debug-reader
+(deftest debug-reader-test
   (is (empty? (remove #(bfkey (meta %))
                       (d/debug-reader '[a b c]))))
   (is (bfkey (meta (d/debug-reader '[a b c]))))
@@ -178,14 +178,14 @@
                         (d/debug-reader '[a :b 10])))
          2)))
 
-(deftest breakpoint-reader
+(deftest breakpoint-reader-test
   (is (bfkey (meta (d/breakpoint-reader '[a b c]))))
   (is (= '[a :b 10 "ok"]
          (remove #(bfkey (meta %)) (d/breakpoint-reader '[a :b 10 "ok"]))))
   ;; Just don't error
   (is (map d/breakpoint-reader '[a :b 10 "ok"])))
 
-(deftest reader-macros
+(deftest reader-macros-test
   (binding [*data-readers* {'dbg d/debug-reader}]
     ;; Reader macro variants
     (is (empty? (remove #(bfkey (meta %)) (read-string "#dbg [a b c]"))))
@@ -193,7 +193,7 @@
     (is (= (count (remove #(bfkey (meta %)) (read-string "#dbg [a :b 10]")))
            2))))
 
-(deftest pr-short
+(deftest pr-short-test
   (reset! d/print-length 4)
   (reset! d/print-level 2)
   (is (< (count (d/pr-short [1 2 3 4 5 6 7 8 9 10]))

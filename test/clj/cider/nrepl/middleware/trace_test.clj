@@ -6,7 +6,7 @@
 
 (use-fixtures :each session/session-fixture)
 
-(deftest test-toggle-trace-var
+(deftest toggle-trace-var-test
   (testing "toggling"
     (is (= {:var-name "#'clojure.core/zipmap" :var-status "traced"}
            (toggle-trace-var {:ns "clojure.core" :sym "zipmap"})))
@@ -22,7 +22,7 @@
       (is (= {:var-name "#'clojure.core/and" :var-status "not-traceable"}
              (toggle-trace-var {:ns "clojure.core" :sym "and"}))))))
 
-(deftest test-toggle-trace-ns
+(deftest toggle-trace-ns-test
   (testing "toogling"
     (is (= {:ns-status "traced"}
            (toggle-trace-ns {:ns "clojure.core"})))

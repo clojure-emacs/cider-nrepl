@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [cider.nrepl.middleware.util.misc :as misc]))
 
-(deftest test-transform-value
+(deftest transform-value-test
   (is (= (misc/transform-value (array-map
                                 :a "b"
                                 "c" :d
@@ -16,7 +16,7 @@
           java.io.File.
           .isAbsolute)))
 
-(deftest test-as-sym
+(deftest as-sym-test
   (is (= nil (misc/as-sym nil)))
   (is (= nil (misc/as-sym 1)))
   (is (= nil (misc/as-sym '())))
@@ -26,7 +26,7 @@
   (is (= 'WAT (misc/as-sym "WAT")))
   (is (= 'WAT (misc/as-sym 'WAT))))
 
-(deftest update-vals
+(deftest update-vals-test
   (is (= (misc/update-vals inc {1 2 3 4 5 6})
          {1 3 3 5 5 7}))
   (is (= (misc/update-vals range {1 2 3 4 5 6})
@@ -36,7 +36,7 @@
   (is (= (misc/update-vals odd? {1 2 3 4 5 6})
          {1 false 3 false 5 false})))
 
-(deftest update-keys
+(deftest update-keys-test
   (is (= (misc/update-keys inc {1 2 3 4 5 6})
          {2 2, 4 4, 6 6}))
   (is (= (misc/update-keys range {1 2 3 4 5 6})

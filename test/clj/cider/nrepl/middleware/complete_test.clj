@@ -56,7 +56,7 @@
       (is (= '("[name & opts+sigs]") (:arglists candidate)))
       (is (string? (:doc candidate))))))
 
-(deftest complete-doc
+(deftest complete-doc-test
   (testing "blank"
     (let [response (session/message {:op "complete-doc" :symbol ""})]
       (is (= #{"done"} (:status response)))
@@ -67,7 +67,7 @@
       (is (= (:status response) #{"done"}))
       (is (.startsWith (:completion-doc response) "clojure.core/true?\n([x")))))
 
-(deftest error-handling
+(deftest error-handling-test
   (testing "complete op error handling"
     (with-redefs [c/complete (fn [& _] (throw (Exception. "complete-exc")))]
       (let [response (session/message {:op "complete" :ns "doesn't matter" :symbol "fake"})]

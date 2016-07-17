@@ -12,7 +12,7 @@
 (defmethod inspect-value MyTestType [obj]
   (str "#<MyTestType " (get-name obj) ">"))
 
-(deftest inspect-val
+(deftest inspect-val-test
   (testing "inspect-value print types"
     (are [result form] (= result (inspect-value form))
       "1" 1

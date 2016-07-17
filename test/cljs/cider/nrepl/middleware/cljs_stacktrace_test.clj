@@ -5,7 +5,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest cljs-stacktrace
+(deftest cljs-stacktrace-test
   (testing "stacktrace op is not implemented"
     (let [response-with-no-error (session/message {:op :stacktrace})
           response-with-error (do (session/message {:op :eval

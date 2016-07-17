@@ -52,7 +52,7 @@
 
 (use-fixtures :once session/session-fixture)
 
-(deftest test-format-code-op
+(deftest format-code-op-test
   (testing "format-code works"
     (let [{:keys [formatted-code status]} (session/message {:op "format-code"
                                                             :code ugly-code-sample})]
@@ -66,7 +66,7 @@
       (is (.startsWith err "clojure.lang.ExceptionInfo: Invalid"))
       (is (= ex "class clojure.lang.ExceptionInfo")))))
 
-(deftest test-format-edn-op
+(deftest format-edn-op-test
   (testing "format-edn works"
     (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
                                                            :edn ugly-edn-sample})]

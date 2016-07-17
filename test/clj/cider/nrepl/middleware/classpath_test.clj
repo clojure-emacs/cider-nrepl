@@ -12,7 +12,7 @@
     (is (every? string? classpaths))
     (is (some #(re-find #".*clojure-.*jar" %) classpaths))))
 
-(deftest error-handling
+(deftest error-handling-test
   (with-redefs [cp/classpath (fn [] (throw (Exception. "cp error")))]
     (let [response   (session/message {:op "classpath"})]
       (is (= (:status response) #{"done" "classpath-error"}))

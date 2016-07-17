@@ -130,7 +130,7 @@
         (f)))))
 
 
-(deftest debug-expression
+(deftest debug-expression-test
   (testing "normal eval (no debugging)"
     (--> :eval "(+ 2 3)")
     (<-- {:value "5"})
@@ -155,7 +155,7 @@
     (<-- {:value "2"})                  ; (let ...)
     (<-- {:status ["done"]})))
 
-(deftest debug-ops
+(deftest debug-ops-test
   (--> :eval "(ns user.test.debug)")
   (<-- {:ns "user.test.debug"})
   (<-- {:status ["done"]})
@@ -217,7 +217,7 @@
     (<-- {:value "8"})
     (<-- {:status ["done"]})))
 
-(deftest call-instrumented-fn-when-stepping-out
+(deftest call-instrumented-fn-when-stepping-out-test
   ;; When we step out of a form, instrumented functions that are
   ;; called should still be debugged.
 
@@ -259,7 +259,7 @@
   (<-- {:value "10"})
   (<-- {:status ["done"]}))
 
-(deftest call-instrumented-fn-when-doing-here-op
+(deftest call-instrumented-fn-when-doing-here-op-test
   ;; When we jump ahead by doing a `:here`, instrumented functions
   ;; that are called from the skipped-over code should still be
   ;; debugged.
@@ -307,7 +307,7 @@
 
 ;;; Tests for force-step operations
 
-(deftest force-step-out-past-instrumented-fn
+(deftest force-step-out-past-instrumented-fn-test
   ;; When we force-step out of a form, instrumented functions that are
   ;; called should not be debugged.
 
@@ -345,7 +345,7 @@
   (<-- {:value "14"})
   (<-- {:status ["done"]}))
 
-(deftest force-here-past-instrumented-fn
+(deftest force-here-past-instrumented-fn-test
   ;; When we do force-here operation that jumps past a call to an
   ;; instrumented function, the function should not be debugged.
 
@@ -385,7 +385,7 @@
 
 ;;; Tests for conditional breakpoints
 
-(deftest conditional-in-for
+(deftest conditional-in-for-test
   (--> :eval
        "(for [i (range 5)]
           #dbg ^{:break/when (= 2 i)}
@@ -397,7 +397,7 @@
   (<-- {:value "(1 2 3 4 5)"})              ; (for ...)
   (<-- {:status ["done"]}))
 
-(deftest conditional-in-defn
+(deftest conditional-in-defn-test
   (--> :eval "(ns user.test.conditional-break)")
   (<-- {:ns "user.test.conditional-break"})
   (<-- {:status ["done"]})
@@ -421,7 +421,7 @@
   (<-- {:value "(1 2 3)"})
   (<-- {:status ["done"]}))
 
-(deftest call-instrumented-fn-from-skipped-break
+(deftest call-instrumented-fn-from-skipped-break-test
   ;; When breaks are skipped due to a false conditional, instrumented
   ;; functions called from withing the skipped form should still be
   ;; debugged.
@@ -468,7 +468,7 @@
   (<-- {:value "(2 3)"})
   (<-- {:status ["done"]}))
 
-(deftest step-in-to-function-in-current-project
+(deftest step-in-to-function-in-current-project-test
   ;; We use misc/as-sym just because it's a simple function that's part of the
   ;; current project, and we want to ensure that the debugger can find and
   ;; instrument the code of a function that lives in a regular file on the
@@ -542,7 +542,7 @@
     (<-- {:value "blah"})
     (<-- {:status ["done"]})))
 
-(deftest step-in-to-function-in-jar
+(deftest step-in-to-function-in-jar-test
   ;; Step into clojure.tools.nrepl.server/handle*. To do this, we need to find
   ;; and instrument the source, which is in a jar file. Note that this function
   ;; is used because it is not marked as a :source-dep, so we can rely on the

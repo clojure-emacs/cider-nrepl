@@ -26,7 +26,7 @@
 
 (use-fixtures :each session-fixture)
 
-(deftest sanity
+(deftest sanity-test
   (testing "eval works"
     (is (= ["(true false true false true false)"]
            (:value (message {:op :eval

@@ -5,7 +5,7 @@
 
 (use-fixtures :each piggieback-fixture)
 
-(deftest cljs-complete
+(deftest cljs-complete-test
   (let [response (session/message {:op "complete"
                                    :ns "cljs.user"
                                    :symbol ""})]
@@ -39,7 +39,7 @@
       (is (= '("[psym & doc+methods]") (:arglists candidate)))
       (is (string? (:doc candidate))))))
 
-(deftest cljs-complete-doc
+(deftest cljs-complete-doc-test
   (let [response (session/message {:op "complete-doc" :symbol "tru"})]
     (is (= (:status response) #{"done"}))
     (is (empty? (:completion-doc response))

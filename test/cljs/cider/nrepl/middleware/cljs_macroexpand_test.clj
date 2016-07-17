@@ -5,7 +5,7 @@
 
 (use-fixtures :once piggieback-fixture)
 
-(deftest cljs-macroexpansion
+(deftest cljs-macroexpansion-test
   (testing "macroexpand-1 expander works"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand-1"

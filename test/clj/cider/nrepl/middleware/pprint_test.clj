@@ -4,7 +4,7 @@
 
 (use-fixtures :once session/session-fixture)
 
-(deftest test-wrap-pprint
+(deftest wrap-pprint-test
   (let [code "[1 2 3 4 5 6 7 8 9 0]"]
     (testing "wrap-pprint does not interfere with normal :eval requests"
       (is (= [code]

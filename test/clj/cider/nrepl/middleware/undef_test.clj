@@ -4,7 +4,7 @@
 
 (use-fixtures :each session/session-fixture)
 
-(deftest undef-var
+(deftest undef-var-test
   (testing "undef undefines vars"
     (is (= ["#'user/x"]
            (:value (session/message {:op "eval"
@@ -20,7 +20,7 @@
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'x)"}))))))
 
-(deftest undef-alias
+(deftest undef-alias-test
   (testing "undef undefines aliases"
     (is (= ["#'clojure.walk/postwalk"]
            (:value (do
@@ -36,7 +36,7 @@
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'postwalk)"}))))))
 
-(deftest undef-undefined
+(deftest undef-undefined-test
   (testing "undef does not throw for aliases or vars that are not defined"
     (is (= ["nil"]
            (:value (session/message {:op "eval"
@@ -46,7 +46,7 @@
                                       :ns "user"
                                       :symbol "x"}))))))
 
-(deftest undef-exceptions
+(deftest undef-exceptions-test
   (testing "undef throws for non-existent namespaces"
     (is (= #{"done" "undef-error"}
            (:status (session/message {:op "undef"

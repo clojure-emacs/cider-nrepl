@@ -2,11 +2,11 @@
   (:require [clojure.test :refer :all])
   (:require [cider.nrepl.middleware.util.namespace :as n]))
 
-(deftest test-project-namespaces
+(deftest project-namespaces-test
   (is (contains? (into #{} (n/project-namespaces))
                  'cider.nrepl.middleware.util.namespace)))
 
-(deftest test-loaded-namespaces
+(deftest loaded-namespaces-test
   ;; If we don't pass the second arg, some cider ns will be returned
   (is (some #(re-find #".*nrepl" %) (n/loaded-namespaces)))
   ;; Shouldn't return any cider.nrepl namespaces

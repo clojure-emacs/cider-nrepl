@@ -3,7 +3,7 @@
             [clojure.repl :as repl]
             [clojure.test :refer :all]))
 
-(deftest merge-meta
+(deftest merge-meta-test
   (testing "Always safe and preserves object"
     (are [form] (let [x form]
                   (= x (m/merge-meta x {:random 'meta})))
@@ -21,7 +21,7 @@
       [1 2 3] '(1 2 3)
       {1 2} #{1 2 3})))
 
-(deftest strip-meta
+(deftest strip-meta-test
   (testing "Always safe and preserves object"
     (are [form] (let [x form]
                   (= x (m/strip-meta (m/merge-meta x {:random 'meta}))))
@@ -44,23 +44,23 @@
   ([a] nil)
   ([]))
 
-(deftest relevant-meta
+(deftest relevant-meta-test
   (is (= (m/relevant-meta (meta #'test-fn))
          {:arglists "([a b] [a] [])"
           :doc "\"docstring\""}))
   (is (= (:macro (m/relevant-meta (meta #'deftest)))
          "true"))
-  (let [m (meta #'strip-meta)]
-    ;; #'strip-meta refers to the deftest, and not the defn
-    (alter-meta! #'strip-meta merge {:indent 1 :cider-instrumented 2 :something-else 3})
-    (is (= (m/relevant-meta (meta #'strip-meta))
-           {:indent "1", :test (pr-str (:test (meta #'strip-meta)))}))
-    (alter-meta! #'strip-meta (fn [x y] y) m)))
+  (let [m (meta #'strip-meta-test)]
+    ;; #'strip-meta-test refers to the deftest, and not the defn
+    (alter-meta! #'strip-meta-test merge {:indent 1 :cider-instrumented 2 :something-else 3})
+    (is (= (m/relevant-meta (meta #'strip-meta-test))
+           {:indent "1", :test (pr-str (:test (meta #'strip-meta-test)))}))
+    (alter-meta! #'strip-meta-test (fn [x y] y) m)))
 
 (defmacro test-macro [& x]
   `(do ~@x))
 
-(deftest macroexpand-all
+(deftest macroexpand-all-test
   (is (->> (m/macroexpand-all '(test-macro ^{:random meta} (hi)))
            second
            meta
