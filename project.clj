@@ -7,7 +7,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
-                 [org.tcrawley/dynapath "0.2.3"]
+                 [org.tcrawley/dynapath "0.2.4"]
                  ^:source-dep [mvxcvi/puget "1.0.0"]
                  ^:source-dep [fipp "0.6.4"]
                  ^:source-dep [compliment "0.3.0"]
