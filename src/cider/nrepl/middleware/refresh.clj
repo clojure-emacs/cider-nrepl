@@ -52,8 +52,8 @@
               (format "%s is not resolvable as a var" sym))))
 
     (when (not (and (fn? @the-var)
-                    (-> (set (:arglists (meta the-var)))
-                        (contains? []))))
+                    (->> (:arglists (meta the-var))
+                         (some #(or (= [] %) (= '& (first %)))))))
       (throw (IllegalArgumentException.
               (format "%s is not a function of no arguments" sym))))
 
