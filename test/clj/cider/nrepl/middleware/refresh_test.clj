@@ -34,7 +34,7 @@
       (is (= #{"done" "ok"} (:status response))))))
 
 (deftest before-fn-test
-  (testing "before arg works"
+  (testing "before fn works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :before "cider.nrepl.middleware.refresh-test/before-fn"})]
@@ -42,7 +42,7 @@
       (is (= #{"done" "invoked-before" "invoking-before" "ok"} (:status response)))
       (is (= "before-fn invoked\n" (:out response)))))
 
-  (testing "bad before arg results in error"
+  (testing "bad before fn results in error"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :before "foo"})]
@@ -65,7 +65,7 @@
       (is (:error response)))))
 
 (deftest after-fn-test
-  (testing "after arg with zero arity works"
+  (testing "after fn with zero arity works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "cider.nrepl.middleware.refresh-test/after-fn"})]
@@ -73,7 +73,7 @@
       (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
       (is (= "after-fn invoked\n" (:out response)))))
 
-  (testing "after arg with optional arg works"
+  (testing "after fn with optional arg works"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "cider.nrepl.middleware.refresh-test/after-fn-optional-arg"})]
@@ -81,7 +81,7 @@
       (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
       (is (= "after with optional argument works\n" (:out response)))))
 
-  (testing "bad after arg results in error"
+  (testing "bad after fn results in error"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "foo"})]
