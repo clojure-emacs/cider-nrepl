@@ -10,7 +10,7 @@
                  [org.tcrawley/dynapath "0.2.4"]
                  ^:source-dep [mvxcvi/puget "1.0.0"]
                  ^:source-dep [fipp "0.6.5"]
-                 ^:source-dep [compliment "0.3.0"]
+                 ^:source-dep [compliment "0.3.1"]
                  ^:source-dep [cljs-tooling "0.2.0"]
                  ^:source-dep [cljfmt "0.5.3" :exclusions [org.clojure/clojurescript]]
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
