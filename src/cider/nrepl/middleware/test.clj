@@ -40,7 +40,7 @@
 
 (defn report-reset! []
   (reset! current-report {:summary {:ns 0 :var 0 :test 0 :pass 0 :fail 0 :error 0}
-                          :results {} :testing-ns nil}))
+                          :results {} :testing-ns nil :gen-input nil}))
 
 ;; In the case of test errors, line number is obtained by searching the
 ;; stacktrace for the originating function. The search target will be the
@@ -65,13 +65,16 @@
   [ns v m]
   (let [c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get-in (@current-report :results) [ns (:name (meta v))]))
-        t (:type m)]
+        t (:type m)
+        gen-input (:gen-input @current-report)]
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
            {:ns ns, :var (:name (meta v)), :index i, :context c}
            (when (and (#{:fail :error} t) (not (:fault m)))
              {:expected (with-out-str (pp/pprint (:expected m)))})
+           (when (and (#{:fail} t) gen-input)
+             {:gen-input (with-out-str (pp/pprint gen-input))})
            (when (#{:fail} t)
              {:actual (with-out-str (pp/pprint (:actual m)))})
            (when (#{:error} t)
@@ -79,6 +82,16 @@
                    f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
                {:error e
                 :line (:line (stack-frame e f))})))))
+
+;;; ## test.check integration
+;; `test.check` generates random test inputs for property testing. We make the
+;; inputs part of the report by parsing the respective calls to report:
+;; `test.chuck`'s `checking` creates events of type
+;; `:com.gfredericks.test.chuck.clojure-test/shrunk` with the minimal failing
+;; input as determined by `test.check`. `test.check`'s own `defspec` does not
+;; (yet?) report _minimal_ inputs, so we also parse events of type
+;; `:clojure.test.check.clojure-test/shrinking`, which `defspec` produces to
+;; report failing input before shrinking it.
 
 (defn report
   "Handle reporting for test events. This takes a test event map as an argument
@@ -95,7 +108,16 @@
       #{:pass :fail :error} (do (update! [:summary :test] inc)
                                 (update! [:summary (:type m)] inc)
                                 (update! [:results ns (:name (meta v))]
-                                         (fnil conj []) (test-result ns v m)))
+                                         (fnil conj []) (test-result ns v m))
+                                (update! [:gen-input] (constantly nil))) ; reset
+
+      #{:com.gfredericks.test.chuck.clojure-test/shrunk :shrunk}
+      (do (update! [:gen-input] (constantly (-> m :shrunk :smallest))))
+
+      #{:clojure.test.check.clojure-test/shrinking}
+      (do (update! [:gen-input]
+                   (constantly (:clojure.test.check.clojure-test/params m))))
+
       nil)))
 
 (defn report-fixture-error
