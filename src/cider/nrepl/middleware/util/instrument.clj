@@ -2,6 +2,7 @@
   "Generic instrumentation for clojure code"
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.util.meta :as m]
+            [riddley.walk :as r]
             [clojure.walk :as walk]))
 
 ;;;; # Instrumentation
@@ -285,7 +286,7 @@
                                  {::extras (assoc line-col :coor i)}))
                       form)
         ;; Expand so we don't have to deal with macros.
-        (m/macroexpand-all ::original-form)
+        (r/macroexpand-all)
         ;; Go through everything again, and instrument any form with
         ;; debug metadata.
         (instrument)
@@ -300,3 +301,9 @@
     (->> (ns-interns ns)
          (filter (comp ::breakfunction meta second))
          (map first))))
+
+
+
+
+
+
