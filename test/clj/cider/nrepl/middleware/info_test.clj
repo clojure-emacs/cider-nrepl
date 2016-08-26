@@ -257,7 +257,8 @@
         (is (= (:name response) "testing-function"))
         (is (= (:arglists-str response) "([a b c])"))
         (is (nil? (:macro response)))
-        (is (= (:doc response) "This is used for testing"))))
+        (is (= (:doc response) "This is used for testing"))
+        (is (nil? (:spec response)))))
 
     (testing "get info of a clojure macro"
       (let [response (session/message {:op "info" :symbol "testing-macro" :ns "cider.nrepl.middleware.info-test"})]
@@ -266,7 +267,8 @@
         (is (= (:name response) "testing-macro"))
         (is (= (:arglists-str response) "([pred a b])"))
         (is (= (:macro response) "true"))
-        (is (= (:doc response) "a macro for testing"))))
+        (is (= (:doc response) "a macro for testing"))
+        (is (nil? (:spec response)))))
 
     (testing "get info of a java instance method with return value"
       (let [response (session/message {:op "info"
