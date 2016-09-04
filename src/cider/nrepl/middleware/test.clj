@@ -85,13 +85,13 @@
 
 ;;; ## test.check integration
 ;; `test.check` generates random test inputs for property testing. We make the
-;; inputs part of the report by parsing the respective calls to report:
+;; inputs part of the report by parsing the respective calls to `report`:
 ;; `test.chuck`'s `checking` creates events of type
 ;; `:com.gfredericks.test.chuck.clojure-test/shrunk` with the minimal failing
-;; input as determined by `test.check`. `test.check`'s own `defspec` does not
-;; (yet?) report _minimal_ inputs, so we also parse events of type
-;; `:clojure.test.check.clojure-test/shrinking`, which `defspec` produces to
-;; report failing input before shrinking it.
+;; input as determined by `test.check`. `test.check`'s own `defspec` does report
+;; minimal inputs in recent versions, but for compatibility we also parse events
+;; of type `:clojure.test.check.clojure-test/shrinking`, which `defspec`
+;; produces to report failing input before shrinking it.
 
 (defn report
   "Handle reporting for test events. This takes a test event map as an argument
@@ -111,10 +111,11 @@
                                          (fnil conj []) (test-result ns v m))
                                 (update! [:gen-input] (constantly nil))) ; reset
 
-      #{:com.gfredericks.test.chuck.clojure-test/shrunk :shrunk}
+      #{:com.gfredericks.test.chuck.clojure-test/shrunk}
       (do (update! [:gen-input] (constantly (-> m :shrunk :smallest))))
 
-      #{:clojure.test.check.clojure-test/shrinking}
+      #{:clojure.test.check.clojure-test/shrinking
+        :clojure.test.check.clojure-test/shrunk}
       (do (update! [:gen-input]
                    (constantly (:clojure.test.check.clojure-test/params m))))
 
