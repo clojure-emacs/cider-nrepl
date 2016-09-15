@@ -10,7 +10,8 @@
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.repl :as repl]
             [cljs-tooling.info :as cljs-info]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
+            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [cider.nrepl.middleware.util.spec :as spec]))
 
 (defn- boot-project? []
   ;; fake.class.path under boot contains the original directories with source
@@ -63,9 +64,29 @@
         (assoc :file (ns/ns-path ns)))
     meta-map))
 
+;; Similar to `print-doc` from clojure.core
+;; https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj#L83
+(defn- format-spec
+  [fnspec]
+  (for [role [:args :ret :fn]
+        :let [spec' (get fnspec role)]
+        :when spec']
+    (str (name role) ": " (pr-str (spec/describe spec')))))
+
+(defn maybe-add-spec
+  "If the var `v` has a spec has associated with it, assoc that into meta-map.
+  The spec is formatted to avoid processing it in CIDER."
+  [v meta-map]
+  (if-let [fnspec (spec/get-spec v)]
+    (merge meta-map {:spec (format-spec fnspec)})
+    meta-map))
+
 (defn var-meta
   [v]
-  (-> v meta maybe-protocol (select-keys var-meta-whitelist) map-seq maybe-add-file))
+  (let [meta-map (-> v meta maybe-protocol
+                     (select-keys var-meta-whitelist)
+                     map-seq maybe-add-file)]
+    (maybe-add-spec v meta-map)))
 
 (defn ns-meta
   [ns]
