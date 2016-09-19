@@ -11,6 +11,4 @@ function check_result {
 
 lein do clean, source-deps :project-prefix cider.inlined-deps
 check_result
-lein with-profile +1.7,+plugin.mranderson/config,+test-clj,+test-cljs test
-check_result
 lein with-profile plugin.mranderson/config "$@"
