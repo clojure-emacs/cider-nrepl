@@ -9,7 +9,7 @@
   :dependencies [[org.clojure/tools.nrepl "0.2.12"]
                  [org.tcrawley/dynapath "0.2.4"]
                  ^:source-dep [mvxcvi/puget "1.0.1"]
-                 ^:source-dep [fipp "0.6.5"]
+                 ^:source-dep [fipp "0.6.6"]
                  ^:source-dep [compliment "0.3.1"]
                  ^:source-dep [cljs-tooling "0.2.0"]
                  ^:source-dep [cljfmt "0.5.3" :exclusions [org.clojure/clojurescript]]
