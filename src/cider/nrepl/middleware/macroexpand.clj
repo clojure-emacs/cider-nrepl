@@ -18,6 +18,23 @@
   (symbol (str (.name (.ns v)))
           (str (.sym v))))
 
+(defn- expandable?
+  "Return true if form is macro-expandable."
+  [form]
+  (not= (macroexpand-1 form) form))
+
+(defn macroexpand-step
+  "Walk form, expanding the next subform."
+  [form]
+  (let [expanded? (atom false)]
+    (walk/prewalk (fn [x]
+                    (if (and (not @expanded?)
+                             (expandable? x))
+                      (do (reset! expanded? true)
+                          (macroexpand-1 x))
+                      x))
+                  form)))
+
 (defn- tidy-namespaced-sym
   "Given a namespace-qualified symbol, returns the symbol to be printed when
   the :display-namespaces option is set to 'tidy.
@@ -61,6 +78,7 @@
     "macroexpand-1" macroexpand-1
     "macroexpand" macroexpand
     "macroexpand-all" walk/macroexpand-all
+    "macroexpand-step" macroexpand-step
     (throw (IllegalArgumentException. (format "Unrecognized expander: %s" expander)))))
 
 (defn- tidy-walker-clj

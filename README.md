@@ -136,7 +136,7 @@ Middleware        | Op(s)      | Description
 `wrap-format`     | `format-(code/edn)` | Code and data formatting.
 `wrap-info`       | `info/eldoc` | File/line, arglists, docstrings and other metadata for vars.
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
-`wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all` | Macroexpand a Clojure form.
+`wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars/ns-path/ns-load-all` | Namespace browsing & loading.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.
 `wrap-pprint-fn`  | | Provides a common pretty-printing interface for other middlewares that need to perform customisable pretty-printing.
