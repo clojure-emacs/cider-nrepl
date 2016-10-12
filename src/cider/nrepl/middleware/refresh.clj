@@ -1,9 +1,9 @@
 (ns ^{:clojure.tools.namespace.repl/load false
       :clojure.tools.namespace.repl/unload false} cider.nrepl.middleware.refresh
-      ;; The above metadata prevents reloading of this namespace - otherwise,
-      ;; `refresh-tracker` is reset with every refresh. This only has any effect
-      ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
-      ;; checkout dependency - tools.namespace doesn't reload source in JARs.
+  ;; The above metadata prevents reloading of this namespace - otherwise,
+  ;; `refresh-tracker` is reset with every refresh. This only has any effect
+  ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
+  ;; checkout dependency - tools.namespace doesn't reload source in JARs.
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
             [cider.nrepl.middleware.util.misc :as u]
@@ -42,25 +42,31 @@
       (update-in [::track/load] #(remove load-disabled? %))
       (update-in [::track/unload] #(remove unload-disabled? %))))
 
+(defn- zero-arity-callable? [func]
+  (and (fn? (if (var? func) @func func))
+       (->> (:arglists (meta func))
+            (some #(or (= [] %) (= '& (first %)))))))
+
 (defn- resolve-and-invoke
+  "Takes a string and tries to coerce a function from it. If that
+  function is a function of possible zero arity (ie, truly a thunk or
+  has optional parameters and can be called with zero args, it is
+  called. Returns whether the function was resolved."
   [sym {:keys [session] :as msg}]
   (let [the-var (some-> sym u/as-sym resolve)]
 
-    (when (or (nil? the-var)
-              (not (var? the-var)))
-      (throw (IllegalArgumentException.
-              (format "%s is not resolvable as a var" sym))))
-
-    (when (not (and (fn? @the-var)
-                    (->> (:arglists (meta the-var))
-                         (some #(or (= [] %) (= '& (first %)))))))
+    (when (and (var? the-var)
+               (not (zero-arity-callable? the-var)))
       (throw (IllegalArgumentException.
               (format "%s is not a function of no arguments" sym))))
 
     (binding [*msg* msg
               *out* (get @session #'*out*)
               *err* (get @session #'*err*)]
-      (@the-var))))
+      (do
+        (when (var? the-var)
+          (@the-var))
+        (var? the-var)))))
 
 (defn- reloading-reply
   [{reloading ::track/load}
@@ -102,12 +108,15 @@
      (response-for msg {:status :invoking-before
                         :before before}))
 
-    (resolve-and-invoke before msg)
+    (let [resolved? (resolve-and-invoke before msg)]
 
-    (transport/send
-     transport
-     (response-for msg {:status :invoked-before
-                        :before before}))))
+      (transport/send
+       transport
+       (response-for msg
+                     {:status (if resolved?
+                                :invoked-before
+                                :invoked-not-resolved)
+                      :before before})))))
 
 (defn- after-reply
   [{error ::reload/error}
@@ -120,12 +129,14 @@
        (response-for msg {:status :invoking-after
                           :after after}))
 
-      (resolve-and-invoke after msg)
+      (let [resolved? (resolve-and-invoke after msg)]
 
-      (transport/send
-       transport
-       (response-for msg {:status :invoked-after
-                          :after after}))
+        (transport/send
+         transport
+         (response-for msg {:status (if resolved?
+                                      :invoked-after
+                                      :invoked-not-resolved)
+                            :after after})))
 
       (catch Exception e
         (error-reply {:error e} msg)))))
