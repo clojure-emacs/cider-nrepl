@@ -1,6 +1,8 @@
 (ns cider.nrepl.middleware.refresh-test
   (:require [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [cider.nrepl.middleware.refresh :as r]
+            [cider.nrepl.middleware.util.misc :as u]))
 
 (use-fixtures :each session/session-fixture)
 
@@ -10,7 +12,7 @@
   ;; unloaded, which breaks session-fixture, and hence all of the below tests.
   ["test/clj/cider/nrepl/middleware/util"])
 
-(defn- before-fn []
+(defn before-fn []
   (println "before-fn invoked"))
 
 (defn- after-fn []
@@ -19,6 +21,11 @@
 (defn- after-fn-optional-arg [& a]
   (when a (throw (IllegalArgumentException. "should not have been called with arg")))
   (println "after with optional argument works"))
+
+(deftest invoking-function-tests
+  (testing "invoking named function works"
+    (is (#'r/zero-arity-callable? (some-> "cider.nrepl.middleware.refresh-test/before-fn"
+                                          u/as-sym resolve)))))
 
 (deftest refresh-op-test
   (testing "refresh op works"
@@ -42,13 +49,11 @@
       (is (= #{"done" "invoked-before" "invoking-before" "ok"} (:status response)))
       (is (= "before-fn invoked\n" (:out response)))))
 
-  (testing "bad before fn results in error"
+  (testing "bad before fn results in not resolved response"
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :before "foo"})]
-      (is (= #{"done" "error" "invoking-before"} (:status response)))
-      (is (:err response))
-      (is (:error response)))
+      (is (= #{"done" "invoked-not-resolved" "ok" "invoking-before"} (:status response))))
 
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
@@ -60,9 +65,8 @@
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :before "java.lang.Thread"})]
-      (is (= #{"done" "error" "invoking-before"} (:status response)))
-      (is (:err response))
-      (is (:error response)))))
+      (is (= #{"done" "invoked-not-resolved" "invoking-before" "ok"}
+             (:status response))))))
 
 (deftest after-fn-test
   (testing "after fn with zero arity works"
@@ -85,23 +89,19 @@
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "foo"})]
-      (is (= #{"done" "error" "invoking-after" "ok"} (:status response)))
-      (is (:err response))
-      (is (:error response)))
+      (is (= #{"done" "invoked-not-resolved" "invoking-after" "ok"} (:status response))))
 
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "clojure.core/seq"})]
       (is (= #{"done" "error" "invoking-after" "ok"} (:status response)))
-      (is (:err response))
-      (is (:error response)))
+      (is (:error response))
+      (is (:err response)))
 
     (let [response (session/message {:op "refresh"
                                      :dirs dirs-to-reload
                                      :after "java.lang.Thread"})]
-      (is (= #{"done" "error" "invoking-after" "ok"} (:status response)))
-      (is (:err response))
-      (is (:error response)))))
+      (is (= #{"done" "invoked-not-resolved" "invoking-after" "ok"} (:status response))))))
 
 (deftest refresh-all-op-test
   (testing "refresh-all op works"
