@@ -1,4 +1,4 @@
-(def VERSION "0.14.0")
+(def VERSION "0.15.0-SNAPSHOT")
 
 (defproject cider/cider-nrepl VERSION
   :description "nREPL middlewares for CIDER"
