@@ -13,11 +13,55 @@
 (defn- reset-index [inspector]
   (merge inspector {:counter 0 :index []}))
 
+(defn push-item-to-path
+  "Takes the current inspector index, the `idx` of the value in it to be navigated
+  to, and the path so far, and returns the updated path to the selected value."
+  [index idx path]
+  (if (>= idx (count index))
+    (conj path '<unknown>)
+    (if (= idx 0)
+      (conj path 'class)
+      (let [klass (first index)]
+        (cond
+          ;; If value's class is a map, jumping into its value means finding a
+          ;; MapEntry object for the key.
+          ((supers klass) clojure.lang.IPersistentMap)
+          (conj path (list 'find (first (nth index idx))))
+
+          ;; For a MapEntry, clicking on the first item means getting the key of
+          ;; the MapEntry, second - means getting the value by the key.
+          (= klass clojure.lang.MapEntry)
+          (if (= idx 1)
+            (conj path 'first)
+            (let [[_ key] (peek path)]
+              (conj (pop path)
+                    (if (keyword? key)
+                      key
+                      (list 'get key)))))
+
+          ;; For sequential things going down means getting the nth value.
+          ((supers klass) clojure.lang.Sequential)
+          (conj path (list 'nth (dec idx)))
+
+          :else (conj path '<unknown>))))))
+
+(defn pop-item-from-path
+  "Takes the current inspector path, and returns an updated path one level up."
+  [path]
+  (let [last-node (peek path)]
+    (if (or (keyword? last-node)
+            (and (list? last-node) (= (first last-node) 'get)))
+      (let [key (if (keyword? last-node)
+                  last-node
+                  (second last-node))]
+        (conj (pop path) (list 'find key)))
+      (pop path))))
+
 (defn clear
   "Clear an inspector's state"
   [inspector]
   (merge (reset-index inspector)
-         {:value nil :stack [] :rendered '() :current-page 0}))
+         {:value nil :stack [] :path [] :rendered '() :current-page 0}))
 
 (defn fresh
   "Return an empty inspector "
@@ -37,6 +81,7 @@
     (if (empty? stack)
       (inspect-render inspector)
       (-> inspector
+          (update-in [:path] pop-item-from-path)
           (inspect-render (last stack))
           (update-in [:stack] pop)))))
 
@@ -45,9 +90,12 @@
    rendered value"
   [inspector idx]
   {:pre [(integer? idx)]}
-  (let [new (get (:index inspector) idx)
-        val (:value inspector)]
+  (let [{:keys [index path]} inspector
+        new (get index idx)
+        val (:value inspector)
+        new-path (push-item-to-path index idx path)]
     (-> (update-in inspector [:stack] conj val)
+        (assoc :path new-path)
         (inspect-render new))))
 
 (defn next-page
@@ -372,13 +420,23 @@
           :default
           inspector)))
 
+(defn render-path [inspector]
+  (let [path (:path inspector)]
+    (if (and (seq path) (not-any? #(= % '<unknown>) path))
+      (-> inspector
+          (render '(:newline))
+          (render (str "  Path: "
+                       (s/join " " (:path inspector)))))
+      inspector)))
+
 (defn inspect-render
   ([inspector] (inspect-render inspector (:value inspector)))
   ([inspector value] (-> (reset-index inspector)
                          (assoc :rendered [])
                          (assoc :value value)
                          (render-reference)
-                         (inspect value))))
+                         (inspect value)
+                         (render-path))))
 
 ;; Get a human readable printout of rendered sequence
 (defmulti inspect-print-component first)

@@ -14,7 +14,7 @@
 
 (def inspect-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentTreeMap\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \"[ :a { :b 1 } ]\" 1) (:newline) \"  \" \"1\" \". \" (:value \"[ :c \\\"a\\\" ]\" 2) (:newline) \"  \" \"2\" \". \" (:value \"[ :d e ]\" 3) (:newline) \"  \" \"3\" \". \" (:value \"[ :f [ 2 3 ] ]\" 4) (:newline))"])
 
-(def push-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentTreeMap$BlackVal\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \":a\" 1) (:newline) \"  \" \"1\" \". \" (:value \"{ :b 1 }\" 2) (:newline))"])
+(def push-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentTreeMap$BlackVal\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \":a\" 1) (:newline) \"  \" \"1\" \". \" (:value \"{ :b 1 }\" 2) (:newline) (:newline) \"  Path: (find :a)\")"])
 
 (def long-sequence (range 70))
 (def long-vector (vec (range 70)))
@@ -160,6 +160,47 @@
                inspect/next-page
                inspect/prev-page
                :current-page)))))
+
+(deftest path-test
+  (testing "inspector tracks the path in the data structure"
+    (is (.endsWith (first (-> long-map
+                              inspect
+                              (inspect/down 20)
+                              render))
+                   "\"  Path: (find 50)\")"))
+    (is (.endsWith (first (-> long-map
+                              inspect
+                              (inspect/down 20)
+                              (inspect/down 1)
+                              render))
+                   "\"  Path: (find 50) first\")"))
+    (is (.endsWith (first (-> long-map
+                              inspect
+                              (inspect/down 20)
+                              (inspect/down 2)
+                              render))
+                   "\"  Path: (get 50)\")"))
+    (is (.endsWith (first (-> long-map
+                              inspect
+                              (inspect/down 20)
+                              (inspect/down 2)
+                              (inspect/down 0)
+                              render))
+                   "\"  Path: (get 50) class\")")))
+  (testing "doesn't show path if unknown navigation has happened"
+    (is (.endsWith (first (-> long-map
+                              inspect
+                              (inspect/down 20)
+                              (inspect/down 2)
+                              (inspect/down 0)
+                              (inspect/down 1)
+                              render))
+                   "(:newline))")))
+  (testing "doesn't show the path in the top level"
+    (is (.endsWith (first (-> [1 2 3]
+                              inspect
+                              render))
+                   "(:newline))"))))
 
 ;; integration tests
 
