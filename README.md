@@ -135,7 +135,7 @@ Middleware        | Op(s)      | Description
 `wrap-debug`      | `init-debugger/debug-input` | Establish a channel for `cider-debug` commands, use it to get debug input, and also wrap the eval op.
 `wrap-format`     | `format-(code/edn)` | Code and data formatting.
 `wrap-info`       | `info/eldoc` | File/line, arglists, docstrings and other metadata for vars.
-`wrap-inspect`    |`inspect-(start/refresh/pop/push/reset)` | Inspect a Clojure expression.
+`wrap-inspect`    |`inspect-(start/refresh/pop/push/reset/get-path)` | Inspect a Clojure expression.
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars/ns-path/ns-load-all` | Namespace browsing & loading.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.

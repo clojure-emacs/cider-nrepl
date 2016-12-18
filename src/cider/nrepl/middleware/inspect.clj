@@ -66,6 +66,10 @@
   (try (success msg (swap-inspector! msg #(or % (inspect/fresh))))
        (catch Exception e (failure msg e :inspect-refresh-error))))
 
+(defn get-path-reply [{:keys [session] :as msg}]
+  (try (success msg (:path (get session #'*inspector*)))
+       (catch Exception e (failure msg e :inspect-get-path-error))))
+
 (defn next-page-reply [msg]
   (try (success msg (swap-inspector! msg inspect/next-page))
        (catch Exception e (failure msg e :inspect-next-page-error))))
@@ -90,6 +94,7 @@
       "inspect-pop" (pop-reply msg)
       "inspect-push" (push-reply msg)
       "inspect-refresh" (refresh-reply msg)
+      "inspect-get-path" (get-path-reply msg)
       "inspect-next-page" (next-page-reply msg)
       "inspect-prev-page" (prev-page-reply msg)
       "inspect-set-page-size" (set-page-size-reply msg)
@@ -111,6 +116,10 @@
               :returns {"status" "\"done\""}}
              "inspect-refresh"
              {:doc "Re-renders the currently inspected value."
+              :requires {"session" "The current session"}
+              :returns {"status" "\"done\""}}
+             "inspect-get-path"
+             {:doc "Returns the path to the current position in the inspected value."
               :requires {"session" "The current session"}
               :returns {"status" "\"done\""}}
              "inspect-next-page"
