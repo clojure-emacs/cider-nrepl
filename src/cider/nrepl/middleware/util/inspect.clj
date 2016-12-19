@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.util.inspect
-  "Adapted from swank-clojure and javert"
+  "Adapted from swank-clojure and javert."
   (:require [clojure.string :as s])
   (:import (java.lang.reflect Field)
            clojure.lang.Seqable))
@@ -58,24 +58,24 @@
       (pop path))))
 
 (defn clear
-  "Clear an inspector's state"
+  "Clear an inspector's state."
   [inspector]
   (merge (reset-index inspector)
          {:value nil :stack [] :path [] :rendered '() :current-page 0}))
 
 (defn fresh
-  "Return an empty inspector "
+  "Return an empty inspector."
   []
   (inspect-render (clear {:page-size 32})))
 
 (defn start
-  "Put a new value onto the inspector stack"
+  "Put a new value onto the inspector stack."
   [inspector value]
   (-> (clear inspector)
       (inspect-render value)))
 
 (defn up
-  "Pop the stack and re-render an earlier value"
+  "Pop the stack and re-render an earlier value."
   [inspector]
   (let [stack (:stack inspector)]
     (if (empty? stack)
@@ -87,7 +87,7 @@
 
 (defn down
   "Drill down to an indexed object referred to by the previously
-   rendered value"
+   rendered value."
   [inspector idx]
   {:pre [(integer? idx)]}
   (let [{:keys [index path]} inspector
@@ -189,16 +189,16 @@
 (defmethod inspect-value :list-long [value]
   (safe-pr-seq (take 5 value) "( %s ... )"))
 
-(defmethod inspect-value :set [value]  
+(defmethod inspect-value :set [value]
   (safe-pr-seq value "#{ %s }"))
 
-(defmethod inspect-value :set-long [value]  
+(defmethod inspect-value :set-long [value]
   (safe-pr-seq (take 5 value) "#{ %s ... }"))
 
-(defmethod inspect-value java.lang.Class [value]  
+(defmethod inspect-value java.lang.Class [value]
   (pr-str value))
 
-(defmethod inspect-value :default [value]  
+(defmethod inspect-value :default [value]
   (str value))
 
 (defn render-onto [inspector coll]
