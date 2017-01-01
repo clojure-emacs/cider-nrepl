@@ -1,9 +1,10 @@
 (ns cider.nrepl.middleware.out
-  "Change *out* to print on sessions in addition to process out.
+  "Change *out*, *err*, System/out and System/err to print on sessions
+  in addition to process out.
 
-  Automatically changes the root binding of *out* to print to any
-  active sessions. An active session is one that has sent at least one
-  \"eval\" op.
+  Automatically changes the root binding of all output channels to
+  print to any active sessions. An active session is one that has sent
+  at least one \"eval\" op.
 
   We use an eval message, instead of the clone op, because there's no
   guarantee that the channel that sent the clone message will properly
@@ -76,10 +77,10 @@
     (PrintStream. (proxy [OutputStream] []
                     (close [] (.flush ^OutputStream this))
                     (write
-                      ([b]
-                       (.write @(resolve printer) (String. b)))
-                      ([b ^Integer off ^Integer len]
-                       (.write @(resolve printer) (String. b) off len)))
+                      ([bytes]
+                       (.write @(resolve printer) (String. bytes)))
+                      ([bytes ^Integer off ^Integer len]
+                       (.write @(resolve printer) (String. bytes) off len)))
                     (flush []
                       (.flush @(resolve printer))))
                   true)))
@@ -91,10 +92,10 @@
   (atom {}))
 
 (defn tracked-sessions-map-watch [_ _ _ new-state]
-  (let [ow (forking-printer (vals new-state) :out)
-        ew (forking-printer (vals new-state) :err)]
-    (alter-var-root #'*out* (constantly ow))
-    (alter-var-root #'*err* (constantly ew))
+  (let [out-writer (forking-printer (vals new-state) :out)
+        err-writer (forking-printer (vals new-state) :err)]
+    (alter-var-root #'*out* (constantly out-writer))
+    (alter-var-root #'*err* (constantly err-writer))
     (System/setOut (print-stream :out))
     (System/setErr (print-stream :err))))
 
