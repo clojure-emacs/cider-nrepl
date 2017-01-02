@@ -80,7 +80,9 @@
                       ([bytes]
                        (.write @(resolve printer) (String. bytes)))
                       ([bytes ^Integer off ^Integer len]
-                       (.write @(resolve printer) (String. bytes) off len)))
+                       (let [byte-range (byte-array
+                                         (take len (drop off bytes)))]
+                        (.write @(resolve printer) (String. byte-range)))))
                     (flush []
                       (.flush @(resolve printer))))
                   true)))
