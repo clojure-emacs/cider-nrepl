@@ -113,3 +113,24 @@
                  'cider.nrepl.middleware.track-state))
   (is (contains? (st/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name)
                  'cider.nrepl.middleware.track-state)))
+
+(deftest ensure-clojure-core-present
+  (testing "if clojurescript doesn't add clojure"
+    ;; note that the {:msg :stuff} object is much more complex in
+    ;; actual use and in fact the msg is much more comlicated
+    (is (-> (st/ensure-clojure-core-present {}
+                                            {'cljs.core :present}
+                                            {:msg :stuff})
+            keys
+            #{st/clojure-core}
+            not)))
+  (testing "if core already present doesn't overwrite or add"
+    (is (= :present
+           (-> (st/ensure-clojure-core-present {}
+                                               {st/clojure-core :present}
+                                               nil)
+               (get st/clojure-core)))))
+  (testing "if core missing and not cljs, it adds it"
+    (is (= st/clojure-core-map
+           (-> (st/ensure-clojure-core-present {} {} nil)
+               (get st/clojure-core))))))
