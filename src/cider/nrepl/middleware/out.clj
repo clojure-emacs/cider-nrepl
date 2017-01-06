@@ -17,15 +17,10 @@
             [clojure.tools.nrepl.middleware.session :as session])
   (:import [java.io PrintWriter Writer PrintStream OutputStream]))
 
-;;; OutStream
-(defonce original-out *out*)
-(defonce original-err *err*)
-
 (declare unsubscribe-session)
 
 (defmacro with-out-binding
   "Run body with v bound to the output stream of each msg in msg-seq.
-  Also run body with v bound to `original-out`.
   type is either :out or :err."
   [[v msg-seq type] & body]
   `(doseq [{:keys [~'session] :as ~'msg} ~msg-seq]
@@ -42,8 +37,7 @@
 (defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
   operations are forwarded to all output bindings in the sessions of
-  messages in addition to the server's usual PrintWriter (saved in
-  `original-out` or `original-err`).
+  messages.
   type is either :out or :err."
   [messages type]
   (PrintWriter. (proxy [Writer] []
@@ -63,8 +57,7 @@
 (defn print-stream
   "Returns a PrintStream suitable for binding as java.lang.System/out
   or java.lang.System/err. All operations are forwarded to all output
-  bindings in the sessions of messages in addition to the server's
-  usual PrintWriter (saved in `original-out` or `original-err`).
+  bindings in the sessions of messages.
   type is either :out or :err."
   [type]
   (let [printer (case type
