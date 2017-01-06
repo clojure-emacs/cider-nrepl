@@ -28,20 +28,16 @@
   Also run body with v bound to `original-out`.
   type is either :out or :err."
   [[v msg-seq type] & body]
-  `(do (let [~(with-meta v {:tag Writer}) (case ~type
-                                            :out original-out
-                                            :err original-err)]
-         ~@body)
-       (doseq [{:keys [~'session] :as ~'msg} ~msg-seq]
-         (let [~(with-meta v {:tag Writer}) (get @~'session
-                                                 (case ~type
-                                                   :out #'*out*
-                                                   :err #'*err*))]
-           (try (binding [ie/*msg* ~'msg]
-                  ~@body)
-                ;; If a channel is faulty, dissoc it.
-                (catch Exception ~'e
-                  (unsubscribe-session ~'session)))))))
+  `(doseq [{:keys [~'session] :as ~'msg} ~msg-seq]
+     (let [~(with-meta v {:tag Writer}) (get @~'session
+                                             (case ~type
+                                               :out #'*out*
+                                               :err #'*err*))]
+       (try (binding [ie/*msg* ~'msg]
+              ~@body)
+            ;; If a channel is faulty, dissoc it.
+            (catch Exception ~'e
+              (unsubscribe-session ~'session))))))
 
 (defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
