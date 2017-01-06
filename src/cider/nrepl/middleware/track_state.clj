@@ -108,6 +108,27 @@
   [f coll]
   (persistent! (reduce f (transient {}) coll)))
 
+(defn ensure-clojure-core-present
+  "Check if `old-ns-map` has clojure.core, else add it to
+  current-ns-map. If `cljs` we inject cljs.core instead. `cljs` is the
+  cljs environment grabbed from the message (if present)."
+  [old-ns-map project-ns-map cljs]
+  (cond
+    (and cljs (not (contains? old-ns-map 'cljs.core)))
+    (assoc project-ns-map 'cljs.core
+           (ns-as-map (cljs-ana/find-ns cljs "cljs.core")))
+
+    ;; we have cljs and the cljs core, nothing to do
+    cljs
+    project-ns-map
+
+    ;; we've got core in old or new
+    (some #{clojure-core} (mapcat keys [old-ns-map project-ns-map]))
+    project-ns-map
+
+    :else
+    (assoc project-ns-map clojure-core clojure-core-map)))
+
 (defn update-and-send-cache
   "Send a reply to msg with state information assoc'ed.
   old-data is the ns-cache that needs to be updated (the one
@@ -139,17 +160,13 @@
                                     (if cljs
                                       (vals (cljs-ana/all-ns cljs))
                                       (all-ns)))
-        ;; When a cljs-repl is created, the ns-cache is not empty, so
-        ;; we can't use the technique we use for `clojure.core` below.
-        project-ns-map (if (and cljs (not (contains? old-data 'cljs.core)))
-                         (assoc project-ns-map 'cljs.core
-                                (ns-as-map (cljs-ana/find-ns cljs "cljs.core")))
-                         project-ns-map)
+        project-ns-map (ensure-clojure-core-present old-data
+                                                    project-ns-map
+                                                    cljs)
         changed-ns-map (-> project-ns-map
                            ;; Add back namespaces that the project depends on.
                            (merge-used-aliases (or old-data {}) find-ns-fn)
-                           ;; If this is a new REPL, add `clojure.core` manually.
-                           (calculate-changed-ns-map (or old-data {'clojure.core clojure-core-map})))]
+                           (calculate-changed-ns-map old-data))]
     (try (->> (response-for
                msg :status :state
                :repl-type (if cljs :cljs :clj)
