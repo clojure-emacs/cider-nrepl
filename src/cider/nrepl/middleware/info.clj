@@ -64,6 +64,17 @@
         (assoc :file (ns/ns-path ns)))
     meta-map))
 
+(defn- format-spec-descripton
+  "Format the spec description to display each predicate on a new line."
+  [description]
+  (if (seq? description)
+    ;; drop the first element, format everything else with newlines and tabs,
+    ;; and add the surrounding parens
+    (let [beg (format "(%s " (pr-str (first description)))
+          desc (drop 1 description)]
+      (format "%s%s)" beg (str/join (map #(format "\n\t%s" (pr-str %)) desc))))
+    (pr-str description)))
+
 ;; Similar to `print-doc` from clojure.core
 ;; https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj#L83
 (defn- format-spec
@@ -71,7 +82,9 @@
   (for [role [:args :ret :fn]
         :let [spec' (get fnspec role)]
         :when spec']
-    (str (name role) ": " (pr-str (spec/describe spec')))))
+    (let [desc (spec/describe spec')]
+      ;; the -4s aligns the fdef parameters (args, ret and fn)
+      (str (format "%-4s: " (name role)) (format-spec-descripton desc)))))
 
 (defn maybe-add-spec
   "If the var `v` has a spec has associated with it, assoc that into meta-map.
