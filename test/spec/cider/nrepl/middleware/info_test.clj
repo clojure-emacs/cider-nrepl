@@ -25,9 +25,9 @@
       (is (= (:arglists-str response) "([start end])"))
       (is (nil? (:macro response)))
       (is (= (:doc response) "Returns random int in range start <= rand < end."))
-      (is (= (:spec response) ["args: (and (cat :start int? :end int?) (< (:start %) (:end %)))"
-                               "ret: int?"
-                               "fn: (and (>= (:ret %) (-> % :args :start)) (< (:ret %) (-> % :args :end)))"])))
+      (is (= (:spec response) ["args: (and\n\t(cat :start int? :end int?)\n\t(< (:start %) (:end %)))"
+                               "ret : int?"
+                               "fn  : (and\n\t(>= (:ret %) (-> % :args :start))\n\t(< (:ret %) (-> % :args :end)))"])))
 
     ;; spec is not defined for this function
     (let [response (session/message {:op "info" :symbol "same-name-testing-function" :ns "cider.test-ns.first-test-ns"})]
