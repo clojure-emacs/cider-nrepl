@@ -70,18 +70,23 @@ using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
 
 #### Via Boot
 
-Boot users can configure the tool to include the middleware automatically in
-all of their projects using a `~/.boot/profile.boot` file like so:
+Boot users can configure the injected middleware by either specifying it on the command line through the `cider.tasks/add-middleware` task (the lenghty command below will include the `apropos` and `version` functionality):
+
+`boot -d org.clojure/tools.nrepl:0.2.12 -d cider/cider-nrepl:0.x.y-SNAPSHOT -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl -s wait`
+
+Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 
 ```clojure
-(require 'boot.repl)
+(set-env! :dependencies '[[org.clojure/tools.nrepl "0.2.12"]
+                          [cider/cider-nrepl "0.x.y-SNAPSHOT"]])
+                          
+(require '[cider.tasks :refer [add-middleware]])
 
-(swap! boot.repl/*default-dependencies*
-       concat '[[cider/cider-nrepl "0.14.0"]])
-
-(swap! boot.repl/*default-middleware*
-       conj 'cider.nrepl/cider-middleware)
+(task-options! add-middleware {:middleware '[cider.nrepl.middleware.apropos/wrap-apropos
+                                             cider.nrepl.middleware.version/wrap-version]})
 ```
+
+And then launching `boot add-middleware repl -s wait`. Note that this is not necessary when using the standard `cider-jack-in`.
 
 For more information visit [boot-clj wiki](https://github.com/boot-clj/boot/wiki/Cider-REPL).
 
