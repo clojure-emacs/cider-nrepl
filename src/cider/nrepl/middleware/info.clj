@@ -355,12 +355,33 @@
            {:docstring (:doc info)})
     {:status :no-eldoc}))
 
+(defn eldoc-datomic-query-reply
+  [msg]
+  (try
+    (let [ns (read-string (:ns msg))
+          sym (read-string (:symbol msg))
+          query (if (symbol? sym)
+                  (deref (ns-resolve ns sym))
+                  (eval sym))
+          inputs (if (map? query)
+                   ;; query as map
+                   (or (:in query) "$")
+                   ;; query as vector
+                   (let [partitioned (partition-by keyword? query)
+                         index (.indexOf partitioned '(:in))]
+                     (if (= index -1)
+                       "$"
+                       (nth partitioned (+ 1 index)))))]
+      {:inputs (format-arglists [inputs])})
+    (catch Throwable _ {:status :no-eldoc})))
+
 (defn wrap-info
   "Middleware that looks up info for a symbol within the context of a particular namespace."
   [handler]
   (with-safe-transport handler
     "info" info-reply
-    "eldoc" eldoc-reply))
+    "eldoc" eldoc-reply
+    "eldoc-datomic-query" eldoc-datomic-query-reply))
 
 (set-descriptor!
  #'wrap-info
@@ -373,6 +394,11 @@
      :returns {"status" "done"}}
     "eldoc"
     {:doc "Return a map of information about the specified symbol."
+     :requires {"symbol" "The symbol to lookup"
+                "ns" "The current namespace"}
+     :returns {"status" "done"}}
+    "eldoc-datomic-query"
+    {:doc "Return a map containing the inputs of the datomic query."
      :requires {"symbol" "The symbol to lookup"
                 "ns" "The current namespace"}
      :returns {"status" "done"}}}}))
