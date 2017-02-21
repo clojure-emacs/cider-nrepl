@@ -67,6 +67,11 @@
       (is (= (:status response) #{"done"}))
       (is (.startsWith (:completion-doc response) "clojure.core/true?\n([x")))))
 
+(deftest complete-flush-caches-test
+  (testing "basic usage"
+    (let [response (session/message {:op "complete-flush-caches"})]
+      (is (= (:status response) #{"done"})))))
+
 (deftest error-handling-test
   (testing "complete op error handling"
     (with-redefs [c/complete (fn [& _] (throw (Exception. "complete-exc")))]
