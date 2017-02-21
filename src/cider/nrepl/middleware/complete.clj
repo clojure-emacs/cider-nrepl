@@ -5,6 +5,7 @@
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.misc :as u]
             [compliment.core :as jvm-complete]
+            [compliment.utils :as jvm-complete-utils]
             [cljs-tooling.complete :as cljs-complete]))
 
 (defn complete
@@ -31,12 +32,18 @@
   [msg]
   {:completion-doc (completion-doc msg)})
 
+(defn flush-caches-reply
+  [msg]
+  (jvm-complete-utils/flush-caches)
+  {})
+
 (defn wrap-complete
   "Middleware that looks up possible functions for the given (partial) symbol."
   [handler]
   (with-safe-transport handler
     "complete" complete-reply
-    "complete-doc" doc-reply))
+    "complete-doc" doc-reply
+    "complete-flush-caches" flush-caches-reply))
 
 (set-descriptor!
  #'wrap-complete
@@ -54,4 +61,6 @@
     {:doc "Retrieve documentation suitable for display in completion popup"
      :requires {"ns" "The symbol's namespace"
                 "symbol" "The symbol to lookup"}
-     :returns {"completion-doc" "Symbol's documentation"}}}}))
+     :returns {"completion-doc" "Symbol's documentation"}}
+    "complete-flush-caches"
+    {:doc "Forces the completion backend to repopulate all its caches"}}}))
