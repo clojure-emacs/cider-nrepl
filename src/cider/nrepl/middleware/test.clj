@@ -131,9 +131,13 @@
                    (map (partial stack-frame e))
                    (filter identity)
                    (first))
-        fixture (resolve (symbol (:var frame)))]
-    (swap! current-report update-in [:summary :test] dec)
-    (binding [test/*testing-vars* (list fixture)]
+        fixture (try (resolve (symbol (:var frame)))
+                     (catch Exception e nil))]
+    (if fixture
+      (do (swap! current-report update-in [:summary :test] dec)
+          (binding [test/*testing-vars* (list fixture)]
+            (report {:type :error, :fault true, :expected nil, :actual e
+                     :message "Uncaught exception in test fixture"})))
       (report {:type :error, :fault true, :expected nil, :actual e
                :message "Uncaught exception in test fixture"}))))
 
