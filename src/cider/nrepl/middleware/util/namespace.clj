@@ -112,11 +112,13 @@
   "Return the path to a file containing namespace `ns`.
   `ns` can be a Namespace object or the name of a namespace."
   [ns]
-  (let [ns (if (instance? clojure.lang.Namespace ns)
-             (ns-name ns) (symbol ns))]
-    (loop [paths (all-clj-files-on-cp)]
-      (when (seq paths)
-        (let [file-ns (second (ns-file/read-file-ns-decl (first paths)))]
-          (if (= file-ns ns)
-            (first paths)
-            (recur (rest paths))))))))
+  (try
+    (let [ns (if (instance? clojure.lang.Namespace ns)
+               (ns-name ns) (symbol ns))]
+      (loop [paths (all-clj-files-on-cp)]
+        (when (seq paths)
+          (let [file-ns (second (ns-file/read-file-ns-decl (first paths)))]
+            (if (= file-ns ns)
+              (first paths)
+              (recur (rest paths)))))))
+    (catch Throwable _ nil)))
