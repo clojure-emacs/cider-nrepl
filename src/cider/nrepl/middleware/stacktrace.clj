@@ -8,7 +8,9 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as t])
+            [clojure.tools.nrepl.transport :as t]
+            [clojure.java.io :as io]
+            [clojure.tools.namespace.find :as nsfind])
   (:import (clojure.lang Compiler$CompilerException)))
 
 ;;; ## Stacktraces
@@ -22,6 +24,11 @@
    :line   (.getLineNumber frame)
    :class  (.getClassName frame)
    :method (.getMethodName frame)})
+
+(defn flag-frame
+  "Update frame's flags vector to include the new flag."
+  [frame flag]
+  (update-in frame [:flags] (comp set conj) flag))
 
 (defn analyze-fn
   "Add namespace, fn, and var to the frame map when the source is a Clojure
@@ -49,7 +56,7 @@
                     :else (last (.split ^String file "\\."))))]
     (-> frame
         (assoc :type type)
-        (update-in [:flags] (comp set conj) type))))
+        (flag-frame type))))
 
 (defn flag-repl
   "Flag the frame if its source is a REPL eval."
@@ -57,7 +64,7 @@
   (if (and file
            (or (= file "NO_SOURCE_FILE")
                (.startsWith ^String file "form-init")))
-    (update-in frame [:flags] (comp set conj) :repl)
+    (flag-frame frame :repl)
     frame))
 
 (defn flag-tooling
@@ -68,9 +75,56 @@
   (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(if (tool? %)
-                 (update-in % [:flags] (comp set conj) :tooling)
+                 (flag-frame % :tooling)
                  %)]
     (map flag frames)))
+
+(def directory-namespaces
+  "This looks for all namespaces inside of directories on the class
+  path, ignoring jars."
+  (let [paths (-> (System/getProperty "java.class.path")
+                  (str/split #":"))]
+    (->> paths
+         (filter (complement #(.endsWith % ".jar")))
+         (map io/file)
+         (filter #(.isDirectory %))
+         (nsfind/find-namespaces)
+         (into #{}))))
+
+(def ns-common-prefix
+  "In order to match more namespaces, we look for a common namespace
+  prefix across the ones we have identified."
+  (let [common
+        (try (reduce
+              (fn [common ns]
+                (let [ns (str/lower-case ns)
+                      matched (map vector common ns)
+                      coincident (take-while (fn [[a b]] (= a b)) matched)]
+                  (apply str (map first coincident))))
+              (str/lower-case (first directory-namespaces))
+              directory-namespaces)
+             (catch Throwable e :error))]
+    (condp = common
+      ""
+      {:valid false :common :missing}
+
+      :error
+      {:valid false :common :error}
+
+      ;;default
+      {:valid true :common common})))
+
+(defn flag-project
+  "Flag the frame if it is from the users project. From a users
+  project means that the namespace is one we have identified or it
+  begins with the identified common prefix."
+  [{:keys [ns] :as frame}]
+  (if (and directory-namespaces ns
+           (or (contains? directory-namespaces (symbol ns))
+               (when (:valid ns-common-prefix)
+                 (.startsWith ^String ns (:common ns-common-prefix)))))
+    (flag-frame frame :project)
+    frame))
 
 (defn flag-duplicates
   "Where a parent and child frame represent substantially the same source
@@ -81,7 +135,7 @@
                (if (or (= (:name frame) (:name child))
                        (and (= (:file frame) (:file child))
                             (= (:line frame) (:line child))))
-                 (update-in frame [:flags] (comp set conj) :dup)
+                 (flag-frame frame :dup)
                  frame))
              (rest frames)
              frames)))
@@ -89,7 +143,7 @@
 (defn analyze-frame
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
   [frame]
-  ((comp flag-repl analyze-fn analyze-file stack-frame) frame))
+  ((comp flag-repl flag-project analyze-fn analyze-file stack-frame) frame))
 
 (defn analyze-stacktrace
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
