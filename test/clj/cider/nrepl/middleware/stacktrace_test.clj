@@ -26,9 +26,12 @@
 (def form2 '(do (defn oops [] (+ 1 "2"))
                 (oops)))
 (def form3 '(not-defined))
+(defn divi [x y] (/ x y))
+(def form4 '(divi 1 0))
 
 (def frames1 (stack-frames form1))
 (def frames2 (stack-frames form2))
+(def frames4 (stack-frames form4))
 (def causes1 (causes form1))
 (def causes2 (causes form2))
 (def causes3 (causes form3))
@@ -68,6 +71,8 @@
                 (filter (comp :tooling :flags) frames1)))
       (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
                 (filter (comp :tooling :flags) frames2))))
+    (testing "for project"
+      (is (not-empty (filter (comp :project :flags) frames4))))
     (testing "for duplicate frames"
       ;; Index frames. For all frames flagged as :dup, the frame above it in
       ;; the stack (index i - 1) should be substantially the same source info.
