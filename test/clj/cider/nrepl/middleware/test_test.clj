@@ -9,3 +9,8 @@
                            10))))
   (is (= (class @test/default-executor)
          java.util.concurrent.ThreadPoolExecutor)))
+
+(deftest has-tests-errors []
+  (is (test/has-tests? 'cider.nrepl.middleware.test-test))
+  ;; clojure-emacs/cider#1940
+  (is (not (test/has-tests? 'this.namespace.does.not.have.tests.or.error))))
