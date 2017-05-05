@@ -202,9 +202,12 @@
 (defn has-tests?
   "Return a truthy value if the namespace has any `:test` metadata."
   [ns]
-  (seq (filter (comp :test meta val)
-               (ns-interns (the-ns ns)))))
-
+  (when-let [ns-obj
+             (if (instance? clojure.lang.Namespace ns)
+               ns
+               (find-ns ns))]
+    (seq (filter (comp :test meta val)
+                 (ns-interns ns-obj)))))
 
 ;;; ## Middleware
 
