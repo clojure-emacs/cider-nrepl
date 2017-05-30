@@ -127,8 +127,6 @@
   [[name & args :as fncall]]
   (cons name (instrument-coll args)))
 
-(def verbose-debug false)
-
 (defn- with-break
   "Return form wrapped in a breakpoint.
   If function is given, use it to instrument form before wrapping. The
@@ -137,8 +135,7 @@
    (let [{extras ::extras,
           [_ orig] ::original-form,
           bf   ::breakfunction} (meta form)]
-     (when verbose-debug
-       (println "[DBG]" (not (not bf)) extras (or orig form)))
+     ;; (println "[DBG]" (not (not bf)) extras (or orig form))
      (cond
        (and bf extras)
        (list bf form extras orig)
@@ -265,43 +262,32 @@
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
   It is expected that something in `form` will contain a
-  ::breakfunction metadata, whose value should be a var holding a
-  macro. This macro should take three arguments, the form being
-  evaluated, a coordinates vector (see below), and the original
-  form (before macroexpansion).
+  ::breakfunction metadata, whose value should be a var holding a macro. This
+  macro should take three arguments, the form being evaluated, a map containing
+  coordinates vector (see below), and the original form (before macroexpansion).
 
-  This function walks through the code attaching to objects
-  the ::extras metadata, which is a map containing :line and :column
-  entries (referring to the top-level sexp), and a :coor entry.
-  The :coor specifies its position inside the top-level form. As an
-  example, a coordinate vector of [3 2 0] means:
+  This function walks through the code attaching to objects the ::extras
+  metadata, which is a map currently containing a :coor vector. The :coor
+  specifies its position inside the top-level form. As an example, a coordinate
+  vector of [3 2 0] means:
     - enter this sexp and move forward three times,
     - enter this sexp and move forward twice,
     - enter this sexp.
 
-  After that, it fully macroexpands the code, walks through it again,
-  and wraps in a breakpoint any form that contains the previously
-  attached metadata."
+  After that, it fully macroexpands the code, walks through it again, and wraps
+  in a ::breakfunction any form that contains the previously attached metadata."
   [form]
-  ;; nrepl doesn't provide line-col information for every single
-  ;; construct it reads, so we take the information of the top-level
-  ;; sexp and use that to find every construct inside it.
-  (let [line-col (select-keys (meta form) [:line :column])]
-    ;; Fill the form with metadata. This will later tell us which of the
-    ;; final (post-expansion) forms correspond to user code (and where
-    ;; it came from).
-    (-> (walk-indexed (fn [i f] (m/merge-meta f
-                                 {::extras (assoc line-col :coor i)}))
-                      form)
-        ;; Expand so we don't have to deal with macros.
-        (m/macroexpand-all ::original-form)
-        ;; Go through everything again, and instrument any form with
-        ;; debug metadata.
-        (instrument)
-        (#(do (when verbose-debug
-                (println "[DBG]" %)
-                (flush))
-              %)))))
+  ;; Fill the form with metadata. This will later tell us which of the
+  ;; final (post-expansion) forms correspond to user code (and where
+  ;; it came from).
+  (-> (walk-indexed (fn [i f] (m/merge-meta f {::extras {:coor i}}))
+                    form)
+      ;; (print-form true)
+      ;; Expand so we don't have to deal with macros.
+      (m/macroexpand-all ::original-form)
+      ;; Go through everything again, and instrument any form with
+      ;; debug metadata.
+      (instrument)))
 
 (defn list-instrumented-defs [ns]
   (let [ns (if (instance? clojure.lang.Namespace ns) ns

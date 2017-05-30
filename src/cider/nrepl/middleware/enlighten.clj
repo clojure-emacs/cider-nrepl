@@ -34,10 +34,11 @@
   Currently this only instruments forms that could run several times
   in a single evaluation. This is necessary so that the client can
   clean-up overlays from previous evaluations."
-  [[head & args :as form] extras]
-  (let [erase `(d/with-debug-bindings ~extras
-                 (d/debugger-send (assoc d/*extras* :status :enlighten
-                                         :erase-previous :true)))]
+  [[head & args :as form] {:keys [coor] :as extras}]
+  (let [erase `(d/debugger-send (assoc ~'META_
+                                       :coor ~coor
+                                       :status :enlighten
+                                       :erase-previous :true))]
     (case head
       ;; This is still compile-time, so return a form, not a function.
       fn* `#(do ~erase (apply ~form %&))
@@ -49,10 +50,11 @@
                           (let [out# (apply ~val %&)]
                             ;; The only non-symbol form we enlighten
                             ;; is the `defn`.
-                            (d/with-debug-bindings ~extras
-                              (->> (pr-very-short out#)
-                                   (assoc d/*extras* :status :enlighten :debug-value)
-                                   d/debugger-send))
+                            (->> (assoc ~'META_
+                                        :coor ~coor
+                                        :status :enlighten
+                                        :debug-value (pr-very-short out#))
+                                 d/debugger-send)
                             out#)))
               form))
       ;; Ensure that any `recur`s remain in the tail position.
@@ -62,10 +64,12 @@
 
 (defmacro light-form
   "Return the result of form, and maybe enlighten it."
-  [form extras original-form]
+  [form {:keys [coor] :as extras} original-form]
   (cond
-    (symbol? original-form) `(d/with-debug-bindings ~extras
-                               (send-if-local '~original-form d/*extras* d/*locals*)
+    (symbol? original-form) `(do
+                               (send-if-local '~original-form
+                                              (assoc ~'META_ :coor ~coor)
+                                              ~(d/sanitize-env &env))
                                ~form)
     (seq? form) (wrap-function-form form extras)
     :else form))
@@ -77,7 +81,10 @@
 (defn eval-with-enlighten
   "Like `eval`, but also enlighten code."
   [form]
-  (eval (ins/instrument-tagged-code (light-reader form))))
+  (let [form1 `(d/with-initial-debug-bindings
+                 ~(ins/instrument-tagged-code (light-reader form)))]
+    ;; (ins/print-form form1 true)
+    (eval form1)))
 
 (defn wrap-enlighten [h]
   (fn [{:keys [op enlighten] :as msg}]
