@@ -253,6 +253,15 @@
   ;; Don't use `postwalk` because it destroys previous metadata.
   (walk-indexed #(tag-form %2 breakfunction) form))
 
+(defn print-form [form & [expand? meta?]]
+  (binding [*print-meta* meta?]
+    (let [form (if expand?
+                 (m/macroexpand-all form)
+                 form)]
+      (clojure.pprint/pprint form)))
+  (flush)
+  form)
+
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
   It is expected that something in `form` will contain a
