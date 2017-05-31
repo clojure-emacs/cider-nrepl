@@ -83,3 +83,19 @@
   {:ex (str (class ex))
    :err (with-out-str (stacktrace/print-cause-trace ex))
    :status #{status :done}})
+
+(defn random-uuid-str
+  "Clojure(script) UUID generator."
+  []
+  (letfn [(hex [] (format "%x" (rand-int 15)))
+          (nhex [n] (apply str (repeatedly n hex)))]
+    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
+      (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
+           "-" rhex (nhex 3) "-" (nhex 12)))))
+
+(defn seq=
+  "To deal with, eg: (= () nil) => true"
+  [a b]
+  (= (seq a) (seq b)))
+
+
