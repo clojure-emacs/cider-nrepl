@@ -18,13 +18,6 @@
             [cider.nrepl.middleware.util.misc :as u])
   (:import [clojure.lang Compiler$LocalBinding]))
 
-(defn random-uuid-str []
-  (letfn [(hex [] (format "%x" (rand-int 15)))
-          (nhex [n] (apply str (repeatedly n hex)))]
-    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
-      (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
-           "-" rhex (nhex 3) "-" (nhex 12)))))
-
 ;;;; # The Debugger
 ;;; The debugger is divided into two parts, intrument.clj and
 ;;; debug.clj.
@@ -56,6 +49,7 @@
 ;;;   - the keyword :expression, in which case a single sexp must be
 ;;;     returned (as a string).
 
+
 ;;;; ## Internal breakpoint logic
 ;;; Variables and functions used for navigating between breakpoints.
 (def ^:dynamic *skip-breaks*
@@ -64,26 +58,6 @@
   binding map, use `skip-breaks!` and `skip-breaks?` instead.
   Its value is discarded at the end each eval session."
   (atom nil))
-
-(defn coord<
-  "Return true if coordinate x comes before y.
-  Here, \"comes before\" means that a sexp at coord x is evaluated
-  before a sexp at coord y (assuming a trivial code-flow)."
-  [x y]
-  (if (seq x)
-    (if (seq y)
-      (let [fa (first x)
-            fb (first y)]
-        (if (= fa fb)
-          (recur (rest x) (rest y))
-          (< fa fb)))
-      ;; If coord `x` goes deeper than `y`, then is `x < y`.
-      true)
-    false))
-
-(defn- seq= [a b]
-  ;; To deal with, eg: (= () nil) => true
-  (= (seq a) (seq b)))
 
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
@@ -114,12 +88,12 @@
           ;; From :out, skip some breaks.
           :deeper (if same-defn?
                     (let [parent (take (count skip-coords) coordinates)]
-                      (and (seq= skip-coords parent)
+                      (and (u/seq= skip-coords parent)
                            (> (count coordinates) (count parent))))
                     force?)
           ;; From :here, skip some breaks.
           :before (if same-defn?
-                    (coord< coordinates skip-coords)
+                    (ins/coord< coordinates skip-coords)
                     force?))))
     ;; We don't breakpoint top-level sexps, because their return value
     ;; is already displayed anyway.
@@ -160,6 +134,7 @@
   (into {} (for [[sym bind] env
                  :when (instance? Compiler$LocalBinding bind)]
              [`(quote ~sym) (.sym bind)])))
+
 
 ;;;; ## Getting user input
 ;;; `wrap-debug` receives an initial message from the client, stores
@@ -213,7 +188,7 @@
   "Like `read`, but reply is sent through `debugger-message`.
   type is sent in the message as :input-type."
   [extras type prompt]
-  (let [key (random-uuid-str)
+  (let [key (u/random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
     (debugger-send (-> extras
@@ -427,7 +402,8 @@
            (not (:macro m))
            (not (:inline m))))))
 
-;;; ## High-level functions
+
+;;;  ## Breakpoint logic
 (defmacro with-initial-debug-bindings
   "Let-wrap `body` with META_ map containing code, file, line,
   column etc."
@@ -518,7 +494,8 @@
              val#))
         `(expand-break ~form ~extras ~original-form)))))
 
-;;; Data readers
+
+;;; ## Data readers
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
@@ -537,7 +514,8 @@
     ;; (ins/print-form form1 true false)
     (eval form1)))
 
-;;; Middleware setup
+
+;;; ## Middleware
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
   [{:keys [code session ns] :as msg}]

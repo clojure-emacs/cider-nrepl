@@ -236,6 +236,22 @@
                       :else form)]
      (f coor (m/merge-meta result (meta form))))))
 
+(defn coord<
+  "Return true if coordinate x comes before y.
+  Here, \"comes before\" means that a sexp at coord x is evaluated
+  before a sexp at coord y (assuming a trivial code-flow)."
+  [x y]
+  (if (seq x)
+    (if (seq y)
+      (let [fa (first x)
+            fb (first y)]
+        (if (= fa fb)
+          (recur (rest x) (rest y))
+          (< fa fb)))
+      ;; If coord `x` goes deeper than `y`, then is `x < y`.
+      true)
+    false))
+
 (defn tag-form
   "Tag form to be instrumented with breakfunction.
   This sets the ::breakfunction metadata of form, which can then be
@@ -250,7 +266,11 @@
   ;; Don't use `postwalk` because it destroys previous metadata.
   (walk-indexed #(tag-form %2 breakfunction) form))
 
-(defn print-form [form & [expand? meta?]]
+(defn print-form
+  "Pretty print form.
+  If expand? is true, macroexpand the form. If meta? is true, also print
+  meta. This function is intended for inspection of instrumented code."
+  [form & [expand? meta?]]
   (binding [*print-meta* meta?]
     (let [form (if expand?
                  (m/macroexpand-all form)
