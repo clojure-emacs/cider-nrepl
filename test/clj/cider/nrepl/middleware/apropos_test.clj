@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.apropos-test
   (:require [cider.nrepl.middleware.apropos :refer :all]
+            [cider.nrepl.middleware.util.meta :refer [var-name var-doc]]
             [clojure.test :refer :all]
             [cider.nrepl.test-session :as session]
             [clojure.repl :as repl]

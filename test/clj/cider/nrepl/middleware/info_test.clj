@@ -6,6 +6,7 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
+            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.misc :as util]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])
@@ -207,9 +208,9 @@
 
 (deftest var-meta-test
   ;; Test files can't be found on the class path.
-  (is (:file (info/var-meta #'info/var-meta)))
-  (is (re-find #"cider-nrepl" (:file (#'info/maybe-add-file {:ns (find-ns 'cider.nrepl.middleware.info)}))))
-  (is (not (re-find #"/form-init[^/]*$" (:file (info/var-meta (eval '(do (in-ns 'cider.nrepl.middleware.info) (def pok 10)))))))))
+  (is (:file (m/var-meta #'m/var-meta)))
+  (is (re-find #"cider-nrepl" (:file (#'m/maybe-add-file {:ns (find-ns 'cider.nrepl.middleware.info)}))))
+  (is (not (re-find #"/form-init[^/]*$" (:file (m/var-meta (eval '(do (in-ns 'cider.nrepl.middleware.info) (def pok 10)))))))))
 
 (deftest javadoc-info-unit-test
   (testing "Get an HTTP URL for a Sun/Oracle Javadoc"
