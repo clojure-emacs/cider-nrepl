@@ -6,9 +6,8 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.java :as java]
-            [cider.nrepl.middleware.util.namespace :as ns]
             [cider.nrepl.middleware.util.misc :as u]
-            [clojure.repl :as repl]
+            [cider.nrepl.middleware.util.meta :as m]
             [cljs-tooling.info :as cljs-info]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [cider.nrepl.middleware.util.spec :as spec]))
@@ -37,121 +36,6 @@
   (if (u/boot-project?)
     (io/resource relative-path (boot-class-loader))
     (io/resource relative-path)))
-
-(defn maybe-protocol
-  [info]
-  (if-let [prot-meta (meta (:protocol info))]
-    (merge info {:file (:file prot-meta)
-                 :line (:line prot-meta)})
-    info))
-
-(def var-meta-whitelist
-  [:ns :name :doc :file :arglists :forms :macro
-   :protocol :line :column :static :added :deprecated :resource])
-
-(defn- map-seq [x]
-  (if (seq x)
-    x
-    nil))
-
-(defn maybe-add-file
-  "If `meta-map` has no :file, assoc the :namespace file into it."
-  [{:keys [file ns] :as meta-map}]
-  ;; If we don't know its file, use the ns file.
-  (if (and ns (or (not file)
-                  (re-find #"/form-init[^/]*$" file)))
-    (-> (dissoc meta-map :line)
-        (assoc :file (ns/ns-path ns)))
-    meta-map))
-
-(defn- format-spec-descripton
-  "Format the spec description to display each predicate on a new line."
-  [description]
-  (if (seq? description)
-    ;; drop the first element, format everything else with newlines and tabs,
-    ;; and add the surrounding parens
-    (let [beg (format "(%s " (pr-str (first description)))
-          desc (drop 1 description)]
-      (format "%s%s)" beg (str/join (map #(format "\n\t%s" (pr-str %)) desc))))
-    (pr-str description)))
-
-;; Similar to `print-doc` from clojure.core
-;; https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj#L83
-(defn- format-spec
-  [fnspec]
-  (for [role [:args :ret :fn]
-        :let [spec' (get fnspec role)]
-        :when spec']
-    (let [desc (spec/describe spec')]
-      ;; the -4s aligns the fdef parameters (args, ret and fn)
-      (str (format "%-4s: " (name role)) (format-spec-descripton desc)))))
-
-(defn maybe-add-spec
-  "If the var `v` has a spec has associated with it, assoc that into meta-map.
-  The spec is formatted to avoid processing it in CIDER."
-  [v meta-map]
-  (if-let [fnspec (spec/get-spec v)]
-    (merge meta-map {:spec (format-spec fnspec)})
-    meta-map))
-
-(defn var-meta
-  [v]
-  (let [meta-map (-> v meta maybe-protocol
-                     (select-keys var-meta-whitelist)
-                     map-seq maybe-add-file)]
-    (maybe-add-spec v meta-map)))
-
-(defn ns-meta
-  [ns]
-  (merge
-   (meta ns)
-   {:ns ns
-    :file (-> (ns-publics ns)
-              first
-              second
-              var-meta
-              :file)
-    :line 1}))
-
-(defn resolve-var
-  [ns sym]
-  (if-let [ns (find-ns ns)]
-    (try (ns-resolve ns sym)
-         ;; Impl might try to resolve it as a class, which may fail
-         (catch ClassNotFoundException _
-           nil)
-         ;; TODO: Preserve and display the exception info
-         (catch Exception _
-           nil))))
-
-(defn resolve-aliases
-  [ns]
-  (if-let [ns (find-ns ns)]
-    (ns-aliases ns)))
-
-;; This reproduces the behavior of the canonical `clojure.repl/doc` using its
-;; internals, but returns the metadata rather than just printing. Oddly, the
-;; only place in the Clojure API that special form metadata is available *as
-;; data* is a private function. Lame. Just call through the var.
-(defn resolve-special
-  "Return info for the symbol if it's a special form, or nil otherwise. Adds
-  `:url` unless that value is explicitly set to `nil` -- the same behavior
-  used by `clojure.repl/doc`."
-  [sym]
-  (try
-    (let [orig-sym sym
-          sym (get '{& fn, catch try, finally try} sym sym)
-          v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
-      (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
-                         (:special-form v) v)]
-        (-> m
-            (assoc :name orig-sym)
-            (assoc :url (if (contains? m :url)
-                          (when (:url m)
-                            (str "https://clojure.org/" (:url m)))
-                          (str "https://clojure.org/special_forms#" (:name m)))))))
-    (catch NoClassDefFoundError _)
-    (catch Exception _)))
 
 (defn find-cljx-source
   "If file was cross-compiled using CLJX, return path to original file."
@@ -182,13 +66,13 @@
   [ns sym]
   (cond
     ;; it's a special (special-symbol? or :special-form)
-    (resolve-special sym) (resolve-special sym)
+    (m/resolve-special sym) (m/resolve-special sym)
     ;; it's a var
-    (var-meta (resolve-var ns sym)) (var-meta (resolve-var ns sym))
+    (m/var-meta (m/resolve-var ns sym)) (m/var-meta (m/resolve-var ns sym))
     ;; sym is an alias for another ns
-    (get (resolve-aliases ns) sym) (ns-meta (get (resolve-aliases ns) sym))
+    (get (m/resolve-aliases ns) sym) (m/ns-meta (get (m/resolve-aliases ns) sym))
     ;; it's simply a full ns
-    (find-ns sym) (ns-meta (find-ns sym))
+    (find-ns sym) (m/ns-meta (find-ns sym))
     ;; it's a Java class/member symbol...or nil
     :else (java/resolve-symbol ns sym)))
 

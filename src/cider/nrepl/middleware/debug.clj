@@ -9,13 +9,14 @@
             [cider.nrepl.middleware.util.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
             [cider.nrepl.middleware.util.misc :as misc]
+            [cider.nrepl.middleware.util.meta :as m]
             [clojure.java.io :as io]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport]
             [cider.nrepl.middleware.util.misc :as u])
-  (:import [clojure.lang Compiler$LocalBinding LineNumberingPushbackReader]))
+  (:import [clojure.lang Compiler$LocalBinding]))
 
 (defn random-uuid-str []
   (letfn [(hex [] (format "%x" (rand-int 15)))
@@ -367,59 +368,6 @@
     (pr form))
   (println "=>" (pr-short value)))
 
-(defn read-var
-  "Find the source of the var `v`.
-  Return a map of the var's metadata (:file, :line, :column, etc.) as well as:
-    - :form : The form, as read by `clojure.core/read`, and
-    - :code : The source code of the form
-  Return nil if the source of the var cannot be found."
-  ;; TODO - maybe this function should go in info.clj?
-  [v]
-  (when-let [{:keys [file line column] :as var-meta} (info/var-meta v)]
-    ;; file can be either absolute (eg: functions that have been eval-ed with
-    ;; C-M-x), or relative to some path on the classpath.
-    (when-let [res (or (io/resource file)
-                       (let [f (io/file file)]
-                         (when (.exists f)
-                           f)))]
-      (with-open [rdr (LineNumberingPushbackReader. (io/reader res))]
-        ;; Skip to the right line
-        (dotimes [_ (dec line)]
-          (.readLine rdr))
-
-        ;; Reader that collects the code as a string. Adapted from
-        ;; clojure.repl/source.
-        (let [text     (StringBuilder.)
-              collect? (atom false)
-              pbr      (proxy [LineNumberingPushbackReader] [rdr]
-                         (read []
-                           (let [i (proxy-super read)]
-                             (when @collect?
-                               (.append text (char i)))
-                             i))
-                         (unread [c]
-                           (when @collect?
-                             (.deleteCharAt text (dec (.length text))))
-                           (proxy-super unread c)))
-              ;; Fix bogus column number of 1, which really means 0
-              column   (if (= 1 column) 0 column)]
-
-          ;; Give it the right line and column number. We can just set the
-          ;; line number directly, but there is no setColumnNumber method, so
-          ;; we have to hack it a bit.
-          (.setLineNumber pbr (.getLineNumber rdr))
-          (dotimes [_ column]
-            (.read pbr))
-
-          ;; Now start collecting the code
-          (reset! collect? true)
-
-          (let [form (read {} pbr)
-                code (str text)]
-            (assoc var-meta
-                   :form form
-                   :code code)))))))
-
 (declare debug-reader)
 
 (defn instrument-var-for-step-in
@@ -427,7 +375,7 @@
   leaving the contents of the var uninstrumented."
   [v]
   (when-not (::instrumented (meta v))
-    (when-let [{:keys [ns file form] :as var-meta} (read-var v)]
+    (when-let [{:keys [ns file form] :as var-meta} (m/var-code v)]
       (let [full-path (misc/transform-value (:file (info/file-info file)))]
         (binding [*ns*   ns
                   *file* file

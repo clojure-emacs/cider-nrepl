@@ -2,9 +2,9 @@
   "Search symbols and docs matching a regular expression"
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [clojure.string :as str]
+            [cider.nrepl.middleware.util.meta :refer [var-name var-doc]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [cider.nrepl.middleware.info :as info]
+            [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.namespace :as ns]))
 
 ;;; ## Overview
@@ -12,38 +12,6 @@
 ;; both symbols and documentation. Results ordered for the most common usages:
 ;; symbols from the current namespace are preferred, then `clojure.*` symbols,
 ;; and then other results.
-
-;;; ## Metadata
-;; Var metadata provides the search targets. In the case of docstrings, an
-;; abbreviated version (i.e. first sentence only) may be returned for
-;; symbol-only searches.
-
-(def special-forms
-  "Special forms that can be apropo'ed."
-  (concat (keys (var-get #'clojure.repl/special-doc-map))
-          '[& catch finally]))
-
-(defn var-name
-  "Return a special form's name or var's namespace-qualified name as a string."
-  [v]
-  (if (special-symbol? v)
-    (str (:name (info/resolve-special v)))
-    (str/join "/" ((juxt (comp ns-name :ns) :name) (meta v)))))
-
-(defn var-doc
-  "Return a special form or var's docstring, optionally limiting the number of
-  sentences returned."
-  ([v]
-   (or (if (special-symbol? v)
-         (:doc (info/resolve-special v))
-         (:doc (meta v)))
-       "(not documented)"))
-  ([n v]
-   (->> (-> (var-doc v)
-            (str/replace #"\s+" " ") ; normalize whitespace
-            (str/split #"(?<=\.) ")) ; split sentences
-        (take n)
-        (str/join " "))))
 
 ;;; ## Symbol Search
 
@@ -82,7 +50,7 @@
          (mapcat (comp (partial sort-by var-name) vals ns-vars))
          (concat (when (or (empty? search-ns)
                            (= 'clojure.core (symbol search-ns)))
-                   special-forms))
+                   m/special-forms))
          (filter (comp (partial re-find regex) search-prop))
          (map (fn [v] {:name (var-name v)
                        :doc  (var-doc* v)

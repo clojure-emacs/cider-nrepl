@@ -1,7 +1,216 @@
 (ns cider.nrepl.middleware.util.meta
-  "Utility functions for dealing with metadata."
+  "Utility functions for extracting and manipulating metadata."
   (:require [clojure.walk :as walk]
-            [cider.nrepl.middleware.util.misc :as u]))
+            [clojure.string :as str]
+            [clojure.repl :as repl]
+            [clojure.java.io :as io]
+            [cider.nrepl.middleware.util.namespace :as ns]
+            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.spec :as spec])
+  (:import [clojure.lang LineNumberingPushbackReader]))
+
+;;; ## Extractors
+
+(defn- format-spec-descripton
+  "Format the spec description to display each predicate on a new line."
+  [description]
+  (if (seq? description)
+    ;; drop the first element, format everything else with newlines and tabs,
+    ;; and add the surrounding parens
+    (let [beg (format "(%s " (pr-str (first description)))
+          desc (drop 1 description)]
+      (format "%s%s)" beg (str/join (map #(format "\n\t%s" (pr-str %)) desc))))
+    (pr-str description)))
+
+;; Similar to `print-doc` from clojure.core
+;; https://github.com/clojure/clojure/blob/master/src/clj/clojure/repl.clj#L83
+(defn- format-spec
+  [fnspec]
+  (for [role [:args :ret :fn]
+        :let [spec' (get fnspec role)]
+        :when spec']
+    (let [desc (spec/describe spec')]
+      ;; the -4s aligns the fdef parameters (args, ret and fn)
+      (str (format "%-4s: " (name role)) (format-spec-descripton desc)))))
+
+(defn- maybe-add-spec
+  "If the var `v` has a spec has associated with it, assoc that into meta-map.
+  The spec is formatted to avoid processing it in CIDER."
+  [v meta-map]
+  (if-let [fnspec (spec/get-spec v)]
+    (merge meta-map {:spec (format-spec fnspec)})
+    meta-map))
+
+(defn- maybe-add-file
+  "If `meta-map` has no :file, assoc the :namespace file into it."
+  [{:keys [file ns] :as meta-map}]
+  ;; If we don't know its file, use the ns file.
+  (if (and ns (or (not file)
+                  (re-find #"/form-init[^/]*$" file)))
+    (-> (dissoc meta-map :line)
+        (assoc :file (ns/ns-path ns)))
+    meta-map))
+
+(defn- maybe-protocol
+  [info]
+  (if-let [prot-meta (meta (:protocol info))]
+    (merge info {:file (:file prot-meta)
+                 :line (:line prot-meta)})
+    info))
+
+(defn- map-seq [x]
+  (if (seq x)
+    x
+    nil))
+
+(defn resolve-var
+  [ns sym]
+  (if-let [ns (find-ns ns)]
+    (try (ns-resolve ns sym)
+         ;; Impl might try to resolve it as a class, which may fail
+         (catch ClassNotFoundException _
+           nil)
+         ;; TODO: Preserve and display the exception info
+         (catch Exception _
+           nil))))
+
+(defn resolve-aliases
+  [ns]
+  (if-let [ns (find-ns ns)]
+    (ns-aliases ns)))
+
+;; This reproduces the behavior of the canonical `clojure.repl/doc` using its
+;; internals, but returns the metadata rather than just printing. Oddly, the
+;; only place in the Clojure API that special form metadata is available *as
+;; data* is a private function. Lame. Just call through the var.
+(defn resolve-special
+  "Return info for the symbol if it's a special form, or nil otherwise. Adds
+  `:url` unless that value is explicitly set to `nil` -- the same behavior
+  used by `clojure.repl/doc`."
+  [sym]
+  (try
+    (let [orig-sym sym
+          sym (get '{& fn, catch try, finally try} sym sym)
+          v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
+      (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
+                         (:special-form v) v)]
+        (-> m
+            (assoc :name orig-sym)
+            (assoc :url (if (contains? m :url)
+                          (when (:url m)
+                            (str "https://clojure.org/" (:url m)))
+                          (str "https://clojure.org/special_forms#" (:name m)))))))
+    (catch NoClassDefFoundError _)
+    (catch Exception _)))
+
+(def var-meta-whitelist
+  [:ns :name :doc :file :arglists :forms :macro
+   :protocol :line :column :static :added :deprecated :resource])
+
+(defn var-meta
+  "Return a map of metadata for v.
+  If whitelist is missing use var-meta-whitelist."
+  ([v] (var-meta v var-meta-whitelist))
+  ([v whitelist]
+   (let [meta-map (-> v meta maybe-protocol
+                      (select-keys (or whitelist var-meta-whitelist))
+                      map-seq maybe-add-file)]
+     (maybe-add-spec v meta-map))))
+
+
+
+(def special-forms
+  "Special forms that can be apropo'ed."
+  (concat (keys (var-get #'clojure.repl/special-doc-map))
+          '[& catch finally]))
+
+(defn var-name
+  "Return a special form's name or var's namespace-qualified name as a string."
+  [v]
+  (if (special-symbol? v)
+    (str (:name (resolve-special v)))
+    (str/join "/" ((juxt (comp ns-name :ns) :name) (meta v)))))
+
+(defn var-doc
+  "Return a special form or var's docstring, optionally limiting the number of
+  sentences returned."
+  ([v]
+   (or (if (special-symbol? v)
+         (:doc (resolve-special v))
+         (:doc (meta v)))
+       "(not documented)"))
+  ([n v]
+   (->> (-> (var-doc v)
+            (str/replace #"\s+" " ") ; normalize whitespace
+            (str/split #"(?<=\.) ")) ; split sentences
+        (take n)
+        (str/join " "))))
+
+(defn var-code
+  "Find the source of the var `v`.
+  Return a map of the var's metadata (:file, :line, :column, etc.) as well as:
+    - :form : The form, as read by `clojure.core/read`, and
+    - :code : The source code of the form
+  Return nil if the source of the var cannot be found."
+  [v]
+  (when-let [{:keys [file line column] :as var-meta} (var-meta v)]
+    ;; file can be either absolute (eg: functions that have been eval-ed with
+    ;; C-M-x), or relative to some path on the classpath.
+    (when-let [res (or (io/resource file)
+                       (let [f (io/file file)]
+                         (when (.exists f)
+                           f)))]
+      (with-open [rdr (LineNumberingPushbackReader. (io/reader res))]
+        ;; Skip to the right line
+        (dotimes [_ (dec line)]
+          (.readLine rdr))
+
+        ;; Reader that collects the code as a string. Adapted from
+        ;; clojure.repl/source.
+        (let [text     (StringBuilder.)
+              collect? (atom false)
+              pbr      (proxy [LineNumberingPushbackReader] [rdr]
+                         (read []
+                           (let [i (proxy-super read)]
+                             (when @collect?
+                               (.append text (char i)))
+                             i))
+                         (unread [c]
+                           (when @collect?
+                             (.deleteCharAt text (dec (.length text))))
+                           (proxy-super unread c)))
+              ;; Fix bogus column number of 1, which really means 0
+              column   (if (= 1 column) 0 column)]
+
+          ;; Give it the right line and column number. We can just set the
+          ;; line number directly, but there is no setColumnNumber method, so
+          ;; we have to hack it a bit.
+          (.setLineNumber pbr (.getLineNumber rdr))
+          (dotimes [_ column]
+            (.read pbr))
+
+          ;; Now start collecting the code
+          (reset! collect? true)
+
+          (let [form (read {} pbr)
+                code (str text)]
+            (assoc var-meta
+                   :form form
+                   :code code)))))))
+
+(defn ns-meta
+  [ns]
+  (merge
+    (meta ns)
+    {:ns ns
+     :file (-> (ns-publics ns)
+               first
+               second
+               var-meta
+               :file)
+     :line 1}))
+
+;;; ## Manipulation
 
 (defn merge-meta
   "Non-throwing version of (vary-meta obj merge metamap-1 metamap-2 ...).
