@@ -381,7 +381,7 @@
   (when (and @step-in-to-next?
              (not (skip-breaks? coor code))
              (not= :trace (:mode @*skip-breaks*))
-             (not (::ins/breakfunction (meta v))))
+             (not (:instrumented (meta v))))
     (try
       (instrument-var-for-step-in v)
       true
