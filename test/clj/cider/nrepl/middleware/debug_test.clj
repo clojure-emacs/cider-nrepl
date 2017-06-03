@@ -145,7 +145,6 @@
 
 (deftest locals-for-message-test
   (let [x 1
-        to_ignore 0
         to__ignore 0]
     (is (= '(("x" "1"))
            (#'d/locals-for-message (locals))))))

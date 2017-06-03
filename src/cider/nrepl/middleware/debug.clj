@@ -129,9 +129,9 @@
 
 
 (defn- filter-env
-  "Remove internal vars and macro locals with _ in their names."
+  "Remove internal vars and macro locals with __ in their names."
   [locals]
-  (remove (fn [[k]] (re-find  #"_" (name k))) locals))
+  (remove (fn [[k]] (re-find  #"__" (name k))) locals))
 
 ;;; Politely borrowed from clj-debugger.
 (defn sanitize-env
@@ -143,19 +143,19 @@
 
 ;;;; ## Getting user input
 ;;; `wrap-debug` receives an initial message from the client, stores
-;;; it in `debugger-message`, and `breakpoint` answers it when asking
-;;; for input.
+;;; it in `debugger-message`, and `breakpoint` sends replies on it when
+;;; asking for input.
 
-;; The message being used to communicate with the client. Stored by the
-;; \"init-debugger\" op, and used by `read-debug` to ask for debug input through
-;; the :need-debug-input status."
-(defonce debugger-message (atom nil))
+(defonce ^{:doc "Message used to communicate with the client. Stored by the
+ \"init-debugger\" op, and used by `read-debug` to ask for debug input through
+ the :need-debug-input status."}
+  debugger-message (atom nil))
 
-;; Map atom holding all unprocessed debug inputs.
-;; This is where the \"debug\" op stores replies received for debug
-;; input requests. `read-debug` will halt until it finds its input in
-;; this map (identified by a key), and will `dissoc` it afterwards."
-(defonce promises (atom {}))
+(defonce ^{:doc "Map atom holding all unprocessed debug inputs.
+This is where the \"debug\" op stores replies received for debug
+input requests. `read-debug` will halt until it finds its input in
+this map (identified by a key), and will `dissoc` it afterwards."}
+  promises (atom {}))
 
 (defonce print-length (atom nil))
 (defonce print-level (atom nil))
@@ -199,11 +199,10 @@
                        (update :locals locals-for-message)))
     @input))
 
-
 (def ^:dynamic *tmp-locals*
-  "Many objects don't have reader representation, thus we cannot simply splice
-  them in `eval-with-locals`. Instead we use this temporary dynamic var to hold
-  them in.")
+  "Many objects don't have reader representation and we cannot simply splice
+  them in `eval-with-locals`. Instead, we use this temporary dynamic var to bind
+  them during `eval`.")
 
 (defn- eval-with-locals
   "`eval` form wrapped in a let of the locals map.
@@ -408,13 +407,15 @@
 (def ^:dynamic *do-locals* true)
 
 (defmacro with-initial-debug-bindings
-  "Let-wrap `body` with META_ map containing code, file, line,
-  column etc."
-  {:style/indent 1}
+  "Let-wrap `body` with META__ map containing code, file, line, column etc.
+  META__ is an anaphoric variable available to all breakpoint macros. Ends with
+  __ to avid conflicts with user locals and to signify that it's an internal
+  variable which is cleaned in `sanitize-env' along other clojure's
+  temporaries." {:style/indent 1}
   [& body]
-  ;; *msg* is the message that instrumented the function,
+  ;; NOTE: *msg* is the message that instrumented the function,
   ;; not the message that led to its evaluation.
-  `(let [~'META_ {:msg ~(let [{:keys [code id file line column]} *msg*]
+  `(let [~'META__ {:msg ~(let [{:keys [code id file line column]} *msg*]
                           (-> {:code code, :original-id id, :file file,
                                :line line, :column column}
                               ;; There's an nrepl bug where the column starts counting
@@ -423,32 +424,31 @@
                               ;; wrong than right.
                               (update :column #(if (= % 1) 0 %))))
                   :forms @*tmp-forms*}]
-     (skip-breaks! nil)
      ~@body))
 
 (defn break
   "Breakpoint function.
   Send the result of form and its coordinates to the client and wait for
   response with `read-debug-command`'."
-  [coor val locals META_]
+  [coor val locals META__]
   (cond
-    (skip-breaks? coor (get-in META_ [:msg :code])) val
+    (skip-breaks? coor (get-in META__ [:msg :code])) val
     ;; The length of `coor` is a good indicator of current code
     ;; depth.
     (= (:mode @*skip-breaks*) :trace)
-    (do (print-step-indented (count coor) (get-in META_ [:forms coor]) val)
+    (do (print-step-indented (count coor) (get-in META__ [:forms coor]) val)
         val)
     ;; Most common case - ask for input.
     :else
-    (read-debug-command val (assoc (:msg META_)
+    (read-debug-command val (assoc (:msg META__)
                                    :debug-value (pr-short val)
                                    :coor coor
                                    :locals locals))))
 
 (defn apply-instrumented-maybe
   "Apply var-fn or its instrumented version to args."
-  [var-fn args coor META_]
-  (let [stepin (step-in? var-fn coor (get-in META_ [:msg :code]))]
+  [var-fn args coor META__]
+  (let [stepin (step-in? var-fn coor (get-in META__ [:msg :code]))]
     (apply (if stepin
              (::instrumented (meta var-fn))
              var-fn)
@@ -459,14 +459,14 @@
   [form {:keys [coor]} original-form]
   (let [val-form (if (looks-step-innable? form)
                    (let [[fn-sym & args] form]
-                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'META_))
+                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'META__))
                    form)
         locals (when *do-locals*
                  (sanitize-env &env))]
     ;; Keep original forms in a separate atom to save some code
     ;; size. Unfortunately same trick wouldn't work for locals.
     (swap! *tmp-forms* assoc coor original-form)
-    `(break ~coor ~val-form ~locals ~'META_)))
+    `(break ~coor ~val-form ~locals ~'META__)))
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
@@ -495,7 +495,7 @@
         ;; once. Next time, we need to test the condition again.
         `(let [old-breaks# @*skip-breaks*]
            (when-not ~condition
-             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'META_)) false))
+             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'META__)) false))
            (try
              (expand-break ~form ~extras ~original-form)
              (finally (reset! *skip-breaks* old-breaks#))))
@@ -535,9 +535,7 @@
 ;;; ## Middleware
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
-  [{:keys [code session ns] :as msg}]
-  (when (instance? clojure.lang.Atom session)
-    (swap! session assoc #'*skip-breaks* (atom nil)))
+  [{:keys [code] :as msg}]
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
   (let [has-debug? (atom false)
@@ -577,9 +575,11 @@
        (transport/send (:transport msg))))
 
 (defn wrap-debug [h]
-  (fn [{:keys [op input] :as msg}]
+  (fn [{:keys [op input session] :as msg}]
     (case op
-      "eval" (h (maybe-debug msg))
+      "eval" (do (when (instance? clojure.lang.Atom session)
+                   (swap! session assoc #'*skip-breaks* (atom nil)))
+                 (h (maybe-debug msg)))
       "debug-instrumented-defs" (instrumented-defs-reply msg)
       "debug-input" (when-let [pro (@promises (:key msg))]
                       (swap! promises dissoc  (:key msg))
