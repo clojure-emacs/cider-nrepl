@@ -297,21 +297,21 @@
     stacktrace: Print the current stacktrace, and prompt again.
     quit: Abort current eval session.
 
-  Response received can be any one of these values. It can also be a
-  map whose :response entry is one of these values, which can thus be
-  used to provide aditional parameters. For instance, if this map has
-  a :code entry, its value is used for operations such as :eval, which
-  would otherwise interactively prompt for an expression."
+  Response received can be any one of these values. It can also be a map
+  whose :response entry is one of these values, which can thus be used to
+  provide additional parameters. For instance, if this map has a :code entry,
+  its value is used for operations such as :eval, which would otherwise
+  interactively prompt for an expression."
   [value extras]
   (let [commands     (cond-> debug-commands
                        (not (map? *msg*))         (dissoc "q")
+                       (nil? (:locals extras))    (dissoc "e" "j" "l" "p")
                        (cljs/grab-cljs-env *msg*) identity)
         response-raw (read-debug extras commands nil)
+        extras       (dissoc extras :inspect)
 
         {:keys [code coord response page-size force?] :or {page-size 32}}
-        (if (map? response-raw) response-raw
-            {:response response-raw})
-        extras (dissoc extras :inspect)]
+        (if (map? response-raw) response-raw {:response response-raw})]
     (reset! step-in-to-next? false)
     (case response
       :next       value
@@ -326,19 +326,14 @@
       :stacktrace (stack-then-read-command value extras)
       :trace      (do (skip-breaks! :trace)
                       value)
-      :quit       (abort!)
-      (if (nil? (:locals extras))
-        ;; nil means that we didn't expand &env; see instrument-and-eval
-        (do (println "WARNING: Compiled with no locals. Method code was too large!")
-            value)
-        (case response
-          :locals  (->> (:locals extras)
-                        (inspect-then-read-command value extras page-size))
-          :inspect (->> (read-debug-eval-expression "Inspect value: " extras code)
-                        (inspect-then-read-command value extras page-size))
-          :inject  (read-debug-eval-expression "Expression to inject: " extras code)
-          :eval    (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
-                     (read-debug-command value (assoc extras :debug-value (pr-short return)))))))))
+      :locals     (->> (:locals extras)
+                       (inspect-then-read-command value extras page-size))
+      :inspect    (->> (read-debug-eval-expression "Inspect value: " extras code)
+                       (inspect-then-read-command value extras page-size))
+      :inject     (read-debug-eval-expression "Expression to inject: " extras code)
+      :eval       (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
+                    (read-debug-command value (assoc extras :debug-value (pr-short return))))
+      :quit       (abort!))))
 
 (defn print-step-indented [depth form value]
   (print (apply str (repeat (dec depth) "| ")))
