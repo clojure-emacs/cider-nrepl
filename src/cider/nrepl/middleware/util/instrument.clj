@@ -293,7 +293,7 @@
                      (let [br (::breakfunction (meta f))
                            f1 (m/strip-meta f keys)]
                        (if br
-                         (vary-meta f1 assoc :instrumented (name (:name (meta br))))
+                         (vary-meta f1 assoc :cider/instrumented (name (:name (meta br))))
                          f1))
                      (m/strip-meta f keys))]
           ;; also strip meta of the meta
@@ -335,6 +335,6 @@
   (let [ns (if (instance? clojure.lang.Namespace ns) ns
                (find-ns (symbol ns)))]
     (->> (ns-interns ns)
-         (filter (comp :instrumented meta second))
+         (filter (comp :cider/instrumented meta second))
          (map first))))
 

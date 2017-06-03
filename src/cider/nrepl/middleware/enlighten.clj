@@ -35,7 +35,7 @@
   in a single evaluation. This is necessary so that the client can
   clean-up overlays from previous evaluations."
   [[head & args :as form] {:keys [coor] :as extras}]
-  (let [erase `(d/debugger-send (assoc ~'META_
+  (let [erase `(d/debugger-send (assoc (:msg ~'META__)
                                        :coor ~coor
                                        :status :enlighten
                                        :erase-previous :true))]
@@ -48,9 +48,8 @@
               (list head name
                     `#(do ~erase
                           (let [out# (apply ~val %&)]
-                            ;; The only non-symbol form we enlighten
-                            ;; is the `defn`.
-                            (->> (assoc ~'META_
+                            ;; `defn` is the only non-symbol form that we enlighten.
+                            (->> (assoc (:msg ~'META__)
                                         :coor ~coor
                                         :status :enlighten
                                         :debug-value (pr-very-short out#))
@@ -68,7 +67,7 @@
   (cond
     (symbol? original-form) `(do
                                (send-if-local '~original-form
-                                              (assoc ~'META_ :coor ~coor)
+                                              (assoc (:msg ~'META__) :coor ~coor)
                                               ~(d/sanitize-env &env))
                                ~form)
     (seq? form) (wrap-function-form form extras)

@@ -97,5 +97,3 @@
   "To deal with, eg: (= () nil) => true"
   [a b]
   (= (seq a) (seq b)))
-
-
