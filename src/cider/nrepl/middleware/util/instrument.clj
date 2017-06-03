@@ -74,7 +74,9 @@
                       (list* (m/merge-meta sym
                                            ;; Instrument the metadata, because
                                            ;; that's where tests are stored.
-                                           (instrument (or (meta sym) {})))
+                                           (instrument (or (meta sym) {}))
+                                           ;; to be used later for meta stripping
+                                           {::def-symbol true})
                              (map instrument (rest args))))
             '#{set!} (list (first args)
                            (instrument (second args)))
@@ -278,6 +280,27 @@
   (flush)
   form)
 
+(defn- strip-instrumentation-meta
+  "Remove all tags in order to reduce java bytecode size and enjoy cleaner code
+  printouts. We keep ::breakfunction for def symbols because that is how we
+  identify currently instrumented vars in list-instrumented-defs."
+  [form]
+  (walk-indexed
+    (fn [_ f]
+      (if (instance? clojure.lang.IObj f)
+        (let [keys [::original-form ::extras ::breakfunction ::def-symbol]
+              f    (if (::def-symbol (meta f))
+                     (let [br (::breakfunction (meta f))
+                           f1 (m/strip-meta f keys)]
+                       (if br
+                         (vary-meta f1 assoc :instrumented (name (:name (meta br))))
+                         f1))
+                     (m/strip-meta f keys))]
+          ;; also strip meta of the meta
+          (with-meta f (strip-instrumentation-meta (meta f))))
+        f))
+    form))
+
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.
   It is expected that something in `form` will contain a
@@ -301,16 +324,17 @@
   ;; it came from).
   (-> (walk-indexed (fn [i f] (m/merge-meta f {::extras {:coor i}}))
                     form)
-      ;; (print-form true)
       ;; Expand so we don't have to deal with macros.
       (m/macroexpand-all ::original-form)
       ;; Go through everything again, and instrument any form with
       ;; debug metadata.
-      (instrument)))
+      (instrument)
+      (strip-instrumentation-meta)))
 
 (defn list-instrumented-defs [ns]
   (let [ns (if (instance? clojure.lang.Namespace ns) ns
                (find-ns (symbol ns)))]
     (->> (ns-interns ns)
-         (filter (comp ::breakfunction meta second))
+         (filter (comp :instrumented meta second))
          (map first))))
+

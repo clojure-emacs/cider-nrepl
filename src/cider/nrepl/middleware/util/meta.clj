@@ -224,12 +224,17 @@
     (apply vary-meta obj merge metamaps)
     (catch Exception e obj)))
 
-(defn strip-meta [form]
-  (if (meta form)
-    (try
-      (with-meta form nil)
-      (catch Exception e form))
-    form))
+(defn strip-meta
+  "Strip meta from form.
+  If keys are provided, strip only those keys."
+  ([form] (strip-meta form nil))
+  ([form keys]
+   (if (and (instance? clojure.lang.IObj form)
+            (meta form))
+     (if keys
+       (with-meta form (apply dissoc (meta form) keys))
+       (with-meta form nil))
+     form)))
 
 (defn macroexpand-all
   "Like clojure.walk/macroexpand-all, but preserves and macroexpands
@@ -262,8 +267,7 @@
   This is used so that we don't crowd the ns cache with useless or
   redudant information, such as :name and :ns."
   [:indent :deprecated :macro :arglists :test :doc
-   :cider.nrepl.middleware.util.instrument/breakfunction
-   :style/indent :clojure.tools.trace/traced])
+   :instrumented :style/indent :clojure.tools.trace/traced])
 
 (defn relevant-meta
   "Filter the entries in map m by `relevant-meta-keys` and non-nil values."
