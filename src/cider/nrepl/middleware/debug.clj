@@ -176,6 +176,8 @@
 (defn debugger-send
   "Send a response through debugger-message."
   [& r]
+  (when (not @debugger-message)
+    (throw (Exception. "Debugger not initialized!")))
   (try
     (transport/send (:transport @debugger-message)
                     (apply response-for @debugger-message r))
@@ -426,8 +428,6 @@
                               ;; wrong than right.
                               (update :column #(if (= % 1) 0 %))))
                   :forms @*tmp-forms*}]
-     (when (not (seq @debugger-message))
-       (throw (Exception. "Debugger not initialized")))
      (skip-breaks! nil)
      ~@body))
 
