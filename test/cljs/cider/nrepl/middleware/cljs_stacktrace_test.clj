@@ -6,11 +6,15 @@
 (use-fixtures :each piggieback-fixture)
 
 (deftest cljs-stacktrace-test
-  (testing "stacktrace op is not implemented"
-    (let [response-with-no-error (session/message {:op :stacktrace})
-          response-with-error (do (session/message {:op :eval
-                                                    :code "(ffirst 1)"})
-                                  (session/message {:op :stacktrace}))]
+  (testing "no last error"
+    (let [response (session/message {:op :stacktrace})]
       (is (= #{"no-error" "done"}
-             (:status response-with-no-error)
-             (:status response-with-error))))))
+             (:status response)))))
+  (testing "last error stacktrace"
+    (let [response (do (session/message {:op :eval
+                                         :code "(ffirst 1)"})
+                       (session/message {:op :stacktrace}))]
+      (is (= #{"done"}
+             (:status response)))
+      (is (= "clojure.lang.ExceptionInfo"
+             (:class response))))))
