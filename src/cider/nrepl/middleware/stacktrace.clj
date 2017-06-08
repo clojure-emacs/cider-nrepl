@@ -211,8 +211,7 @@
 
 (defn wrap-stacktrace-reply
   [{:keys [session transport pprint-fn] :as msg}]
-  ;; no stacktrace support for cljs currently - they are printed by piggieback anyway
-  (if-let [e (when-not (cljs/grab-cljs-env msg) (@session #'*e))]
+  (if-let [e (@session #'*e)]
     (doseq [cause (analyze-causes e pprint-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
