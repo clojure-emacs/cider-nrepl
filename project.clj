@@ -62,7 +62,7 @@
                         :java-source-paths ["test/java"]
                         :resource-paths ["test/resources"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[com.cemerick/piggieback "0.2.1"]
+                         :dependencies [[com.cemerick/piggieback "0.2.2"]
                                         [org.clojure/clojurescript "1.7.189"]]}
 
              :cloverage {:plugins [[lein-cloverage "1.0.7-SNAPSHOT"]]}
