@@ -139,15 +139,17 @@
   used by `clojure.repl/doc`."
   [sym]
   (try
-    (let [sym (get '{& fn, catch try, finally try} sym sym)
+    (let [orig-sym sym
+          sym (get '{& fn, catch try, finally try} sym sym)
           v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
       (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
                          (:special-form v) v)]
-        (assoc m
-               :url (if (contains? m :url)
-                      (when (:url m)
-                        (str "https://clojure.org/" (:url m)))
-                      (str "https://clojure.org/special_forms#" (:name m))))))
+        (-> m
+            (assoc :name orig-sym)
+            (assoc :url (if (contains? m :url)
+                          (when (:url m)
+                            (str "https://clojure.org/" (:url m)))
+                          (str "https://clojure.org/special_forms#" (:name m)))))))
     (catch NoClassDefFoundError _)
     (catch Exception _)))
 

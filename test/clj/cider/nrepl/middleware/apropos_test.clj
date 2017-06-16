@@ -2,10 +2,27 @@
   (:require [cider.nrepl.middleware.apropos :refer :all]
             [clojure.test :refer :all]
             [cider.nrepl.test-session :as session]
+            [clojure.repl :as repl]
             [clojure.string :as str]))
 
 (def ^{:doc "Test1. Test2. Test3."} public-var [1 2 3])
 (def ^:private ^{:doc "Can't. See. Me"} private-var [:a :b :c])
+
+(deftest var-name-test
+  (testing "Returns Var's namespace-qualified name"
+    (is (= "clojure.core/conj" (var-name #'clojure.core/conj))))
+
+  (testing "Returns special form's name"
+    (is (= "if" (var-name 'if)))))
+
+(deftest var-doc-test
+  (testing "Returns Var's doc"
+    (is (= (:doc (meta #'clojure.core/conj))
+           (var-doc #'clojure.core/conj))))
+
+  (testing "Returns special form's doc"
+    (is (= (:doc (#'repl/special-doc 'if))
+           (var-doc 'if)))))
 
 (deftest unit-test-metadata
   (is (= (var-name  #'public-var) "cider.nrepl.middleware.apropos-test/public-var"))
@@ -52,7 +69,22 @@
           "Symbol search should return an abbreviated docstring.")
       (is (= (take 20 (:doc x))
              (take 20 (:doc y)))
-          "The abbreviated docstring should be the start of the full docstring."))))
+          "The abbreviated docstring should be the start of the full docstring.")))
+
+  (testing "Includes special forms when `search-ns` is nil"
+    (is (not-empty (filter #(= "if" (:name %))
+                           (find-symbols nil "if" nil
+                                         false false false nil)))))
+
+  (testing "Includes special forms when `search-ns` is \"clojure.core\""
+    (is (not-empty (filter #(= "if" (:name %))
+                           (find-symbols nil "if" "clojure.core"
+                                         false false false nil)))))
+
+  (testing "Excludes special forms when `search-ns` is some other ns"
+    (is (empty? (filter #(= "if" (:name %))
+                        (find-symbols nil "if" "clojure.set"
+                                      false false false nil))))))
 
 (use-fixtures :each session/session-fixture)
 (deftest integration-test
