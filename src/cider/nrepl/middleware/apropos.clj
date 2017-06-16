@@ -4,6 +4,7 @@
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.namespace :as ns]))
 
 ;;; ## Overview
@@ -17,17 +18,26 @@
 ;; abbreviated version (i.e. first sentence only) may be returned for
 ;; symbol-only searches.
 
+(def special-forms
+  "Special forms that can be apropo'ed."
+  (concat (keys (var-get #'clojure.repl/special-doc-map))
+          '[& catch finally]))
+
 (defn var-name
-  "Return a var's namespace-qualified name as a string."
+  "Return a special form's name or var's namespace-qualified name as a string."
   [v]
-  (str/join "/" ((juxt (comp ns-name :ns) :name)
-                 (meta v))))
+  (if (special-symbol? v)
+    (str (:name (info/resolve-special v)))
+    (str/join "/" ((juxt (comp ns-name :ns) :name) (meta v)))))
 
 (defn var-doc
-  "Return a var's docstring, optionally limiting the number of sentences
-  returned."
+  "Return a special form or var's docstring, optionally limiting the number of
+  sentences returned."
   ([v]
-   (or (:doc (meta v)) "(not documented)"))
+   (or (if (special-symbol? v)
+         (:doc (info/resolve-special v))
+         (:doc (meta v)))
+       "(not documented)"))
   ([n v]
    (->> (-> (var-doc v)
             (str/replace #"\s+" " ") ; normalize whitespace
@@ -70,12 +80,16 @@
         regex   (-> (if case-sensitive? query (format "(?i:%s)" query)) re-pattern)]
     (->> (namespaces ns search-ns filter-regexps)
          (mapcat (comp (partial sort-by var-name) vals ns-vars))
+         (concat (when (or (empty? search-ns)
+                           (= 'clojure.core (symbol search-ns)))
+                   special-forms))
          (filter (comp (partial re-find regex) search-prop))
          (map (fn [v] {:name (var-name v)
                        :doc  (var-doc* v)
-                       :type (cond (:macro (meta v)) :macro
-                                   (fn? (deref v))   :function
-                                   :else             :variable)})))))
+                       :type (cond (special-symbol? v) :special-form
+                                   (:macro (meta v))   :macro
+                                   (fn? (deref v))     :function
+                                   :else               :variable)})))))
 
 ;;; ## Middleware
 

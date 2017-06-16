@@ -53,7 +53,7 @@
     (spit tmp-file-path "test")
     (testing "when fake.class.path is not set"
       (is (not (= (class (file tmp-file-name))
-                  java.net.URL)))
+                java.net.URL)))
       (is (= (file tmp-file-name) tmp-file-name)))
     (testing "when fake.class.path is set"
       (try
@@ -72,6 +72,22 @@
                  "file:fake/clojure.jar"))
           (finally
             (System/clearProperty "fake.class.path")))))))
+
+(deftest resolve-special-test
+  (testing "Resolves all special forms"
+    (let [specials (keys clojure.lang.Compiler/specials)]
+      (is (every? (fn [[sym {:keys [name special-form]}]]
+                    (and (= sym name)
+                         (true? special-form)))
+                  (map #(vector % (info/resolve-special %)) specials)))))
+
+  (testing "Names are correct for symbols #{&, catch, finally}"
+    (is (= '& (:name (info/resolve-special '&))))
+    (is (= 'catch (:name (info/resolve-special 'catch))))
+    (is (= 'finally (:name (info/resolve-special 'finally)))))
+
+  (testing "Returns nil for unknown symbol"
+    (is (nil? (info/resolve-special 'unknown)))))
 
 (deftype T [])
 
