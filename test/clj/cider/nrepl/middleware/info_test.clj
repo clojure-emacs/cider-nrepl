@@ -4,6 +4,7 @@
             [clojure.java.io :as io]
             [clojure.repl :as repl]
             [clojure.set :as set]
+            [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.misc :as util]
             [cider.nrepl.test-session :as session]
@@ -160,7 +161,8 @@
     (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
            {"ns" "clojure.core"
             "name" "assoc"
-            "arglists-str" (pr-str arglists)
+            "arglists-str" (->> (map pr-str arglists)
+                                (str/join \newline))
             "column" column
             "added" added
             "static" (str static)
@@ -271,7 +273,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:ns response) "cider.nrepl.middleware.info-test"))
         (is (= (:name response) "testing-function"))
-        (is (= (:arglists-str response) "([a b c])"))
+        (is (= (:arglists-str response) "[a b c]"))
         (is (nil? (:macro response)))
         (is (= (:doc response) "This is used for testing"))
         (is (nil? (:spec response)))))
@@ -281,7 +283,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:ns response) "cider.nrepl.middleware.info-test"))
         (is (= (:name response) "testing-macro"))
-        (is (= (:arglists-str response) "([pred a b])"))
+        (is (= (:arglists-str response) "[pred a b]"))
         (is (= (:macro response) "true"))
         (is (= (:doc response) "a macro for testing"))
         (is (nil? (:spec response)))))
@@ -293,7 +295,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:class response) "cider.nrepl.test.TestClass"))
         (is (= (:member response) "getInt"))
-        (is (= (:arglists-str response) "([this])"))
+        (is (= (:arglists-str response) "[this]"))
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public}"))
@@ -320,7 +322,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:class response) "cider.nrepl.test.TestClass"))
         (is (= (:member response) "doSomething"))
-        (is (= (:arglists-str response) "([int int java.lang.String])"))
+        (is (= (:arglists-str response) "[int int java.lang.String]"))
         (is (= (:argtypes response) ["int" "int" "java.lang.String"]))
         (is (= (:returns response) "void"))
         (is (= (:modifiers response) "#{:private :static}"))
@@ -347,7 +349,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:class response) "java.lang.StringBuilder"))
         (is (= (:member response) "capacity"))
-        (is (= (:arglists-str response) "([this])"))
+        (is (= (:arglists-str response) "[this]"))
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
@@ -374,7 +376,7 @@
         (is (= (:url response) "https://clojure.org/java_interop#dot"))
         (is (= (:special-form response) "true"))
         (is (.startsWith (:doc response) "The instance member form works"))
-        (is (.startsWith (:forms-str response) "  (.instanceMember instance args*)\n  (.instanceMember"))))
+        (is (.startsWith (:forms-str response) "(.instanceMember instance args*)\n(.instanceMember"))))
 
     (testing "get info of a clojure non-core file, located in a jar"
       (let [response (session/message {:op "info" :symbol "resource" :ns "clojure.java.io"})]
@@ -382,7 +384,7 @@
         (is (= (:name response) "resource"))
         (is (= (:resource response) "clojure/java/io.clj"))
         (is (= (:ns response) "clojure.java.io"))
-        (is (= (:arglists-str response) "([n] [n loader])"))
+        (is (= (:arglists-str response) "[n]\n[n loader]"))
         (is (.startsWith (:doc response) "Returns the URL for a named"))
         (is (.startsWith (:file response) "jar:file:"))))
 
@@ -405,7 +407,7 @@
           (is (= (:status response) #{"done"}))
           (is (= (:ns response) "clojure.core"))
           (is (= (:name response) "as->"))
-          (is (= (:arglists-str response) "([expr name & forms])"))
+          (is (= (:arglists-str response) "[expr name & forms]"))
           (is (= (:macro response) "true"))
           (is (.startsWith (:doc response) "Binds name to expr, evaluates")))
         (finally

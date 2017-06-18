@@ -288,22 +288,24 @@
 
 (defn format-response
   [info]
-  (when info
-    (-> info
-        (merge (when-let [ns (:ns info)]
-                 {:ns (str ns)})
-               (when-let [args (:arglists info)]
-                 {:arglists-str (pr-str args)})
-               (when-let [forms (:forms info)]
-                 {:forms-str (->> (map #(str "  " (pr-str %)) forms)
-                                  (str/join \newline))})
-               (when-let [file (:file info)]
-                 (file-info file))
-               (when-let [path (:javadoc info)]
-                 (javadoc-info path)))
-        format-nested
-        blacklist
-        u/transform-value)))
+  (letfn [(forms-join [forms]
+            (->> (map pr-str forms)
+                 (str/join \newline)))]
+    (when info
+      (-> info
+          (merge (when-let [ns (:ns info)]
+                   {:ns (str ns)})
+                 (when-let [args (:arglists info)]
+                   {:arglists-str (forms-join args)})
+                 (when-let [forms (:forms info)]
+                   {:forms-str (forms-join forms)})
+                 (when-let [file (:file info)]
+                   (file-info file))
+                 (when-let [path (:javadoc info)]
+                   (javadoc-info path)))
+          format-nested
+          blacklist
+          u/transform-value))))
 
 (defn info-reply
   [msg]
