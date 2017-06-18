@@ -64,17 +64,17 @@
 
 (defn info-clj
   [ns sym]
-  (cond
+  (or
     ;; it's a special (special-symbol? or :special-form)
-    (m/resolve-special sym) (m/resolve-special sym)
+    (m/special-sym-meta sym)
     ;; it's a var
-    (m/var-meta (m/resolve-var ns sym)) (m/var-meta (m/resolve-var ns sym))
+    (m/var-meta (m/resolve-var ns sym))
     ;; sym is an alias for another ns
-    (get (m/resolve-aliases ns) sym) (m/ns-meta (get (m/resolve-aliases ns) sym))
+    (m/ns-meta (get (m/resolve-aliases ns) sym))
     ;; it's simply a full ns
-    (find-ns sym) (m/ns-meta (find-ns sym))
+    (m/ns-meta (find-ns sym))
     ;; it's a Java class/member symbol...or nil
-    :else (java/resolve-symbol ns sym)))
+    (java/resolve-symbol ns sym)))
 
 (defn info-cljs
   [env symbol ns]

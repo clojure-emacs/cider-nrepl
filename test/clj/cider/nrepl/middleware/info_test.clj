@@ -75,21 +75,21 @@
           (finally
             (System/clearProperty "fake.class.path")))))))
 
-(deftest resolve-special-test
+(deftest special-sym-meta-test
   (testing "Resolves all special forms"
     (let [specials (keys clojure.lang.Compiler/specials)]
       (is (every? (fn [[sym {:keys [name special-form]}]]
                     (and (= sym name)
                          (true? special-form)))
-                  (map #(vector % (info/resolve-special %)) specials)))))
+                  (map #(vector % (m/special-sym-meta %)) specials)))))
 
   (testing "Names are correct for symbols #{&, catch, finally}"
-    (is (= '& (:name (info/resolve-special '&))))
-    (is (= 'catch (:name (info/resolve-special 'catch))))
-    (is (= 'finally (:name (info/resolve-special 'finally)))))
+    (is (= '& (:name (m/special-sym-meta '&))))
+    (is (= 'catch (:name (m/special-sym-meta 'catch))))
+    (is (= 'finally (:name (m/special-sym-meta 'finally)))))
 
   (testing "Returns nil for unknown symbol"
-    (is (nil? (info/resolve-special 'unknown)))))
+    (is (nil? (m/special-sym-meta 'unknown)))))
 
 (deftype T [])
 

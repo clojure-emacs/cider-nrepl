@@ -83,7 +83,7 @@
 ;; internals, but returns the metadata rather than just printing. Oddly, the
 ;; only place in the Clojure API that special form metadata is available *as
 ;; data* is a private function. Lame. Just call through the var.
-(defn resolve-special
+(defn special-sym-meta
   "Return info for the symbol if it's a special form, or nil otherwise. Adds
   `:url` unless that value is explicitly set to `nil` -- the same behavior
   used by `clojure.repl/doc`."
@@ -108,11 +108,13 @@
    :protocol :line :column :static :added :deprecated :resource])
 
 (defn var-meta
-  "Return a map of metadata for v.
+  "Return a map of metadata for var or special form v.
   If whitelist is missing use var-meta-whitelist."
   ([v] (var-meta v var-meta-whitelist))
   ([v whitelist]
-   (let [meta-map (-> v meta maybe-protocol
+   (let [meta-map (-> (or (special-sym-meta v)
+                          (meta v))
+                      maybe-protocol
                       (select-keys (or whitelist var-meta-whitelist))
                       map-seq maybe-add-file)]
      (maybe-add-spec v meta-map))))
@@ -125,19 +127,20 @@
           '[& catch finally]))
 
 (defn var-name
-  "Return a special form's name or var's namespace-qualified name as a string."
+  "Return special form or var's namespace-qualified name as string."
   [v]
-  (if (special-symbol? v)
-    (str (:name (resolve-special v)))
-    (str/join "/" ((juxt (comp ns-name :ns) :name) (meta v)))))
+  (let [mta (or (special-sym-meta v)
+                (meta v))]
+    (if-let [ns (:ns mta)]
+      (str (ns-name ns) "/" (:name mta))
+      (name (:name mta)))))
 
 (defn var-doc
-  "Return a special form or var's docstring, optionally limiting the number of
-  sentences returned."
+  "Return special form or var's docstring, optionally limiting the number of
+  sentences returned to n."
   ([v]
-   (or (if (special-symbol? v)
-         (:doc (resolve-special v))
-         (:doc (meta v)))
+   (or (:doc (or (special-sym-meta v)
+                 (meta v)))
        "(not documented)"))
   ([n v]
    (->> (-> (var-doc v)
@@ -200,15 +203,16 @@
 
 (defn ns-meta
   [ns]
-  (merge
-    (meta ns)
-    {:ns ns
-     :file (-> (ns-publics ns)
-               first
-               second
-               var-meta
-               :file)
-     :line 1}))
+  (when ns
+    (merge
+      (meta ns)
+      {:ns ns
+       :file (-> (ns-publics ns)
+                 first
+                 second
+                 var-meta
+                 :file)
+       :line 1})))
 
 ;;; ## Manipulation
 
