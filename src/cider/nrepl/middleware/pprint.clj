@@ -7,19 +7,34 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport]
-            [fipp.edn :as fipp]
-            [puget.printer :as puget])
+            [clojure.tools.nrepl.transport :as transport])
   (:import clojure.tools.nrepl.transport.Transport))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; fipp-printer and puget-printer are not loaded in the main `(ns)` form
+;; because they are optional features that take hundreds of milliseconds
+;; to load. Therefore, we delay the require/resolve process of the alternate
+;; pprint features until the user tries to use it.
+
+(def ^:private fipp-printer
+  (delay
+   (do
+     (require 'fipp.edn)
+     (resolve 'fipp.edn/pprint))))
+
 (defn fipp-pprint [object]
-  (fipp/pprint object {:width (or *print-right-margin* 72)}))
+  (@fipp-printer object {:width (or *print-right-margin* 72)}))
+
+(def ^:private puget-printer
+  (delay
+   (do
+     (require 'puget.printer)
+     (resolve 'puget.printer/pprint))))
 
 (defn puget-pprint [object]
-  (puget/pprint object {:width (or *print-right-margin* 72)
-                        :seq-limit *print-length*}))
+  (@puget-printer object {:width (or *print-right-margin* 72)
+                          :seq-limit *print-length*}))
 
 (defn- resolve-pprint-fn
   [sym]
