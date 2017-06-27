@@ -91,15 +91,20 @@
   (try
     (let [orig-sym sym
           sym (get '{& fn, catch try, finally try} sym sym)
+          compiler-special? (special-symbol? orig-sym)
           v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
       (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
                          (:special-form v) v)]
-        (-> m
-            (assoc :name orig-sym)
-            (assoc :url (if (contains? m :url)
-                          (when (:url m)
-                            (str "https://clojure.org/" (:url m)))
-                          (str "https://clojure.org/special_forms#" (:name m)))))))
+        (cond-> m
+          compiler-special? (assoc :name orig-sym)
+
+          ;; & uses fn's info, but is not in `clojure.core`
+          (= '& orig-sym) (dissoc :ns)
+
+          true (assoc :url (if (contains? m :url)
+                             (when (:url m)
+                               (str "https://clojure.org/" (:url m)))
+                             (str "https://clojure.org/special_forms#" (:name m)))))))
     (catch NoClassDefFoundError _)
     (catch Exception _)))
 

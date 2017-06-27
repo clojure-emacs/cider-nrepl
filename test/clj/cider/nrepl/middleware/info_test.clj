@@ -77,16 +77,28 @@
 
 (deftest special-sym-meta-test
   (testing "Resolves all special forms"
-    (let [specials (keys clojure.lang.Compiler/specials)]
+    (let [compiler-specials (keys clojure.lang.Compiler/specials)
+          core-specials (->> (vals (ns-publics 'clojure.core))
+                             (map meta)
+                             (filter :special-form)
+                             (map :name))
+          specials (concat compiler-specials core-specials)]
       (is (every? (fn [[sym {:keys [name special-form]}]]
                     (and (= sym name)
                          (true? special-form)))
                   (map #(vector % (m/special-sym-meta %)) specials)))))
 
-  (testing "Names are correct for symbols #{&, catch, finally}"
+  (testing "Names are correct for `&`, `catch`, `finally`"
     (is (= '& (:name (m/special-sym-meta '&))))
     (is (= 'catch (:name (m/special-sym-meta 'catch))))
     (is (= 'finally (:name (m/special-sym-meta 'finally)))))
+
+  (testing "Name is correct for `clojure.core/import*`"
+    ;; Only compiler special to be namespaced
+    (is (= 'clojure.core/import* (:name (m/special-sym-meta 'clojure.core/import*)))))
+
+  (testing "No ns for &, which uses fn's info"
+    (is (nil? (:ns (m/special-sym-meta '&)))))
 
   (testing "Returns nil for unknown symbol"
     (is (nil? (m/special-sym-meta 'unknown)))))
