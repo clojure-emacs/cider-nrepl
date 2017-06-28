@@ -6,7 +6,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[org.clojure/tools.nrepl "0.2.12"]
+  :dependencies [[org.clojure/tools.nrepl "0.2.13"]
                  [org.tcrawley/dynapath "0.2.5"]
                  ^:source-dep [mvxcvi/puget "1.0.1"]
                  ^:source-dep [fipp "0.6.6"]
