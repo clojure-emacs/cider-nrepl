@@ -51,6 +51,7 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.inspect/wrap-inspect
                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.ns/wrap-ns
+                  cider.nrepl.middleware.ns/wrap-spec
                   cider.nrepl.middleware.pprint/wrap-pprint
                   cider.nrepl.middleware.pprint/wrap-pprint-fn
                   cider.nrepl.middleware.refresh/wrap-refresh
@@ -143,6 +144,7 @@ Middleware        | Op(s)      | Description
 `wrap-inspect`    |`inspect-(start/refresh/pop/push/reset/get-path)` | Inspect a Clojure expression.
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars/ns-path/ns-load-all` | Namespace browsing & loading.
+`wrap-spec`         | `spec-list/spec-form/spec-example` | Spec browsing.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.
 `wrap-pprint-fn`  | | Provides a common pretty-printing interface for other middlewares that need to perform customisable pretty-printing.
 `wrap-refresh`    | `refresh/refresh-all/refresh-clear` | Code reloading.

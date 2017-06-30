@@ -24,6 +24,11 @@
 
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
 
+  :test-selectors {:default (fn [test-meta]
+                              (if-let [min-version (:min-clj-version test-meta)]
+                                (>= (compare (clojure-version) min-version) 0 )
+                                true))}
+  
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
@@ -36,6 +41,7 @@
                                                      cider.nrepl.middleware.inspect/wrap-inspect
                                                      cider.nrepl.middleware.macroexpand/wrap-macroexpand
                                                      cider.nrepl.middleware.ns/wrap-ns
+                                                     cider.nrepl.middleware.spec/wrap-spec
                                                      cider.nrepl.middleware.out/wrap-out
                                                      cider.nrepl.middleware.pprint/wrap-pprint
                                                      cider.nrepl.middleware.pprint/wrap-pprint-fn
@@ -53,7 +59,7 @@
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
-             :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha12"]]
+             :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha17"]]
                    :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}

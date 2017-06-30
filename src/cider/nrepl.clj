@@ -11,6 +11,7 @@
             [cider.nrepl.middleware.inspect]
             [cider.nrepl.middleware.macroexpand]
             [cider.nrepl.middleware.ns]
+            [cider.nrepl.middleware.spec]
             [cider.nrepl.middleware.out]
             [cider.nrepl.middleware.pprint]
             [cider.nrepl.middleware.refresh]
@@ -33,6 +34,7 @@
     cider.nrepl.middleware.info/wrap-info
     cider.nrepl.middleware.inspect/wrap-inspect
     cider.nrepl.middleware.macroexpand/wrap-macroexpand
+    cider.nrepl.middleware.spec/wrap-spec
     cider.nrepl.middleware.ns/wrap-ns
     cider.nrepl.middleware.out/wrap-out
     cider.nrepl.middleware.pprint/wrap-pprint
