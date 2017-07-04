@@ -79,7 +79,28 @@
 (defn info-cljs
   [env symbol ns]
   (some-> (cljs-info/info env symbol ns)
-          (select-keys [:file :line :ns :doc :column :name :arglists])))
+          (select-keys [:file :line :ns :doc :column :name :arglists])
+          (update
+            :file
+            (fn [f]
+              (if (boot-project?)
+                ;; Boot stores files in a temporary directory & clojurescript
+                ;; stores the :file metadata location absolutely instead of
+                ;; relatively to the classpath. This means when doing jump to
+                ;; source in Boot & Clojurescript, you end up at the temp file.
+                ;; This code attempts to find the classpath-relative location
+                ;; of the file, so that it can be opened correctly.
+                (let [path (java.nio.file.Paths/get f (into-array String []))
+                      path-count (.getNameCount path)]
+                  (or
+                    (first
+                      (sequence
+                        (comp (map #(.subpath path % path-count))
+                              (map str)
+                              (filter io/resource))
+                        (range path-count)))
+                    f))
+                f)))))
 
 (defn info-java
   [class member]
