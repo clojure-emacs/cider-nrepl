@@ -12,11 +12,6 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [cider.nrepl.middleware.util.spec :as spec]))
 
-(defn- boot-project? []
-  ;; fake.class.path under boot contains the original directories with source
-  ;; files, see https://github.com/boot-clj/boot/issues/249
-  (not (nil? (System/getProperty "fake.class.path"))))
-
 (defn- boot-class-loader
   "Creates a class-loader that knows original source files paths in Boot project."
   []
@@ -83,7 +78,7 @@
           (update
             :file
             (fn [f]
-              (if (boot-project?)
+              (if (u/boot-project?)
                 ;; Boot stores files in a temporary directory & clojurescript
                 ;; stores the :file metadata location absolutely instead of
                 ;; relatively to the classpath. This means when doing jump to
