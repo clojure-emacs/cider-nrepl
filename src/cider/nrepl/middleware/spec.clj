@@ -31,7 +31,7 @@
                 (let [checkable-part (if (.startsWith ^String spec-symbol-str ":")
                                        (subs spec-symbol-str 1)
                                        spec-symbol-str)]
-                  (re-matches (re-pattern filter-regex) checkable-part)))
+                  (re-find (re-pattern filter-regex) checkable-part)))
               sorted-specs)
       sorted-specs)))
 
