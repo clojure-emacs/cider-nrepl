@@ -14,6 +14,7 @@
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport]
             [cider.nrepl.middleware.util.misc :as u])
   (:import [clojure.lang Compiler$LocalBinding]))
@@ -596,7 +597,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
  #'wrap-debug
  (cljs/requires-piggieback
   {:expects #{"eval"}
-   :requires #{#'pprint/wrap-pprint-fn}
+   :requires #{#'pprint/wrap-pprint-fn #'session/session}
    :handles
    {"debug-input"
     {:doc "Read client input on debug action."

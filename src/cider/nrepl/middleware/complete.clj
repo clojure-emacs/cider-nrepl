@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.complete
   (:require [clojure.string :as s]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [clojure.tools.nrepl.middleware.session :as session]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.misc :as u]
@@ -48,7 +49,8 @@
 (set-descriptor!
  #'wrap-complete
  (cljs/requires-piggieback
-  {:handles
+  {:requires #{#'session/session}
+   :handles
    {"complete"
     {:doc "Return a list of symbols matching the specified (partial) symbol."
      :requires {"ns" "The symbol's namespace"

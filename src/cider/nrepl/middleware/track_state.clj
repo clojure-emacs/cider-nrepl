@@ -11,6 +11,7 @@
             [clojure.tools.namespace.find :as ns-find]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport])
   (:import clojure.lang.Namespace
            clojure.tools.nrepl.transport.Transport
@@ -207,7 +208,7 @@
 (set-descriptor!
  #'wrap-tracker
  (cljs/expects-piggieback
-  {:requires #{#'clojure.tools.nrepl.middleware.session/session}
+  {:requires #{#'session/session}
    :expects ops-that-can-eval
    :handles
    {"track-state-middleware"

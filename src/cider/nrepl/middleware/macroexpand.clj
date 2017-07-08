@@ -8,6 +8,7 @@
             [clojure.pprint :as pp]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
+            [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.reader :as reader]
             [clojure.walk :as walk])
   (:import [clojure.lang Var]))
@@ -229,7 +230,8 @@
 (set-descriptor!
  #'wrap-macroexpand
  (cljs/requires-piggieback
-  {:handles
+  {:requires #{#'session/session}
+   :handles
    {"macroexpand"
     {:doc "Produces macroexpansion of some form using the given expander."
      :requires {"code" "The form to macroexpand."}

@@ -8,7 +8,8 @@
             [cljs-tooling.util.analysis :as cljs-analysis]
             [clojure.tools.nrepl
              [middleware :refer [set-descriptor!]]
-             [misc :refer [response-for]]]))
+             [misc :refer [response-for]]]
+            [clojure.tools.nrepl.middleware.session :as session]))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -112,7 +113,8 @@
 (set-descriptor!
  #'wrap-ns
  (cljs/requires-piggieback
-  {:handles
+  {:requires #{#'session/session}
+   :handles
    {"ns-list"
     {:doc "Return a sorted list of all namespaces."
      :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}

@@ -10,6 +10,7 @@
             [cider.nrepl.middleware.util.meta :as m]
             [cljs-tooling.info :as cljs-info]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+            [clojure.tools.nrepl.middleware.session :as session]
             [cider.nrepl.middleware.util.spec :as spec]))
 
 (defn- boot-class-loader
@@ -290,7 +291,8 @@
 (set-descriptor!
  #'wrap-info
  (cljs/requires-piggieback
-  {:handles
+  {:requires #{#'session/session}
+   :handles
    {"info"
     {:doc "Return a map of information about the specified symbol."
      :requires {"symbol" "The symbol to lookup"
