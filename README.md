@@ -51,7 +51,7 @@ middleware to `:nrepl-middleware` under `:repl-options`.
                   cider.nrepl.middleware.inspect/wrap-inspect
                   cider.nrepl.middleware.macroexpand/wrap-macroexpand
                   cider.nrepl.middleware.ns/wrap-ns
-                  cider.nrepl.middleware.ns/wrap-spec
+                  cider.nrepl.middleware.spec/wrap-spec
                   cider.nrepl.middleware.pprint/wrap-pprint
                   cider.nrepl.middleware.pprint/wrap-pprint-fn
                   cider.nrepl.middleware.refresh/wrap-refresh
