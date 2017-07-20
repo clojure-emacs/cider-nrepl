@@ -1,4 +1,4 @@
-(def VERSION "0.15.0-SNAPSHOT")
+(def VERSION "0.15.0")
 
 (defproject cider/cider-nrepl VERSION
   :description "nREPL middlewares for CIDER"
@@ -28,7 +28,7 @@
                               (if-let [min-version (:min-clj-version test-meta)]
                                 (>= (compare (clojure-version) min-version) 0 )
                                 true))}
-  
+
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl.middleware.apropos/wrap-apropos
