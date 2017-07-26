@@ -120,7 +120,7 @@
   false, or string representations of the above)."
   [handler]
   (fn [{:keys [op pprint] :as msg}]
-    (handler (if (and pprint (= op "eval"))
+    (handler (if (and pprint (#{"eval" "load-file"} op))
                (assoc msg :transport (pprint-transport msg))
                msg))))
 
@@ -128,7 +128,7 @@
  #'wrap-pprint
  (cljs/expects-piggieback
   {:requires #{"clone" #'pr-values #'wrap-pprint-fn}
-   :expects #{"eval"}
+   :expects #{"eval" "load-file"}
    :handles
    {"pprint-middleware"
     {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
