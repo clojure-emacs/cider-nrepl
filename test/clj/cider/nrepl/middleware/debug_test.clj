@@ -46,35 +46,43 @@
       (is (not (#'d/skip-breaks? [2 2 1] code)))
       (is (#'d/skip-breaks? [1 2 3] code)))))
 
+(defn- send-override
+  [value]
+  (fn [trans {:keys [key]}]
+    (deliver (@d/promises key) (str value))))
+
 (defn- send-override-msg
   [trans {:keys [key] :as msg}]
   (let [pro (@d/promises key)]
     (swap! d/promises dissoc key)
-    (deliver pro msg)))
+    (deliver pro (str msg))))
 
-(deftest read-debug
-  (reset! d/promises {})
-  (with-redefs [t/send send-override-msg]
-    (is (:test (#'d/read-debug {:test true} :test-type "prompt")))
-    (is (empty? @d/promises))
-    (are [pred key] (pred (key (#'d/read-debug {:test true} :test-type "prompt")))
-      true? :test
-      :need-debug-input :status
-      string? :key
-      #(= :test-type %) :input-type)))
-
-(defn- send-override
-  [value]
-  (fn [trans {:keys [key]}]
-    (deliver (@d/promises key) value)))
+(defmacro extras
+  "Add :original-ns to map m."
+  [& [m]]
+  `(merge {:original-ns "user"}
+          ~m))
 
 (defmacro locals []
   `~(#'d/sanitize-env &env))
 
 (defmacro add-locals
   "Add locals to map m."
-  [m]
-  `(assoc ~m :locals ~(#'d/sanitize-env &env)))
+  [& [m]]
+  `(assoc ~m
+          :locals ~(#'d/sanitize-env &env)
+          :original-ns "user"))
+
+(deftest read-debug-roundtrip
+  (reset! d/promises {})
+  (with-redefs [t/send send-override-msg]
+    (is (:test (#'d/read-debug (extras {:test true}) :test-type "prompt")))
+    (is (empty? @d/promises))
+    (are [pred key] (pred (key (#'d/read-debug (extras {:test true}) :test-type "prompt")))
+      true? :test
+      :need-debug-input :status
+      string? :key
+      #(= :test-type %) :input-type)))
 
 (deftest read-debug-command
   (reset! @#'d/debugger-message {})
@@ -103,7 +111,7 @@
 (deftest read-debug-command-eval-test
   (let [replies (atom [:eval 100 :next])]
     (with-redefs [t/send (fn [trans {:keys [key]}]
-                           (deliver (@d/promises key) (first @replies))
+                           (deliver (@d/promises key) (str (first @replies)))
                            (swap! replies rest))]
       (is (= 'value (#'d/read-debug-command 'value (add-locals {})))))))
 
@@ -119,17 +127,7 @@
   (reset! @#'d/debugger-message {})
   (is (= 2
          (let [x 1]
-           (#'d/eval-with-locals '(inc x) (locals))))))
-
-(deftest eval-add-locals-exceptions-test
-  (binding [*msg* {:session (atom {})}]
-    (let [e (Exception. "HI")
-          resp (atom nil)]
-      (with-redefs [d/debugger-send #(reset! resp %)]
-        (#'d/eval-with-locals '(do (throw e) true) (locals))
-        (is (= (:status @resp) :eval-error))
-        (is (coll? (:causes @resp)))
-        (is (= "HI" (:message (last (:causes @resp)))))))))
+           (#'d/eval-with-locals '(inc x) (add-locals {}))))))
 
 (deftest initialize-test
   (with-redefs [d/debugger-message (atom nil)]
@@ -157,13 +155,6 @@
     (is (= (#'d/read-debug-eval-expression
              "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc x))
            11))))
-
-(deftest inspect-then-read-command-test
-  (with-redefs [d/debugger-message (atom {:session (atom {})})
-                d/read-debug-command vector]
-    (let [[v m] (#'d/inspect-then-read-command :value {} 32 10)]
-      (is (= v :value))
-      (is (string? (:inspect m))))))
 
 (deftest debug-reader-test
   (is (empty? (remove #(bfkey (meta %))
