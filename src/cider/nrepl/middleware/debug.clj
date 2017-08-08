@@ -16,7 +16,8 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport]
-            [cider.nrepl.middleware.util.misc :as u])
+            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.nrepl :refer [notify-client]])
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;;;; # The Debugger
@@ -198,7 +199,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                               :prompt prompt
                               :input-type type)
                        (update :locals locals-for-message)))
-    @input))
+    (binding [*ns* (find-ns (symbol (:original-ns extras)))]
+      (try (read-string @input)
+           (catch Exception e
+             (let [notification (format "Error reading '%s': %s"
+                                        @input (.getMessage e))]
+               (notify-client *msg* notification :error)
+               notification))
+           (finally (swap! promises dissoc key))))))
 
 (def ^:dynamic *tmp-locals*
   "Many objects don't have reader representation and we cannot simply splice
@@ -336,7 +344,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       :inject     (read-debug-eval-expression "Expression to inject: " extras code)
       :eval       (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
                     (read-debug-command value (assoc extras :debug-value (pr-short return))))
-      :quit       (abort!))))
+      :quit       (abort!)
+      (do (abort!)
+          (throw (ex-info "Invalid input from `read-debug`."
+                          {:response-raw response-raw}))))))
 
 (defn print-step-indented [depth form value]
   (print (apply str (repeat (dec depth) "| ")))
@@ -592,12 +603,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                  (h (maybe-debug msg)))
       "debug-instrumented-defs" (instrumented-defs-reply msg)
       "debug-input" (when-let [pro (@promises (:key msg))]
-                      (swap! promises dissoc  (:key msg))
-                      (try (deliver pro (read-string input))
-                           (catch Exception e
-                             (when-not (realized? pro)
-                               (deliver pro :quit))
-                             (throw e))))
+                      (deliver pro input))
       "init-debugger" (initialize msg)
       ;; else
       (h msg))))
