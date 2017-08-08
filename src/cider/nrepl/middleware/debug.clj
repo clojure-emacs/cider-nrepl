@@ -16,8 +16,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport]
-            [cider.nrepl.middleware.util.misc :as u]
-            [cider.nrepl.middleware.util.nrepl :refer [notify-client]])
+            [cider.nrepl.middleware.util.misc :as u])
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;;;; # The Debugger
@@ -186,6 +185,26 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     (catch java.net.SocketException _
       (reset! debugger-message nil))))
 
+(defmacro try-let
+  "Try binding `sym` to `val` end eval `success-expr` or `error-expr` on error.
+  On error send an eval-error message through `debugger-message` channel."
+  {:style/indent 1}
+  [[sym val] success-expr error-expr]
+  `(let [~sym (try
+                  ~val
+                  ;; Borrowed from `interruptible-eval/evaluate`.
+                  (catch Exception e#
+                    (let [root-ex# (#'clojure.main/root-cause e#)]
+                      (when-not (instance? ThreadDeath root-ex#)
+                        (debugger-send
+                          {:status :eval-error
+                           :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
+                                      (when (coll? causes#) (last causes#)))]})))
+                    ::error))]
+     (if (= ::error ~sym)
+       ~error-expr
+       ~success-expr)))
+
 (defn- read-debug
   "Like `read`, but reply is sent through `debugger-message`.
   type is sent in the message as :input-type."
@@ -201,11 +220,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                        (update :locals locals-for-message)))
     (binding [*ns* (find-ns (symbol (:original-ns extras)))]
       (try (read-string @input)
-           (catch Exception e
-             (let [notification (format "Error reading '%s': %s"
-                                        @input (.getMessage e))]
-               (notify-client *msg* notification :error)
-               notification))
            (finally (swap! promises dissoc key))))))
 
 (def ^:dynamic *tmp-locals*
@@ -226,15 +240,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         (eval `(let ~(vec (mapcat #(list % `(get *tmp-locals* '~%))
                                   (keys *tmp-locals*)))
                  ~form)))
-      (catch Exception e
-        ;; Borrowed from `interruptible-eval/evaluate`.
-        (let [root-ex (#'clojure.main/root-cause e)]
-          (when-not (instance? ThreadDeath root-ex)
-            (debugger-send
-              {:status :eval-error
-               :causes [(let [causes (stacktrace/analyze-causes e (:pprint-fn *msg*))]
-                          (when (coll? causes) (last causes)))]})))
-        nil)
       (finally
         (try
           ;; Restore original ns in case it was changed by the evaluated
@@ -253,32 +258,25 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (declare read-debug-command)
 
-(defn inspect-then-read-command
-  "Inspect `inspect-value` and send it as part of a new `read-debug-command`.
-  This `read-debug-command` is passed `value` and the `extras` map
-  with the result of the inspection `assoc`ed in."
-  [value extras page-size inspect-value]
-  (let [i (binding [*print-length* nil
-                    *print-level* nil]
-            (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
-                 (swap-inspector! @debugger-message)
-                 :rendered pr-str))]
-    (read-debug-command value (assoc extras :inspect i))))
+(defn debug-inspect
+  "Inspect `inspect-value`."
+  [page-size inspect-value]
+  (binding [*print-length* nil
+            *print-level* nil]
+    (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
+         (swap-inspector! @debugger-message)
+         :rendered pr-str)))
 
-(defn stack-then-read-command
-  "Create a dummy exception, send its stack, and read a debugging command.
-  Stack is sent via `debugger-message`, under the :causes entry
-  with the :status entry set to :stack-trace.
-  value and extras are passed unmodified to `read-debug-command`."
-  [value extras]
+(defn debug-stacktrace
+  "Create a dummy exception, send its stack."
+  []
   (debugger-send
-   {:status :stack
-    :causes [{:class "StackTrace"
-              :message "Harmless user-requested stacktrace"
-              :stacktrace (-> (Exception. "Dummy")
-                              (stacktrace/analyze-causes (:pprint-fn *msg*))
-                              last :stacktrace)}]})
-  (read-debug-command value extras))
+    {:status :stack
+     :causes [{:class "StackTrace"
+               :message "Harmless user-requested stacktrace"
+               :stacktrace (-> (Exception. "Dummy")
+                               (stacktrace/analyze-causes (:pprint-fn *msg*))
+                               last :stacktrace)}]}))
 
 (def debug-commands
   {"c" :continue
@@ -321,8 +319,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         response-raw (read-debug extras commands nil)
         extras       (dissoc extras :inspect)
 
-        {:keys [code coord response page-size force?] :or {page-size 32}}
-        (if (map? response-raw) response-raw {:response response-raw})]
+        {:keys [code coord response page-size force?]
+         :or {page-size 32}} (if (map? response-raw)
+                               response-raw
+                               {:response response-raw})]
     (reset! step-in-to-next? false)
     (case response
       :next       value
@@ -334,16 +334,24 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                       value)
       :here       (do (skip-breaks! :before coord (:code extras) force?)
                       value)
-      :stacktrace (stack-then-read-command value extras)
+      :stacktrace (do (debug-stacktrace)
+                      (read-debug-command value extras))
       :trace      (do (skip-breaks! :trace)
                       value)
-      :locals     (->> (:locals extras)
-                       (inspect-then-read-command value extras page-size))
-      :inspect    (->> (read-debug-eval-expression "Inspect value: " extras code)
-                       (inspect-then-read-command value extras page-size))
-      :inject     (read-debug-eval-expression "Expression to inject: " extras code)
-      :eval       (let [return (read-debug-eval-expression "Expression to evaluate: " extras code)]
-                    (read-debug-command value (assoc extras :debug-value (pr-short return))))
+      :locals     (->> (debug-inspect page-size (:locals extras))
+                       (assoc extras :inspect)
+                       (read-debug-command value))
+      :inspect    (try-let [val (read-debug-eval-expression "Inspect value: " extras code)]
+                    (->> (debug-inspect page-size val)
+                         (assoc extras :inspect)
+                         (read-debug-command value))
+                    (read-debug-command value extras))
+      :inject     (try-let [val (read-debug-eval-expression "Expression to inject: " extras code)]
+                    val
+                    (read-debug-command value extras))
+      :eval       (try-let [val (read-debug-eval-expression "Expression to evaluate: " extras code)]
+                    (read-debug-command value (assoc extras :debug-value (pr-short val)))
+                    (read-debug-command value extras))
       :quit       (abort!)
       (do (abort!)
           (throw (ex-info "Invalid input from `read-debug`."
@@ -520,7 +528,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
              (finally (reset! *skip-breaks* old-breaks#))))
         `(expand-break ~form ~extras ~original-form)))))
 
-
+
 ;;; ## Data readers
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
