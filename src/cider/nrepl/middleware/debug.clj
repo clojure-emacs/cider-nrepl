@@ -74,8 +74,7 @@
 
   For :deeper and :before, if we are not in the same code (i.e. we have stepped
   into another instrumented function and code argument doesn't match old code in
-  *skip-breaks*), then return the value of `force?`.
-  "
+  *skip-breaks*), then return the value of `force?`."
   [coordinates code]
   (if (seq coordinates)
     (when-let [{mode :mode skip-coords :coor
@@ -128,7 +127,6 @@
     ;; the user won't be offered the :quit option if there's no *msg*.
     (skip-breaks! :all)))
 
-
 (defn- filter-env
   "Remove internal vars and macro locals with __ in their names."
   [locals]
@@ -148,13 +146,13 @@
 ;;; asking for input.
 
 (defonce ^{:doc "Message used to communicate with the client. Stored by the
- \"init-debugger\" op, and used by `read-debug` to ask for debug input through
+ \"init-debugger\" op, and used by `read-debug-input` to ask for debug input through
  the :need-debug-input status."}
   debugger-message (atom nil))
 
 (defonce ^{:doc "Map atom holding all unprocessed debug inputs.
 This is where the \"debug\" op stores replies received for debug
-input requests. `read-debug` will halt until it finds its input in
+input requests. `read-debug-input` will halt until it finds its input in
 this map (identified by a key), and will `dissoc` it afterwards."}
   promises (atom {}))
 
@@ -205,20 +203,19 @@ this map (identified by a key), and will `dissoc` it afterwards."}
        ~error-expr
        ~success-expr)))
 
-(defn- read-debug
-  "Like `read`, but reply is sent through `debugger-message`.
-  type is sent in the message as :input-type."
-  [extras type prompt]
+(defn- read-debug-input
+  "Like `read`, but reply is sent through `debugger-message`."
+  [dbg-state input-type prompt]
   (let [key (u/random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
-    (debugger-send (-> extras
+    (debugger-send (-> dbg-state
                        (assoc :status :need-debug-input
                               :key key
                               :prompt prompt
-                              :input-type type)
+                              :input-type input-type)
                        (update :locals locals-for-message)))
-    (binding [*ns* (find-ns (symbol (:original-ns extras)))]
+    (binding [*ns* (find-ns (symbol (:original-ns dbg-state)))]
       (try (read-string @input)
            (finally (swap! promises dissoc key))))))
 
@@ -230,13 +227,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn- eval-with-locals
   "`eval` form wrapped in a let of the locals map.
   If an exception is thrown, it is caught and sent to the client, and this
-  function returns nil. `extras` is a metadata map received from `break'."
-  [form extras]
+  function returns nil. `dbg-state` is a metadata map received from `break'."
+  [form dbg-state]
   (let [ns (ns-name *ns*)]
     (try
-      (binding [*tmp-locals* (:locals extras)
+      (binding [*tmp-locals* (:locals dbg-state)
                 ;; evaluate in the instrumentation ns
-                *ns* (find-ns (symbol (:original-ns extras)))]
+                *ns* (find-ns (symbol (:original-ns dbg-state)))]
         (eval `(let ~(vec (mapcat #(list % `(get *tmp-locals* '~%))
                                   (keys *tmp-locals*)))
                  ~form)))
@@ -247,18 +244,18 @@ this map (identified by a key), and will `dissoc` it afterwards."}
           (in-ns ns)
           (catch IllegalStateException _))))))
 
-(defn- read-debug-eval-expression
+(defn- read-eval-expression
   "Read and eval an expression from the client.
-  `extras` is a map received from `break`, and `prompt` is added into
+  `dbg-state` is a map received from `break`, and `prompt` is added into
   the :prompt key."
-  ([prompt extras] (read-debug-eval-expression prompt extras nil))
-  ([prompt extras code]
-   (eval-with-locals (or code (read-debug extras :expression prompt))
-                     extras)))
+  ([prompt dbg-state] (read-eval-expression prompt dbg-state nil))
+  ([prompt dbg-state code]
+   (eval-with-locals (or code (read-debug-input dbg-state :expression prompt))
+                     dbg-state)))
 
 (declare read-debug-command)
 
-(defn debug-inspect
+(defn- debug-inspect
   "Inspect `inspect-value`."
   [page-size inspect-value]
   (binding [*print-length* nil
@@ -267,7 +264,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
          (swap-inspector! @debugger-message)
          :rendered pr-str)))
 
-(defn debug-stacktrace
+(defn- debug-stacktrace
   "Create a dummy exception, send its stack."
   []
   (debugger-send
@@ -294,7 +291,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn read-debug-command
   "Read and take action on a debugging command.
-  Ask for one of the following debug commands using `read-debug`:
+  Ask for one of the following debug commands using `read-debug-input`:
 
     next: Return value.
     continue: Skip breakpoints for the remainder of this eval session.
@@ -311,13 +308,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   provide additional parameters. For instance, if this map has a :code entry,
   its value is used for operations such as :eval, which would otherwise
   interactively prompt for an expression."
-  [value extras]
+  [value dbg-state]
   (let [commands     (cond-> debug-commands
                        (not (map? *msg*))         (dissoc "q")
-                       (nil? (:locals extras))    (dissoc "e" "j" "l" "p")
+                       (nil? (:locals dbg-state))    (dissoc "e" "j" "l" "p")
                        (cljs/grab-cljs-env *msg*) identity)
-        response-raw (read-debug extras commands nil)
-        extras       (dissoc extras :inspect)
+        response-raw (read-debug-input dbg-state commands nil)
+        dbg-state       (dissoc dbg-state :inspect)
 
         {:keys [code coord response page-size force?]
          :or {page-size 32}} (if (map? response-raw)
@@ -330,31 +327,31 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                       value)
       :continue   (do (skip-breaks! :all)
                       value)
-      :out        (do (skip-breaks! :deeper (butlast (:coor extras)) (:code extras) force?)
+      :out        (do (skip-breaks! :deeper (butlast (:coor dbg-state)) (:code dbg-state) force?)
                       value)
-      :here       (do (skip-breaks! :before coord (:code extras) force?)
+      :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
                       value)
       :stacktrace (do (debug-stacktrace)
-                      (read-debug-command value extras))
+                      (read-debug-command value dbg-state))
       :trace      (do (skip-breaks! :trace)
                       value)
-      :locals     (->> (debug-inspect page-size (:locals extras))
-                       (assoc extras :inspect)
+      :locals     (->> (debug-inspect page-size (:locals dbg-state))
+                       (assoc dbg-state :inspect)
                        (read-debug-command value))
-      :inspect    (try-let [val (read-debug-eval-expression "Inspect value: " extras code)]
+      :inspect    (try-let [val (read-eval-expression "Inspect value: " dbg-state code)]
                     (->> (debug-inspect page-size val)
-                         (assoc extras :inspect)
+                         (assoc dbg-state :inspect)
                          (read-debug-command value))
-                    (read-debug-command value extras))
-      :inject     (try-let [val (read-debug-eval-expression "Expression to inject: " extras code)]
+                    (read-debug-command value dbg-state))
+      :inject     (try-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
                     val
-                    (read-debug-command value extras))
-      :eval       (try-let [val (read-debug-eval-expression "Expression to evaluate: " extras code)]
-                    (read-debug-command value (assoc extras :debug-value (pr-short val)))
-                    (read-debug-command value extras))
+                    (read-debug-command value dbg-state))
+      :eval       (try-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
+                    (read-debug-command value (assoc dbg-state :debug-value (pr-short val)))
+                    (read-debug-command value dbg-state))
       :quit       (abort!)
       (do (abort!)
-          (throw (ex-info "Invalid input from `read-debug`."
+          (throw (ex-info "Invalid input from `read-debug-input`."
                           {:response-raw response-raw}))))))
 
 (defn print-step-indented [depth form value]
@@ -430,15 +427,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (def ^:dynamic *do-locals* true)
 
 (defmacro with-initial-debug-bindings
-  "Let-wrap `body` with META__ map containing code, file, line, column etc.
-  META__ is an anaphoric variable available to all breakpoint macros. Ends with
+  "Let-wrap `body` with STATE__ map containing code, file, line, column etc.
+  STATE__ is an anaphoric variable available to all breakpoint macros. Ends with
   __ to avid conflicts with user locals and to signify that it's an internal
   variable which is cleaned in `sanitize-env' along other clojure's
   temporaries."
   {:style/indent 1}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
-  `(let [~'META__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
+  `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
                            (-> {:code code,
                                 ;; Passing clojure.lang.Namespace object
                                 ;; as :original-ns breaks nREPL in bewildering
@@ -457,25 +454,25 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   "Breakpoint function.
   Send the result of form and its coordinates to the client and wait for
   response with `read-debug-command`'."
-  [coor val locals META__]
+  [coor val locals STATE__]
   (cond
-    (skip-breaks? coor (get-in META__ [:msg :code])) val
+    (skip-breaks? coor (get-in STATE__ [:msg :code])) val
     ;; The length of `coor` is a good indicator of current code
     ;; depth.
     (= (:mode @*skip-breaks*) :trace)
-    (do (print-step-indented (count coor) (get-in META__ [:forms coor]) val)
+    (do (print-step-indented (count coor) (get-in STATE__ [:forms coor]) val)
         val)
     ;; Most common case - ask for input.
     :else
-    (read-debug-command val (assoc (:msg META__)
+    (read-debug-command val (assoc (:msg STATE__)
                                    :debug-value (pr-short val)
                                    :coor coor
                                    :locals locals))))
 
 (defn apply-instrumented-maybe
   "Apply var-fn or its instrumented version to args."
-  [var-fn args coor META__]
-  (let [stepin (step-in? var-fn coor (get-in META__ [:msg :code]))]
+  [var-fn args coor STATE__]
+  (let [stepin (step-in? var-fn coor (get-in STATE__ [:msg :code]))]
     (apply (if stepin
              (::instrumented (meta var-fn))
              var-fn)
@@ -486,14 +483,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form {:keys [coor]} original-form]
   (let [val-form (if (looks-step-innable? form)
                    (let [[fn-sym & args] form]
-                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'META__))
+                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'STATE__))
                    form)
         locals (when *do-locals*
                  (sanitize-env &env))]
     ;; Keep original forms in a separate atom to save some code
     ;; size. Unfortunately same trick wouldn't work for locals.
     (swap! *tmp-forms* assoc coor original-form)
-    `(break ~coor ~val-form ~locals ~'META__)))
+    `(break ~coor ~val-form ~locals ~'STATE__)))
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
@@ -505,7 +502,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   Uninteresting forms are symbols that resolve to `clojure.core`
   (taking locals into account), and sexps whose head is present in
   `irrelevant-return-value-forms`. Used as :breakfunction in `tag-form`."
-  [form {:keys [coor] :as extras} original-form]
+  [form {:keys [coor] :as dbg-state} original-form]
   (if (or (and (symbol? form)
                (not (contains? &env form))
                (try
@@ -522,11 +519,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         ;; once. Next time, we need to test the condition again.
         `(let [old-breaks# @*skip-breaks*]
            (when-not ~condition
-             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'META__)) false))
+             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'STATE__)) false))
            (try
-             (expand-break ~form ~extras ~original-form)
+             (expand-break ~form ~dbg-state ~original-form)
              (finally (reset! *skip-breaks* old-breaks#))))
-        `(expand-break ~form ~extras ~original-form)))))
+        `(expand-break ~form ~dbg-state ~original-form)))))
 
 
 ;;; ## Data readers

@@ -73,12 +73,12 @@
           :locals ~(#'d/sanitize-env &env)
           :original-ns "user"))
 
-(deftest read-debug-roundtrip
+(deftest read-debug-input-roundtrip
   (reset! d/promises {})
   (with-redefs [t/send send-override-msg]
-    (is (:test (#'d/read-debug (extras {:test true}) :test-type "prompt")))
+    (is (:test (#'d/read-debug-input (extras {:test true}) :test-type "prompt")))
     (is (empty? @d/promises))
-    (are [pred key] (pred (key (#'d/read-debug (extras {:test true}) :test-type "prompt")))
+    (are [pred key] (pred (key (#'d/read-debug-input (extras {:test true}) :test-type "prompt")))
       true? :test
       :need-debug-input :status
       string? :key
@@ -115,13 +115,13 @@
                            (swap! replies rest))]
       (is (= 'value (#'d/read-debug-command 'value (add-locals {})))))))
 
-(deftest read-debug-eval-expression-test
+(deftest read-eval-expression-test
   (reset! d/debugger-message {})
   (let [x 1]
     (with-redefs [t/send (send-override '(inc 10))]
-      (is (= 11 (#'d/read-debug-eval-expression "" (add-locals {})))))
+      (is (= 11 (#'d/read-eval-expression "" (add-locals {})))))
     (with-redefs [t/send (send-override '(inc x))]
-      (is (= 2 (#'d/read-debug-eval-expression "" (add-locals {})))))))
+      (is (= 2 (#'d/read-eval-expression "" (add-locals {})))))))
 
 (deftest eval-add-locals
   (reset! @#'d/debugger-message {})
@@ -148,11 +148,11 @@
            (#'d/locals-for-message (locals))))))
 
 (deftest eval-expression-with-code-test
-  (is (= (#'d/read-debug-eval-expression
+  (is (= (#'d/read-eval-expression
            "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc 1))
          2))
   (let [x 10]
-    (is (= (#'d/read-debug-eval-expression
+    (is (= (#'d/read-eval-expression
              "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc x))
            11))))
 
