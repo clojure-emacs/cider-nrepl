@@ -207,12 +207,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn- eval-with-locals
   "`eval` form wrapped in a let of the locals map.
-  If an exception is thrown, it is caught and sent to the client, and
-  this function returns nil."
-  [form locals]
+  If an exception is thrown, it is caught and sent to the client, and this
+  function returns nil. `extras` is a metadata map received from `break'."
+  [form extras]
   (let [ns (ns-name *ns*)]
     (try
-      (binding [*tmp-locals* locals]
+      (binding [*tmp-locals* (:locals extras)
+                ;; evaluate in the instrumentation ns
+                *ns* (find-ns (symbol (:original-ns extras)))]
         (eval `(let ~(vec (mapcat #(list % `(get *tmp-locals* '~%))
                                   (keys *tmp-locals*)))
                  ~form)))
@@ -227,18 +229,19 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         nil)
       (finally
         (try
+          ;; Restore original ns in case it was changed by the evaluated
+          ;; code. See https://github.com/clojure-emacs/cider/issues/1604.
           (in-ns ns)
-          ;; See https://github.com/clojure-emacs/cider/issues/1604
           (catch IllegalStateException _))))))
 
 (defn- read-debug-eval-expression
   "Read and eval an expression from the client.
-  extras is a map to be added to the message, and prompt is added into
+  `extras` is a map received from `break`, and `prompt` is added into
   the :prompt key."
   ([prompt extras] (read-debug-eval-expression prompt extras nil))
   ([prompt extras code]
    (eval-with-locals (or code (read-debug extras :expression prompt))
-                     (:locals extras))))
+                     extras)))
 
 (declare read-debug-command)
 
@@ -412,19 +415,23 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   META__ is an anaphoric variable available to all breakpoint macros. Ends with
   __ to avid conflicts with user locals and to signify that it's an internal
   variable which is cleaned in `sanitize-env' along other clojure's
-  temporaries." {:style/indent 1}
+  temporaries."
+  {:style/indent 1}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
-  ;; not the message that led to its evaluation.
-  `(let [~'META__ {:msg ~(let [{:keys [code id file line column]} *msg*]
-                          (-> {:code code, :original-id id, :file file,
-                               :line line, :column column}
-                              ;; There's an nrepl bug where the column starts counting
-                              ;; at 1 if it's after the first line. Since this is a
-                              ;; top-level sexp, a (= col 1) is much more likely to be
-                              ;; wrong than right.
-                              (update :column #(if (= % 1) 0 %))))
-                  :forms @*tmp-forms*}]
+  `(let [~'META__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
+                           (-> {:code code,
+                                ;; Passing clojure.lang.Namespace object
+                                ;; as :original-ns breaks nREPL in bewildering
+                                ;; ways.
+                                :original-id id, :original-ns (str (or ns *ns*)),
+                                :file file, :line line, :column column}
+                               ;; There's an nrepl bug where the column starts counting
+                               ;; at 1 if it's after the first line. Since this is a
+                               ;; top-level sexp, a (= col 1) is much more likely to be
+                               ;; wrong than right.
+                               (update :column #(if (= % 1) 0 %))))
+                   :forms @*tmp-forms*}]
      ~@body))
 
 (defn break
