@@ -332,23 +332,23 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
                       value)
       :stacktrace (do (debug-stacktrace)
-                      (read-debug-command value dbg-state))
+                      (recur value dbg-state))
       :trace      (do (skip-breaks! :trace)
                       value)
       :locals     (->> (debug-inspect page-size (:locals dbg-state))
                        (assoc dbg-state :inspect)
-                       (read-debug-command value))
+                       (recur value))
       :inspect    (try-let [val (read-eval-expression "Inspect value: " dbg-state code)]
                     (->> (debug-inspect page-size val)
                          (assoc dbg-state :inspect)
-                         (read-debug-command value))
-                    (read-debug-command value dbg-state))
+                         (recur value))
+                    (recur value dbg-state))
       :inject     (try-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
                     val
-                    (read-debug-command value dbg-state))
+                    (recur value dbg-state))
       :eval       (try-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
-                    (read-debug-command value (assoc dbg-state :debug-value (pr-short val)))
-                    (read-debug-command value dbg-state))
+                    (recur value (assoc dbg-state :debug-value (pr-short val)))
+                    (recur value dbg-state))
       :quit       (abort!)
       (do (abort!)
           (throw (ex-info "Invalid input from `read-debug-input`."
