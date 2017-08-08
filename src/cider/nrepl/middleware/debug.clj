@@ -536,12 +536,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 ;;; ## Middleware
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
-  [{:keys [code] :as msg}]
+  [{:keys [code ns] :as msg}]
   ;; The best way of checking if there's a #break reader-macro in
   ;; `code` is by reading it, in which case it toggles `has-debug?`.
-  (let [has-debug? (atom false)
-        fake-reader (fn [x] (reset! has-debug? true) nil)]
-    (binding [*data-readers* (->> (repeat fake-reader)
+  (let [has-debug?  (atom false)
+        ;; Don't return nil in reader (https://dev.clojure.org/jira/browse/CLJ-1138)
+        fake-reader (fn [x] (reset! has-debug? true) x)]
+    (binding [*ns* (find-ns (symbol (or ns "user")))
+              *data-readers* (->> (repeat fake-reader)
                                   (interleave '[dbg break light])
                                   (apply assoc *data-readers*))]
       (try
