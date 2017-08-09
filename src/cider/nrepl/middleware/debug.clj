@@ -183,23 +183,24 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     (catch java.net.SocketException _
       (reset! debugger-message nil))))
 
-(defmacro try-let
+(defmacro try-if-let
   "Try binding `sym` to `val` end eval `success-expr` or `error-expr` on error.
   On error send an eval-error message through `debugger-message` channel."
   {:style/indent 1}
   [[sym val] success-expr error-expr]
-  `(let [~sym (try
-                  ~val
-                  ;; Borrowed from `interruptible-eval/evaluate`.
-                  (catch Exception e#
-                    (let [root-ex# (#'clojure.main/root-cause e#)]
-                      (when-not (instance? ThreadDeath root-ex#)
-                        (debugger-send
-                          {:status :eval-error
-                           :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
-                                      (when (coll? causes#) (last causes#)))]})))
-                    ::error))]
-     (if (= ::error ~sym)
+  `(let [error# (gensym)
+         ~sym (try
+                ~val
+                ;; Borrowed from `interruptible-eval/evaluate`.
+                (catch Exception e#
+                  (let [root-ex# (#'clojure.main/root-cause e#)]
+                    (when-not (instance? ThreadDeath root-ex#)
+                      (debugger-send
+                        {:status :eval-error
+                         :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
+                                    (when (coll? causes#) (last causes#)))]})))
+                  error#))]
+     (if (= error# ~sym)
        ~error-expr
        ~success-expr)))
 
@@ -338,15 +339,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       :locals     (->> (debug-inspect page-size (:locals dbg-state))
                        (assoc dbg-state :inspect)
                        (recur value))
-      :inspect    (try-let [val (read-eval-expression "Inspect value: " dbg-state code)]
+      :inspect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
                     (->> (debug-inspect page-size val)
                          (assoc dbg-state :inspect)
                          (recur value))
                     (recur value dbg-state))
-      :inject     (try-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
+      :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
                     val
                     (recur value dbg-state))
-      :eval       (try-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
+      :eval       (try-if-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
                     (recur value (assoc dbg-state :debug-value (pr-short val)))
                     (recur value dbg-state))
       :quit       (abort!)
