@@ -571,7 +571,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                                   (interleave '[dbg break light])
                                   (apply assoc *data-readers*))]
       (try
-        (read-string code)
+        (read-string {:read-cond :allow} code)
         (catch Exception e)))
     (if @has-debug?
       ;; Technically, `instrument-and-eval` acts like a regular eval
