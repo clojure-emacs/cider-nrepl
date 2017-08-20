@@ -66,7 +66,8 @@
                                      (binding [*print-length* (or print-length (get @session #'*print-length*))
                                                *print-level* (or print-level (get @session #'*print-level*))
                                                *print-meta* (or print-meta (get @session #'*print-meta*))
-                                               *print-right-margin* (or print-right-margin (get @session #'*print-right-margin*))]
+                                               ;; pprint/*print-right-margin* is not bound by session middleware
+                                               *print-right-margin* (or print-right-margin *print-right-margin*)]
                                        ((resolve-pprint-fn pprint-fn) object)))))))
 
 (def wrap-pprint-fn-optional-arguments
@@ -92,7 +93,8 @@
     ;; Binding `*msg*` sets the `:id` slot when printing to an nREPL session
     ;; PrintWriter (as created by `pprint-writer`), which the client requires to
     ;; handle the response correctly.
-    (binding [*msg* msg *out* writer]
+    (binding [*msg* msg
+              *out* writer]
       (let [value (cljs/response-value msg response)
             print-fn (if (string? value) println pprint-fn)]
         (print-fn value))))
