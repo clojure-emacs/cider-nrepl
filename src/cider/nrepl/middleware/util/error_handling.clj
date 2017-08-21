@@ -3,13 +3,23 @@
   errors/exceptions that might arise from doing so."
   (:refer-clojure :exclude [error-handler])
   (:require [clojure.set :as set]
-            [clojure.stacktrace :as stacktrace]
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [cider.nrepl.middleware.stacktrace :as cider-stacktrace]
             [clojure.walk :as walk])
   (:import java.io.InputStream
            clojure.lang.RT))
+
+(def ^:private print-cause-trace
+  (delay
+    (do
+      (require 'clojure.stacktrace)
+      (resolve 'clojure.stacktrace/print-cause-trace))))
+
+(def ^:private analyze-causes
+  (delay
+    (do
+      (require 'cider.nrepl.middleware.stacktrace)
+      (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
 
 ;;; UTILITY FUNCTIONS
 
@@ -19,7 +29,7 @@
   used as the value for the :status key."
   [ex & statuses]
   (merge {:ex (str (class ex))
-          :err (with-out-str (stacktrace/print-cause-trace ex))}
+          :err (with-out-str (@print-cause-trace ex))}
          (when statuses {:status (set statuses)})))
 
 (defn pp-stacktrace
@@ -27,7 +37,7 @@
   as `pprint-fn`, then returns a pretty-printed version of the
   exception that can be rendered by CIDER's stacktrace viewer."
   [ex pprint-fn]
-  {:pp-stacktrace (cider-stacktrace/analyze-causes ex pprint-fn)})
+  {:pp-stacktrace (@analyze-causes ex pprint-fn)})
 
 (defn base-error-response
   "Takes a CIDER-nREPL message as `msg`, an Exception `ex`, and a
