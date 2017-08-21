@@ -38,31 +38,8 @@
   (jvm-complete-utils/flush-caches)
   {})
 
-(defn wrap-complete
-  "Middleware that looks up possible functions for the given (partial) symbol."
-  [handler]
-  (with-safe-transport handler
+(defn handle-complete [handler msg]
+  (with-safe-transport handler msg
     "complete" complete-reply
     "complete-doc" doc-reply
     "complete-flush-caches" flush-caches-reply))
-
-(set-descriptor!
- #'wrap-complete
- (cljs/requires-piggieback
-  {:requires #{#'session/session}
-   :handles
-   {"complete"
-    {:doc "Return a list of symbols matching the specified (partial) symbol."
-     :requires {"ns" "The symbol's namespace"
-                "symbol" "The symbol to lookup"
-                "session" "The current session"}
-     :optional {"context" "Completion context for compliment."
-                "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
-     :returns {"completions" "A list of possible completions"}}
-    "complete-doc"
-    {:doc "Retrieve documentation suitable for display in completion popup"
-     :requires {"ns" "The symbol's namespace"
-                "symbol" "The symbol to lookup"}
-     :returns {"completion-doc" "Symbol's documentation"}}
-    "complete-flush-caches"
-    {:doc "Forces the completion backend to repopulate all its caches"}}}))

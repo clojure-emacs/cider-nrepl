@@ -12,9 +12,7 @@
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [clojure.string :as s]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
-            [clojure.tools.nrepl.middleware.session :as session])
+            [clojure.tools.nrepl.middleware.interruptible-eval :as ie])
   (:import [java.io PrintWriter Writer PrintStream OutputStream]))
 
 (declare unsubscribe-session)
@@ -107,18 +105,7 @@
     (swap! tracked-sessions-map dissoc removed)
     {:out-unsubscribe removed}))
 
-(defn wrap-out [handler]
-  (with-safe-transport handler
+(defn handle-out [handler msg]
+  (with-safe-transport handler msg
     "out-subscribe" subscribe-session
     "out-unsubscribe" unsubscribe-session))
-
-(set-descriptor!
- #'wrap-out
- (cljs/expects-piggieback
-  {:requires #{#'session/session}
-   :expects #{"eval"}
-   :handles
-   {"out-subscribe"
-    {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
-    "out-unsubscribe"
-    {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))

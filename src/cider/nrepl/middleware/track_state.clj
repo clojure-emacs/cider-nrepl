@@ -9,9 +9,7 @@
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.java.classpath :as cp]
             [clojure.tools.namespace.find :as ns-find]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport])
   (:import clojure.lang.Namespace
            clojure.tools.nrepl.transport.Transport
@@ -197,19 +195,7 @@
   #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
     "toggle-trace-var" "toggle-trace-ns" "undef"})
 
-(defn wrap-tracker
-  "Middleware that tracks relevant server info and notifies the client."
-  [handler]
-  (fn [{:keys [op] :as msg}]
-    (if (ops-that-can-eval op)
-      (handler (assoc msg :transport (make-transport msg)))
-      (handler msg))))
-
-(set-descriptor!
- #'wrap-tracker
- (cljs/expects-piggieback
-  {:requires #{#'session/session}
-   :expects ops-that-can-eval
-   :handles
-   {"track-state-middleware"
-    {:doc "Enhances the `eval` op by notifying the client of the current REPL state. Currently, only the REPL type (Clojure or ClojureScript) is informed."}}}))
+(defn handle-tracker [handler msg]
+  (if (ops-that-can-eval (:op msg))
+    (handler (assoc msg :transport (make-transport msg)))
+    (handler msg)))

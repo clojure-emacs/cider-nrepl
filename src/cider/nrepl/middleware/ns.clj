@@ -5,11 +5,7 @@
             [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cljs-tooling.info :as cljs-info]
-            [cljs-tooling.util.analysis :as cljs-analysis]
-            [clojure.tools.nrepl
-             [middleware :refer [set-descriptor!]]
-             [misc :refer [response-for]]]
-            [clojure.tools.nrepl.middleware.session :as session]))
+            [cljs-tooling.util.analysis :as cljs-analysis]))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -99,42 +95,11 @@
   [msg]
   {:loaded-ns (ns/load-project-namespaces)})
 
-(defn wrap-ns
-  "Middleware that provides ns listing/browsing functionality."
-  [handler]
-  (with-safe-transport handler
+(defn handle-ns [handler msg]
+  (with-safe-transport handler msg
     "ns-list" ns-list-reply
     "ns-list-vars-by-name" ns-list-vars-by-name-reply
     "ns-vars" ns-vars-reply
     "ns-vars-with-meta" ns-vars-with-meta-reply
     "ns-path" ns-path-reply
     "ns-load-all" ns-load-all-reply))
-
-(set-descriptor!
- #'wrap-ns
- (cljs/requires-piggieback
-  {:requires #{#'session/session}
-   :handles
-   {"ns-list"
-    {:doc "Return a sorted list of all namespaces."
-     :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-     :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
-    "ns-list-vars-by-name"
-    {:doc "Return a list of vars named `name` amongst all namespaces."
-     :requires {"name" "The name to use."}
-     :returns {"status" "done" "var-list" "The list obtained."}}
-    "ns-vars"
-    {:doc "Returns a sorted list of all vars in a namespace."
-     :requires {"ns" "The namespace to browse."}
-     :returns {"status" "done" "ns-vars" "The sorted list of all vars in a namespace."}}
-    "ns-vars-with-meta"
-    {:doc "Returns a map of [var-name] to [var-metadata] for all vars in a namespace."
-     :requires {"ns" "The namespace to use."}
-     :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for all vars in a namespace."}}
-    "ns-path"
-    {:doc "Returns the path to the file containing ns."
-     :requires {"ns" "The namespace to find."}
-     :return {"status" "done" "path" "The path to the file containing ns."}}
-    "ns-load-all"
-    {:doc "Loads all project namespaces."
-     :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}}}))

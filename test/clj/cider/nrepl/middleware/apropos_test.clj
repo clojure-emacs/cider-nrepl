@@ -9,6 +9,12 @@
 (def ^{:doc "Test1. Test2. Test3."} public-var [1 2 3])
 (def ^:private ^{:doc "Can't. See. Me"} private-var [:a :b :c])
 
+(defn find-symbols1 [ns query search-ns docs? privates? case-sensitive? filter-regexps]
+  (find-symbols {:ns ns :query query :search-ns search-ns
+                 :docs? docs? :privates? privates?
+                 :case-sensitive? case-sensitive?
+                 :filter-regexps filter-regexps}))
+
 (deftest var-name-test
   (testing "Returns Var's namespace-qualified name"
     (is (= "clojure.core/conj" (var-name #'clojure.core/conj))))
@@ -52,16 +58,16 @@
 
 (deftest search-test
   (testing "Search results"
-    (is (empty? (find-symbols nil "xxxxxxxx" nil false false false nil))
+    (is (empty? (find-symbols1 nil "xxxxxxxx" nil false false false nil))
         "Failing searches should return empty.")
-    (is (= 1 (count (find-symbols nil "handle-apropos" nil false false false nil)))
+    (is (= 1 (count (find-symbols1 nil "handle-apropos" nil false false false nil)))
         "Search for specific fn should return it."))
 
   (testing "Symbol vs docstring search"
     ;; Search for the same fn by name and docstring
-    (let [x (first (find-symbols nil "handle-apropos" nil false false false nil))
-          y (first (find-symbols nil "Return a sequence of vars whose name matches"
-                                 nil true false false nil))]
+    (let [x (first (find-symbols1 nil "find-symbols" nil false false false nil))
+          y (first (find-symbols1 nil "The search may optionally include private"
+                                  nil true false false nil))]
       (is (= (dissoc x :doc)
              (dissoc y :doc))
           "Other than docstring, returned attributes should be the same.")
@@ -74,17 +80,17 @@
 
   (testing "Includes special forms when `search-ns` is nil"
     (is (not-empty (filter #(= "if" (:name %))
-                           (find-symbols nil "if" nil
+                           (find-symbols1 nil "if" nil
                                          false false false nil)))))
 
   (testing "Includes special forms when `search-ns` is \"clojure.core\""
     (is (not-empty (filter #(= "if" (:name %))
-                           (find-symbols nil "if" "clojure.core"
+                           (find-symbols1 nil "if" "clojure.core"
                                          false false false nil)))))
 
   (testing "Excludes special forms when `search-ns` is some other ns"
     (is (empty? (filter #(= "if" (:name %))
-                        (find-symbols nil "if" "clojure.set"
+                        (find-symbols1 nil "if" "clojure.set"
                                       false false false nil))))))
 
 (use-fixtures :each session/session-fixture)
@@ -94,8 +100,7 @@
           match    (get-in response [:apropos-matches 0])]
       (is (= (:status response) #{"done"}))
       (is (= (:type match) "function"))
-      (is (= (:name match) "cider.nrepl.middleware.apropos/handle-apropos"))
-      (is (.startsWith (:doc match) "Return a sequence of vars"))))
+      (is (= (:name match) "cider.nrepl.middleware.apropos/handle-apropos"))))
 
   (testing "Apropos op, but specialized cases (invoked with prefix argument)"
     (testing "Fails to get a private var because private? unset"
@@ -133,7 +138,7 @@
 (deftest error-handling-test
   (testing "Handles a fake error done via mocked function"
     (with-redefs [cider.nrepl.middleware.apropos/find-symbols
-                  (fn [& args] (throw (Exception. "boom")))]
+                  (fn [args] (throw (Exception. "boom")))]
       (let [response (session/message {:op "apropos" :query "doesn't matter"})]
         (is (= (:status response) #{"apropos-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))

@@ -1,8 +1,7 @@
 (ns cider.nrepl.middleware.trace
   (:require [clojure.string :as s]
             [clojure.tools.trace :as trace]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport] :as err]))
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]))
 
 (defn toggle-trace-var
   [{:keys [ns sym transport] :as msg}]
@@ -30,23 +29,7 @@
           {:ns-status "traced"}))
     {:ns-status "not-found"}))
 
-(defn wrap-trace
-  "Middleware that toggles tracing of a given var."
-  [handler]
-  (with-safe-transport handler
+(defn handle-trace [handler msg]
+  (with-safe-transport handler msg
     "toggle-trace-var" [toggle-trace-var :toggle-trace-error]
     "toggle-trace-ns"  [toggle-trace-ns :toggle-trace-error]))
-
-(set-descriptor!
- #'wrap-trace
- {:handles
-  {"toggle-trace-var"
-   {:doc "Toggle tracing of a given var."
-    :requires {"sym" "The symbol to trace"
-               "ns" "The current namespace"}
-    :returns {"var-status" "The result of tracing operation"
-              "var-name" "The fully-qualified name of the traced/untraced var"}}
-   "toggle-trace-ns"
-   {:doc "Toggle tracing of a given ns."
-    :requires {"ns" "The namespace to trace"}
-    :returns {"ns-status" "The result of tracing operation"}}}})

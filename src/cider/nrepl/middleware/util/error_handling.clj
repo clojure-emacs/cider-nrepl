@@ -155,24 +155,24 @@
 
 (defmacro with-safe-transport
   "This will safely handle all the transport calls mapped out in the
-  `wrap-<middleware>` functions. All checked exceptions will be
-  caught, analyzed by the `cider.nrepl.middleware.stacktrace`
-  middleware, and an error message will be returned to the client with
-  a stacktrace renderable by the default CIDER stacktrace viewer.
-  Takes the default pass-through handler as well as a list of pairings
-  between op names and actions used to process the ops as
-  varargs. Actions can either be expressed as a 2-item vector with the
-  head being the op-action and the tail being the error-action, or if
-  the default error handler is sufficient, then the op name can be
-  paired directly to the op-action.
+  `handle-<middleware>` functions. All checked exceptions will be caught,
+  analyzed by the `cider.nrepl.middleware.stacktrace` middleware, and an error
+  message will be returned to the client with a stacktrace renderable by the
+  default CIDER stacktrace viewer. Takes the default pass-through `handler`
+  current `msg` and a list of pairings between op names and actions used to
+  process the ops as varargs. Actions can either be expressed as a 2-item vector
+  with the head being the op-action and the tail being the error-action, or if
+  the default error handler is sufficient, then the op name can be paired
+  directly to the op-action.
 
-  Actions can be functions, maps, non-associate collections, and
-  single items such as kw's, strings, numbers, etc. The utilization of
-  each type is discussed above in the `selector` method."
-  [pass-through & pairings]
-  `(fn [{op# :op transport# :transport :as msg#}]
+  Actions can be functions, maps, non-associate collections, and single items
+  such as kw's, strings, numbers, etc. The utilization of each type is discussed
+  above in the `selector` method."
+  {:style/indent 2}
+  [handler msg & pairings]
+  `(let [{op# :op transport# :transport :as msg#} ~msg]
      (if-let [action# (get (hash-map ~@pairings) op#)]
        (let [[op-action# err-action#]  (if (vector? action#) action# [action# ::default])]
          (try (transport/send transport# (op-handler op-action# msg#))
               (catch Exception e# (transport/send transport# (error-handler err-action# msg# e#)))))
-       (~pass-through msg#))))
+       (~handler msg#))))

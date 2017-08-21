@@ -2,8 +2,7 @@
   "Undefine a symbol"
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [cider.nrepl.middleware.util.misc :as u]
-   [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
+   [cider.nrepl.middleware.util.misc :as u]))
 
 (defn undef
   [{:keys [ns symbol] :as msg}]
@@ -16,17 +15,6 @@
   [msg]
   {:undef (undef msg)})
 
-(defn wrap-undef
-  "Middleware to undefine a symbol in a namespace."
-  [handler]
-  (with-safe-transport handler
+(defn handle-undef [handler msg]
+  (with-safe-transport handler msg
     "undef" undef-reply))
-
-(set-descriptor!
- #'wrap-undef
- {:handles
-  {"undef"
-   {:doc "Undefine a symbol"
-    :requires {"symbol" "The symbol to undefine"
-               "ns" "The current namespace"}
-    :returns {"status" "done"}}}})

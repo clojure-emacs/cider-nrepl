@@ -85,14 +85,8 @@
     ;; (ins/print-form form1 true)
     (eval form1)))
 
-(defn wrap-enlighten [h]
-  (fn [{:keys [op enlighten] :as msg}]
-    (if (and (= op "eval") enlighten)
-      (h (assoc msg :eval "cider.nrepl.middleware.enlighten/eval-with-enlighten"))
-      (h msg))))
-
-(set-descriptor!
- #'wrap-enlighten
- ;; We need to come before wrap-debug, so that the debugger can still
- ;; work if enlighten-mode is on.
- {:expects #{"eval" #'d/wrap-debug}})
+(defn handle-enlighten
+  [h {:keys [op enlighten] :as msg}]
+  (if (and (= op "eval") enlighten)
+    (h (assoc msg :eval "cider.nrepl.middleware.enlighten/eval-with-enlighten"))
+    (h msg)))

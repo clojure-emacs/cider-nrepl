@@ -9,8 +9,6 @@
             [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.meta :as m]
             [cljs-tooling.info :as cljs-info]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.session :as session]
             [cider.nrepl.middleware.util.spec :as spec]))
 
 (defn- boot-class-loader
@@ -280,31 +278,8 @@
       {:inputs (format-arglists [inputs])})
     (catch Throwable _ {:status :no-eldoc})))
 
-(defn wrap-info
-  "Middleware that looks up info for a symbol within the context of a particular namespace."
-  [handler]
-  (with-safe-transport handler
+(defn handle-info [handler msg]
+  (with-safe-transport handler msg
     "info" info-reply
     "eldoc" eldoc-reply
     "eldoc-datomic-query" eldoc-datomic-query-reply))
-
-(set-descriptor!
- #'wrap-info
- (cljs/requires-piggieback
-  {:requires #{#'session/session}
-   :handles
-   {"info"
-    {:doc "Return a map of information about the specified symbol."
-     :requires {"symbol" "The symbol to lookup"
-                "ns" "The current namespace"}
-     :returns {"status" "done"}}
-    "eldoc"
-    {:doc "Return a map of information about the specified symbol."
-     :requires {"symbol" "The symbol to lookup"
-                "ns" "The current namespace"}
-     :returns {"status" "done"}}
-    "eldoc-datomic-query"
-    {:doc "Return a map containing the inputs of the datomic query."
-     :requires {"symbol" "The symbol to lookup"
-                "ns" "The current namespace"}
-     :returns {"status" "done"}}}}))
