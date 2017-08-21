@@ -209,31 +209,10 @@
 
 ;;; ## Middleware
 
-(defn wrap-stacktrace-reply
-  [{:keys [session transport pprint-fn] :as msg}]
+(defn handle-stacktrace
+  [_ {:keys [session transport pprint-fn] :as msg}]
   (if-let [e (@session #'*e)]
     (doseq [cause (analyze-causes e pprint-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
   (t/send transport (response-for msg :status :done)))
-
-(defn wrap-stacktrace
-  "Middleware that handles stacktrace requests, sending cause and stack frame
-  info for the most recent exception."
-  [handler]
-  (fn [{:keys [op] :as msg}]
-    (case op
-      "stacktrace" (wrap-stacktrace-reply msg)
-      (handler msg))))
-
-;; nREPL middleware descriptor info
-(set-descriptor!
- #'wrap-stacktrace
- (cljs/requires-piggieback
-  {:requires #{#'session #'pprint/wrap-pprint-fn}
-   :expects #{}
-   :handles {"stacktrace"
-             {:doc (str "Return messages describing each cause and stack frame "
-                        "of the most recent exception.")
-              :optional pprint/wrap-pprint-fn-optional-arguments
-              :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))

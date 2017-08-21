@@ -6,9 +6,6 @@
             [cider.nrepl.middleware.util.misc :as u]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.pprint :as pp]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.reader :as reader]
             [clojure.walk :as walk])
   (:import [clojure.lang Var]))
@@ -221,22 +218,6 @@
 (defn macroexpansion-reply [msg]
   {:expansion (macroexpansion msg)})
 
-(defn wrap-macroexpand
-  "Middleware that provides a macroexpand op."
-  [handler]
-  (with-safe-transport handler
+(defn handle-macroexpand [handler msg]
+  (with-safe-transport handler msg
     "macroexpand" [macroexpansion-reply :macroexpand-error]))
-
-(set-descriptor!
- #'wrap-macroexpand
- (cljs/requires-piggieback
-  {:requires #{#'session/session}
-   :handles
-   {"macroexpand"
-    {:doc "Produces macroexpansion of some form using the given expander."
-     :requires {"code" "The form to macroexpand."}
-     :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
-                "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
-                "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
-                "print-meta" "If truthy, also print metadata of forms."}
-     :returns {"expansion" "The macroexpanded form."}}}}))

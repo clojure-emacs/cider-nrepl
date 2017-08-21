@@ -1,9 +1,6 @@
 (ns cider.nrepl.middleware.spec
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.spec :as spec-utils]
-            [clojure.tools.nrepl
-             [middleware :refer [set-descriptor!]]
-             [misc :refer [response-for]]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [clojure.string :as str]
             [clojure.walk :as walk]
@@ -95,32 +92,8 @@
 (defn spec-example-reply [msg]
   {:spec-example (spec-example (:spec-name msg))})
 
-(defn wrap-spec
-  "Middleware that provides clojure.spec browsing functionality."
-  [handler]
-  (with-safe-transport handler
+(defn handle-spec [handler msg]
+  (with-safe-transport handler msg
     "spec-list" spec-list-reply
     "spec-form" spec-form-reply
     "spec-example" spec-example-reply))
-
-(set-descriptor!
- #'wrap-spec
- (cljs/requires-piggieback
-  {:handles
-   {"spec-list"
-    {:doc "Return a sorted list of all specs in the registry"
-     :returns {"status" "done"
-               "spec-list" "The sorted list of all specs in the registry with their descriptions"}
-     :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
-
-    "spec-form"
-    {:doc "Return the form of a given spec"
-     :requires {"spec-name" "The spec namespaced keyword we are looking for"}
-     :returns {"status" "done"
-               "spec-form" "The spec form"}}
-
-    "spec-example"
-    {:doc "Return a string with a pretty printed example for a spec"
-     :requires {"spec-name" "The spec namespaced keyword we want the example for"}
-     :returns {"status" "done"
-               "example" "The pretty printed spec example string"}}}}))

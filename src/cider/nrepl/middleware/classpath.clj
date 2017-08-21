@@ -9,15 +9,6 @@
 (defn classpath-reply [msg]
   {:classpath (classpath)})
 
-(defn wrap-classpath
-  "Middleware that provides the java classpath."
-  [handler]
-  (with-safe-transport handler
+(defn handle-classpath [handler msg]
+  (with-safe-transport handler msg
     "classpath" classpath-reply))
-
-(set-descriptor!
- #'wrap-classpath
- {:handles
-  {"classpath"
-   {:doc "Obtain a list of entries in the Java classpath."
-    :returns {"classpath" "A list of the Java classpath entries."}}}})

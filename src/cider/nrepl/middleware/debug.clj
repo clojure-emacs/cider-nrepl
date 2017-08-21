@@ -601,46 +601,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
        (response-for msg :status :done :list)
        (transport/send (:transport msg))))
 
-(defn wrap-debug [h]
-  (fn [{:keys [op input session] :as msg}]
-    (case op
-      "eval" (do (when (instance? clojure.lang.Atom session)
-                   (swap! session assoc #'*skip-breaks* (atom nil)))
-                 (h (maybe-debug msg)))
-      "debug-instrumented-defs" (instrumented-defs-reply msg)
-      "debug-input" (when-let [pro (@promises (:key msg))]
-                      (deliver pro input))
-      "init-debugger" (initialize msg)
-      ;; else
-      (h msg))))
-
-(set-descriptor!
- #'wrap-debug
- (cljs/requires-piggieback
-  {:expects #{"eval"}
-   :requires #{#'pprint/wrap-pprint-fn #'session/session}
-   :handles
-   {"debug-input"
-    {:doc "Read client input on debug action."
-     :requires {"input" "The user's reply to the input request."}
-     :returns {"status" "done"}}
-    "init-debugger"
-    {:doc "Initialize the debugger so that `breakpoint` works correctly.
-This usually does not respond immediately. It sends a response when a
-breakpoint is reached or when the message is discarded."
-     :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-    "debug-instrumented-defs"
-    {:doc "Return an alist of definitions currently thought to be instrumented on each namespace.
-Due to Clojure's versatility, this could include false postives, but
-there will not be false negatives. Instrumentations inside protocols
-are not listed."
-     :returns {"status" "done"
-               "list" "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
-    "debug-middleware"
-    {:doc "Debug a code form or fall back on regular eval."
-     :requires {"id" "A message id that will be responded to when a breakpoint is reached."
-                "code" "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-                "file" "File where the code is located."
-                "ns" "Passed to \"eval\"."
-                "point" "Position in the file where the provided code begins."}
-     :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
+(defn handle-debug
+  [handler {:keys [op input session] :as msg}]
+  (case op
+    "eval" (do (when (instance? clojure.lang.Atom session)
+                 (swap! session assoc #'*skip-breaks* (atom nil)))
+               (handler (maybe-debug msg)))
+    "debug-instrumented-defs" (instrumented-defs-reply msg)
+    "debug-input" (when-let [pro (@promises (:key msg))]
+                    (deliver pro input))
+    "init-debugger" (initialize msg)
+    ;; else
+    (handler msg)))

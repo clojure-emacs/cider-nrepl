@@ -7,10 +7,8 @@
             [cider.nrepl.middleware.util.namespace :as ns]
             [clojure.pprint :as pp]
             [clojure.test :as test]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-            [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]))
 
@@ -233,10 +231,7 @@
             ~@body)
           (alter-meta! session# dissoc :thread :eval-msg))))))
 
-(defn handle-test
-  "Run tests in the specified namespace and return results. This accepts a set
-  of `tests` to be run; if nil, runs all tests. Results are cached for exception
-  retrieval and to enable re-running of failed/erring tests."
+(defn handle-test-op
   [{:keys [ns tests session transport] :as msg}]
   (with-interruptible-eval msg
     (if-let [ns (ns/ensure-namespace ns)]
@@ -247,11 +242,7 @@
       (t/send transport (response-for msg :status :namespace-not-found)))
     (t/send transport (response-for msg :status :done))))
 
-(defn handle-test-all
-  "Run all tests in the project. If `load?` is truthy, all project namespaces
-  are loaded; otherwise, only tests in presently loaded namespaces are run.
-  Results are cached for exception retrieval and to enable re-running of
-  failed/erring tests."
+(defn handle-test-all-op
   [{:keys [load? session transport] :as msg}]
   (with-interruptible-eval msg
     (let [nss (zipmap (->> (if load?
@@ -264,9 +255,7 @@
       (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
 
-(defn handle-retest
-  "Rerun all tests that did not pass when last run. Results are cached for
-  exception retrieval and to enable re-running of failed/erring tests."
+(defn handle-retest-op
   [{:keys [session transport] :as msg}]
   (with-interruptible-eval msg
     (let [nss (reduce (fn [ret [ns tests]]
@@ -280,10 +269,7 @@
       (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
 
-(defn handle-stacktrace
-  "Return exception cause and stack frame info for an erring test via the
-  `stacktrace` middleware. The error to be retrieved is referenced by namespace,
-  var name, and assertion index within the var."
+(defn handle-stacktrace-op
   [{:keys [ns var index session transport pprint-fn] :as msg}]
   (with-interruptible-eval msg
     (let [[ns var] (map u/as-sym [ns var])]
@@ -299,28 +285,11 @@
                                @@def
                                (@#'ie/configure-executor))))
 
-(defn wrap-test
-  "Middleware that handles testing requests"
-  [handler & configuration]
+(defn handle-test [handler msg & configuration]
   (let [executor (:executor configuration @default-executor)]
-    (fn [{:keys [op] :as msg}]
-      (case op
-        "test"            (handle-test (assoc msg :executor executor))
-        "test-all"        (handle-test-all (assoc msg :executor executor))
-        "test-stacktrace" (handle-stacktrace (assoc msg :executor executor))
-        "retest"          (handle-retest (assoc msg :executor executor))
-        (handler msg)))))
-
-;; nREPL middleware descriptor info
-(set-descriptor!
- #'wrap-test
- {:requires #{#'session #'pprint/wrap-pprint-fn}
-  :expects #{#'pr-values}
-  :handles {"test"            {:doc (:doc (meta #'handle-test))
-                               :optional pprint/wrap-pprint-fn-optional-arguments}
-            "test-all"        {:doc (:doc (meta #'handle-test-all))
-                               :optional pprint/wrap-pprint-fn-optional-arguments}
-            "test-stacktrace" {:doc (:doc (meta #'handle-stacktrace))
-                               :optional pprint/wrap-pprint-fn-optional-arguments}
-            "retest"          {:doc (:doc (meta #'handle-retest))
-                               :optional pprint/wrap-pprint-fn-optional-arguments}}})
+    (case (:op msg)
+      "test"            (handle-test-op (assoc msg :executor executor))
+      "test-all"        (handle-test-all-op (assoc msg :executor executor))
+      "test-stacktrace" (handle-stacktrace-op (assoc msg :executor executor))
+      "retest"          (handle-retest-op (assoc msg :executor executor))
+      (handler msg))))

@@ -41,7 +41,7 @@
   and may be case senstive. Types returned correspond to Apropos types.
   Docstring search returns the full doc; symbol search returns an abbreviated
   version."
-  [ns query search-ns docs? privates? case-sensitive? filter-regexps]
+  [{:keys [ns query search-ns docs? privates? case-sensitive? filter-regexps]}]
   (let [ns-vars     (if privates? ns-interns ns-publics)
         var-doc*    (if docs? var-doc (partial var-doc 1))
         search-prop (if docs? var-doc var-name)
@@ -61,24 +61,9 @@
 
 ;;; ## Middleware
 
-(defn handle-apropos
-  "Return a sequence of vars whose name matches the query pattern, or if
-  specified, having the pattern in their docstring."
-  [{:keys [ns query search-ns docs? privates? case-sensitive? filter-regexps] :as msg}]
-  {:apropos-matches (find-symbols ns query search-ns docs? privates? case-sensitive? filter-regexps)})
+(defn apropos [msg]
+  {:apropos-matches (find-symbols msg)})
 
-(defn wrap-apropos
-  "Middleware that handles apropos requests"
-  [handler]
-  (with-safe-transport handler
-    "apropos" handle-apropos))
-
-;; nREPL middleware descriptor info
-(set-descriptor!
- #'wrap-apropos
- {:handles
-  {"apropos"
-   {:doc (:doc (meta #'handle-apropos))
-    :requires {"query" "The search query."}
-    :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
-    :returns {"apropos-matches" "A list of matching symbols."}}}})
+(defn handle-apropos [handler msg]
+  (with-safe-transport handler msg
+    "apropos" apropos))

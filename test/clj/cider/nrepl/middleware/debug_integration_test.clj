@@ -25,7 +25,7 @@
       (apply prn args))))
 
 (defn debug-handler []
-  (nrepl.server/default-handler #'d/wrap-debug))
+  (nrepl.server/default-handler #'cider.nrepl/wrap-debug))
 
 (defonce next-id
   (let [id (atom 0)]

@@ -1,7 +1,6 @@
 (ns cider.nrepl.middleware.resource
   (:require [clojure.java.io :as io]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport] :as err]
+            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [compliment.sources.resources :as r]
             [compliment.core :as jvm-complete]))
 
@@ -21,22 +20,7 @@
 (defn resources-list-reply [msg]
   {:resources-list (resources-list msg)})
 
-(defn wrap-resource
-  "Middleware that provides the path to resource."
-  [handler]
-  (with-safe-transport handler
+(defn handle-resource [handler msg]
+  (with-safe-transport handler msg
     "resource" resource-reply
     "resources-list" resources-list-reply))
-
-(set-descriptor!
- #'wrap-resource
- {:handles
-  {"resource"
-   {:doc "Obtain the path to a resource."
-    :requires {"name" "The name of the resource in question."}
-    :returns {"resource-path" "The file path to a resource."}}
-   "resources-list"
-   {:doc "Obtain a list of all resources on the classpath."
-    :returns {"resources-list" "The list of resources."}
-    :optional {"context" "Completion context for compliment."
-               "prefix" "Prefix to filter out resources."}}}})
