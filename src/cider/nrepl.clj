@@ -52,7 +52,7 @@
     `(do
        (defn ~name ~doc [~'h]
          (fn [~'msg]
-           (if ~cond
+           (if (and ~cond (not (:inhibit-cider-middleware ~'msg)))
              (run-delayed-handler ~handler-fn ~'h ~'msg)
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
