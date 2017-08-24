@@ -126,8 +126,8 @@
   finds the erring test fixture in the stacktrace and binds it as the current
   test var. Test count is decremented to indicate that no tests were run."
   [ns e]
-  (let [frame (->> (concat (::clojure.test/once-fixtures (meta ns))
-                           (::clojure.test/each-fixtures (meta ns)))
+  (let [frame (->> (concat (:clojure.test/once-fixtures (meta ns))
+                           (:clojure.test/each-fixtures (meta ns)))
                    (map (partial stack-frame e))
                    (filter identity)
                    (first))
