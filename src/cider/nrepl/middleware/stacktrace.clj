@@ -10,6 +10,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
             [clojure.java.io :as io]
+            [clojure.set :as set]
             [clojure.tools.namespace.find :as nsfind])
   (:import (clojure.lang Compiler$CompilerException)))
 
@@ -187,6 +188,50 @@
   (when-let [data (ex-data e)]
     (into {} (filter (comp (complement ex-data-blacklist) key) data))))
 
+(def spec-abbrev
+  (delay
+    (if (try (require 'clojure.spec) true
+             (catch Throwable _ false))
+      (resolve 'clojure.spec/abbrev)
+      (if (try (require 'clojure.spec.alpha) true
+               (catch Throwable _ false))
+        (resolve 'clojure.spec.alpha/abbrev)
+        #'identity))))
+
+(defn prepare-spec-data
+  "Prepare spec problems for display in user stacktraces.
+  Take in a map `ed` as returned by `clojure.spec/explain-data` and return a map
+  of pretty printed problems. The content of the returned map is modeled after
+  `clojure.spec/explain-printer`."
+  [ed pprint-fn]
+  (let [pp-str #(with-out-str (pprint-fn %))
+        problems (sort-by #(count (:path %))
+                          (or (:clojure.spec/problems ed)
+                              (:clojure.spec.alpha/problems ed)))]
+    {:spec (pr-str (or (:clojure.spec/spec ed)
+                       (:clojure.spec.alpha/spec ed)))
+     :value (pp-str (or (:clojure.spec/value ed)
+                        (:clojure.spec.alpha/value ed)))
+     :problems (for [{:keys [in val
+                             pred reason
+                             via path]
+                      :as prob} problems]
+                 (->> {:in (when-not (empty? in) (pr-str in))
+                       :val (pp-str val)
+                       :predicate (pr-str (@spec-abbrev pred))
+                       :reason reason ; <- always nil or string
+                       :spec (when-not (empty? via) (pr-str (last via)))
+                       :at (when-not (empty? path) (pr-str path))
+                       :extra (let [extras (->> #{:in :val :pred :reason :via :path
+                                                  :clojure.spec/failure
+                                                  :clojure.spec.alpha/failure}
+                                                (set/difference (set (keys prob)))
+                                                (select-keys prob))]
+                                (when-not (empty? extras)
+                                  (pp-str extras)))}
+                      (filter clojure.core/val)
+                      (into {})))}))
+
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
@@ -195,12 +240,20 @@
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
     (if-let [data (filtered-ex-data e)]
-      (assoc m :data (with-out-str (pprint-fn data)))
+      (if (or (:clojure.spec/failure data)
+              (:clojure.spec.alpha/failure data))
+        (assoc m
+               :message "Spec assertion failed."
+               :spec (prepare-spec-data data pprint-fn))
+        (assoc m
+               :data (with-out-str (pprint-fn data))))
       m)))
 
 (defn analyze-causes
   "Return the cause chain beginning with the thrown exception, with stack frames
-  for each."
+  for each. For `ex-info` exceptions response contains :data slot with pretty
+  printed data. For clojure.spec asserts, :spec slot contains a map of pretty
+  printed components describing spec failures."
   [e pprint-fn]
   (->> e
        (iterate #(.getCause ^Exception %))
