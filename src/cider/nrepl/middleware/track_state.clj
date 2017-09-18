@@ -13,7 +13,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.session :as session]
             [clojure.tools.nrepl.transport :as transport])
-  (:import clojure.lang.Namespace
+  (:import (clojure.lang Namespace MultiFn)
            clojure.tools.nrepl.transport.Transport
            java.net.SocketException))
 
@@ -22,15 +22,28 @@
 
 ;;; Auxiliary
 
+(defn- var-meta-with-fn
+  "Like clojure.core/meta but adds {:fn true} for functions and macros.
+  Should only be used for vars."
+  [var]
+  (cond-> (meta var)
+    (or (fn? @var) (instance? MultiFn @var)) (assoc :fn true)))
+
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
   [refers]
   (->> refers
        (into {} (keep (fn [[sym the-var]]
                         (when (var? the-var)
-                          (let [{the-ns :ns :as the-meta} (meta the-var)]
+                          (let [{the-ns :ns :as the-meta} (var-meta-with-fn the-var)]
                             (when-not (identical? the-ns clojure-core)
                               [sym (m/relevant-meta the-meta)]))))))))
+
+(defn- cljs-meta-with-fn
+  "Like (:meta m) but adds {:fn true} if (:fn-var m) is true."
+  [m]
+  (cond-> (:meta m)
+    (:fn-var m) (assoc :fn true)))
 
 ;;; Namespaces
 (defn ns-as-map [object]
@@ -46,7 +59,8 @@
       {:aliases (merge require-macros requires)
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
-       :interns (merge (u/update-vals #(dissoc (m/relevant-meta (:meta %)) :test) defs)
+       :interns (merge (u/update-vals #(dissoc (m/relevant-meta (cljs-meta-with-fn %)) :test)
+                                      defs)
                        ;; FIXME: `uses` and `use-macros` are maps from
                        ;; symbols to namespace names:
                        ;;     {log reagent.debug, dbg reagent.debug}
@@ -62,7 +76,7 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (u/update-vals #(m/relevant-meta (meta %))))}))
+                   (u/update-vals #(m/relevant-meta (var-meta-with-fn %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.
