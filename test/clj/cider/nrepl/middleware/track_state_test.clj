@@ -57,11 +57,25 @@
           (is (= repl-type :cljs))
           (is (map? changed-namespaces)))))))
 
+(def ^:private fn-test-var nil)
+(def ^:private fn-test-def-fn (fn []))
+(defn- fn-test-defn-fn [])
+(defmulti fn-test-multi (fn [x]))
+
 (deftest filter-core-and-get-meta-test
   (is (= (st/filter-core-and-get-meta {'and #'and, 'b #'map, 'c #'deftest})
          '{c {:macro "true",
-              :arglists "([name & body])"
+              :arglists "([name & body])",
+              :fn "true",
               :doc "\"Defines a test function with no arguments.  Test functions may call\\n  other tests, so tests may be composed.  If you compose tests, you\\n  should also define a function named test-ns-hook; run-tests will\\n  call test-ns-hook instead of testing all vars.\\n\\n  Note: Actually, the test body goes in the :test metadata on the var,\\n  and the real function (the value of the var) calls test-var on\\n  itself.\\n\\n  When *load-tests* is false, deftest is ignored.\""}}))
+  (is (= (map (comp :fn
+                    (st/filter-core-and-get-meta
+                     {'fn-test-var #'fn-test-var,
+                      'fn-test-def-fn #'fn-test-def-fn,
+                      'fn-test-defn-fn #'fn-test-defn-fn
+                      'fn-test-multi #'fn-test-multi}))
+              '[fn-test-var fn-test-def-fn fn-test-defn-fn fn-test-multi])
+         [nil "true" "true" "true"]))
   (is (-> (find-ns 'clojure.core)
           ns-map st/filter-core-and-get-meta
           seq not)))
@@ -97,14 +111,18 @@
 (deftest ns-as-map-cljs-test
   (let [cljs-ns {:use-macros {'sym-0 #'test-fn}
                  :uses {'sym-1 #'ns-as-map-cljs-test}
-                 :defs {'sym-2 #'ns-as-map-cljs-test}
+                 :defs {'sym-2 #'ns-as-map-cljs-test
+                        'a-fn {:fn-var true}
+                        'a-var {}}
                  :require-macros {'sym-3 'some-namespace}
                  :requires {'sym-4 'some-namespace}}
         {:keys [aliases interns]} (st/ns-as-map cljs-ns)]
     (is (= aliases '{sym-3 some-namespace sym-4 some-namespace}))
     (is (= interns '{sym-0 {:arglists ([]) :macro true}
                      sym-1 {:arglists ([])}
-                     sym-2 {}}))))
+                     sym-2 {}
+                     a-var {}
+                     a-fn {:fn "true"}}))))
 
 (deftest calculate-used-aliases-test
   (is (contains? (st/merge-used-aliases some-ns-map nil ns-name)
