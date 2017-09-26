@@ -318,7 +318,7 @@
       (render-ln "Contents: ")
       (render-indexed-values obj)))
 
-(defmethod inspect :array [inspector ^"[Ljava.lang.Object;" obj]
+(defmethod inspect :array [inspector obj]
   (-> inspector
       (render-labeled-value "Class" (class obj))
       (render-labeled-value "Count" (alength obj))
