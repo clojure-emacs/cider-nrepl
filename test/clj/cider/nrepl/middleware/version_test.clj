@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.version-test
-  (:require [cider.nrepl.middleware.version :as v]
+  (:require [cider.nrepl.version :as v]
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 

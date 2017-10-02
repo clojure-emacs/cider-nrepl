@@ -3,9 +3,9 @@
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
             [clojure.tools.nrepl.server :as nrepl-server]
+            [cider.nrepl.version :as version]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.middleware.version]
             [cider.nrepl.print-method]))
 
 (def DELAYS (atom nil))
@@ -60,35 +60,52 @@
 
 ;;; Wrappers
 
-(def-wrapper wrap-debug cider.nrepl.middleware.debug/handle-debug
-  #{"eval"}
-  (cljs/requires-piggieback
-    {:doc "Provide instrumentation and debugging functionality."
-     :expects  #{"eval"}
-     :requires #{#'pprint/wrap-pprint-fn #'session}
-     :handles {"debug-input"
-               {:doc "Read client input on debug action."
-                :requires {"input" "The user's reply to the input request."}
-                :returns  {"status" "done"}}
-               "init-debugger"
-               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
-                :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-               "debug-instrumented-defs"
-               {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed."
-                :returns {"status" "done"
-                          "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
-               "debug-middleware"
-               {:doc "Debug a code form or fall back on regular eval."
-                :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
-                           "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-                           "file"  "File where the code is located."
-                           "ns"    "Passed to \"eval\"."
-                           "point" "Position in the file where the provided code begins."}
-                :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
+(def wrap-pprint-fn-optional-arguments
+  "Common pprint arguments for CIDER's middleware."
+  {"pprint-fn" "The namespace-qualified name of a single-arity function to use for pretty-printing. Defaults to `clojure.pprint/pprint`."
+   "print-length" "Value to bind to `*print-length*` when pretty-printing. Defaults to the value bound in the current REPL session."
+   "print-level" "Value to bind to `*print-level*` when pretty-printing. Defaults to the value bound in the current REPL session."
+   "print-meta" "Value to bind to `*print-meta*` when pretty-printing. Defaults to the value bound in the current REPL session."
+   "print-right-margin" "Value to bind to `clojure.pprint/*print-right-margin*` when pretty-printing. Defaults to the value bound in the current REPL session."})
 
-(def-wrapper wrap-enlighten cider.nrepl.middleware.enlighten/handle-enlighten
-  :enlighten
-  {:expects #{"eval" #'wrap-debug}})
+(def-wrapper wrap-pprint-fn cider.nrepl.middleware.pprint/handle-pprint-fn
+  (fn [msg] true)
+  {:doc "Middleware that provides a common interface for other middlewares that
+         need to perform customisable pretty-printing.
+
+         A namespace-qualified name of the function to be used for printing can
+         be optionally passed in the `:pprint-fn` slot, the default value being
+         `clojure.pprint/pprint`.
+
+         The `:pprint-fn` slot will be replaced with a closure that calls the
+         given printing function with `*print-length*`, `*print-level*`,
+         `*print-meta*`, and `clojure.pprint/*print-right-margin*` bound to the
+         values of the `:print-length`, `:print-level`, `:print-meta`, and
+         `:print-right-margin` slots respectively.
+
+         Middlewares further down the stack can then look up the `:pprint-fn`
+         slot and call it where necessary."
+   :requires #{#'session}})
+
+(def-wrapper wrap-pprint cider.nrepl.middleware.pprint/handle-pprint
+  #{"eval" "load-file"}
+  (cljs/expects-piggieback
+    {:doc "Middleware that adds a pretty-printing option to the eval op.
+           Passing a non-nil value in the `:pprint` slot will cause eval to call
+           clojure.pprint/pprint on its result. The `:right-margin` slot can be
+           used to bind `*clojure.pprint/*print-right-margin*` during the
+           evaluation. (N.B., the encoding used to transmit the request map
+           `msg` across the wire will convert presumably falsey values into
+           truthy values. If you don't want something to be pretty printed,
+           remove the `:pprint` key entirely from your request map, don't try
+           and set the value to nil, false, or string representations of the
+           above)."
+     :requires #{"clone" #'pr-values #'wrap-pprint-fn}
+     :expects #{"eval" "load-file"}
+     :handles {"pprint-middleware"
+               {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
+                :optional (merge wrap-pprint-fn-optional-arguments
+                                 {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:doc "Middleware that handles apropos requests"
@@ -124,9 +141,39 @@
                "complete-flush-caches"
                {:doc "Forces the completion backend to repopulate all its caches"}}}))
 
+(def-wrapper wrap-debug cider.nrepl.middleware.debug/handle-debug
+  #{"eval"}
+  (cljs/requires-piggieback
+    {:doc "Provide instrumentation and debugging functionality."
+     :expects  #{"eval"}
+     :requires #{#'wrap-pprint-fn #'session}
+     :handles {"debug-input"
+               {:doc "Read client input on debug action."
+                :requires {"input" "The user's reply to the input request."}
+                :returns  {"status" "done"}}
+               "init-debugger"
+               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
+                :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+               "debug-instrumented-defs"
+               {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed."
+                :returns {"status" "done"
+                          "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
+               "debug-middleware"
+               {:doc "Debug a code form or fall back on regular eval."
+                :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
+                           "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
+                           "file"  "File where the code is located."
+                           "ns"    "Passed to \"eval\"."
+                           "point" "Position in the file where the provided code begins."}
+                :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
+
+(def-wrapper wrap-enlighten cider.nrepl.middleware.enlighten/handle-enlighten
+  :enlighten
+  {:expects #{"eval" #'wrap-debug}})
+
 (def-wrapper wrap-format cider.nrepl.middleware.format/handle-format
   {:doc "Middleware providing support for formatting Clojure code and EDN data."
-   :requires #{#'pprint/wrap-pprint-fn}
+   :requires #{#'wrap-pprint-fn}
    :handles {"format-code"
              {:doc "Reformats the given Clojure code, returning the result as a string."
               :requires {"code" "The code to format."}
@@ -249,10 +296,10 @@
 
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:doc "Refresh middleware."
-   :requires #{"clone" #'pprint/wrap-pprint-fn}
+   :requires #{"clone" #'wrap-pprint-fn}
    :handles {"refresh"
              {:doc "Reloads all changed files in dependency order."
-              :optional (merge pprint/wrap-pprint-fn-optional-arguments
+              :optional (merge wrap-pprint-fn-optional-arguments
                                {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
                                 "before" "The namespace-qualified name of a zero-arity function to call before reloading."
                                 "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
@@ -262,7 +309,7 @@
                         "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
              "refresh-all"
              {:doc "Reloads all files in dependency order."
-              :optional (merge pprint/wrap-pprint-fn-optional-arguments
+              :optional (merge wrap-pprint-fn-optional-arguments
                                {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
                                 "before" "The namespace-qualified name of a zero-arity function to call before reloading."
                                 "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
@@ -305,28 +352,28 @@
   (cljs/requires-piggieback
     {:doc "Middleware that handles stacktrace requests, sending
            cause and stack frame info for the most recent exception."
-     :requires #{#'session #'pprint/wrap-pprint-fn}
+     :requires #{#'session #'wrap-pprint-fn}
      :expects #{}
      :handles {"stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
-                             :optional pprint/wrap-pprint-fn-optional-arguments
+                             :optional wrap-pprint-fn-optional-arguments
                              :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
-   :requires #{#'session #'pprint/wrap-pprint-fn}
+   :requires #{#'session #'wrap-pprint-fn}
    :expects #{#'pr-values}
    :handles {"test"
              {:doc "Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional pprint/wrap-pprint-fn-optional-arguments}
+              :optional wrap-pprint-fn-optional-arguments}
              "test-all"
              {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional pprint/wrap-pprint-fn-optional-arguments}
+              :optional wrap-pprint-fn-optional-arguments}
              "test-stacktrace"
              {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional pprint/wrap-pprint-fn-optional-arguments}
+              :optional wrap-pprint-fn-optional-arguments}
              "retest"
              {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
-              :optional pprint/wrap-pprint-fn-optional-arguments}}})
+              :optional wrap-pprint-fn-optional-arguments}}})
 
 (def-wrapper wrap-trace cider.nrepl.middleware.trace/handle-trace
   {:doc     "Toggle tracing of a given var."
@@ -365,6 +412,16 @@
                         "ns" "The current namespace"}
              :returns {"status" "done"}}}})
 
+(def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
+  {:doc "Provides CIDER-nREPL version information."
+   :describe-fn #'version/cider-version-reply ;; For the "describe" op. Merged into `:aux`.
+   :handles
+   {"cider-version"
+    {:doc "Returns the version of the CIDER-nREPL middleware."
+     :requires {}
+     :returns {"cider-version" "CIDER-nREPL's version map."
+               "status" "done"}}}})
+
 
 ;;; Cider's Handler
 
@@ -381,6 +438,8 @@
     wrap-macroexpand
     wrap-ns
     wrap-out
+    wrap-pprint
+    wrap-pprint-fn
     wrap-refresh
     wrap-resource
     wrap-spec
@@ -389,9 +448,7 @@
     wrap-trace
     wrap-tracker
     wrap-undef
-    cider.nrepl.middleware.pprint/wrap-pprint
-    cider.nrepl.middleware.pprint/wrap-pprint-fn
-    cider.nrepl.middleware.version/wrap-version])
+    wrap-version])
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."

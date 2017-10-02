@@ -42,26 +42,11 @@
     pp-fn
     (throw (IllegalArgumentException. (format "%s is not resolvable to a var" sym)))))
 
-(defn wrap-pprint-fn
-  "Middleware that provides a common interface for other middlewares that need
-  to perform customisable pretty-printing.
-
-  A namespace-qualified name of the function to be used for printing can be
-  optionally passed in the `:pprint-fn` slot, the default value being
-  `clojure.pprint/pprint`.
-
-  The `:pprint-fn` slot will be replaced with a closure that calls the given
-  printing function with `*print-length*`, `*print-level*`, `*print-meta*`, and
-  `clojure.pprint/*print-right-margin*` bound to the values of the
-  `:print-length`, `:print-level`, `:print-meta`, and `:print-right-margin`
-  slots respectively.
-
-  Middlewares further down the stack can then look up the `:pprint-fn` slot and
-  call it where necessary."
-  [handler]
-  (fn [{:keys [pprint-fn print-length print-level print-meta print-right-margin session]
-        :or {pprint-fn 'clojure.pprint/pprint}
-        :as msg}]
+(defn handle-pprint-fn
+  [handler msg]
+  (let [{:keys [pprint-fn print-length print-level print-meta print-right-margin session]
+         :or {pprint-fn 'clojure.pprint/pprint}}
+        msg]
     (handler (assoc msg :pprint-fn (fn [object]
                                      (binding [*print-length* (or print-length (get @session #'*print-length*))
                                                *print-level* (or print-level (get @session #'*print-level*))
@@ -69,17 +54,6 @@
                                                ;; pprint/*print-right-margin* is not bound by session middleware
                                                *print-right-margin* (or print-right-margin *print-right-margin*)]
                                        ((resolve-pprint-fn pprint-fn) object)))))))
-
-(def wrap-pprint-fn-optional-arguments
-  {"pprint-fn" "The namespace-qualified name of a single-arity function to use for pretty-printing. Defaults to `clojure.pprint/pprint`."
-   "print-length" "Value to bind to `*print-length*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-level" "Value to bind to `*print-level*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-meta" "Value to bind to `*print-meta*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-right-margin" "Value to bind to `clojure.pprint/*print-right-margin*` when pretty-printing. Defaults to the value bound in the current REPL session."})
-
-(set-descriptor!
- #'wrap-pprint-fn
- {:requires #{#'session/session}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -110,29 +84,9 @@
         (pprint-reply msg response))
       (.send transport (dissoc response :value)))))
 
-(defn wrap-pprint
-  "Middleware that adds a pretty-printing option to the eval op.
-  Passing a non-nil value in the `:pprint` slot will cause eval to call
-  clojure.pprint/pprint on its result. The `:right-margin` slot can be used to
-  bind `*clojure.pprint/*print-right-margin*` during the evaluation. (N.B., the
-  encoding used to transmit the request map `msg` across the wire will
-  convert presumably falsey values into truthy values. If you don't
-  want something to be pretty printed, remove the `:pprint` key
-  entirely from your request map, don't try and set the value to nil,
-  false, or string representations of the above)."
-  [handler]
-  (fn [{:keys [op pprint] :as msg}]
+(defn handle-pprint
+  [handler msg]
+  (let [{:keys [op pprint]} msg]
     (handler (if (and pprint (#{"eval" "load-file"} op))
                (assoc msg :transport (pprint-transport msg))
                msg))))
-
-(set-descriptor!
- #'wrap-pprint
- (cljs/expects-piggieback
-  {:requires #{"clone" #'pr-values #'wrap-pprint-fn}
-   :expects #{"eval" "load-file"}
-   :handles
-   {"pprint-middleware"
-    {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
-     :optional (merge wrap-pprint-fn-optional-arguments
-                      {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
