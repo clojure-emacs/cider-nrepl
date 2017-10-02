@@ -11,3 +11,10 @@
                 rest
                 (zipmap [:major :minor :incremental :qualifier]))
            :version-string version-string)))
+
+(defn cider-version-reply
+  "Returns CIDER-nREPL's version as a map which contains `:major`,
+  `:minor`, `:incremental`, and `:qualifier` keys, just as
+  `*clojure-version*` does."
+  [msg]
+  {:cider-version version})

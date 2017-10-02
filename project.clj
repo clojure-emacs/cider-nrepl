@@ -42,6 +42,8 @@
                                                      cider.nrepl/wrap-macroexpand
                                                      cider.nrepl/wrap-ns
                                                      cider.nrepl/wrap-out
+                                                     cider.nrepl/wrap-pprint
+                                                     cider.nrepl/wrap-pprint-fn
                                                      cider.nrepl/wrap-refresh
                                                      cider.nrepl/wrap-resource
                                                      cider.nrepl/wrap-spec
@@ -50,9 +52,7 @@
                                                      cider.nrepl/wrap-trace
                                                      cider.nrepl/wrap-tracker
                                                      cider.nrepl/wrap-undef
-                                                     cider.nrepl.middleware.pprint/wrap-pprint
-                                                     cider.nrepl.middleware.pprint/wrap-pprint-fn
-                                                     cider.nrepl.middleware.version/wrap-version]}
+                                                     cider.nrepl/wrap-version]}
                    :dependencies [[org.clojure/tools.nrepl "0.2.13"]
                                   ;; For developing the Leiningen plugin.
                                   [leiningen-core "2.7.1"]
