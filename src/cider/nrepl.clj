@@ -8,52 +8,57 @@
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.print-method]))
 
-(def DELAYS (atom nil))
+(def DELAYED-HANDLERS
+  "Map of `delay`s holding deferred middleware handlers."
+  (atom nil))
 
 (defn- resolve-or-fail [sym]
   (or (resolve sym)
       (throw (IllegalArgumentException. (format "Cannot resolve %s" sym)))))
 
-(defmacro run-delayed-handler
-  "Make a delay of `fn-name` and place it in `DELAYS` atom at compile time.
-  Require and invoke the delay at run-time with arguments h and msg."
-  [fn-name h msg]
+(defmacro run-deferred-handler
+  "Make a delay out of `fn-name` and place it in `DELAYED-HANDLERS` atom at compile time.
+  Require and invoke the delay at run-time with arguments `handler` and
+  `msg`. `fn-name` must be a namespaced symbol (unquoted)."
+  [fn-name handler msg]
   (let [ns  (symbol (namespace `~fn-name))
         sym (symbol (name `~fn-name))]
-    (swap! DELAYS assoc sym
+    (swap! DELAYED-HANDLERS assoc sym
            (delay
              (require `~ns)
              (resolve-or-fail `~fn-name)))
-    `(@(get @DELAYS '~sym) ~h ~msg)))
+    `(@(get @DELAYED-HANDLERS '~sym) ~handler ~msg)))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
-                        [name handler-fn handle descriptor])}
+                        [name handler-fn trigger-it descriptor])}
   def-wrapper
   "Define delayed middleware (e.g. wrap-xyz).
   `handler-fn` is an unquoted name of a function that takes two arguments -
   `handler` and `message`. It is called only when certain conditions are met as
-  expressed by the optional `handle` argument. `handle` can be either a function
-  or a set of ops (strings). When a function, it must take a `msg` and return
-  truthy value when `handler-fn` should run. When `handle` is missing,
-  `handle-fn` is called when :op of `msg` is in the set of keys of the :handles
-  slot of the `descriptor`. When `handle` is a set it should contain extra ops,
-  besides those in :handles, on which `handle-fn` is triggered. `descriptor` is
-  passed to nREPLs `set-descriptor!`."
-  [name handler-fn & [handle descriptor]]
-  (let [[descriptor handle] (if descriptor [descriptor handle] [handle descriptor])
-        handle (eval handle)
+  expressed by the optional `trigger-it` argument. `trigger-it` can be either a
+  function or a set of ops (strings). When a function, it must take a `msg` and
+  return truthy value when `handler-fn` should run. When `trigger-it` is missing,
+  `handle-fn` is called when :op of `msg` is one of keys of the :handles slot of
+  the `descriptor`. When `trigger-it` is a set it should contain extra ops,
+  besides those in :handles slot, on which `handle-fn` is
+  triggered. `descriptor` is passed directly to the nREPLs `set-descriptor!`."
+  [name handler-fn & [trigger-it descriptor]]
+  (let [[descriptor trigger-it] (if descriptor
+                                  [descriptor trigger-it]
+                                  [trigger-it descriptor])
+        trigger-it (eval trigger-it)
         descriptor (eval descriptor)
-        cond (if (or (nil? handle) (set? handle))
-               (let [ops-set (into (-> descriptor :handles keys set) handle)]
+        cond (if (or (nil? trigger-it) (set? trigger-it))
+               (let [ops-set (into (-> descriptor :handles keys set) trigger-it)]
                  `(~ops-set (:op ~'msg)))
-               `(~handle ~'msg))
+               `(~trigger-it ~'msg))
         doc (or (:doc descriptor) "")]
     (assert descriptor)
     `(do
        (defn ~name ~doc [~'h]
          (fn [~'msg]
            (if (and ~cond (not (:inhibit-cider-middleware ~'msg)))
-             (run-delayed-handler ~handler-fn ~'h ~'msg)
+             (run-deferred-handler ~handler-fn ~'h ~'msg)
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
 
