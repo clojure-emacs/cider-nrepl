@@ -12,6 +12,14 @@
   "Map of `delay`s holding deferred middleware handlers."
   (atom nil))
 
+(def REQUIRE-LOCK
+  "Lock used to inhibit concurrent `require` of the middleware namespaces.
+  Clojure seem to have issues with concurrent loading of transitive
+  dependencies. The issue is extremely hard to reproduce. For the context see
+  https://github.com/clojure-emacs/cider/issues/2092 and
+  https://github.com/clojure-emacs/cider/pull/2078."
+  (Object.))
+
 (defn- resolve-or-fail [sym]
   (or (resolve sym)
       (throw (IllegalArgumentException. (format "Cannot resolve %s" sym)))))
@@ -25,8 +33,9 @@
         sym (symbol (name `~fn-name))]
     (swap! DELAYED-HANDLERS assoc sym
            (delay
-             (require `~ns)
-             (resolve-or-fail `~fn-name)))
+             (locking REQUIRE-LOCK
+               (require `~ns)
+               (resolve-or-fail `~fn-name))))
     `(@(get @DELAYED-HANDLERS '~sym) ~handler ~msg)))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
