@@ -64,8 +64,11 @@
     (PrintStream. (proxy [OutputStream] []
                     (close [] (.flush ^OutputStream this))
                     (write
-                      ([bytes]
-                       (.write @(resolve printer) (String. bytes)))
+                      ([int-or-bytes]
+                       (.write @(resolve printer)
+                               (if (instance? Integer int-or-bytes)
+                                 int-or-bytes
+                                 (String. int-or-bytes))))
                       ([bytes ^Integer off ^Integer len]
                        (let [byte-range (byte-array
                                          (take len (drop off bytes)))]
