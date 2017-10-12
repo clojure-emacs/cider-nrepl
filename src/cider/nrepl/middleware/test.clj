@@ -158,8 +158,8 @@
   "Call `test-var` on each var, with the fixtures defined for namespace
   object `ns`."
   [ns vars]
-  (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
+  (let [once-fixture-fn (test/join-fixtures (:clojure.test/once-fixtures (meta ns)))
+        each-fixture-fn (test/join-fixtures (:clojure.test/each-fixtures (meta ns)))]
     (try (once-fixture-fn
           (fn []
             (doseq [v vars]
