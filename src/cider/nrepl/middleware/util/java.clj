@@ -44,18 +44,21 @@
   (-> (io/file (System/getProperty "java.home"))
       (.getParentFile)))
 
+(defn jdk-resource-url
+  "Returns url to file at PATH-SEGMENTS relative to `jdk-root`."
+  [& path-segments]
+  (let [f (apply io/file jdk-root path-segments)]
+    (when (.canRead f)
+      (io/as-url f))))
+
 (def jdk-sources
   "The JDK sources path. If available, this is added to the classpath. By
   convention, this is the file `src.zip` in the root of the JDK directory."
-  (let [zip (io/file jdk-root "src.zip")]
-    (when (.canRead zip)
-      (add-classpath! (io/as-url zip)))))
+  (some-> (jdk-resource-url "src.zip") add-classpath!))
 
 (def jdk-tools
   "The JDK `tools.jar` path. If available, this is added to the classpath."
-  (let [jar (io/file jdk-root "lib" "tools.jar")]
-    (when (.canRead jar)
-      (add-classpath! (io/as-url jar)))))
+  (some-> (jdk-resource-url "lib" "tools.jar") add-classpath!))
 
 ;;; ## Javadoc URLs
 ;; Relative Javadoc URLs can be constructed from class/member signatures.
