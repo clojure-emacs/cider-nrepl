@@ -23,8 +23,13 @@
                             (str "file:" path)
                             (str "file:" path dir-separator))]
                   (new java.net.URL url)))
-              paths)]
-    (new java.net.URLClassLoader (into-array java.net.URL urls))))
+              paths)
+        jdk-sources (->> [#_"see '## Classpath' notes at `cider.nrepl.middleware.util.java`"
+                          ["src.zip"]
+                          ["lib" "tools.jar"]]
+                         (map (partial apply java/jdk-resource-url))
+                         (remove nil?))]
+    (new java.net.URLClassLoader (into-array java.net.URL (concat urls jdk-sources)))))
 
 (defn- resource-full-path [relative-path]
   (if (u/boot-project?)
