@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.classpath-test
   (:require [cider.nrepl.test-session :as session]
             [cider.nrepl.middleware.classpath :as cp]
+            [clojure.string :as str]
             [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
@@ -19,3 +20,16 @@
       (is (.startsWith (:err response) "java.lang.Exception: cp error"))
       (is (= (:ex response) "class java.lang.Exception"))
       (is (:pp-stacktrace response)))))
+
+(deftest boot-fake-classpath-test
+  (let [fake-paths [(System/getProperty "java.io.tmpdir")]
+        fake-classpath (str/join ":" fake-paths)]
+    (testing "when fake.class.path is not set"
+      (is (not= fake-classpath (cp/classpath))))
+    (testing "when fake.class.path is set"
+      (try
+        (System/setProperty "fake.class.path" fake-classpath)
+        (is (= ["/some/file/path/src" "/some/file/path/test"]
+               (cp/classpath)))
+        (finally
+          (System/clearProperty "fake.class.path"))))))

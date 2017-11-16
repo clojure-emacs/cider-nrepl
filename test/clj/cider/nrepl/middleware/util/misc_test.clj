@@ -1,6 +1,21 @@
 (ns cider.nrepl.middleware.util.misc-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [cider.nrepl.middleware.util.misc :as misc]))
+
+(deftest boot-fake-classpath-test
+  (let [fake-paths [(System/getProperty "java.io.tmpdir")]
+        fake-classpath (str/join ":" fake-paths)]
+    (testing "when fake.class.path is not set"
+      (is (nil? (misc/boot-fake-classpath)))
+      (is (not (misc/boot-project?))))
+    (testing "when fake.class.path is set"
+      (try
+        (System/setProperty "fake.class.path" fake-classpath)
+        (is (= fake-classpath (misc/boot-fake-classpath)))
+        (is (misc/boot-project?))
+        (finally
+          (System/clearProperty "fake.class.path"))))))
 
 (deftest transform-value-test
   (is (= (misc/transform-value (array-map

@@ -2,10 +2,14 @@
   (:require [clojure.string :as str]
             [clojure.stacktrace :as stacktrace]))
 
-(defn boot-project? []
+(defn boot-fake-classpath
   ;; fake.class.path under boot contains the original directories with source
   ;; files, see https://github.com/boot-clj/boot/issues/249
-  (not (nil? (System/getProperty "fake.class.path"))))
+  []
+  (System/getProperty "fake.class.path"))
+
+(defn boot-project? []
+  (not (nil? (boot-fake-classpath))))
 
 (def java-api-version
   (try (-> (System/getProperty "java.version") (str/split #"\.") second)
