@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.stacktrace-test
-  (:require [cider.nrepl.middleware.stacktrace :refer :all]
+  (:require [clojure.string :as string]
+            [cider.nrepl.middleware.stacktrace :refer :all]
             [clojure.pprint :refer [pprint]]
             [clojure.test :refer :all]))
 
@@ -45,6 +46,15 @@
           ts2 (group-by :type frames2)]
       (is (= #{:clj :java} (set (keys ts1))))
       (is (= #{:clj :java} (set (keys ts2))))))
+  (testing "Full file mappings"
+      (is (every?
+            #(.endsWith (:file-url %) "!/clojure/core.clj")
+            (filter #(= "clojure.core" (:ns %))
+                    frames1)))
+      (is (every?
+            #(.startsWith (:file-url %) "file:/")
+            (filter #(some-> % :ns (.contains "cider"))
+                    frames1))))
   (testing "Clojure ns, fn, and var"
     ;; All Clojure frames should have non-nil :ns :fn and :var attributes.
     (is (every? #(every? identity ((juxt :ns :fn :var) %))
@@ -119,6 +129,7 @@
     (is (= {:class "clojure.lang.Compiler$CompilerException"
             :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"
             :file "/foo/bar/baz.clj"
+            :file-url nil
             :path "/foo/bar/baz.clj"
             :line 1
             :column 42}
@@ -128,6 +139,7 @@
     (is (= {:class "clojure.lang.Compiler$CompilerException"
             :message "java.lang.NegativeArraySizeException"
             :file "/foo/bar/baz.clj"
+            :file-url nil
             :path "/foo/bar/baz.clj"
             :line 1
             :column 42}
