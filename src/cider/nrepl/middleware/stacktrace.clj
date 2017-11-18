@@ -2,6 +2,7 @@
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.pprint :as pprint]
+            [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [clojure.repl :as repl]
             [clojure.string :as str]
@@ -9,6 +10,8 @@
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
+            [cider.nrepl.middleware.util.misc :as u]
+            [cider.nrepl.middleware.util.java :as java]
             [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.tools.namespace.find :as nsfind])
@@ -31,6 +34,31 @@
   [frame flag]
   (update-in frame [:flags] (comp set conj) flag))
 
+(defn- source-path
+  "Return the relative source path for the class without extension."
+  [class]
+  (-> (str/replace (str class) #"\$.*" "")
+      (str/replace "." "/")))
+
+(defn- path->url
+  "Return a url for the path, either relative to classpath, or absolute."
+  [path]
+  (or (info/file-path path) (second (info/resource-path path))))
+
+(defn- frame->url
+  "Return a java.net.URL to the file referenced in the frame, if possible.
+  Useful for handling clojure vars which may not exist. Uncomprehensive list of
+  reasons for this:
+  * Failed refresh
+  * Top-level evaluation"
+  [frame]
+  (some-> (:name frame)
+          source-path
+          (str "." (last (.split ^String (:file frame)
+                                 "\\.")))
+          path->url
+          u/transform-value))
+
 (defn analyze-fn
   "Add namespace, fn, and var to the frame map when the source is a Clojure
   function."
@@ -43,8 +71,19 @@
       (assoc frame
              :ns  ns
              :fn  (str/join "/" (cons fn anons))
-             :var (str ns "/" fn)))
-    frame))
+             :var (str ns "/" fn)
+             ;; Full file path
+             :file-url (or (some-> (info/info-clj 'user (symbol (str ns "/" fn)))
+                                   :file
+                                   path->url
+                                   u/transform-value)
+                           (u/transform-value (frame->url frame)))))
+    (assoc frame :file-url (some->
+                             (java/resolve-symbol 'user
+                                                  (symbol (:name frame)))
+                             :file
+                             path->url
+                             u/transform-value))))
 
 (defn analyze-file
   "Associate the file type (extension) of the source file to the frame map, and
@@ -171,7 +210,11 @@
     (let [[_ msg file line column]
           (re-find #"(.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
       (assoc cause
-             :message msg :file file
+             :message msg
+             :file file
+             :file-url (some-> file
+                               path->url
+                               u/transform-value)
              :path (relative-path file)
              :line (Integer/parseInt line)
              :column (Integer/parseInt column)))
