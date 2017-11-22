@@ -63,7 +63,8 @@
   "Add namespace, fn, and var to the frame map when the source is a Clojure
   function."
   [{:keys [file type class method] :as frame}]
-  (if (= :clj type)
+  (if (or (= :clj type)
+          (= :cljc type))
     (let [[ns fn & anons] (-> (repl/demunge class)
                               (str/replace #"--\d+" "")
                               (str/split #"/"))
