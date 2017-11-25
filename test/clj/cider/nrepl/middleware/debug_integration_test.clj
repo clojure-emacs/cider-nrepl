@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.debug-integration-test
   (:require [cider.nrepl.middleware.debug :as d]
+            [cider.nrepl.test.server :refer [start-server]]
             [clojure.test :refer :all]
             [clojure.tools.nrepl :as nrepl]
             [clojure.tools.nrepl.server :as nrepl.server]
@@ -46,7 +47,7 @@
 (defn with-nrepl-session*
   "Run the given function with *transport* and *session-id* bound."
   [f]
-  (with-open [server    (nrepl.server/start-server :handler (debug-handler))
+  (with-open [server    (start-server :handler (debug-handler))
               transport (nrepl/connect :port (:port server))]
     ;; Create a session by sending the "clone" op
     (transport/send transport {:op "clone" :id (next-id)})
