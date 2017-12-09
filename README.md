@@ -8,7 +8,7 @@ middleware designed to enhance
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
-[CIDER's Readme](https://github.com/clojure-emacs/cider) instead.
+[CIDER's manual](https://cider.readthedocs.io) instead.
 
 If you're trying to use cider-nrepl for some other purpose, the
 sections below outline how to include it in a project.
