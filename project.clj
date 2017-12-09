@@ -65,7 +65,7 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]
                    :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
-                      :dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
+                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]]}
 
              :test-clj {:test-paths ["test/clj"]
                         :java-source-paths ["test/java"]
