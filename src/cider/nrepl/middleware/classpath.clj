@@ -5,7 +5,10 @@
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
 
-(defn classpath []
+(defn classpath
+  "Return a list of classpath entries for the current project.
+  Takes into account the classpath trickery performed by Boot."
+  []
   (if-let [classpath (u/boot-fake-classpath)]
     (str/split classpath #":")
     (map str (cp/classpath))))

@@ -3,12 +3,17 @@
             [clojure.stacktrace :as stacktrace]))
 
 (defn boot-fake-classpath
-  ;; fake.class.path under boot contains the original directories with source
-  ;; files, see https://github.com/boot-clj/boot/issues/249
+  "Retrieve Boot's fake classpath.
+  When using Boot, fake.class.path contains the original directories with source
+  files, which makes it way more useful than the real classpath.
+  See https://github.com/boot-clj/boot/issues/249 for details."
   []
   (System/getProperty "fake.class.path"))
 
-(defn boot-project? []
+(defn boot-project?
+  "Check whether we're dealing with a Boot project.
+  We figure this by checking for the presence of Boot's fake classpath."
+  []
   (not (nil? (boot-fake-classpath))))
 
 (def java-api-version
