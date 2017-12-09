@@ -135,7 +135,7 @@
 (deftest ensure-clojure-core-present
   (testing "if clojurescript doesn't add clojure"
     ;; note that the {:msg :stuff} object is much more complex in
-    ;; actual use and in fact the msg is much more comlicated
+    ;; actual use and in fact the msg is much more complicated
     (is (-> (st/ensure-clojure-core-present {}
                                             {'cljs.core :present}
                                             {:msg :stuff})
