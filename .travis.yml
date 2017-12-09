@@ -15,6 +15,7 @@ env:
   - TEST_CMD="lein with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
 
   - TEST_CMD="lein with-profile +1.9,+plugin.mranderson/config,+test-clj test"
+  - TEST_CMD="lein with-profile +1.9,+plugin.mranderson/config,+test-cljs test"
 
   - TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-clj test"
   - TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-cljs test"
