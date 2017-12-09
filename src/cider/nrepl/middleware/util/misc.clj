@@ -94,7 +94,7 @@
    :status #{status :done}})
 
 (defn random-uuid-str
-  "Clojure(script) UUID generator."
+  "Clojure(Script) UUID generator."
   []
   (letfn [(hex [] (format "%x" (rand-int 15)))
           (nhex [n] (apply str (repeatedly n hex)))]

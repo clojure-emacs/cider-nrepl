@@ -83,10 +83,10 @@
             :file
             (fn [f]
               (if (u/boot-project?)
-                ;; Boot stores files in a temporary directory & clojurescript
+                ;; Boot stores files in a temporary directory & ClojureScript
                 ;; stores the :file metadata location absolutely instead of
                 ;; relatively to the classpath. This means when doing jump to
-                ;; source in Boot & Clojurescript, you end up at the temp file.
+                ;; source in Boot & ClojureScript, you end up at the temp file.
                 ;; This code attempts to find the classpath-relative location
                 ;; of the file, so that it can be opened correctly.
                 (let [path (java.nio.file.Paths/get f (into-array String []))
