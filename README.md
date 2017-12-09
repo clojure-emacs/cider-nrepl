@@ -2,7 +2,8 @@
 
 # CIDER nREPL
 
-A collection of [nREPL](https://github.com/clojure/tools.nrepl) middleware designed to enhance
+A collection of [nREPL](https://github.com/clojure/tools.nrepl)
+middleware designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
 
 If you're just a user trying to get started with CIDER, then you
@@ -36,8 +37,9 @@ A minimal `profiles.clj` for CIDER would be:
 {:user {:plugins [[cider/cider-nrepl "0.15.1"]]}}
 ```
 
-Or (if you know what you're doing) add `cider-nrepl` to your `:dev :dependencies` vector plus specific
-middleware to `:nrepl-middleware` under `:repl-options`.
+Or (if you know what you're doing) add `cider-nrepl` to your `:dev
+:dependencies` vector plus specific middleware to `:nrepl-middleware`
+under `:repl-options`.
 
 ```clojure
 :dependencies [[cider/cider-nrepl "0.15.1"]]
@@ -65,15 +67,21 @@ middleware to `:nrepl-middleware` under `:repl-options`.
 
 ```
 
-Note that you should use a `cider-nrepl` version compatible with your CIDER. Generally, if you're
-using CIDER 0.x.y you should be using `cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should be
-using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
+Note that you should use a `cider-nrepl` version compatible with your
+CIDER. Generally, if you're using CIDER 0.x.y you should be using
+`cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should
+be using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
 
 #### Via Boot
 
-Boot users can configure the injected middleware by either specifying it on the command line through the `cider.tasks/add-middleware` task (the lenghty command below will include the `apropos` and `version` functionality):
+Boot users can configure the injected middleware by either specifying
+it on the command line through the `cider.tasks/add-middleware` task
+(the lenghty command below will include the `apropos` and `version`
+functionality):
 
-`boot -d org.clojure/tools.nrepl:0.2.12 -d cider/cider-nrepl:0.x.y-SNAPSHOT -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl -s wait`
+```
+boot -d org.clojure/tools.nrepl:0.2.12 -d cider/cider-nrepl:0.x.y-SNAPSHOT -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl -s wait
+```
 
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 
@@ -87,7 +95,8 @@ Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
                                              cider.nrepl.middleware.version/wrap-version]})
 ```
 
-And then launching `boot add-middleware repl -s wait`. Note that this is not necessary when using the standard `cider-jack-in`.
+And then launching `boot add-middleware repl -s wait`. Note that this
+is not necessary when using the standard `cider-jack-in`.
 
 For more information visit [boot-clj wiki](https://github.com/boot-clj/boot/wiki/Cider-REPL).
 
