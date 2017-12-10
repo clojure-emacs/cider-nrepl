@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.util.namespace
   "Utilities for resolving and loading namespaces"
-  (:require [cider.nrepl.middleware.util.misc :as u]
+  (:require [cider.nrepl.middleware.util.classloader :refer [class-loader]]
             [clojure.java.classpath :as cp]
             [clojure.tools.namespace
              [file :as ns-file]
@@ -32,12 +32,9 @@
 (defn project-namespaces
   "Find all namespaces defined in source paths within the current project."
   []
-  (if (u/boot-project?)
-    ;; This has false positives, but it's the best we can do in boot.
-    (remove jar-namespaces (map ns-name (all-ns)))
-    (->> (cp/classpath-directories)
-         (filter #(.startsWith (str %) project-root))
-         (mapcat ns-find/find-namespaces-in-dir))))
+  (->> (filter (memfn isDirectory) (cp/classpath (class-loader)))
+       (filter #(.startsWith (str %) project-root))
+       (mapcat ns-find/find-namespaces-in-dir)))
 
 (defn inlined-dependency?
   "Returns true if the namespace matches one of our, or eastwood's,

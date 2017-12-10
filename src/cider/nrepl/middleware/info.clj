@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
+            [cider.nrepl.middleware.util.classloader :refer [class-loader]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.util.java :as java]
@@ -11,30 +12,8 @@
             [cljs-tooling.info :as cljs-info]
             [cider.nrepl.middleware.util.spec :as spec]))
 
-(defn- boot-class-loader
-  "Creates a class-loader that knows original source files paths in Boot project."
-  []
-  (let [class-path (System/getProperty "fake.class.path")
-        dir-separator (System/getProperty "file.separator")
-        paths (str/split class-path (re-pattern (System/getProperty "path.separator")))
-        urls (map
-              (fn [path]
-                (let [url (if (re-find #".jar$" path)
-                            (str "file:" path)
-                            (str "file:" path dir-separator))]
-                  (new java.net.URL url)))
-              paths)
-        jdk-sources (->> [#_"see '## Classpath' notes at `cider.nrepl.middleware.util.java`"
-                          ["src.zip"]
-                          ["lib" "tools.jar"]]
-                         (map (partial apply java/jdk-resource-url))
-                         (remove nil?))]
-    (new java.net.URLClassLoader (into-array java.net.URL (concat urls jdk-sources)))))
-
 (defn- resource-full-path [relative-path]
-  (if (u/boot-project?)
-    (io/resource relative-path (boot-class-loader))
-    (io/resource relative-path)))
+  (io/resource relative-path (class-loader)))
 
 (defn find-cljx-source
   "If file was cross-compiled using CLJX, return path to original file."
