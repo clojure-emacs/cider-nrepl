@@ -4,6 +4,7 @@
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.namespace :as namespace]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
@@ -123,14 +124,7 @@
 (def directory-namespaces
   "This looks for all namespaces inside of directories on the class
   path, ignoring jars."
-  (let [paths (-> (System/getProperty "java.class.path")
-                  (str/split #":"))]
-    (->> paths
-         (filter (complement #(.endsWith % ".jar")))
-         (map io/file)
-         (filter #(.isDirectory %))
-         (nsfind/find-namespaces)
-         (into #{}))))
+  (into #{} (namespace/project-namespaces)))
 
 (def ns-common-prefix
   "In order to match more namespaces, we look for a common namespace
