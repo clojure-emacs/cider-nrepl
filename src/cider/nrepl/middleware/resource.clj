@@ -3,7 +3,8 @@
     [clojure.java.io :as io]
     [clojure.java.classpath :as classpath]
     [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-    [cider.nrepl.middleware.util.classloader :refer [class-loader]]))
+    [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+    [cider.nrepl.middleware.util.misc :as u]))
 
 (defn- trim-leading-separator
   [s]
@@ -39,16 +40,19 @@
   (when-let [resource (io/resource name (class-loader))]
     (.getPath resource)))
 
-(defn resources-list [{:keys [prefix]}]
-  (cond->> (map :relpath (get-project-resources))
-    prefix
-    (filter #(.startsWith % prefix))))
+(defn resources-list
+  "Return a list of dictionaries containing file and relpath: file is the
+  absolute path to the resource, relpath is the path of the resource relative
+  to the classpath."
+  [_]
+  (map #(select-keys % [:file :relpath])
+       (get-project-resources)))
 
 (defn resource-reply [{:keys [name] :as msg}]
   {:resource-path (resource-path name)})
 
 (defn resources-list-reply [msg]
-  {:resources-list (resources-list msg)})
+  {:resources-list (u/transform-value (resources-list msg))})
 
 (defn handle-resource [handler msg]
   (with-safe-transport handler msg
