@@ -22,14 +22,15 @@
       (is (:pp-stacktrace response)))))
 
 (deftest boot-fake-classpath-test
-  (let [fake-paths [(System/getProperty "java.io.tmpdir")]
-        fake-classpath (str/join ":" fake-paths)]
+  (let [fake-paths #{(System/getProperty "java.io.tmpdir")}
+        fake-classpath (str/join (System/getProperty "path.separator") fake-paths)]
     (testing "when fake.class.path is not set"
       (is (not= fake-classpath (cp/classpath))))
     (testing "when fake.class.path is set"
       (try
         (System/setProperty "fake.class.path" fake-classpath)
-        (is (= ["/some/file/path/src" "/some/file/path/test"]
-               (cp/classpath)))
+        (is (= (seq fake-paths)
+               (filter #(contains? fake-paths %)
+                       (cp/classpath))))
         (finally
           (System/clearProperty "fake.class.path"))))))
