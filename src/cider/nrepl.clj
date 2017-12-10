@@ -8,11 +8,11 @@
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.print-method]))
 
-(def DELAYED-HANDLERS
+(def delayed-handlers
   "Map of `delay`s holding deferred middleware handlers."
   (atom nil))
 
-(def REQUIRE-LOCK
+(def require-lock
   "Lock used to inhibit concurrent `require` of the middleware namespaces.
   Clojure seem to have issues with concurrent loading of transitive
   dependencies. The issue is extremely hard to reproduce. For the context see
@@ -25,18 +25,18 @@
       (throw (IllegalArgumentException. (format "Cannot resolve %s" sym)))))
 
 (defmacro run-deferred-handler
-  "Make a delay out of `fn-name` and place it in `DELAYED-HANDLERS` atom at compile time.
+  "Make a delay out of `fn-name` and place it in `delayed-handlers` atom at compile time.
   Require and invoke the delay at run-time with arguments `handler` and
   `msg`. `fn-name` must be a namespaced symbol (unquoted)."
   [fn-name handler msg]
   (let [ns  (symbol (namespace `~fn-name))
         sym (symbol (name `~fn-name))]
-    (swap! DELAYED-HANDLERS assoc sym
+    (swap! delayed-handlers assoc sym
            (delay
-             (locking REQUIRE-LOCK
+             (locking require-lock
                (require `~ns)
                (resolve-or-fail `~fn-name))))
-    `(@(get @DELAYED-HANDLERS '~sym) ~handler ~msg)))
+    `(@(get @delayed-handlers '~sym) ~handler ~msg)))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
                         [name handler-fn trigger-it descriptor])}
