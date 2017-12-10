@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.info-test
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
