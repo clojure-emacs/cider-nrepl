@@ -9,6 +9,7 @@
             [cider.nrepl.middleware.util.java :as java]
             [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.misc :as util]
+            [cider.nrepl.middleware.util.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])
   (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))
@@ -72,15 +73,14 @@
         (try
           (System/setProperty "fake.class.path" tmp-jar-path)
           (is (some #{"file:fake/clojure.jar"}
-                    (->> (#'cider.nrepl.middleware.info/boot-class-loader) .getURLs (map str))))
+                    (->> (class-loader) .getURLs (map str))))
           (finally
             (System/clearProperty "fake.class.path")))))
     (testing "include sources when avaliable"
       (when-let [src-url (java/jdk-resource-url "src.zip")]
         (try
           (System/setProperty "fake.class.path" tmp-dir-name)
-          (is (some #{src-url}
-                    (.getURLs (#'cider.nrepl.middleware.info/boot-class-loader))))
+          (is (some #{src-url} (.getURLs (class-loader))))
           (finally
             (System/clearProperty "fake.class.path")))))))
 
