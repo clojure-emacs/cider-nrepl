@@ -492,7 +492,7 @@
     (--> :in)
 
     ;; Note - if anyone changes misc.clj, this could fail:
-    (let [msg (<-- {:line        23
+    (let [msg (<-- {:line        32
                     :column      0
                     :debug-value "\"bar\""
                     :coor        [3 1 1]
