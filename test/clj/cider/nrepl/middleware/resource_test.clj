@@ -14,14 +14,10 @@
     (let [response (session/message {:op "resources-list"})]
       (is (= #{"done"} (:status response)))
       (is (not (empty? (:resources-list response))))
-      (is (not (empty? (filter #(re-matches #"test\.txt" %) (:resources-list response)))))))
-
-  (testing "Filtering resources based on prefixes"
-    (let [response (session/message {:op "resources-list" :prefix "see-also"})]
-      (is (= #{"done"} (:status response)))
-      (is (not (empty? (:resources-list response))))
-      (is (every? #(.startsWith % "see-also") (:resources-list response)))
-      (is (contains? (set (:resources-list response)) "see-also.edn")))))
+      (is (not (empty? (filter #(re-matches #"test\.txt" (:relpath %))
+                               (:resources-list response)))))
+      (is (not (empty? (filter #(re-matches #".*test/resources/test\.txt" (:file %))
+                               (:resources-list response))))))))
 
 (deftest resource-op-error-handling-test
   (with-redefs [r/resource-path (fn [& _] (throw (Exception. "resource")))]
