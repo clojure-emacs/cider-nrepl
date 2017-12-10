@@ -10,7 +10,7 @@
 
 (def delayed-handlers
   "Map of `delay`s holding deferred middleware handlers."
-  (atom nil))
+  (atom {}))
 
 (def require-lock
   "Lock used to inhibit concurrent `require` of the middleware namespaces.
