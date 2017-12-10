@@ -72,7 +72,12 @@
        (set-descriptor! #'~name ~descriptor))))
 
 
-;;; Wrappers
+;;; Deferred Middleware Wrappers
+;; Each middleware is defined in its own namespace, but here we're defining
+;; deferred versions of the middleware handlers, that load the actual middleware
+;; handlers on demand (the first time some middleware op gets invoked). This
+;; makes the code a bit more complex, but improves a lot the startup time
+;; as almost nothing gets loaded during REPL boot time.
 
 (def wrap-pprint-fn-optional-arguments
   "Common pprint arguments for CIDER's middleware."
