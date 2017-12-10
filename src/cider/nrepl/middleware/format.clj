@@ -2,22 +2,15 @@
   (:refer-clojure :exclude [read-string])
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.pprint :as pprint]
+            [cljfmt.core :as fmt]
             [clojure.string :as string]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.reader.edn :as edn]
             [clojure.tools.reader.reader-types :as readers]))
 
-;; cljfmt.core takes many milliseconds to load and isn't used every session
-;; so delay loading it.
-(def ^:private reformat-string
-  (delay
-   (do
-     (require 'cljfmt.core)
-     (resolve 'cljfmt.core/reformat-string))))
-
 (defn format-code-reply
   [{:keys [code] :as msg}]
-  {:formatted-code (@reformat-string code)})
+  {:formatted-code (fmt/reformat-string code)})
 
 (defn- read-edn
   "Returns a vector of EDN forms, read from the string s."
