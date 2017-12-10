@@ -1,18 +1,48 @@
 (ns cider.nrepl.middleware.resource
-  (:require [clojure.java.io :as io]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [compliment.sources.resources :as r]
-            [compliment.core :as jvm-complete]))
+  (:require
+    [clojure.java.io :as io]
+    [clojure.java.classpath :as classpath]
+    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+    [cider.nrepl.middleware.util.classloader :refer [class-loader]]))
+
+(defn- trim-leading-separator
+  [s]
+  (if (.startsWith s java.io.File/separator)
+    (subs s 1)
+    s))
+
+(defn- get-project-resources
+  []
+  (mapcat
+    (fn [directory]
+      (->>
+        directory
+        (file-seq)
+        (filter (memfn isFile))
+        (map (fn [file]
+               (let [relpath (-> file
+                                 (.getPath)
+                                 (.replaceFirst
+                                   (.getPath directory)
+                                   "")
+                                 (trim-leading-separator))]
+                 {:root directory
+                  :file file
+                  :relpath relpath
+                  :url (io/resource relpath)})))
+        (remove #(.startsWith (:relpath %) "META-INF/"))
+        (remove #(re-matches #".*\.(clj[cs]?|java|class)" (:relpath %)))))
+    (filter (memfn isDirectory)
+            (classpath/classpath (class-loader)))))
 
 (defn resource-path [name]
-  (when-let [resource (io/resource name)]
+  (when-let [resource (io/resource name (class-loader))]
     (.getPath resource)))
 
-(defn resources-list [{:keys [prefix context] :as msg
-                       :or {context "(resource \"__prefix__\")" prefix ""}}]
-  (->> (jvm-complete/completions prefix {:context context
-                                         :sources [::r/resources]})
-       (map :candidate)))
+(defn resources-list [{:keys [prefix]}]
+  (cond->> (map :relpath (get-project-resources))
+    prefix
+    (filter #(.startsWith % prefix))))
 
 (defn resource-reply [{:keys [name] :as msg}]
   {:resource-path (resource-path name)})
