@@ -17,8 +17,13 @@
   (not (nil? (boot-fake-classpath))))
 
 (def java-api-version
-  (try (-> (System/getProperty "java.version") (str/split #"\.") second)
-       (catch Exception _ "7")))
+  (try
+    (let [java-ver (System/getProperty "java.version")
+          [major minor _] (str/split java-ver #"\.")]
+      (if (> (bigint major) 1)
+        major
+        (or minor "7")))
+    (catch Exception _ "7")))
 
 (defn deep-merge
   "Merge maps recursively. When vals are not maps, last value wins."
