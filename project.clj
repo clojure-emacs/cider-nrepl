@@ -16,7 +16,7 @@
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha3"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
-                 ^:source-dep [org.clojure/tools.reader "1.0.0"]]
+                 ^:source-dep [org.clojure/tools.reader "1.1.1"]]
   :plugins [[thomasa/mranderson "0.4.8"]]
   :exclusions [org.clojure/clojure]
 
