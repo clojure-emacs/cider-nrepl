@@ -75,7 +75,7 @@
                          :dependencies [[com.cemerick/piggieback "0.2.2"]
                                         [org.clojure/clojurescript "1.7.189"]]}
 
-             :cloverage {:plugins [[lein-cloverage "1.0.7-SNAPSHOT"]]}
+             :cloverage {:plugins [[lein-cloverage "1.0.10"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.4.1"]]
                       :cljfmt {:indents {as-> [[:inner 0]]
