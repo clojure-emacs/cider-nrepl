@@ -57,8 +57,8 @@
                                   ;; For developing the Leiningen plugin.
                                   [leiningen-core "2.8.1"]
                                   ;; For the boot tasks namespace
-                                  [boot/base "2.7.1"]
-                                  [boot/core "2.7.1"]]}
+                                  [boot/base "2.7.2"]
+                                  [boot/core "2.7.2"]]}
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
