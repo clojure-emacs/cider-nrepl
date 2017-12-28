@@ -236,14 +236,14 @@ release locally:
 lein with-profile plugin.mranderson/config install
 ```
 
-Release to clojars:
+Release to [clojars](https://clojars.org/):
 
 ```
 lein with-profile plugin.mranderson/config deploy clojars
 ```
 
-Or you can use the very sophisticated script to clean, inline, test
-and run an end target like install or deploy:
+Or you can use the "very sophisticated" `build.sh` script to clean,
+inline, and run a lein target like `install` or `deploy`:
 
 ```
 ./build.sh install
@@ -251,7 +251,7 @@ and run an end target like install or deploy:
 ```
 
 [build.sh](build.sh) cleans, runs source-deps with the right
-parameters, runs the tests and then runs the provided lein target.
+parameters, and then runs the provided lein target.
 
 ## Hall of Fame
 
