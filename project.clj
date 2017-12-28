@@ -82,5 +82,5 @@
                                          with-debug-bindings [[:inner 0]]
                                          merge-meta [[:inner 0]]}}}
 
-             :eastwood {:plugins [[jonase/eastwood "0.2.3"]]
+             :eastwood {:plugins [[jonase/eastwood "0.2.5"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})
