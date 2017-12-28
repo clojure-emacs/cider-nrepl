@@ -8,7 +8,7 @@
 
   :dependencies [[org.clojure/tools.nrepl "0.2.13"]
                  [org.tcrawley/dynapath "0.2.5"]
-                 ^:source-dep [mvxcvi/puget "1.0.1"]
+                 ^:source-dep [mvxcvi/puget "1.0.2"]
                  ^:source-dep [fipp "0.6.9"]
                  ^:source-dep [compliment "0.3.5"]
                  ^:source-dep [cljs-tooling "0.2.0"]
