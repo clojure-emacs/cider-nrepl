@@ -28,13 +28,13 @@ Use the convenient plugin for defaults, either in your project's
 `~/.lein/profiles.clj`.
 
 ```clojure
-:plugins [[cider/cider-nrepl "0.15.1"]]
+:plugins [[cider/cider-nrepl "0.16.0"]]
 ```
 
 A minimal `profiles.clj` for CIDER would be:
 
 ```clojure
-{:user {:plugins [[cider/cider-nrepl "0.15.1"]]}}
+{:user {:plugins [[cider/cider-nrepl "0.16.0"]]}}
 ```
 
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev
@@ -42,7 +42,7 @@ Or (if you know what you're doing) add `cider-nrepl` to your `:dev
 under `:repl-options`.
 
 ```clojure
-:dependencies [[cider/cider-nrepl "0.15.1"]]
+:dependencies [[cider/cider-nrepl "0.16.0"]]
 :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.apropos/wrap-apropos
                   cider.nrepl.middleware.classpath/wrap-classpath
