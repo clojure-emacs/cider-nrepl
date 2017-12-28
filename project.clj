@@ -12,7 +12,7 @@
                  ^:source-dep [fipp "0.6.9"]
                  ^:source-dep [compliment "0.3.5"]
                  ^:source-dep [cljs-tooling "0.2.0"]
-                 ^:source-dep [cljfmt "0.5.6" :exclusions [org.clojure/clojurescript]]
+                 ^:source-dep [cljfmt "0.5.7" :exclusions [org.clojure/clojurescript]]
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha3"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
