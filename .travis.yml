@@ -26,13 +26,11 @@ jdk:
 matrix:
   include:
     - env:
-        - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
         - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
       jdk: oraclejdk8
 
     - env:
-        - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
         - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
       after_success: curl -F json_file=@target/coverage/coveralls.json https://coveralls.io/api/v1/jobs
       jdk: oraclejdk8
@@ -72,10 +70,8 @@ matrix:
     - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
     - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
     - env:
-        - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
         - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
     - env:
-        - CLOVERAGE_VERSION="1.0.7-SNAPSHOT"
         - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
 
 notifications:
