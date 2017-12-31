@@ -195,7 +195,7 @@
 
 (defn- expand-cljs
   "Returns the macroexpansion of the given ClojureScript form :code, performed
-  in the context of the given :ns, using the provided :expander
+  in the context of the given :ns, using the provided :expander.
   and :display-namespaces options."
   [{:keys [code expander ns] :as msg}]
   (->> (let [expander-fn (resolve-expander-cljs msg)]
