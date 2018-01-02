@@ -470,19 +470,18 @@
   (<-- {:status ["done"]}))
 
 (deftest step-in-to-function-in-current-project-test
-  ;; We use misc/as-sym just because it's a simple function that's part of the
-  ;; current project, and we want to ensure that the debugger can find and
-  ;; instrument the code of a function that lives in a regular file on the
-  ;; classpath (as opposed to, for example, in a jar, which is tested later).
+  ;; We want to ensure that the debugger can find and instrument the code of a
+  ;; function that lives in a regular file on the classpath (as opposed to,
+  ;; for example, in a jar, which is tested later).
   (--> :eval "(ns user.test.step-in
-                (:require [cider.nrepl.middleware.util.misc :as misc]))")
+                (:require [cider.nrepl.middleware.debug-integration-test.fn :as test-fn]))")
   (<-- {:ns "user.test.step-in"})
   (<-- {:status ["done"]})
 
   (--> :eval
        "#dbg
         (defn foo [s]
-          (misc/as-sym s))")
+          (test-fn/as-sym s))")
   (<-- {:value "#'user.test.step-in/foo"})
   (<-- {:status ["done"]})
 
@@ -491,21 +490,21 @@
     (<-- {:debug-value "\"bar\""})
     (--> :in)
 
-    ;; Note - if anyone changes misc.clj, this could fail:
-    (let [msg (<-- {:line        32
+    ;; Note - if changing test/src/cider/nrepl/middleware/debug_integration_test/fn.clj, also change this:
+    (let [msg (<-- {:line        7
                     :column      0
                     :debug-value "\"bar\""
                     :coor        [3 1 1]
                     :locals      [["x" "\"bar\""]]})
-          misc-file (:file msg)]
-      (is (.endsWith misc-file "/cider/nrepl/middleware/util/misc.clj"))
-      (is (.startsWith misc-file "file:/"))
+          file (:file msg)]
+      (is (.endsWith file "/cider/nrepl/middleware/debug_integration_test/fn.clj"))
+      (is (.startsWith file "file:/"))
 
-      ;; Step out a couple of times, taking us out of misc/as-sym
+      ;; Step out a couple of times, taking us out of test-fn/as-sym
       (--> :out)
-      (<-- {:debug-value "false" :file misc-file})
+      (<-- {:debug-value "false" :file file})
       (--> :out)
-      (<-- {:debug-value "bar" :file misc-file})
+      (<-- {:debug-value "bar" :file file})
 
       ;; Next step should take us back into foo
       (--> :next)
@@ -518,23 +517,23 @@
     (--> :eval "(foo \"bar\")")
     (<-- {:debug-value "\"bar\""})
     (--> :next)
-    (<-- {:debug-value "bar" :coor [3]}) ; return value of (misc/as-sym ...)
+    (<-- {:debug-value "bar" :coor [3]}) ; return value of (test-fn/as-sym ...)
     (--> :continue)
     (<-- {:value "bar"})
     (<-- {:status ["done"]}))
 
   (testing "stepped-in-to functions are not instrumented"
-    ;; Test that stepped-in-to functions are not instrumented - that is, calling
-    ;; misc/as-sym directly now should not invoke the debugger, even though we
-    ;; were stepping through its code in the test above.
-    (--> :eval "(misc/as-sym \"bar\")")
+    ;; Test that stepped-in-to functions are not instrumented - that is,
+    ;; calling test-fn/as-sym directly now should not invoke the debugger,
+    ;; even though we were stepping through its code in the test above.
+    (--> :eval "(test-fn/as-sym \"bar\")")
     (<-- {:value "bar"})
     (<-- {:status ["done"]}))
 
   (testing ":in command acts as :next on non-function"
     (--> :eval "#dbg (let [s \"blah\"]
                        s
-                       (misc/as-sym s))")
+                       (test-fn/as-sym s))")
     (<-- {:debug-value "\"blah\"" :coor [2]})
     ;; try to step in to `s`, make sure nothing blows up
     (--> :in)
