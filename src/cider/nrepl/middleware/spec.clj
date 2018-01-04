@@ -64,12 +64,33 @@
       (spec-utils/get-spec (keyword (subs spec-ns 1) spec-kw))
       (spec-utils/get-spec (symbol s)))))
 
+(defn normalize-spec-fn-form
+  "Given a form like (fn* [any-symbol] ... any-symbol...) replace fn* with fn
+  and any occurrence of any-symbol with %."
+  [[_ [sym] & r]]
+  (concat '(fn [%])
+        (walk/postwalk (fn [form]
+                         (if (and (symbol? form) (= form sym))
+                           '%
+                           form))
+                       r)))
+
+(defn normalize-spec-form
+  "Applys normalize-spec-fn-form to any fn* sub form."
+  [sub-form]
+  (walk/postwalk (fn [form]
+                   (if (and (seq? form) (= 'fn* (first form)))
+                     (normalize-spec-fn-form form)
+                     form))
+                 sub-form))
+
 (defn spec-form
   "Given a spec symbol as a string, get the spec form and prepare it for
   a response."
   [spec-name]
   (-> (spec-utils/form (spec-from-string spec-name))
       add-multi-specs
+      normalize-spec-form
       str-non-colls))
 
 (defn spec-example
