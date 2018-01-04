@@ -43,7 +43,7 @@
 (defn info-clj
   [ns sym]
   (or
-    ;; it's a special (special-symbol? or :special-form)
+    ;; it's a special (special-symbol?)
     (m/special-sym-meta sym)
     ;; it's a var
     (m/var-meta (m/resolve-var ns sym))

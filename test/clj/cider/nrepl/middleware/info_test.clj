@@ -85,18 +85,7 @@
             (System/clearProperty "fake.class.path")))))))
 
 (deftest special-sym-meta-test
-  (testing "Resolves all special forms"
-    (let [compiler-specials (keys clojure.lang.Compiler/specials)
-          core-specials (->> (vals (ns-publics 'clojure.core))
-                             (map meta)
-                             (filter :special-form)
-                             (map :name))
-          specials (concat compiler-specials core-specials)]
-      (is (every? (fn [[sym {:keys [name special-form]}]]
-                    (and (= sym name)
-                         (true? special-form)))
-                  (map #(vector % (m/special-sym-meta %)) specials)))))
-
+  
   (testing "Names are correct for `&`, `catch`, `finally`"
     (is (= '& (:name (m/special-sym-meta '&))))
     (is (= 'catch (:name (m/special-sym-meta 'catch))))

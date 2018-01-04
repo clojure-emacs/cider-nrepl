@@ -42,6 +42,19 @@
     (merge meta-map {:spec (format-spec fnspec)})
     meta-map))
 
+(defn- maybe-add-url
+  "If `info` has a non blank :url or it's a :special-form build a :url
+  entry pointing to https://clojure.org/..."
+  [info]
+  (if-let [url (cond
+                 (not (str/blank? (:url info)))
+                 (str "https://clojure.org/" (:url info))
+                 
+                 (:special-form info)
+                 (str "https://clojure.org/special_forms#" (:name info)))]
+    (assoc info :url url)
+    info))
+
 (defn- maybe-add-file
   "If `meta-map` has no :file, assoc the :namespace file into it."
   [{:keys [file ns] :as meta-map}]
@@ -80,37 +93,38 @@
   (if-let [ns (find-ns ns)]
     (ns-aliases ns)))
 
-;; This reproduces the behavior of the canonical `clojure.repl/doc` using its
-;; internals, but returns the metadata rather than just printing. Oddly, the
-;; only place in the Clojure API that special form metadata is available *as
-;; data* is a private function. Lame. Just call through the var.
+;; Even if things like catch or finally aren't clojure special
+;; symbols we want to be able to talk about them.
+;; They just map to a special symbol. 
+(def special-sub-symbs '{& fn*, catch try, finally try})
+
+;; What I find very confusing in Clojure documentation is the use of "special form" which is not a concept,
+;; just an annotation on vars (always macros) that are special forms in other lisps.
+;; 
+;; In Clojure, real "special forms" are called special symbols:
+;;
+;; user> (keys (. clojure.lang.Compiler specials))
+;; (& let* monitor-exit case* fn* try reify* ... )
+;; 
+;; and even if the oficial documentation says let is a special form,
+;; it isn't special at all, let* is, while let is just a macro.
+;; 
+;; Looking at Clojure code I couldn't find any use of :special-form annotation
+;; apart from printing a label at the repl doc.
+;; Here we only take care of special symbols, look var-meta for stuff like let, fn, defn, etc.
 (defn special-sym-meta
-  "Return info for the symbol if it's a special form, or nil otherwise. Adds
-  `:url` unless that value is explicitly set to `nil` -- the same behavior
-  used by `clojure.repl/doc`."
+  "Return info for the symbol if it's a special-symbol?, or nil otherwise."
   [sym]
-  (try
-    (let [orig-sym sym
-          sym (get '{& fn, catch try, finally try} sym sym)
-          compiler-special? (special-symbol? orig-sym)
-          v   (meta (ns-resolve (find-ns 'clojure.core) sym))]
-      (when-let [m (cond (special-symbol? sym) (#'repl/special-doc sym)
-                         (:special-form v) v)]
-        (cond-> m
-          compiler-special? (assoc :name orig-sym)
-
-          ;; & uses fn's info, but is not in `clojure.core`
-          (= '& orig-sym) (dissoc :ns)
-
-          true (assoc :url (if (contains? m :url)
-                             (when (:url m)
-                               (str "https://clojure.org/" (:url m)))
-                             (str "https://clojure.org/special_forms#" (:name m)))))))
-    (catch NoClassDefFoundError _)
-    (catch Exception _)))
+  (let [orig-sym sym
+        sym (get special-sub-symbs sym sym)
+        compiler-special? (special-symbol? orig-sym)]
+    (when-let [m (and compiler-special? (#'repl/special-doc sym))]
+      (-> m
+          (assoc :name orig-sym)
+          maybe-add-url))))
 
 (def var-meta-whitelist
-  [:ns :name :doc :file :arglists :forms :macro
+  [:ns :name :doc :file :arglists :forms :macro :special-form
    :protocol :line :column :static :added :deprecated :resource])
 
 (defn var-meta
@@ -118,11 +132,10 @@
   If whitelist is missing use var-meta-whitelist."
   ([v] (var-meta v var-meta-whitelist))
   ([v whitelist]
-   (let [meta-map (-> (or (special-sym-meta v)
-                          (meta v))
+   (let [meta-map (-> (meta v)
                       maybe-protocol
                       (select-keys (or whitelist var-meta-whitelist))
-                      map-seq maybe-add-file)]
+                      map-seq maybe-add-file maybe-add-url)]
      (maybe-add-spec v meta-map))))
 
 
