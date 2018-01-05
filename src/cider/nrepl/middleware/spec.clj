@@ -68,7 +68,7 @@
   "Given a form like (fn* [any-symbol] ... any-symbol...) replace fn* with fn
   and any occurrence of any-symbol with %."
   [[_ [sym] & r]]
-  (concat '(fn [%])
+  (concat '(clojure.core/fn [%])
         (walk/postwalk (fn [form]
                          (if (and (symbol? form) (= form sym))
                            '%
@@ -88,10 +88,11 @@
   "Given a spec symbol as a string, get the spec form and prepare it for
   a response."
   [spec-name]
-  (-> (spec-utils/form (spec-from-string spec-name))
-      add-multi-specs
-      normalize-spec-form
-      str-non-colls))
+  (when-let [spec (spec-from-string spec-name)]
+    (-> (spec-utils/form spec)
+        add-multi-specs
+        normalize-spec-form
+        str-non-colls)))
 
 (defn spec-example
   "Given a spec symbol as a string, returns a string with a pretty printed
