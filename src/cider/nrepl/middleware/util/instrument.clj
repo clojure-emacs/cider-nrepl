@@ -5,6 +5,7 @@
             [clojure.walk :as walk]))
 
 ;;;; # Instrumentation
+;;;
 ;;; The following code is responsible for automatic instrumentation.
 ;;; This involves:
 ;;;    - knowing what's interesting and what's not,
@@ -22,6 +23,7 @@
   '#{quote catch finally})
 
 ;;;; ## Instrumentation
+;;;
 ;;; The top-level instrumenting function is `read-and-instrument`. See
 ;;; its doc for more information.
 ;;;
@@ -30,6 +32,7 @@
 ;;; necessary.
 
 ;;;; ### Instrumenting Special forms
+;;;
 ;;; Here, we implement instrumentation of special-forms on a
 ;;; case-by-case basis. Unlike function calls, we can't just look at
 ;;; each argument separately.
@@ -115,6 +118,7 @@
             args))))
 
 ;;;; ### Instrumenting Functions and Collections
+;;;
 ;;; This part is quite simple, most of the code is devoted to checking
 ;;; form-types and special cases. The idea here is that we walk
 ;;; through collections and function arguments looking for interesting
@@ -208,6 +212,7 @@
     form))
 
 ;;;; ## Pre-instrumentation
+;;;
 ;;; The following functions are used to populate with metadata and
 ;;; macroexpand code before instrumenting it. This is where we
 ;;; calculate all the ::coor vectors. See `read-and-instrument`.
@@ -337,4 +342,3 @@
     (->> (ns-interns ns)
          (filter (comp :cider/instrumented meta second))
          (map first))))
-

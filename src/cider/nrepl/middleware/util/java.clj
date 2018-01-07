@@ -10,6 +10,7 @@
            (clojure.reflect Constructor Field JavaReflector Method)))
 
 ;;; ## Java Class/Member Info
+;;
 ;; Getting class and member info (i.e. type hierarchy, method names,
 ;; argument/return types, etc) is straightforward using reflection; this
 ;; provides the basis of Java metadata support. When the source is available
@@ -17,6 +18,7 @@
 ;; get file, line, and column info, as well as docstrings and argument names.
 
 ;;; ## Classpath
+;;
 ;; Java source files are resolved from the classpath. For library dependencies,
 ;; this simply entails having the corresponding source artifacts in the
 ;; project's dev dependencies. The core Java API classes are the exception to
@@ -61,6 +63,7 @@
   (some-> (jdk-resource-url "lib" "tools.jar") add-classpath!))
 
 ;;; ## Javadoc URLs
+;;
 ;; Relative Javadoc URLs can be constructed from class/member signatures.
 ;;
 ;; N.b. Where a method's bytecode signature differs from its declared signature
@@ -84,6 +87,7 @@
             (str "-" (str/join "-" (map #(str/replace % #"\[\]" ":A") argtypes)) "-"))))))
 
 ;;; ## Class Metadata Assembly
+;;
 ;; We construct metadata at the class level, first using `reflect-info` to
 ;; transform the metadata returned by `clojure.reflect/reflect`. This is then
 ;; merged with a source analysis pass (when available) from `source-info`. The
@@ -157,6 +161,7 @@
                         :javadoc    (javadoc-url class)}))))
 
 ;;; ## Class Metadata Caching
+;;
 ;; When it won't change, cache the class info. Otherwise when we analyze
 ;; hundreds or more classes at once (as with a naive symbol resolution call),
 ;; duplicated reflection and source parsing becomes a wasteful performance hit.
@@ -188,6 +193,7 @@
         info)))
 
 ;;; ## Class/Member Info
+;;
 ;; These functions filter the class info assembled above to respond to a more
 ;; specific query: type information for a class name, and member information for
 ;; a class/member combination.
@@ -233,6 +239,7 @@
                                          (:argtypes m*))))))))
 
 ;;; ## Class/Member Resolution
+;;
 ;; A namespace provides a search context for resolving a symbol to a Java class
 ;; or member. Classes, constructors, and static members can be resolved
 ;; unambiguously. With instance members, more than one imported class may have
@@ -286,6 +293,7 @@
           {:candidates (zipmap (map :class ms) ms)})))))
 
 ;;; ## Initialization
+;;
 ;; On startup, cache info for the most commonly referenced classes.
 (future
   (doseq [class (->> (ns-imports 'clojure.core)

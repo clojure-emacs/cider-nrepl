@@ -20,6 +20,7 @@
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;;;; # The Debugger
+;;;
 ;;; The debugger is divided into two parts, intrument.clj and
 ;;; debug.clj.
 ;;;
@@ -52,6 +53,7 @@
 
 
 ;;;; ## Internal breakpoint logic
+;;;
 ;;; Variables and functions used for navigating between breakpoints.
 (def ^:dynamic *skip-breaks*
   "Map used to determine whether to skip a breakpoint.
@@ -141,6 +143,7 @@
              [`(quote ~sym) (.sym bind)])))
 
 ;;;; ## Getting user input
+;;;
 ;;; `wrap-debug` receives an initial message from the client, stores
 ;;; it in `debugger-message`, and `breakpoint` sends replies on it when
 ;;; asking for input.
@@ -528,6 +531,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 
 ;;; ## Data readers
+;;
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."

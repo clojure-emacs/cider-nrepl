@@ -13,6 +13,7 @@
             [clojure.tools.nrepl.transport :as t]))
 
 ;;; ## Overview
+;;
 ;; This middleware provides test execution and reporting support for the
 ;; `clojure.test` machinery. In this model, the smallest unit of execution is
 ;; the var (as created by `deftest`); which runs all the tests defined within
@@ -28,6 +29,7 @@
 
 
 ;;; ## Test Results
+;;
 ;; `clojure.test` allows extensible test reporting by rebinding the `report`
 ;; function. The implementation below does this to capture report events in the
 ;; `current-report` atom.
@@ -82,6 +84,7 @@
                 :line (:line (stack-frame e f))})))))
 
 ;;; ## test.check integration
+;;
 ;; `test.check` generates random test inputs for property testing. We make the
 ;; inputs part of the report by parsing the respective calls to `report`:
 ;; `test.chuck`'s `checking` creates events of type
@@ -136,6 +139,7 @@
                :message "Uncaught exception in test fixture"}))))
 
 ;;; ## Test Execution
+;;
 ;; These functions are based on the ones in `clojure.test`, updated to accept
 ;; a list of vars to test, use the report implementation above, and distinguish
 ;; between test errors and faults outside of assertions.

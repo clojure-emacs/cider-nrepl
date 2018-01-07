@@ -8,6 +8,7 @@
             [cider.nrepl.middleware.util.namespace :as ns]))
 
 ;;; ## Overview
+;;
 ;; This middleware provides regular expression search across namespaces for
 ;; both symbols and documentation. Results ordered for the most common usages:
 ;; symbols from the current namespace are preferred, then `clojure.*` symbols,

@@ -17,11 +17,13 @@
            (javax.tools JavaFileObject$Kind SimpleJavaFileObject)))
 
 ;;; ## Java Source Analysis
+;;
 ;; Any metadata not available via reflection can be had from the source code; we
 ;; just need to parse it. In the case of docstrings, we actually need to parse
 ;; it twice -- first from Java source, and then from Javadoc HTML.
 
 ;;; ## Java Parsing
+;;
 ;; The Java Compiler API provides in-process access to the Javadoc compiler.
 ;; Unlike the standard Java compiler which it extends, the Javadoc compiler
 ;; preserves docstrings (obviously), as well as source position and argument
@@ -186,6 +188,7 @@
        (apply str)))
 
 ;;; ## Java Parse Tree Traversal
+;;
 ;; From the parse tree returned by the compiler, create a nested map structure
 ;; as produced by `cider.nrepl.middleware.util.java/reflect-info`: class members
 ;; are indexed first by name, then argument types.
