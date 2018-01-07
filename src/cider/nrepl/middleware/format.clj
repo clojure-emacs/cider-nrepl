@@ -1,4 +1,5 @@
 (ns cider.nrepl.middleware.format
+  "Code and EDN formatting functionality."
   (:refer-clojure :exclude [read-string])
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cider.nrepl.middleware.pprint :as pprint]
@@ -8,10 +9,12 @@
             [clojure.tools.reader.edn :as edn]
             [clojure.tools.reader.reader-types :as readers]))
 
+;;; Code formatting
 (defn format-code-reply
   [{:keys [code] :as msg}]
   {:formatted-code (fmt/reformat-string code)})
 
+;;; EDN formatting
 (defn- read-edn
   "Returns a vector of EDN forms, read from the string s."
   [s]
@@ -34,6 +37,7 @@
   [{:keys [edn pprint-fn] :as msg}]
   {:formatted-edn (format-edn edn pprint-fn)})
 
+;;; Middleware op handling
 (defn handle-format [handler msg]
   (with-safe-transport handler msg
     "format-code" format-code-reply
