@@ -2,7 +2,6 @@
   "Code and EDN formatting functionality."
   (:refer-clojure :exclude [read-string])
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.pprint :as pprint]
             [cljfmt.core :as fmt]
             [clojure.string :as string]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
