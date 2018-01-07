@@ -6,7 +6,7 @@
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.inspect :as inspect]
+            [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
             [cider.nrepl.middleware.util.misc :as misc]
             [cider.nrepl.middleware.util.meta :as m]

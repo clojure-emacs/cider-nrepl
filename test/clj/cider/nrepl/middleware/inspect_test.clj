@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require [cider.nrepl.middleware.inspect :as i]
-            [cider.nrepl.middleware.util.inspect :as inspect]
+            [orchard.inspect :as inspect]
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 

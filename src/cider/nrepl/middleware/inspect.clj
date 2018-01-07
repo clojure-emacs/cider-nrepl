@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.inspect
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
-            [cider.nrepl.middleware.util.inspect :as inspect]
+            [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.misc :as u]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]

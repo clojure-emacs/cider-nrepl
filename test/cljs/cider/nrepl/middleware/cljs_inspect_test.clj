@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.cljs-inspect-test
   (:require [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
             [cider.nrepl.test-session :refer [message]]
-            [cider.nrepl.middleware.util.inspect :as inspect]
+            [orchard.inspect :as inspect]
             [clojure.test :refer :all]))
 
 (use-fixtures :each piggieback-fixture)
@@ -16,4 +16,3 @@
                      pr-str)]
     (is (= [rendered] (:value response)))
     (is (= #{"done"} (:status response)))))
-

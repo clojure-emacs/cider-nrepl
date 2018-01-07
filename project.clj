@@ -8,6 +8,7 @@
 
   :dependencies [[org.clojure/tools.nrepl "0.2.13"]
                  [org.tcrawley/dynapath "1.0.0"]
+                 [cider/orchard "0.1.0-SNAPSHOT"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
                  ^:source-dep [fipp "0.6.12"]
                  ^:source-dep [compliment "0.3.5"]
