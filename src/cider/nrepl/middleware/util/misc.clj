@@ -92,12 +92,6 @@
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
 
-(defn err-info
-  [ex status]
-  {:ex (str (class ex))
-   :err (with-out-str (stacktrace/print-cause-trace ex))
-   :status #{status :done}})
-
 (defn random-uuid-str
   "Clojure(Script) UUID generator."
   []
