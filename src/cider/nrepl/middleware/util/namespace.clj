@@ -18,6 +18,7 @@
        (catch Exception _)))
 
 ;;; Project Namespaces
+;;
 ;; These methods search project sources on the classpath. Non-classpath source
 ;; files, documentation code, etc within the project directory are ignored.
 (def jar-namespaces
