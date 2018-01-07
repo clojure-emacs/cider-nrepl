@@ -49,7 +49,7 @@
   (if-let [url (cond
                  (not (str/blank? (:url info)))
                  (str "https://clojure.org/" (:url info))
-                 
+
                  (:special-form info)
                  (str "https://clojure.org/special_forms#" (:name info)))]
     (assoc info :url url)
@@ -95,20 +95,20 @@
 
 ;; Even if things like catch or finally aren't clojure special
 ;; symbols we want to be able to talk about them.
-;; They just map to a special symbol. 
+;; They just map to a special symbol.
 (def special-sub-symbs '{& fn*, catch try, finally try})
 
 ;; What I find very confusing in Clojure documentation is the use of "special form" which is not a concept,
 ;; just an annotation on vars (always macros) that are special forms in other lisps.
-;; 
+;;
 ;; In Clojure, real "special forms" are called special symbols:
 ;;
 ;; user> (keys (. clojure.lang.Compiler specials))
 ;; (& let* monitor-exit case* fn* try reify* ... )
-;; 
+;;
 ;; and even if the oficial documentation says let is a special form,
 ;; it isn't special at all, let* is, while let is just a macro.
-;; 
+;;
 ;; Looking at Clojure code I couldn't find any use of :special-form annotation
 ;; apart from printing a label at the repl doc.
 ;; Here we only take care of special symbols, look var-meta for stuff like let, fn, defn, etc.
@@ -224,14 +224,14 @@
   [ns]
   (when ns
     (merge
-      (meta ns)
-      {:ns ns
-       :file (-> (ns-publics ns)
-                 first
-                 second
-                 var-meta
-                 :file)
-       :line 1})))
+     (meta ns)
+     {:ns ns
+      :file (-> (ns-publics ns)
+                first
+                second
+                var-meta
+                :file)
+      :line 1})))
 
 ;;; ## Manipulation
 
