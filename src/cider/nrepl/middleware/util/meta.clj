@@ -3,6 +3,7 @@
   (:require [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.namespace :as ns]
             [cider.nrepl.middleware.util.spec :as spec]
+            [cider.nrepl.middleware.spec :as spec-mid]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.repl :as repl]
@@ -34,12 +35,14 @@
         :when spec]
     [role (-> spec spec/describe format-spec-descripton)]))
 
+(declare var-name)
+
 (defn- maybe-add-spec
   "If the var `v` has a spec has associated with it, assoc that into meta-map.
   The spec is formatted to avoid processing it in CIDER."
   [v meta-map]
-  (if-let [fnspec (spec/get-spec v)]
-    (merge meta-map {:spec (format-spec fnspec)})
+  (if-let [spec (when v (spec-mid/spec-form (var-name v)))]
+    (merge meta-map {:spec spec})
     meta-map))
 
 (defn- maybe-add-url
@@ -132,11 +135,12 @@
   If whitelist is missing use var-meta-whitelist."
   ([v] (var-meta v var-meta-whitelist))
   ([v whitelist]
-   (let [meta-map (-> (meta v)
-                      maybe-protocol
-                      (select-keys (or whitelist var-meta-whitelist))
-                      map-seq maybe-add-file maybe-add-url)]
-     (maybe-add-spec v meta-map))))
+   (when (var? v)
+    (let [meta-map (-> (meta v)
+                       maybe-protocol
+                       (select-keys (or whitelist var-meta-whitelist))
+                       map-seq maybe-add-file maybe-add-url)]
+      (maybe-add-spec v meta-map)))))
 
 
 
