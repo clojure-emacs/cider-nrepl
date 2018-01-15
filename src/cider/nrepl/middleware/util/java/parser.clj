@@ -243,8 +243,10 @@
 
 (defn source-path
   "Return the relative `.java` source path for the top-level class."
-  [class]
-  (-> (str/replace (str class) #"\$.*" "")
+  [klass]
+  (-> (str klass)
+      (str/replace #"^class " "")
+      (str/replace #"\$.*" "")
       (str/replace "." "/")
       (str ".java")))
 
