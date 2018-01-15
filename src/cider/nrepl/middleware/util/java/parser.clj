@@ -255,13 +255,14 @@
   and return info to supplement reflection. Specifically, this includes source
   file and position, docstring, and argument name info. Info returned has the
   same structure as that of `cider.nrepl.middleware.util.java/reflect-info`."
-  [class]
-  {:pre [(symbol? class)]}
+  [klass]
+  {:pre [(symbol? klass)]}
   (try
-    (let [path (source-path class)]
+    (let [path (source-path klass)]
       (when-let [root (parse-java path)]
         (assoc (->> (map parse-info (.classes root))
-                    (filter #(= class (:class %)))
+                    (filter #(= klass (:class %)))
                     (first))
-               :file path)))
+               :file path
+               :path (. (io/resource path) getPath))))
     (catch Abort _)))
