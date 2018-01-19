@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.debug-integration-test
-  (:require [cider.nrepl.middleware.debug :as d]
+  (:require [cider.nrepl :refer [wrap-debug]]
+            [cider.nrepl.middleware.debug :as d]
             [cider.nrepl.test.server :refer [start-server]]
             [clojure.test :refer :all]
             [clojure.tools.nrepl :as nrepl]
