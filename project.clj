@@ -79,7 +79,7 @@
              :test-cljs {:test-paths ["test/cljs"]
                          :dependencies [[com.cemerick/piggieback "0.2.2"]]}
 
-             :cloverage {:plugins [[lein-cloverage "1.0.10"]]}
+             :cloverage {:plugins [[lein-cloverage "1.0.11-SNAPSHOT"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.5.7"]]
                       :cljfmt {:indents {as-> [[:inner 0]]
