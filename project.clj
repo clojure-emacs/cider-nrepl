@@ -61,21 +61,23 @@
                                   [boot/base "2.7.2"]
                                   [boot/core "2.7.2"]]}
 
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]
+                                  [org.clojure/clojurescript "1.7.228" :scope "provided"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
+                                  [org.clojure/clojurescript "1.8.51" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.9.946"]]
+                                  [org.clojure/clojurescript "1.9.946" :scope "provided"]]
                    :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
-                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]]}
+                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]
+                                     [org.clojure/clojurescript "1.9.946" :scope "provided"]]}
 
              :test-clj {:source-paths ["test/src"]
                         :java-source-paths ["test/java"]
                         :resource-paths ["test/resources"]
                         :test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[com.cemerick/piggieback "0.2.2"]
-                                        [org.clojure/clojurescript "1.7.189"]]}
+                         :dependencies [[com.cemerick/piggieback "0.2.2"]]}
 
              :cloverage {:plugins [[lein-cloverage "1.0.10"]]}
 
