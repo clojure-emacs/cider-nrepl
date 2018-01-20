@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.util.classloader
   (:require [orchard.java :as java]
-            [cider.nrepl.middleware.util.misc :refer [boot-fake-classpath boot-project?]]
+            [orchard.misc :refer [boot-fake-classpath boot-project?]]
             [clojure.string :as str]))
 
 (defn boot-class-loader

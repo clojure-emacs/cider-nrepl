@@ -3,7 +3,7 @@
   {:author "Bozhidar Batsov"}
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.pprint :as pp]
             [clojure.tools.reader :as reader]

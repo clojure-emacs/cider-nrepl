@@ -4,7 +4,7 @@
     [clojure.java.classpath :as classpath]
     [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
     [cider.nrepl.middleware.util.classloader :refer [class-loader]]
-    [cider.nrepl.middleware.util.misc :as u]))
+    [orchard.misc :as u]))
 
 (defn- trim-leading-separator
   [s]

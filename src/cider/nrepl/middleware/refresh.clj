@@ -6,7 +6,7 @@
   ;; checkout dependency - tools.namespace doesn't reload source in JARs.
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [clojure.main :refer [repl-caught]]
             [clojure.tools.namespace.dir :as dir]
             [clojure.tools.namespace.reload :as reload]

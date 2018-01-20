@@ -8,7 +8,7 @@
             [cider.nrepl.middleware.info :as info]
             [orchard.java :as java]
             [cider.nrepl.middleware.util.meta :as m]
-            [cider.nrepl.middleware.util.misc :as util]
+            [orchard.misc :as util]
             [cider.nrepl.middleware.util.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])

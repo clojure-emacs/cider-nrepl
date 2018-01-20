@@ -2,7 +2,7 @@
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
             [orchard.inspect :as inspect]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport])

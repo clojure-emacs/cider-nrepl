@@ -8,7 +8,7 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.util.misc :as misc]
+            [orchard.misc :as misc]
             [cider.nrepl.middleware.util.meta :as m]
             [clojure.java.io :as io]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]

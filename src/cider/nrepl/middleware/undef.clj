@@ -2,7 +2,7 @@
   "Undefine a symbol"
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [cider.nrepl.middleware.util.misc :as u]))
+   [orchard.misc :as u]))
 
 (defn undef
   [{:keys [ns symbol] :as msg}]

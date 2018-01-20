@@ -3,7 +3,7 @@
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.ns :as ns]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]

@@ -11,7 +11,7 @@
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [orchard.java :as java]
             [clojure.java.io :as io]
             [clojure.set :as set]

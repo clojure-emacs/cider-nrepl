@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.pprint
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [clojure.pprint :refer [pprint *print-right-margin*]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
