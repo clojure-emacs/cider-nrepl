@@ -2,9 +2,9 @@
   "Search symbols and docs matching a regular expression"
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.meta :refer [var-name var-doc]]
+            [orchard.meta :refer [var-name var-doc]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [orchard.namespace :as ns]))
 
 ;;; ## Overview

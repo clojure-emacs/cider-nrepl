@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
             [orchard.java :as java]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [orchard.misc :as util]
             [orchard.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]

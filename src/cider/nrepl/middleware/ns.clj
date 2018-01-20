@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [orchard.misc :as u]
             [orchard.namespace :as ns]
             [cljs-tooling.info :as cljs-info]

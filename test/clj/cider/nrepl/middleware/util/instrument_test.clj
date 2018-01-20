@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.util.instrument-test
   (:require [cider.nrepl.middleware.util.instrument :as t]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [clojure.test :refer :all]
             [clojure.walk :as walk]))
 

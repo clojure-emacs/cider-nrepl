@@ -8,7 +8,7 @@
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [orchard.java :as java]
             [orchard.misc :as u]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [cljs-tooling.info :as cljs-info]
             [orchard.spec :as spec]))
 

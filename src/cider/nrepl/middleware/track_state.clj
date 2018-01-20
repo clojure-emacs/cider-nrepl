@@ -4,7 +4,7 @@
   (:require [cider.nrepl.middleware.ns :as ns]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [orchard.misc :as u]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [orchard.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.tools.namespace.find :as ns-find]

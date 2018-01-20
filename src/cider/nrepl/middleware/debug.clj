@@ -9,7 +9,7 @@
             [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
             [orchard.misc :as misc]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.meta :as m]
             [clojure.java.io :as io]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
