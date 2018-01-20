@@ -7,7 +7,6 @@
             [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
-            [clojure.java.classpath :as cp]
             [clojure.tools.namespace.find :as ns-find]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as transport])
