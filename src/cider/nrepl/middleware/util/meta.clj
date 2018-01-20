@@ -2,7 +2,7 @@
   "Utility functions for extracting and manipulating metadata."
   (:require [orchard.misc :as u]
             [orchard.namespace :as ns]
-            [cider.nrepl.middleware.util.spec :as spec]
+            [orchard.spec :as spec]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.repl :as repl]

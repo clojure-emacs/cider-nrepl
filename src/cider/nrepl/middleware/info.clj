@@ -10,7 +10,7 @@
             [orchard.misc :as u]
             [cider.nrepl.middleware.util.meta :as m]
             [cljs-tooling.info :as cljs-info]
-            [cider.nrepl.middleware.util.spec :as spec]))
+            [orchard.spec :as spec]))
 
 (defn- resource-full-path [relative-path]
   (io/resource relative-path (class-loader)))
