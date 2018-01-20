@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.util.meta
   "Utility functions for extracting and manipulating metadata."
   (:require [orchard.misc :as u]
-            [cider.nrepl.middleware.util.namespace :as ns]
+            [orchard.namespace :as ns]
             [cider.nrepl.middleware.util.spec :as spec]
             [cider.nrepl.middleware.spec :as spec-mid]
             [clojure.java.io :as io]

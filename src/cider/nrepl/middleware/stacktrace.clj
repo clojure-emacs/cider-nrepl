@@ -4,7 +4,7 @@
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.info :as info]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.namespace :as namespace]
+            [orchard.namespace :as namespace]
             [clojure.repl :as repl]
             [clojure.string :as str]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]

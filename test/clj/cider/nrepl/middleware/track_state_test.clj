@@ -2,7 +2,7 @@
   (:require [cider.nrepl.middleware.track-state :as st]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.meta :as m]
-            [cider.nrepl.middleware.util.namespace :as namespace]
+            [orchard.namespace :as namespace]
             [clojure.test :refer :all]
             [clojure.tools.nrepl.transport :as t])
   (:import clojure.tools.nrepl.transport.Transport))

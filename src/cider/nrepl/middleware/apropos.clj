@@ -5,7 +5,7 @@
             [cider.nrepl.middleware.util.meta :refer [var-name var-doc]]
             [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [cider.nrepl.middleware.util.meta :as m]
-            [cider.nrepl.middleware.util.namespace :as ns]))
+            [orchard.namespace :as ns]))
 
 ;;; ## Overview
 ;;

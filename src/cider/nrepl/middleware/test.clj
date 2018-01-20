@@ -4,7 +4,7 @@
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as st]
             [orchard.misc :as u]
-            [cider.nrepl.middleware.util.namespace :as ns]
+            [orchard.namespace :as ns]
             [clojure.pprint :as pp]
             [clojure.test :as test]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
