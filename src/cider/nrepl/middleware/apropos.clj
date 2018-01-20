@@ -2,7 +2,6 @@
   "Search symbols and docs matching a regular expression"
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [orchard.apropos :as apropos]))
 
 ;;; ## Middleware
