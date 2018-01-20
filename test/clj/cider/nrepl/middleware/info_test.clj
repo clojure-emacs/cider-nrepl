@@ -9,7 +9,7 @@
             [orchard.java :as java]
             [cider.nrepl.middleware.util.meta :as m]
             [orchard.misc :as util]
-            [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+            [orchard.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])
   (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))

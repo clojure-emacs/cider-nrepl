@@ -3,7 +3,7 @@
     [clojure.java.io :as io]
     [clojure.java.classpath :as classpath]
     [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-    [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+    [orchard.classloader :refer [class-loader]]
     [orchard.misc :as u]))
 
 (defn- trim-leading-separator

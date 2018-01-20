@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.util.namespace
   "Utilities for resolving and loading namespaces"
-  (:require [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+  (:require [orchard.classloader :refer [class-loader]]
             [clojure.java.classpath :as cp]
             [clojure.tools.namespace
              [file :as ns-file]

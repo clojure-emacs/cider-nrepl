@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
-            [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+            [orchard.classloader :refer [class-loader]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [orchard.java :as java]
