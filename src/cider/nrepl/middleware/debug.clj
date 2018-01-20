@@ -20,7 +20,7 @@
 
 ;;;; # The Debugger
 ;;;
-;;; The debugger is divided into two parts, intrument.clj and
+;;; The debugger is divided into two parts, instrument.clj and
 ;;; debug.clj.
 ;;;
 ;;; - instrument.clj (which see), found in the util/ subdir, is
