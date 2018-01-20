@@ -216,10 +216,12 @@
   MethodDoc
   (parse-info [m]
     {:argtypes (mapv #(-> ^Parameter % .type typesym) (.parameters m))
-     :argnames (mapv #(-> ^Parameter % .name symbol) (.parameters m))})
+     :argnames (mapv #(-> ^Parameter % .name symbol) (.parameters m))
+     :type (str (. m returnType))})
 
   FieldDoc
-  (parse-info [f])
+  (parse-info [f]
+    {:type (str (. f type))})
 
   ClassDoc
   (parse-info [c]
