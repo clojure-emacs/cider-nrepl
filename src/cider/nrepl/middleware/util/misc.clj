@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.util.misc
-  (:require [clojure.string :as str]
-            [clojure.stacktrace :as stacktrace]))
+  (:require [clojure.string :as str]))
 
 (defn boot-fake-classpath
   "Retrieve Boot's fake classpath.
