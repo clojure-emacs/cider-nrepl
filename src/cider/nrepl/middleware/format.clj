@@ -4,7 +4,6 @@
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [cljfmt.core :as fmt]
             [clojure.string :as string]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.reader.edn :as edn]
             [clojure.tools.reader.reader-types :as readers]))
 

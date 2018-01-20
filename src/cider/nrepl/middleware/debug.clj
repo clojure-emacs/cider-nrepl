@@ -11,7 +11,6 @@
             [orchard.misc :as misc]
             [orchard.meta :as m]
             [clojure.java.io :as io]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.session :as session]

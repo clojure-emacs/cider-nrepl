@@ -2,8 +2,7 @@
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [orchard.misc :as u]
             [clojure.java.classpath :as cp]
-            [clojure.string :as str]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]))
+            [clojure.string :as str]))
 
 (defn classpath
   "Return a list of classpath entries for the current project.

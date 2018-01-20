@@ -7,7 +7,6 @@
   (:require [cider.nrepl.middleware.debug :as d]
             [cider.nrepl.middleware.util.instrument :as ins]
             [orchard.meta :as m]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.walk :as walk]))
 
 (defn pr-very-short [val]

@@ -7,7 +7,6 @@
             [orchard.namespace :as namespace]
             [clojure.repl :as repl]
             [clojure.string :as str]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.session :refer [session]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
