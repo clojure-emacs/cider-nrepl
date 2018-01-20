@@ -12,7 +12,7 @@
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.transport :as t]
             [cider.nrepl.middleware.util.misc :as u]
-            [cider.nrepl.middleware.util.java :as java]
+            [orchard.java :as java]
             [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.tools.namespace.find :as nsfind])

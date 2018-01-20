@@ -25,15 +25,6 @@
         (or minor "7")))
     (catch Exception _ "7")))
 
-(defn deep-merge
-  "Merge maps recursively. When vals are not maps, last value wins."
-  [& xs]
-  (let [f (fn f [& xs]
-            (if (every? map? xs)
-              (apply merge-with f xs)
-              (last xs)))]
-    (apply f (filter identity xs))))
-
 (defn as-sym
   [x]
   (cond

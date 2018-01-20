@@ -6,7 +6,7 @@
             [cider.nrepl.middleware.util.classloader :refer [class-loader]]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.java :as java]
+            [orchard.java :as java]
             [cider.nrepl.middleware.util.misc :as u]
             [cider.nrepl.middleware.util.meta :as m]
             [cljs-tooling.info :as cljs-info]

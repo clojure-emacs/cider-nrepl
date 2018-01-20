@@ -6,7 +6,7 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
-            [cider.nrepl.middleware.util.java :as java]
+            [orchard.java :as java]
             [cider.nrepl.middleware.util.meta :as m]
             [cider.nrepl.middleware.util.misc :as util]
             [cider.nrepl.middleware.util.classloader :refer [class-loader]]
@@ -85,7 +85,7 @@
             (System/clearProperty "fake.class.path")))))))
 
 (deftest special-sym-meta-test
-  
+
   (testing "Names are correct for `&`, `catch`, `finally`"
     (is (= '& (:name (m/special-sym-meta '&))))
     (is (= 'catch (:name (m/special-sym-meta 'catch))))

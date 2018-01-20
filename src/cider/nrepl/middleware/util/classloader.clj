@@ -1,5 +1,5 @@
 (ns cider.nrepl.middleware.util.classloader
-  (:require [cider.nrepl.middleware.util.java :as java]
+  (:require [orchard.java :as java]
             [cider.nrepl.middleware.util.misc :refer [boot-fake-classpath boot-project?]]
             [clojure.string :as str]))
 
@@ -16,7 +16,7 @@
                             (str "file:" path dir-separator))]
                   (new java.net.URL url)))
               paths)
-        jdk-sources (->> [#_"see '## Classpath' notes at `cider.nrepl.middleware.util.java`"
+        jdk-sources (->> [#_"see '## Classpath' notes at `orchard.java`"
                           ["src.zip"]
                           ["lib" "tools.jar"]]
                          (map (partial apply java/jdk-resource-url))

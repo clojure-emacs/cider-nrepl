@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.util.java.parser
+(ns orchard.java.parser
   "Source and docstring info for Java classes and members"
   {:author "Jeff Valk"}
   (:require [clojure.java.io :as io]
@@ -190,12 +190,12 @@
 ;;; ## Java Parse Tree Traversal
 ;;
 ;; From the parse tree returned by the compiler, create a nested map structure
-;; as produced by `cider.nrepl.middleware.util.java/reflect-info`: class members
+;; as produced by `orchard.java/reflect-info`: class members
 ;; are indexed first by name, then argument types.
 
 (defn typesym
   "Using parse tree info, return the type's name equivalently to the `typesym`
-  function in `cider.nrepl.middleware.util.java`."
+  function in `orchard.java`."
   [^Type t]
   (symbol
    (str (when-let [c (.asClassDoc t)] ; when not a primitive
@@ -254,7 +254,7 @@
   "If the source for the Java class is available on the classpath, parse it
   and return info to supplement reflection. Specifically, this includes source
   file and position, docstring, and argument name info. Info returned has the
-  same structure as that of `cider.nrepl.middleware.util.java/reflect-info`."
+  same structure as that of `orchard.java/reflect-info`."
   [klass]
   {:pre [(symbol? klass)]}
   (try
