@@ -3,7 +3,6 @@
   (:require [orchard.misc :as u]
             [orchard.namespace :as ns]
             [cider.nrepl.middleware.util.spec :as spec]
-            [cider.nrepl.middleware.spec :as spec-mid]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.repl :as repl]
@@ -41,7 +40,7 @@
   "If the var `v` has a spec has associated with it, assoc that into meta-map.
   The spec is formatted to avoid processing it in CIDER."
   [v meta-map]
-  (if-let [spec (when v (spec-mid/spec-form (var-name v)))]
+  (if-let [spec (when v (spec/spec-form (var-name v)))]
     (merge meta-map {:spec spec})
     meta-map))
 
