@@ -66,6 +66,7 @@
   [{:keys [ns symbol class member] :as msg}]
   (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
+      (info-cljs cljs-env symbol ns)
       (let [var-info (cond (and ns symbol) (info-clj ns symbol)
                            (and class member) (info-java class member)
                            :else (throw (Exception.
