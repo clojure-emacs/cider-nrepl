@@ -70,8 +70,10 @@
                            (and class member) (info-java class member)
                            :else (throw (Exception.
                                          "Either \"symbol\", or (\"class\", \"member\") must be supplied")))
-            see-also (get see-also-data (str (:ns var-info) "/" (:name var-info)))]
-        (if see-also
+            var-key  (str (:ns var-info) "/" (:name var-info))
+            see-also (->> (get see-also-data var-key)
+                          (filter (comp resolve u/as-sym)))]
+        (if (seq see-also)
           (merge {:see-also see-also} var-info)
           var-info)))))
 
