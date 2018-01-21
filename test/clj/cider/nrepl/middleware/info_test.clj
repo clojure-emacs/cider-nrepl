@@ -152,12 +152,6 @@
   (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
   (is (nil? (info/info {:ns "" :symbol ""})))
 
-  ;; test CLJX resolve
-  (is (= "simple/test/workaround.cljx"
-         (-> (info/info-clj 'cider.nrepl.middleware.info-test 'info-test)
-             info/handle-cljx-sources
-             :file)))
-
   ;; either symbol or (class method) should be passed
   (is (thrown? Exception
                (info/info {:ns "cider.nrepl.middleware.info-test"
@@ -252,16 +246,6 @@
     (let [reply (info/javadoc-info "http://some/other/url")
           url (:javadoc reply)]
       (is (= url "http://some/other/url")))))
-
-(deftest find-cljx-source-unit-test
-  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "http://fake.com"))]
-    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
-
-  (with-redefs [info/resource-full-path (fn [& _] false)]
-    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
-
-  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "file://fakehome"))]
-    (is (nil? (info/find-cljx-source "cider/nrepl/test_session.clj")))))
 
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
