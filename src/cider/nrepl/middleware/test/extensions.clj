@@ -9,7 +9,8 @@
 
 ;; From pjstadig/humane-test-output
 ;; https://github.com/pjstadig/humane-test-output
-(defmethod assert-expr '= [msg [_ expected & more]]
+(defn =-body
+  [msg expected more]
   (if (seq more)
     `(let [more# (list ~@more)
            result# (apply = ~expected more#)]
@@ -24,6 +25,15 @@
             test/do-report)
        result#)
     `(throw (Exception. "= expects more than one argument"))))
+
+(defmethod assert-expr '= [msg [_ expected & more]]
+  (=-body msg expected more))
+
+;; In cases where an is form is part of a macro expansion assert-expr will get
+;; called with the fully qualified name for = (clojure.core/=)
+;; See: https://github.com/clojure-emacs/cider-nrepl/pull/478#pullrequestreview-90616379
+(defmethod assert-expr 'clojure.core/= [msg [_ expected & more]]
+  (=-body msg expected more))
 
 (defn diffs-result
   "Convert diffs data to form appropriate for transport."
