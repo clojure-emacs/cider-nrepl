@@ -426,7 +426,8 @@
     (testing "see also"
       (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:see-also response)
-               ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt"])))
+               ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"]
+               )))
       (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
         (is (nil? (:see-also response))))
 
