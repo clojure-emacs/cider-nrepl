@@ -5,6 +5,8 @@
             [cider.nrepl.test-session :as session]
             [clojure.string :as str]))
 
+(def ^:private ^{:doc "Can't. See. Me"} private-var [:a :b :c])
+
 (use-fixtures :each session/session-fixture)
 (deftest integration-test
   (testing "Apropos op, typical case"
