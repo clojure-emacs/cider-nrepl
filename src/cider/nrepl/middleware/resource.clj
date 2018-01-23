@@ -1,10 +1,10 @@
 (ns cider.nrepl.middleware.resource
   (:require
-    [clojure.java.io :as io]
-    [clojure.java.classpath :as classpath]
-    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-    [orchard.classloader :refer [class-loader]]
-    [orchard.misc :as u]))
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [clojure.java.io :as io]
+   [orchard.classloader :refer [class-loader]]
+   [orchard.classpath :as cp]
+   [orchard.misc :as u]))
 
 (defn- trim-leading-separator
   [s]
@@ -15,26 +15,25 @@
 (defn- get-project-resources
   []
   (mapcat
-    (fn [directory]
-      (->>
-        directory
-        (file-seq)
-        (filter (memfn isFile))
-        (map (fn [file]
-               (let [relpath (-> file
-                                 (.getPath)
-                                 (.replaceFirst
-                                   (.getPath directory)
-                                   "")
-                                 (trim-leading-separator))]
-                 {:root directory
-                  :file file
-                  :relpath relpath
-                  :url (io/resource relpath)})))
-        (remove #(.startsWith (:relpath %) "META-INF/"))
-        (remove #(re-matches #".*\.(clj[cs]?|java|class)" (:relpath %)))))
-    (filter (memfn isDirectory)
-            (classpath/classpath (class-loader)))))
+   (fn [directory]
+     (->> directory
+          (file-seq)
+          (filter (memfn isFile))
+          (map (fn [file]
+                 (let [relpath (-> file
+                                   (.getPath)
+                                   (.replaceFirst
+                                    (.getPath directory)
+                                    "")
+                                   (trim-leading-separator))]
+                   {:root directory
+                    :file file
+                    :relpath relpath
+                    :url (io/resource relpath)})))
+          (remove #(.startsWith (:relpath %) "META-INF/"))
+          (remove #(re-matches #".*\.(clj[cs]?|java|class)" (:relpath %)))))
+   (filter (memfn isDirectory)
+           (cp/classpath (class-loader)))))
 
 (defn resource-path [name]
   (when-let [resource (io/resource name (class-loader))]
