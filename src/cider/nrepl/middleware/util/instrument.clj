@@ -77,9 +77,9 @@
                       (list* (m/merge-meta sym
                                            ;; Instrument the metadata, because
                                            ;; that's where tests are stored.
-                                           (instrument (or (meta sym) {}))
+                               (instrument (or (meta sym) {}))
                                            ;; to be used later for meta stripping
-                                           {::def-symbol true})
+                               {::def-symbol true})
                              (map instrument (rest args))))
             '#{set!} (list (first args)
                            (instrument (second args)))
@@ -90,7 +90,7 @@
             '#{reify* deftype*} (map #(if (seq? %)
                                         (let [[a1 a2 & ar] %]
                                           (m/merge-meta (list* a1 a2 (instrument-coll ar))
-                                                        (meta %)))
+                                            (meta %)))
                                         %)
                                      args)
             ;; `fn*` has several possible syntaxes.
@@ -138,8 +138,8 @@
   If function is given, use it to instrument form before wrapping. The
   breakpoint is given by the form's ::breakfunction metadata."
   ([form]
-   (let [{extras ::extras,
-          [_ orig] ::original-form,
+   (let [{extras ::extras
+          [_ orig] ::original-form
           bf   ::breakfunction} (meta form)]
      (cond
        (and bf extras)
@@ -148,8 +148,8 @@
        ;; destroyed by a macro. Try guessing the extras by looking at
        ;; the first element. This fixes `->`, for instance.
        (seq? form)
-       (let [{extras ::extras,
-              [_ orig] ::original-form,
+       (let [{extras ::extras
+              [_ orig] ::original-form
               bf   ::breakfunction} (meta (first form))
              extras (if (= (last extras) 0)
                       (pop extras)
@@ -291,20 +291,20 @@
   identify currently instrumented vars in list-instrumented-defs."
   [form]
   (walk-indexed
-    (fn [_ f]
-      (if (instance? clojure.lang.IObj f)
-        (let [keys [::original-form ::extras ::breakfunction ::def-symbol]
-              f    (if (::def-symbol (meta f))
-                     (let [br (::breakfunction (meta f))
-                           f1 (m/strip-meta f keys)]
-                       (if br
-                         (vary-meta f1 assoc :cider/instrumented (name (:name (meta br))))
-                         f1))
-                     (m/strip-meta f keys))]
+   (fn [_ f]
+     (if (instance? clojure.lang.IObj f)
+       (let [keys [::original-form ::extras ::breakfunction ::def-symbol]
+             f    (if (::def-symbol (meta f))
+                    (let [br (::breakfunction (meta f))
+                          f1 (m/strip-meta f keys)]
+                      (if br
+                        (vary-meta f1 assoc :cider/instrumented (name (:name (meta br))))
+                        f1))
+                    (m/strip-meta f keys))]
           ;; also strip meta of the meta
-          (with-meta f (strip-instrumentation-meta (meta f))))
-        f))
-    form))
+         (with-meta f (strip-instrumentation-meta (meta f))))
+       f))
+   form))
 
 (defn instrument-tagged-code
   "Return `form` instrumented with breakpoints.

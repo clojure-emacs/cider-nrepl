@@ -21,42 +21,42 @@
 (defn info-clj
   [ns sym]
   (or
-    ;; it's a special (special-symbol?)
-    (m/special-sym-meta sym)
-    ;; it's a var
-    (m/var-meta (m/resolve-var ns sym))
-    ;; sym is an alias for another ns
-    (m/ns-meta (get (m/resolve-aliases ns) sym))
-    ;; it's simply a full ns
-    (m/ns-meta (find-ns sym))
-    ;; it's a Java class/member symbol...or nil
-    (java/resolve-symbol ns sym)))
+   ;; it's a special (special-symbol?)
+   (m/special-sym-meta sym)
+   ;; it's a var
+   (m/var-meta (m/resolve-var ns sym))
+   ;; sym is an alias for another ns
+   (m/ns-meta (get (m/resolve-aliases ns) sym))
+   ;; it's simply a full ns
+   (m/ns-meta (find-ns sym))
+   ;; it's a Java class/member symbol...or nil
+   (java/resolve-symbol ns sym)))
 
 (defn info-cljs
   [env symbol ns]
   (some-> (cljs-info/info env symbol ns)
           (select-keys [:file :line :ns :doc :column :name :arglists])
           (update
-            :file
-            (fn [f]
-              (if (u/boot-project?)
-                ;; Boot stores files in a temporary directory & ClojureScript
-                ;; stores the :file metadata location absolutely instead of
-                ;; relatively to the classpath. This means when doing jump to
-                ;; source in Boot & ClojureScript, you end up at the temp file.
-                ;; This code attempts to find the classpath-relative location
-                ;; of the file, so that it can be opened correctly.
-                (let [path (java.nio.file.Paths/get f (into-array String []))
-                      path-count (.getNameCount path)]
-                  (or
-                    (first
-                      (sequence
-                        (comp (map #(.subpath path % path-count))
-                              (map str)
-                              (filter io/resource))
-                        (range path-count)))
-                    f))
-                f)))))
+           :file
+           (fn [f]
+             (if (u/boot-project?)
+               ;; Boot stores files in a temporary directory & ClojureScript
+               ;; stores the :file metadata location absolutely instead of
+               ;; relatively to the classpath. This means when doing jump to
+               ;; source in Boot & ClojureScript, you end up at the temp file.
+               ;; This code attempts to find the classpath-relative location
+               ;; of the file, so that it can be opened correctly.
+               (let [path (java.nio.file.Paths/get f (into-array String []))
+                     path-count (.getNameCount path)]
+                 (or
+                  (first
+                   (sequence
+                    (comp (map #(.subpath path % path-count))
+                          (map str)
+                          (filter io/resource))
+                    (range path-count)))
+                  f))
+               f)))))
 
 (defn info-java
   [class member]

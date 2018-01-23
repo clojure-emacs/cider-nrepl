@@ -27,15 +27,15 @@
                                   ;; In this case the onus is on the user. A warning will be emitted
                                   ;; later, but we assume that the user will provide an appropriate
                                   ;; implementation.
-                                  ,,true
+                                  true
 
                                   (nil? clojure-version)
                                   ;; Lein 2.5.2+ uses Clojure 1.7 by default, which would be OK.
-                                  ,,lein-version-ok?
+                                  lein-version-ok?
 
                                   :else
                                   ;; There is a Clojure version depended on, it must check out.
-                                  ,,(lein/version-satisfies? clojure-version "1.7.0"))]
+                                  (lein/version-satisfies? clojure-version "1.7.0"))]
 
     (when-not lein-version-ok?
       (lein/warn "Warning: cider-nrepl requires Leiningen 2.5.2 or greater."))

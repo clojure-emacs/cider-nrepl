@@ -80,11 +80,11 @@
                                    u/transform-value)
                            (u/transform-value (frame->url frame)))))
     (assoc frame :file-url (some->
-                             (java/resolve-symbol 'user
-                                                  (symbol (:name frame)))
-                             :file
-                             path->url
-                             u/transform-value))))
+                            (java/resolve-symbol 'user
+                                                 (symbol (:name frame)))
+                            :file
+                            path->url
+                            u/transform-value))))
 
 (defn analyze-file
   "Associate the file type (extension) of the source file to the frame map, and
@@ -227,13 +227,13 @@
 
 (def spec-abbrev
   (delay
-    (if (try (require 'clojure.spec) true
-             (catch Throwable _ false))
-      (resolve 'clojure.spec/abbrev)
-      (if (try (require 'clojure.spec.alpha) true
-               (catch Throwable _ false))
-        (resolve 'clojure.spec.alpha/abbrev)
-        #'identity))))
+   (if (try (require 'clojure.spec) true
+            (catch Throwable _ false))
+     (resolve 'clojure.spec/abbrev)
+     (if (try (require 'clojure.spec.alpha) true
+              (catch Throwable _ false))
+       (resolve 'clojure.spec.alpha/abbrev)
+       #'identity))))
 
 (defn prepare-spec-data
   "Prepare spec problems for display in user stacktraces.

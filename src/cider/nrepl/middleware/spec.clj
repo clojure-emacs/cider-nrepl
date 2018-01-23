@@ -2,7 +2,6 @@
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [orchard.spec :as spec-utils]))
 
-
 ;; Replies
 
 (defn spec-list-reply [msg]
