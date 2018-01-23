@@ -14,7 +14,7 @@ env:
   - VERSION=1.9 TARGET=test-clj
   - VERSION=1.9 TARGET=test-cljs
 jdk:
-  - oraclejdk7
+  - openjdk7
   - oraclejdk8
   - oraclejdk9
 matrix:
