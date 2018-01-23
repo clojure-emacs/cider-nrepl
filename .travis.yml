@@ -5,74 +5,52 @@ cache:
   directories:
     - $HOME/.m2
 script:
-  - lein source-deps
-  - $TEST_CMD
+  - make $TARGET
 env:
-  - TEST_CMD="lein with-profile +1.7,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
-
-  - TEST_CMD="lein with-profile +1.8,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
-
-  - TEST_CMD="lein with-profile +1.9,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein with-profile +1.9,+plugin.mranderson/config,+test-cljs test"
-
-  - TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-clj test"
-  - TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-cljs test"
+  - VERSION=1.7 TARGET=test-clj
+  - VERSION=1.7 TARGET=test-cljs
+  - VERSION=1.8 TARGET=test-clj
+  - VERSION=1.8 TARGET=test-cljs
+  - VERSION=1.9 TARGET=test-clj
+  - VERSION=1.9 TARGET=test-cljs
 jdk:
   - openjdk7
-  - oraclejdk7
   - oraclejdk8
+  - oraclejdk9
 matrix:
   include:
-    - env:
-        - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
+    # Test OpenJDK against latest Clojure stable
+    - env: VERSION=1.9 TARGET=test-clj
+      jdk: openjdk8
+    - env: VERSION=1.9 TARGET=test-cljs
+      jdk: openjdk8
+
+    # Test Clojure master against a single JDK
+    - env: VERSION=master TARGET=test-clj
+      jdk: oraclejdk8
+    - env: VERSION=master TARGET=test-cljs
+      jdk: oraclejdk8
+
+    # Eastwood linter
+    - env: VERSION=1.9 TARGET=eastwood
+      jdk: oraclejdk8
+
+    # Check cljfmt
+    - env: VERSION=1.9 TARGET=cljfmt
+      jdk: oraclejdk8
+
+    # Coverage analysis
+    - env: VERSION=1.9 TARGET=cloverage
+      jdk: oraclejdk8
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
-      jdk: oraclejdk8
 
-    - env:
-        - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
-      after_success: curl -F json_file=@target/coverage/coveralls.json https://coveralls.io/api/v1/jobs
-      jdk: oraclejdk8
-
-    - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
-      jdk: oraclejdk8
-
-    - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
-      jdk: oraclejdk8
-
-  exclude:
-    # Only test openjdk against the latest Clojure stable.
-    - env: TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-clj test"
-      jdk: openjdk7
-    - env: TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-cljs test"
-      jdk: openjdk7
-    - env: TEST_CMD="lein with-profile +1.7,+plugin.mranderson/config,+test-clj test"
-      jdk: openjdk7
-    - env: TEST_CMD="lein with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
-      jdk: openjdk7
-
-    # Testing Clojure master is about foreseeing incompatible changes,
-    # not about uncovering incompatibilities with specific jdk
-    # versions, so a single build (oraclejdk8) should be enough.
-    - env: TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-clj test"
-      jdk: oraclejdk7
-    - env: TEST_CMD="lein with-profile +master,+plugin.mranderson/config,+test-cljs test"
-      jdk: oraclejdk7
-
-  # "fast_finish" means "don't wait for the allowed failures".
-  fast_finish: true
+  fast_finish: true      # don't wait for allowed failures before build finish
   allow_failures:
-    - env: TEST_CMD="lein with-profile +1.8,+plugin.mranderson/config,+test-cljs test"
-      jdk: oraclejdk7
-    - env: TEST_CMD="lein with-profile +1.7,+plugin.mranderson/config,+test-cljs test"
-      jdk: oraclejdk7
-    - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cljfmt cljfmt check"
-    - env: TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+eastwood eastwood"
-    - env:
-        - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --codecov"
-    - env:
-        - TEST_CMD="lein with-profile +1.7,+test-clj,+test-cljs,+cloverage cloverage --coveralls"
+    - env: VERSION=master TARGET=test-clj
+    - env: VERSION=master TARGET=test-cljs
+    - env: VERSION=1.9 TARGET=cloverage
+    - env: VERSION=1.9 TARGET=eastwood
+    - env: VERSION=1.9 TARGET=cljfmt
 
 notifications:
   webhooks:

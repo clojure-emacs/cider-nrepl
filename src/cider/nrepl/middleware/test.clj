@@ -3,8 +3,9 @@
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as st]
-            [cider.nrepl.middleware.util.misc :as u]
-            [cider.nrepl.middleware.util.namespace :as ns]
+            [cider.nrepl.middleware.test.extensions :as extensions]
+            [orchard.misc :as u]
+            [orchard.namespace :as ns]
             [clojure.pprint :as pp]
             [clojure.test :as test]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
@@ -63,22 +64,26 @@
   "Transform the result of a test assertion. Append ns, var, assertion index,
   and 'testing' context. Retain any exception. Pretty-print expected/actual."
   [ns v m]
-  (let [c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
+  (let [{:keys [actual diffs expected fault]
+         t :type} m
+        c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get-in (@current-report :results) [ns (:name (meta v))]))
-        t (:type m)
-        gen-input (:gen-input @current-report)]
+        gen-input (:gen-input @current-report)
+        pprint-str #(with-out-str (pp/pprint %))]
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
            {:ns ns, :var (:name (meta v)), :index i, :context c}
-           (when (and (#{:fail :error} t) (not (:fault m)))
-             {:expected (with-out-str (pp/pprint (:expected m)))})
+           (when (and (#{:fail :error} t) (not fault))
+             {:expected (pprint-str expected)})
            (when (and (#{:fail} t) gen-input)
-             {:gen-input (with-out-str (pp/pprint gen-input))})
+             {:gen-input (pprint-str gen-input)})
            (when (#{:fail} t)
-             {:actual (with-out-str (pp/pprint (:actual m)))})
+             {:actual (pprint-str actual)})
+           (when diffs
+             {:diffs (extensions/diffs-result diffs)})
            (when (#{:error} t)
-             (let [e (:actual m)
+             (let [e actual
                    f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
                {:error e
                 :line (:line (stack-frame e f))})))))

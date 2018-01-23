@@ -2,7 +2,7 @@
   (:require [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]
             [cider.nrepl.middleware.refresh :as r]
-            [cider.nrepl.middleware.util.misc :as u]))
+            [orchard.misc :as u]))
 
 (use-fixtures :each session/session-fixture)
 

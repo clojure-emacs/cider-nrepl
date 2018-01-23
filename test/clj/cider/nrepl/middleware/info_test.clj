@@ -6,10 +6,10 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
-            [cider.nrepl.middleware.util.java :as java]
-            [cider.nrepl.middleware.util.meta :as m]
-            [cider.nrepl.middleware.util.misc :as util]
-            [cider.nrepl.middleware.util.classloader :refer [class-loader]]
+            [orchard.java :as java]
+            [orchard.meta :as m]
+            [orchard.misc :as util]
+            [orchard.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])
   (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))
@@ -85,7 +85,7 @@
             (System/clearProperty "fake.class.path")))))))
 
 (deftest special-sym-meta-test
-  
+
   (testing "Names are correct for `&`, `catch`, `finally`"
     (is (= '& (:name (m/special-sym-meta '&))))
     (is (= 'catch (:name (m/special-sym-meta 'catch))))
@@ -151,12 +151,6 @@
   ;; handle zero-lenth input
   (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
   (is (nil? (info/info {:ns "" :symbol ""})))
-
-  ;; test CLJX resolve
-  (is (= "simple/test/workaround.cljx"
-         (-> (info/info-clj 'cider.nrepl.middleware.info-test 'info-test)
-             info/handle-cljx-sources
-             :file)))
 
   ;; either symbol or (class method) should be passed
   (is (thrown? Exception
@@ -252,16 +246,6 @@
     (let [reply (info/javadoc-info "http://some/other/url")
           url (:javadoc reply)]
       (is (= url "http://some/other/url")))))
-
-(deftest find-cljx-source-unit-test
-  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "http://fake.com"))]
-    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
-
-  (with-redefs [info/resource-full-path (fn [& _] false)]
-    (is (nil? (info/find-cljx-source "clojure/java/io.clj"))))
-
-  (with-redefs [info/resource-full-path (fn [& _] (java.net.URL. "file://fakehome"))]
-    (is (nil? (info/find-cljx-source "cider/nrepl/test_session.clj")))))
 
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
@@ -442,7 +426,8 @@
     (testing "see also"
       (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:see-also response)
-               ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt"])))
+               ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"]
+               )))
       (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
         (is (nil? (:see-also response))))
 

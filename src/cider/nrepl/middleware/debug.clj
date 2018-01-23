@@ -8,20 +8,18 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.util.misc :as misc]
-            [cider.nrepl.middleware.util.meta :as m]
+            [orchard.misc :as misc]
+            [orchard.meta :as m]
             [clojure.java.io :as io]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
             [clojure.tools.nrepl.misc :refer [response-for]]
             [clojure.tools.nrepl.middleware.session :as session]
-            [clojure.tools.nrepl.transport :as transport]
-            [cider.nrepl.middleware.util.misc :as u])
+            [clojure.tools.nrepl.transport :as transport])
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;;;; # The Debugger
 ;;;
-;;; The debugger is divided into two parts, intrument.clj and
+;;; The debugger is divided into two parts, instrument.clj and
 ;;; debug.clj.
 ;;;
 ;;; - instrument.clj (which see), found in the util/ subdir, is
@@ -62,6 +60,20 @@
   Its value is discarded at the end each eval session."
   (atom nil))
 
+(defn- random-uuid-str
+  "Clojure(Script) UUID generator."
+  []
+  (letfn [(hex [] (format "%x" (rand-int 15)))
+          (nhex [n] (apply str (repeatedly n hex)))]
+    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
+      (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
+           "-" rhex (nhex 3) "-" (nhex 12)))))
+
+(defn- seq=
+  "To deal with, eg: (= () nil) => true"
+  [a b]
+  (= (seq a) (seq b)))
+
 (defn skip-breaks?
   "True if the breakpoint at coordinates should be skipped.
 
@@ -90,7 +102,7 @@
           ;; From :out, skip some breaks.
           :deeper (if same-defn?
                     (let [parent (take (count skip-coords) coordinates)]
-                      (and (u/seq= skip-coords parent)
+                      (and (seq= skip-coords parent)
                            (> (count coordinates) (count parent))))
                     force?)
           ;; From :here, skip some breaks.
@@ -210,7 +222,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn- read-debug-input
   "Like `read`, but reply is sent through `debugger-message`."
   [dbg-state input-type prompt]
-  (let [key (u/random-uuid-str)
+  (let [key (random-uuid-str)
         input (promise)]
     (swap! promises assoc key input)
     (debugger-send (-> dbg-state

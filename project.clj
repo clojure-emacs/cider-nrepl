@@ -7,14 +7,12 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/tools.nrepl "0.2.13"]
-                 [org.tcrawley/dynapath "1.0.0"]
-                 [cider/orchard "0.1.0-SNAPSHOT"]
+                 ^:source-dep [cider/orchard "0.1.0-SNAPSHOT"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
                  ^:source-dep [fipp "0.6.12"]
                  ^:source-dep [compliment "0.3.5"]
                  ^:source-dep [cljs-tooling "0.2.0"]
                  ^:source-dep [cljfmt "0.5.7" :exclusions [org.clojure/clojurescript]]
-                 ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
                  ^:source-dep [org.clojure/tools.trace "0.7.9"]
                  ^:source-dep [org.clojure/tools.reader "1.1.1"]]
@@ -61,23 +59,25 @@
                                   [boot/base "2.7.2"]
                                   [boot/core "2.7.2"]]}
 
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]
+                                  [org.clojure/clojurescript "1.7.228" :scope "provided"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
+                                  [org.clojure/clojurescript "1.8.51" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.9.946"]]
+                                  [org.clojure/clojurescript "1.9.946" :scope "provided"]]
                    :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
-                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]]}
+                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]
+                                     [org.clojure/clojurescript "1.9.946" :scope "provided"]]}
 
              :test-clj {:source-paths ["test/src"]
                         :java-source-paths ["test/java"]
                         :resource-paths ["test/resources"]
                         :test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[com.cemerick/piggieback "0.2.2"]
-                                        [org.clojure/clojurescript "1.7.189"]]}
+                         :dependencies [[com.cemerick/piggieback "0.2.2"]]}
 
-             :cloverage {:plugins [[lein-cloverage "1.0.10"]]}
+             :cloverage {:plugins [[lein-cloverage "1.0.11-SNAPSHOT"]]}
 
              :cljfmt {:plugins [[lein-cljfmt "0.5.7"]]
                       :cljfmt {:indents {as-> [[:inner 0]]

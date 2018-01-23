@@ -1,10 +1,8 @@
 (ns cider.nrepl.middleware.complete
   (:require [clojure.string :as s]
-            [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.session :as session]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.misc :as u]
+            [orchard.misc :as u]
             [compliment.core :as jvm-complete]
             [compliment.utils :as jvm-complete-utils]
             [cljs-tooling.complete :as cljs-complete]))
