@@ -1,8 +1,10 @@
 (ns cider.nrepl.middleware.classpath-test
-  (:require [cider.nrepl.test-session :as session]
-            [cider.nrepl.middleware.classpath :as cp]
+  (:require [cider.nrepl.middleware.classpath :as cp]
+            [cider.nrepl.test-session :as session]
+            [clojure.set :as set]
             [clojure.string :as str]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import [java.io File]))
 
 (use-fixtures :each session/session-fixture)
 (deftest integration-test
@@ -34,3 +36,8 @@
                        (cp/classpath))))
         (finally
           (System/clearProperty "fake.class.path"))))))
+
+(deftest classpath-test
+  (is (set/subset? (set (-> (System/getProperty "java.class.path")
+                            (str/split (re-pattern File/pathSeparator))))
+                   (set (cp/classpath)))))
