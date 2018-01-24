@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.apropos-test
-  (:require [orchard.apropos :refer :all]
-            [orchard.meta :refer [var-name var-doc]]
+  (:require [cider.nrepl.middleware.apropos :refer [apropos]]
             [clojure.test :refer :all]
             [cider.nrepl.test-session :as session]
             [clojure.string :as str]))
@@ -51,7 +50,7 @@
 
 (deftest error-handling-test
   (testing "Handles a fake error done via mocked function"
-    (with-redefs [orchard.apropos/find-symbols
+    (with-redefs [apropos
                   (fn [args] (throw (Exception. "boom")))]
       (let [response (session/message {:op "apropos" :query "doesn't matter"})]
         (is (= (:status response) #{"apropos-error" "done"}))

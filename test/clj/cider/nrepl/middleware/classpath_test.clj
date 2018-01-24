@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.classpath-test
   (:require [cider.nrepl.test-session :as session]
-            [orchard.classpath :as cp]
+            [cider.nrepl.middleware.classpath :refer :all]
             [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
@@ -14,7 +14,7 @@
     (is (some #(re-find #".*clojure-.*jar" %) classpaths))))
 
 (deftest error-handling-test
-  (with-redefs [cp/classpath (fn [] (throw (Exception. "cp error")))]
+  (with-redefs [classpath-reply (fn [] (throw (Exception. "cp error")))]
     (let [response (session/message {:op "classpath"})]
       (is (= (:status response) #{"done" "classpath-error"}))
       (is (.startsWith (:err response) "java.lang.Exception: cp error"))
