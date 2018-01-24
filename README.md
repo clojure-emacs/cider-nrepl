@@ -272,6 +272,7 @@ who have helped so far.
 
 Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
+* [orchard](https://github.com/clojure-emacs/orchard) - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
 * [compliment](https://github.com/alexander-yakushev/compliment) - for Clojure code completion
 * [cljs-tooling](https://github.com/clojure-emacs/cljs-tooling) - for ClojureScript code completion and var info
 * [tools.trace](https://github.com/clojure/tools.trace) - for tracing
