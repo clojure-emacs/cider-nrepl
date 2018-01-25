@@ -10,10 +10,10 @@ export CLOVERAGE_VERSION = 1.0.11-SNAPSHOT
 source-deps: .source-deps
 
 test-clj: .source-deps
-	lein with-profile +$(VERSION),+plugin.mranderson/config,+test-clj test
+	lein with-profile +$(VERSION),+test-clj test
 
 test-cljs: .source-deps
-	lein with-profile +$(VERSION),+plugin.mranderson/config,+test-cljs test
+	lein with-profile +$(VERSION),+test-cljs test
 
 eastwood: .source-deps
 	lein with-profile +$(VERSION),+test-clj,+test-cljs,+eastwood eastwood
