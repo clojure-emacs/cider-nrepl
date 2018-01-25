@@ -14,7 +14,7 @@
     (is (some #(re-find #".*clojure-.*jar" %) classpaths))))
 
 (deftest error-handling-test
-  (with-redefs [classpath-reply (fn [] (throw (Exception. "cp error")))]
+  (with-redefs [classpath-reply (fn [_] (throw (Exception. "cp error")))]
     (let [response (session/message {:op "classpath"})]
       (is (= (:status response) #{"done" "classpath-error"}))
       (is (.startsWith (:err response) "java.lang.Exception: cp error"))
