@@ -32,6 +32,20 @@
                                 (>= (compare (clojure-version) min-version) 0 )
                                 true))}
 
+  :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]}
+
+  :release-tasks [["vcs" "assert-committed"]
+                  ["bump-version" "release"]
+                  ["vcs" "commit" "Release %s"]
+                  ["vcs" "tag" "v" "--no-sign"]
+                  ["bump-version"]
+                  ["vcs" "commit" "Begin %s"]]
+
+  :deploy-repositories [["clojars" {:url "https://clojars.org/repo"
+                                    :username :env/clojars_username
+                                    :password :env/clojars_password
+                                    :sign-releases false}]]
+
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
