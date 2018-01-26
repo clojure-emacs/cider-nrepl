@@ -9,16 +9,16 @@ export CLOVERAGE_VERSION = 1.0.11-SNAPSHOT
 
 source-deps: .source-deps
 
-test-clj: .source-deps
+test-clj: #  .source-deps
 	lein with-profile +$(VERSION),+test-clj test
 
-test-cljs: .source-deps
+test-cljs: # .source-deps
 	lein with-profile +$(VERSION),+test-cljs test
 
-eastwood: .source-deps
+eastwood:
 	lein with-profile +$(VERSION),+test-clj,+test-cljs,+eastwood eastwood
 
-cljfmt: .source-deps
+cljfmt:
 	lein with-profile +$(VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check
 
 
@@ -27,7 +27,7 @@ cljfmt: .source-deps
 # instrumentation. Note: this means for now coverage reporting isn't
 # exact. See issue #457 for details.
 
-cloverage: .source-deps
+cloverage:
 	lein with-profile +$(VERSION),+test-clj,+cloverage cloverage --codecov \
 	     -e ".*java.parser" \
 	     -e "cider-nrepl.plugin" \
@@ -36,5 +36,4 @@ cloverage: .source-deps
 
 clean:
 	lein clean
-	rm .source-deps
-
+	rm -f .source-deps
