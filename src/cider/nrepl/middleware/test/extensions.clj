@@ -19,7 +19,7 @@
               {:type :fail
                :diffs (->> (remove #(= ~expected %) more#)
                            (map #(vector % (data/diff ~expected %))))})
-            (merge {:message ~msg,
+            (merge {:message ~msg
                     :expected ~expected
                     :actual more#})
             test/do-report)

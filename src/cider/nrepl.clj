@@ -33,9 +33,9 @@
         sym (symbol (name `~fn-name))]
     (swap! delayed-handlers assoc sym
            (delay
-             (locking require-lock
-               (require `~ns)
-               (resolve-or-fail `~fn-name))))
+            (locking require-lock
+              (require `~ns)
+              (resolve-or-fail `~fn-name))))
     `(@(get @delayed-handlers '~sym) ~handler ~msg)))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
@@ -70,8 +70,6 @@
              (run-deferred-handler ~handler-fn ~'h ~'msg)
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
-
-
 ;;; Deferred Middleware Wrappers
 ;; Each middleware is defined in its own namespace, but here we're defining
 ;; deferred versions of the middleware handlers, that load the actual middleware
@@ -109,7 +107,7 @@
 (def-wrapper wrap-pprint cider.nrepl.middleware.pprint/handle-pprint
   #{"eval" "load-file"}
   (cljs/expects-piggieback
-    {:doc "Middleware that adds a pretty-printing option to the eval op.
+   {:doc "Middleware that adds a pretty-printing option to the eval op.
            Passing a non-nil value in the `:pprint` slot will cause eval to call
            clojure.pprint/pprint on its result. The `:right-margin` slot can be
            used to bind `*clojure.pprint/*print-right-margin*` during the
@@ -119,12 +117,12 @@
            remove the `:pprint` key entirely from your request map, don't try
            and set the value to nil, false, or string representations of the
            above)."
-     :requires #{"clone" #'pr-values #'wrap-pprint-fn}
-     :expects #{"eval" "load-file"}
-     :handles {"pprint-middleware"
-               {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
-                :optional (merge wrap-pprint-fn-optional-arguments
-                                 {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
+    :requires #{"clone" #'pr-values #'wrap-pprint-fn}
+    :expects #{"eval" "load-file"}
+    :handles {"pprint-middleware"
+              {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
+               :optional (merge wrap-pprint-fn-optional-arguments
+                                {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:doc "Middleware that handles apropos requests"
@@ -142,49 +140,49 @@
 
 (def-wrapper wrap-complete cider.nrepl.middleware.complete/handle-complete
   (cljs/requires-piggieback
-    {:doc "Middleware providing completion support."
-     :requires #{#'session}
-     :handles {"complete"
-               {:doc "Return a list of symbols matching the specified (partial) symbol."
-                :requires {"ns" "The symbol's namespace"
-                           "symbol" "The symbol to lookup"
-                           "session" "The current session"}
-                :optional {"context" "Completion context for compliment."
-                           "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
-                :returns {"completions" "A list of possible completions"}}
-               "complete-doc"
-               {:doc "Retrieve documentation suitable for display in completion popup"
-                :requires {"ns" "The symbol's namespace"
-                           "symbol" "The symbol to lookup"}
-                :returns {"completion-doc" "Symbol's documentation"}}
-               "complete-flush-caches"
-               {:doc "Forces the completion backend to repopulate all its caches"}}}))
+   {:doc "Middleware providing completion support."
+    :requires #{#'session}
+    :handles {"complete"
+              {:doc "Return a list of symbols matching the specified (partial) symbol."
+               :requires {"ns" "The symbol's namespace"
+                          "symbol" "The symbol to lookup"
+                          "session" "The current session"}
+               :optional {"context" "Completion context for compliment."
+                          "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
+               :returns {"completions" "A list of possible completions"}}
+              "complete-doc"
+              {:doc "Retrieve documentation suitable for display in completion popup"
+               :requires {"ns" "The symbol's namespace"
+                          "symbol" "The symbol to lookup"}
+               :returns {"completion-doc" "Symbol's documentation"}}
+              "complete-flush-caches"
+              {:doc "Forces the completion backend to repopulate all its caches"}}}))
 
 (def-wrapper wrap-debug cider.nrepl.middleware.debug/handle-debug
   #{"eval"}
   (cljs/requires-piggieback
-    {:doc "Provide instrumentation and debugging functionality."
-     :expects  #{"eval"}
-     :requires #{#'wrap-pprint-fn #'session}
-     :handles {"debug-input"
-               {:doc "Read client input on debug action."
-                :requires {"input" "The user's reply to the input request."}
-                :returns  {"status" "done"}}
-               "init-debugger"
-               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
-                :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-               "debug-instrumented-defs"
-               {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed."
-                :returns {"status" "done"
-                          "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
-               "debug-middleware"
-               {:doc "Debug a code form or fall back on regular eval."
-                :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
-                           "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-                           "file"  "File where the code is located."
-                           "ns"    "Passed to \"eval\"."
-                           "point" "Position in the file where the provided code begins."}
-                :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
+   {:doc "Provide instrumentation and debugging functionality."
+    :expects  #{"eval"}
+    :requires #{#'wrap-pprint-fn #'session}
+    :handles {"debug-input"
+              {:doc "Read client input on debug action."
+               :requires {"input" "The user's reply to the input request."}
+               :returns  {"status" "done"}}
+              "init-debugger"
+              {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
+               :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+              "debug-instrumented-defs"
+              {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed."
+               :returns {"status" "done"
+                         "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
+              "debug-middleware"
+              {:doc "Debug a code form or fall back on regular eval."
+               :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
+                          "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
+                          "file"  "File where the code is located."
+                          "ns"    "Passed to \"eval\"."
+                          "point" "Position in the file where the provided code begins."}
+               :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}}))
 
 (def-wrapper wrap-enlighten cider.nrepl.middleware.enlighten/handle-enlighten
   :enlighten
@@ -206,112 +204,112 @@
 
 (def-wrapper wrap-info cider.nrepl.middleware.info/handle-info
   (cljs/requires-piggieback
-    {:requires #{#'session}
-     :handles {"info"
-               {:doc "Return a map of information about the specified symbol."
-                :requires {"symbol" "The symbol to lookup"
-                           "ns" "The current namespace"}
-                :returns {"status" "done"}}
-               "eldoc"
-               {:doc "Return a map of information about the specified symbol."
-                :requires {"symbol" "The symbol to lookup"
-                           "ns" "The current namespace"}
-                :returns {"status" "done"}}
-               "eldoc-datomic-query"
-               {:doc "Return a map containing the inputs of the datomic query."
-                :requires {"symbol" "The symbol to lookup"
-                           "ns" "The current namespace"}
-                :returns {"status" "done"}}}}))
+   {:requires #{#'session}
+    :handles {"info"
+              {:doc "Return a map of information about the specified symbol."
+               :requires {"symbol" "The symbol to lookup"
+                          "ns" "The current namespace"}
+               :returns {"status" "done"}}
+              "eldoc"
+              {:doc "Return a map of information about the specified symbol."
+               :requires {"symbol" "The symbol to lookup"
+                          "ns" "The current namespace"}
+               :returns {"status" "done"}}
+              "eldoc-datomic-query"
+              {:doc "Return a map containing the inputs of the datomic query."
+               :requires {"symbol" "The symbol to lookup"
+                          "ns" "The current namespace"}
+               :returns {"status" "done"}}}}))
 
 (def-wrapper wrap-inspect cider.nrepl.middleware.inspect/handle-inspect
   #{"eval"}
   (cljs/expects-piggieback
-    {:doc "Add a value inspector option to the eval op. Passing a non-nil value
+   {:doc "Add a value inspector option to the eval op. Passing a non-nil value
            in the `:inspect` slot will cause the last value returned by eval to
            be inspected. Returns a string representation of the resulting
            inspector's state in the `:value` slot."
-     :requires #{"clone" #'pr-values}
-     :expects #{"eval"}
-     :handles {"inspect-pop"
-               {:doc "Moves one level up in the inspector stack."
-                :requires {"session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-push"
-               {:doc "Inspects the inside value specified by index."
-                :requires {"idx" "Index of the internal value currently rendered."
-                           "session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-refresh"
-               {:doc "Re-renders the currently inspected value."
-                :requires {"session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-get-path"
-               {:doc "Returns the path to the current position in the inspected value."
-                :requires {"session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-next-page"
-               {:doc "Jumps to the next page in paginated collection view."
-                :requires {"session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-prev-page"
-               {:doc "Jumps to the previous page in paginated collection view."
-                :requires {"session" "The current session"}
-                :returns {"status" "\"done\""}}
-               "inspect-set-page-size"
-               {:doc "Sets the page size in paginated view to specified value."
-                :requires {"page-size" "New page size."
-                           "session" "The current session"}
-                :returns {"status" "\"done\""}}}}))
+    :requires #{"clone" #'pr-values}
+    :expects #{"eval"}
+    :handles {"inspect-pop"
+              {:doc "Moves one level up in the inspector stack."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-push"
+              {:doc "Inspects the inside value specified by index."
+               :requires {"idx" "Index of the internal value currently rendered."
+                          "session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-refresh"
+              {:doc "Re-renders the currently inspected value."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-get-path"
+              {:doc "Returns the path to the current position in the inspected value."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-next-page"
+              {:doc "Jumps to the next page in paginated collection view."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-prev-page"
+              {:doc "Jumps to the previous page in paginated collection view."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-set-page-size"
+              {:doc "Sets the page size in paginated view to specified value."
+               :requires {"page-size" "New page size."
+                          "session" "The current session"}
+               :returns {"status" "\"done\""}}}}))
 
 (def-wrapper wrap-macroexpand cider.nrepl.middleware.macroexpand/handle-macroexpand
   (cljs/requires-piggieback
-    {:doc "Macroexpansion middleware."
-     :requires #{#'session}
-     :handles {"macroexpand"
-               {:doc "Produces macroexpansion of some form using the given expander."
-                :requires {"code" "The form to macroexpand."}
-                :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
-                           "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
-                           "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
-                           "print-meta" "If truthy, also print metadata of forms."}
-                :returns {"expansion" "The macroexpanded form."}}}}))
+   {:doc "Macroexpansion middleware."
+    :requires #{#'session}
+    :handles {"macroexpand"
+              {:doc "Produces macroexpansion of some form using the given expander."
+               :requires {"code" "The form to macroexpand."}
+               :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
+                          "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
+                          "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
+                          "print-meta" "If truthy, also print metadata of forms."}
+               :returns {"expansion" "The macroexpanded form."}}}}))
 
 (def-wrapper wrap-ns cider.nrepl.middleware.ns/handle-ns
   (cljs/requires-piggieback
-    {:doc "Provide ns listing and browsing functionality."
-     :requires #{#'session}
-     :handles {"ns-list"
-               {:doc "Return a sorted list of all namespaces."
-                :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-                :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
-               "ns-list-vars-by-name"
-               {:doc "Return a list of vars named `name` amongst all namespaces."
-                :requires {"name" "The name to use."}
-                :returns {"status" "done" "var-list" "The list obtained."}}
-               "ns-vars"
-               {:doc "Returns a sorted list of all vars in a namespace."
-                :requires {"ns" "The namespace to browse."}
-                :returns {"status" "done" "ns-vars" "The sorted list of all vars in a namespace."}}
-               "ns-vars-with-meta"
-               {:doc "Returns a map of [var-name] to [var-metadata] for all vars in a namespace."
-                :requires {"ns" "The namespace to use."}
-                :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for all vars in a namespace."}}
-               "ns-path"
-               {:doc "Returns the path to the file containing ns."
-                :requires {"ns" "The namespace to find."}
-                :return {"status" "done" "path" "The path to the file containing ns."}}
-               "ns-load-all"
-               {:doc "Loads all project namespaces."
-                :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}}}))
+   {:doc "Provide ns listing and browsing functionality."
+    :requires #{#'session}
+    :handles {"ns-list"
+              {:doc "Return a sorted list of all namespaces."
+               :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
+               :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
+              "ns-list-vars-by-name"
+              {:doc "Return a list of vars named `name` amongst all namespaces."
+               :requires {"name" "The name to use."}
+               :returns {"status" "done" "var-list" "The list obtained."}}
+              "ns-vars"
+              {:doc "Returns a sorted list of all vars in a namespace."
+               :requires {"ns" "The namespace to browse."}
+               :returns {"status" "done" "ns-vars" "The sorted list of all vars in a namespace."}}
+              "ns-vars-with-meta"
+              {:doc "Returns a map of [var-name] to [var-metadata] for all vars in a namespace."
+               :requires {"ns" "The namespace to use."}
+               :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for all vars in a namespace."}}
+              "ns-path"
+              {:doc "Returns the path to the file containing ns."
+               :requires {"ns" "The namespace to find."}
+               :return {"status" "done" "path" "The path to the file containing ns."}}
+              "ns-load-all"
+              {:doc "Loads all project namespaces."
+               :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}}}))
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   (cljs/expects-piggieback
-    {:requires #{#'session}
-     :expects #{"eval"}
-     :handles {"out-subscribe"
-               {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
-               "out-unsubscribe"
-               {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
+   {:requires #{#'session}
+    :expects #{"eval"}
+    :handles {"out-subscribe"
+              {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
+              "out-unsubscribe"
+              {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
 
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:doc "Refresh middleware."
@@ -353,29 +351,29 @@
 
 (def-wrapper wrap-spec cider.nrepl.middleware.spec/handle-spec
   (cljs/requires-piggieback
-    {:doc "Middleware that provides `clojure.spec` browsing functionality."
-     :handles {"spec-list" {:doc "Return a sorted list of all specs in the registry"
-                            :returns {"status" "done"
-                                      "spec-list" "The sorted list of all specs in the registry with their descriptions"}
-                            :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
-               "spec-form" {:doc "Return the form of a given spec"
-                            :requires {"spec-name" "The spec namespaced keyword we are looking for"}
-                            :returns {"status" "done"
-                                      "spec-form" "The spec form"}}
-               "spec-example" {:doc "Return a string with a pretty printed example for a spec"
-                               :requires {"spec-name" "The spec namespaced keyword we want the example for"}
-                               :returns {"status" "done"
-                                         "example" "The pretty printed spec example string"}}}}))
+   {:doc "Middleware that provides `clojure.spec` browsing functionality."
+    :handles {"spec-list" {:doc "Return a sorted list of all specs in the registry"
+                           :returns {"status" "done"
+                                     "spec-list" "The sorted list of all specs in the registry with their descriptions"}
+                           :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
+              "spec-form" {:doc "Return the form of a given spec"
+                           :requires {"spec-name" "The spec namespaced keyword we are looking for"}
+                           :returns {"status" "done"
+                                     "spec-form" "The spec form"}}
+              "spec-example" {:doc "Return a string with a pretty printed example for a spec"
+                              :requires {"spec-name" "The spec namespaced keyword we want the example for"}
+                              :returns {"status" "done"
+                                        "example" "The pretty printed spec example string"}}}}))
 
 (def-wrapper wrap-stacktrace cider.nrepl.middleware.stacktrace/handle-stacktrace
   (cljs/requires-piggieback
-    {:doc "Middleware that handles stacktrace requests, sending
+   {:doc "Middleware that handles stacktrace requests, sending
            cause and stack frame info for the most recent exception."
-     :requires #{#'session #'wrap-pprint-fn}
-     :expects #{}
-     :handles {"stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
-                             :optional wrap-pprint-fn-optional-arguments
-                             :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
+    :requires #{#'session #'wrap-pprint-fn}
+    :expects #{}
+    :handles {"stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
+                            :optional wrap-pprint-fn-optional-arguments
+                            :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
@@ -415,13 +413,13 @@
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   ops-that-can-eval
   (cljs/expects-piggieback
-    {:doc "Enhances the `eval` op by notifying the client of the current REPL
+   {:doc "Enhances the `eval` op by notifying the client of the current REPL
            state. Currently, only the REPL type (Clojure or ClojureScript) is
            informed."
-     :requires #{#'session}
-     :expects ops-that-can-eval
-     :handles {"track-state-middleware" ;; <- not handled !?
-               {}}}))
+    :requires #{#'session}
+    :expects ops-that-can-eval
+    :handles {"track-state-middleware" ;; <- not handled !?
+              {}}}))
 
 (def-wrapper wrap-undef cider.nrepl.middleware.undef/handle-undef
   {:doc "Middleware to undefine a symbol in a namespace."
@@ -440,8 +438,6 @@
      :requires {}
      :returns {"cider-version" "CIDER-nREPL's version map."
                "status" "done"}}}})
-
-
 ;;; Cider's Handler
 
 (def cider-middleware

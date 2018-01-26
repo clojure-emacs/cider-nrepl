@@ -203,7 +203,6 @@
          (test-ns (the-ns ns))))
   @current-report)
 
-
 ;;; ## Metadata Utils
 
 (defn has-tests?
@@ -231,14 +230,14 @@
   `(let [session# (:session ~msg)]
      ;; Before tools.nrepl-0.2.10, `queue-eval` was private.
      (@#'ie/queue-eval session# (:executor ~msg)
-      (fn []
-        (alter-meta! session# assoc
-                     :thread (Thread/currentThread)
-                     :eval-msg ~msg)
-        (binding [ie/*msg* ~msg]
-          (with-bindings @session#
-            ~@body)
-          (alter-meta! session# dissoc :thread :eval-msg))))))
+                       (fn []
+                         (alter-meta! session# assoc
+                                      :thread (Thread/currentThread)
+                                      :eval-msg ~msg)
+                         (binding [ie/*msg* ~msg]
+                           (with-bindings @session#
+                             ~@body)
+                           (alter-meta! session# dissoc :thread :eval-msg))))))
 
 (defn handle-test-op
   [{:keys [ns tests session transport] :as msg}]

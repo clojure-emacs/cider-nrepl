@@ -149,11 +149,11 @@
 
 (deftest eval-expression-with-code-test
   (is (= (#'d/read-eval-expression
-           "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc 1))
+          "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc 1))
          2))
   (let [x 10]
     (is (= (#'d/read-eval-expression
-             "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc x))
+            "Unused prompt" (add-locals {:some "random", 'meaningless :map}) '(inc x))
            11))))
 
 (deftest debug-reader-test
@@ -194,10 +194,14 @@
   (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
                 d/debugger-message   (atom [:fake])
                 d/*skip-breaks*      (atom nil)]
-    (binding [*msg* {:session (atom {}) :code :code, :id     :id,
-                     :file    :file,    :line :line, :column :column}]
+    (binding [*msg* {:session (atom {})
+                     :code    :code
+                     :id      :id
+                     :file    :file
+                     :line    :line
+                     :column  :column}]
       (let [m (eval `(d/with-initial-debug-bindings
-                         (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10))))]
+                       (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10))))]
         (are [k v] (= (k m) v)
           :value       11
           :debug-value "11"
@@ -210,15 +214,14 @@
       (reset! d/debugger-message [:fake])
       ;; Locals capturing
       (is (= (:value (eval `(d/with-initial-debug-bindings
-                                (let [~'x 10] (d/breakpoint-if-interesting
-                                                (locals)
-                                                {:coor [1]} nil)))))
+                              (let [~'x 10] (d/breakpoint-if-interesting
+                                             (locals)
+                                             {:coor [1]} nil)))))
              '{x 10}))
       ;; Top-level sexps are not debugged, just returned.
       (is (= (eval `(d/with-initial-debug-bindings
-                        (let [~'x 10] (d/breakpoint-if-interesting
-                                        (locals)
-                                        {:coor []}
-                                        nil))))
-             '{x 10}))
-      )))
+                      (let [~'x 10] (d/breakpoint-if-interesting
+                                     (locals)
+                                     {:coor []}
+                                     nil))))
+             '{x 10})))))

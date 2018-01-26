@@ -64,14 +64,14 @@
 
 (deftest filter-core-and-get-meta-test
   (is (= (st/filter-core-and-get-meta {'and #'and, 'b #'map, 'c #'deftest})
-         '{c {:macro "true",
-              :arglists "([name & body])",
-              :fn "true",
+         '{c {:macro "true"
+              :arglists "([name & body])"
+              :fn "true"
               :doc "\"Defines a test function with no arguments.  Test functions may call\\n  other tests, so tests may be composed.  If you compose tests, you\\n  should also define a function named test-ns-hook; run-tests will\\n  call test-ns-hook instead of testing all vars.\\n\\n  Note: Actually, the test body goes in the :test metadata on the var,\\n  and the real function (the value of the var) calls test-var on\\n  itself.\\n\\n  When *load-tests* is false, deftest is ignored.\""}}))
   (is (= (map (comp :fn
                     (st/filter-core-and-get-meta
-                     {'fn-test-var #'fn-test-var,
-                      'fn-test-def-fn #'fn-test-def-fn,
+                     {'fn-test-var #'fn-test-var
+                      'fn-test-def-fn #'fn-test-def-fn
                       'fn-test-defn-fn #'fn-test-defn-fn
                       'fn-test-multi #'fn-test-multi}))
               '[fn-test-var fn-test-def-fn fn-test-defn-fn fn-test-multi])

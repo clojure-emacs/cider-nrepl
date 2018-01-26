@@ -211,9 +211,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                   (let [root-ex# (#'clojure.main/root-cause e#)]
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
-                        {:status :eval-error
-                         :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
-                                    (when (coll? causes#) (last causes#)))]})))
+                       {:status :eval-error
+                        :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
+                                   (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)
        ~error-expr
@@ -284,12 +284,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   "Create a dummy exception, send its stack."
   []
   (debugger-send
-    {:status :stack
-     :causes [{:class "StackTrace"
-               :message "Harmless user-requested stacktrace"
-               :stacktrace (-> (Exception. "Dummy")
-                               (stacktrace/analyze-causes (:pprint-fn *msg*))
-                               last :stacktrace)}]}))
+   {:status :stack
+    :causes [{:class "StackTrace"
+              :message "Harmless user-requested stacktrace"
+              :stacktrace (-> (Exception. "Dummy")
+                              (stacktrace/analyze-causes (:pprint-fn *msg*))
+                              last :stacktrace)}]}))
 
 (def debug-commands
   {"c" :continue
@@ -392,7 +392,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                              (merge var-meta)
                              (assoc :file full-path))]
           (let [iform `(with-initial-debug-bindings
-                           ~(ins/instrument-tagged-code (debug-reader form)))]
+                         ~(ins/instrument-tagged-code (debug-reader form)))]
             ;; (ins/print-form iform true)
             (eval iform)
             (let [instrumented @v]
@@ -436,7 +436,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
            (not (:macro m))
            (not (:inline m))))))
 
-
 ;;;  ## Breakpoint logic
 
 (def ^:dynamic *tmp-forms* (atom {}))
@@ -452,18 +451,18 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
   `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
-                           (-> {:code code,
-                                ;; Passing clojure.lang.Namespace object
-                                ;; as :original-ns breaks nREPL in bewildering
-                                ;; ways.
-                                :original-id id, :original-ns (str (or ns *ns*)),
-                                :file file, :line line, :column column}
-                               ;; There's an nrepl bug where the column starts counting
-                               ;; at 1 if it's after the first line. Since this is a
-                               ;; top-level sexp, a (= col 1) is much more likely to be
-                               ;; wrong than right.
-                               (update :column #(if (= % 1) 0 %))))
-                   :forms @*tmp-forms*}]
+                            (-> {:code code
+                                 ;; Passing clojure.lang.Namespace object
+                                 ;; as :original-ns breaks nREPL in bewildering
+                                 ;; ways.
+                                 :original-id id, :original-ns (str (or ns *ns*))
+                                 :file file, :line line, :column column}
+                                ;; There's an nrepl bug where the column starts counting
+                                ;; at 1 if it's after the first line. Since this is a
+                                ;; top-level sexp, a (= col 1) is much more likely to be
+                                ;; wrong than right.
+                                (update :column #(if (= % 1) 0 %))))
+                    :forms @*tmp-forms*}]
      ~@body))
 
 (defn break
@@ -540,8 +539,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
              (expand-break ~form ~dbg-state ~original-form)
              (finally (reset! *skip-breaks* old-breaks#))))
         `(expand-break ~form ~dbg-state ~original-form)))))
-
-
 ;;; ## Data readers
 ;;
 ;; Set in `src/data_readers.clj`.
@@ -558,7 +555,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn instrument-and-eval [form]
   (let [form1 `(with-initial-debug-bindings
-                   ~(ins/instrument-tagged-code form))]
+                 ~(ins/instrument-tagged-code form))]
     ;; (ins/print-form form1 true false)
     (try
       (binding [*tmp-forms* (atom {})]

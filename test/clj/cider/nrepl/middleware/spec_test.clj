@@ -3,7 +3,6 @@
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]))
 
-
 ;; integration tests
 
 (use-fixtures :each session/session-fixture)

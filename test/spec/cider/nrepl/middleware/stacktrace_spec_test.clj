@@ -9,17 +9,17 @@
 (defn causes
   [form]
   (analyze-causes
-    (try (eval form)
-         (catch Exception e
-           e))
-    pprint))
+   (try (eval form)
+        (catch Exception e
+          e))
+   pprint))
 
 (defn stack-frames
   [form]
   (analyze-stacktrace
-    (try (eval form)
-         (catch Exception e
-           e))))
+   (try (eval form)
+        (catch Exception e
+          e))))
 
 (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 (s/def ::email-type (s/and string? #(re-matches email-regex %)))
@@ -37,7 +37,7 @@
 
   (def broken-musk-causes
     (causes
-      `(s/assert ::person broken-musk)))
+     `(s/assert ::person broken-musk)))
 
   (testing "Spec assert components"
     (is (= 1 (count broken-musk-causes)))

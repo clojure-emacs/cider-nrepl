@@ -11,15 +11,15 @@
 
 (def ^:private print-cause-trace
   (delay
-    (do
-      (require 'clojure.stacktrace)
-      (resolve 'clojure.stacktrace/print-cause-trace))))
+   (do
+     (require 'clojure.stacktrace)
+     (resolve 'clojure.stacktrace/print-cause-trace))))
 
 (def ^:private analyze-causes
   (delay
-    (do
-      (require 'cider.nrepl.middleware.stacktrace)
-      (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
+   (do
+     (require 'cider.nrepl.middleware.stacktrace)
+     (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
 
 ;;; UTILITY FUNCTIONS
 
@@ -89,7 +89,7 @@
   examine the elements of a collection to ensure that the enclosed
   elements are also bencodable, and so you probably actually want to
   use `deep-bencodable-or-fail` or write something similar."
-  [item] 
+  [item]
   (cond
     (instance? (RT/classForName "[B") item) :bytes
     (instance? InputStream item) :input-stream

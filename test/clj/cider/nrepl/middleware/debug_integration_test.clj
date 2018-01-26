@@ -10,7 +10,6 @@
   (:import java.util.UUID
            [java.util.concurrent TimeUnit LinkedBlockingQueue]))
 
-
 ;;; Helpers for starting an nRepl session
 ;;; We do not use clojure.tools.nrepl/client-session here because it
 ;;; is built with the expectation that each message sent to the server
@@ -59,7 +58,6 @@
 (defmacro with-nrepl-session [& body]
   `(with-nrepl-session* (fn [] ~@body)))
 
-
 ;;; Helpers for initiating a new debugger session.
 
 (def ^:dynamic *debugger-key*
@@ -83,7 +81,6 @@
 
 (defmacro with-debug-session [& body]
   `(with-debug-session* (fn [] ~@body)))
-
 
 ;;; Sort-of a DSL for testing nrepl interactions
 
@@ -122,7 +119,6 @@
 (defmacro <-- [& body]
   `(debugger-expect ~@body))
 
-
 ;;; Tests
 
 (use-fixtures :each
@@ -130,7 +126,6 @@
     (with-nrepl-session
       (with-debug-session
         (f)))))
-
 
 (deftest debug-expression-test
   (testing "normal eval (no debugging)"
@@ -147,7 +142,7 @@
 
   (testing "#dbg reader, with breaks"
     (--> :eval
-        "#dbg
+         "#dbg
          (let [x 1]
            (inc x))")
     (<-- {:debug-value "1"})            ; x
@@ -286,7 +281,7 @@
 
   ;; 1) should break at the `i` in `(foo (inc i))`
   (<-- {:debug-value "7" :coor [2 1 1] :locals [["i" "7"]]})
-  
+
   ;; 2) Do a `:here` op at the end of `(dec i)`, skipping over the
   ;; call to foo.
   (--> :here [3])
@@ -305,7 +300,6 @@
   ;; 5) return value of the `let`
   (<-- {:value "6"})
   (<-- {:status ["done"]}))
-
 
 ;;; Tests for force-step operations
 
@@ -380,10 +374,9 @@
   ;; instrumented, but should stop after `(dec i)`.
   (<-- {:debug-value "4" :coor [3]})
   (--> :next)
-  
+
   (<-- {:value "4"})
   (<-- {:status ["done"]}))
-
 
 ;;; Tests for conditional breakpoints
 
