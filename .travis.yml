@@ -44,6 +44,13 @@ matrix:
       jdk: oraclejdk8
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
 
+  exclude:
+    # CLJS-1.9 doesn't build on JDK7. This is because of a dependency on the
+    # google/closure-compiler which requires JDK8 or higher.
+    # https://github.com/google/closure-compiler/wiki/Releases#september-10-2017-v20170910
+    - env: VERSION=1.9 TARGET=test-cljs
+      jdk: openjdk7
+
   fast_finish: true      # don't wait for allowed failures before build finish
   allow_failures:
     - env: VERSION=master TARGET=test-clj
