@@ -7,17 +7,26 @@ cache:
 script:
   - make $TARGET
 env:
-  - VERSION=1.7 TARGET=test-clj
-  - VERSION=1.7 TARGET=test-cljs
-  - VERSION=1.8 TARGET=test-clj
-  - VERSION=1.8 TARGET=test-cljs
-  - VERSION=1.9 TARGET=test-clj
-  - VERSION=1.9 TARGET=test-cljs
+  matrix:
+    - VERSION=1.7 TARGET=test-clj
+    - VERSION=1.7 TARGET=test-cljs
+    - VERSION=1.8 TARGET=test-clj
+    - VERSION=1.8 TARGET=test-cljs
+    - VERSION=1.9 TARGET=test-clj
+    - VERSION=1.9 TARGET=test-cljs
+  #global:
+  #  - secure: <encrypted CLOJARS_USERNAME goes here>
+  #  - secure: <encrypted CLOJARS_PASSWORD goes here>
 jdk:
   - openjdk7
   - oraclejdk8
   - oraclejdk9
-matrix:
+stages:
+  - name: test
+  - name: check
+  - name: deploy
+    if: branch = master
+jobs:
   include:
     # Test OpenJDK against latest Clojure stable
     - env: VERSION=1.9 TARGET=test-clj
@@ -31,18 +40,25 @@ matrix:
     - env: VERSION=master TARGET=test-cljs
       jdk: oraclejdk8
 
-    # Eastwood linter
-    - env: VERSION=1.9 TARGET=eastwood
-      jdk: oraclejdk8
-
-    # Check cljfmt
-    - env: VERSION=1.9 TARGET=cljfmt
-      jdk: oraclejdk8
-
     # Coverage analysis
     - env: VERSION=1.9 TARGET=cloverage
       jdk: oraclejdk8
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
+
+    # Eastwood linter
+    - stage: check
+      env: VERSION=1.9 TARGET=eastwood
+      jdk: oraclejdk8
+
+    # Check cljfmt
+    - stage: check
+      env: VERSION=1.9 TARGET=cljfmt
+      jdk: oraclejdk8
+
+    # Deployment
+    - stage: deploy
+      env: TARGET=deploy
+      jdk: oraclejdk8
 
   exclude:
     # CLJS-1.9 doesn't build on JDK7. This is because of a dependency on the
