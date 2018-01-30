@@ -55,19 +55,10 @@ release:
 
 # Deploying requires the caller to set environment variables as
 # specified in project.clj to provide a login and password to the
-# artifact repository.  We're setting TRAVIS_PULL_REQUEST to a default
-# value to avoid accidentally deploying from the command line. Inside
-# Travis CI this variable will be set to the pull request number, or
-# to "false" if it's not a pull request.
-
-TRAVIS_PULL_REQUEST ?= "true"
+# artifact repository.
 
 deploy: .source-deps
-	if [ "$(TRAVIS_PULL_REQUEST)" != "false" ]; then \
-	    echo "Pull request detected. Skipping deploy."; \
-	else \
-	    lein with-profile +$(VERSION),+plugin.mranderson/config deploy clojars; \
-	fi
+	lein with-profile +$(VERSION),+plugin.mranderson/config deploy clojars
 
 clean:
 	lein clean
