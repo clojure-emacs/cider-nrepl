@@ -4,7 +4,8 @@ VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.11-SNAPSHOT
 
 # The test-cljs target needs to be modified if working with JDK9
-JAVA_VERSION = $(shell lein version | cut -d " " -f 5 | cut -d "." -f 1-2)
+JAVA_VERSION = $(shell lein with-profile +sysutils \
+                       sysutils :java-version-simple | cut -d " " -f 2)
 
 .source-deps:
 	lein source-deps
@@ -16,7 +17,7 @@ test-clj: # .source-deps
 	lein with-profile +$(VERSION),+test-clj test
 
 test-cljs: # .source-deps
-	if [ "$(JAVA_VERSION)" = "9.0" ] || [ "$(JAVA_VERSION)" = "9-internal" ]; then \
+	if [ "$(JAVA_VERSION)" = "9" ]; then \
             lein with-profile +$(VERSION),+test-cljs \
                  update-in :jvm-opts concat '["--add-modules" "java.xml.bind"]' \
                  -- test; \
