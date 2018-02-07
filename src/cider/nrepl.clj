@@ -311,6 +311,45 @@
               "out-unsubscribe"
               {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
 
+(def-wrapper wrap-profile cider.nrepl.middleware.profile/handle-profile
+  {:doc     "Middleware that provides supports Profiling based on https://github.com/thunknyc/profile"
+   :handles {"toggle-profile-ns"   {:doc      "Toggle profiling of given namespace."
+                                    :requires {"ns" "The current namespace"}
+                                    :returns  {"status" "Done"
+                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
+             "is-var-profiled"     {:doc      "Reports wheth symbol is currently profiled."
+                                    :requires {"sym" "The symbol to check"
+                                               "ns"  "The current namespace"}
+                                    :returns  {"status" "Done"
+                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
+             "get-max-samples"     {:doc      "Returns maximum number of samples to be collected for any var."
+                                    :requires {}
+                                    :returns  {"status" "Done"
+                                               "value"  "String representing number of max-sample-count"}}
+             "set-max-samples"     {:doc      "Sets maximum sample count. Returns new max-sample-count."
+                                    :requires {"max-samples" "Maxiumum samples to collect for any single var."}
+                                    :returns  {"status" "Done"
+                                               "value"  "String representing number of max-sample-count"}}
+             "toggle-profile"      {:doc      "Toggle profiling of a given var."
+                                    :requires {"sym" "The symbol to profile"
+                                               "ns"  "The current namespace"}
+                                    :returns  {"status" "Done"
+                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled, 'unbound' if ns/sym not bound"}}
+             "profile-var-summary" {:doc      "Return profiling data summary for a single var."
+                                    :requires {"sym" "The symbol to profile"
+                                               "ns"  "The current namespace"}
+                                    :returns  {"status" "Done"
+                                               "err"    "Content of profile summary report"}}
+             "profile-summary"     {:doc      "Return profiling data summary."
+                                    :requires {}
+                                    :returns  {"status" "Done"
+                                               "err"    "Content of profile summary report"}}
+             "clear-profile"       {:doc      "Clears profile of samples."
+                                    :requires {}
+                                    :returns  {"status" "Done"}}}})
+
+
+
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:doc "Refresh middleware."
    :requires #{"clone" #'wrap-pprint-fn}
@@ -455,6 +494,7 @@
     wrap-out
     wrap-pprint
     wrap-pprint-fn
+    wrap-profile
     wrap-refresh
     wrap-resource
     wrap-spec
