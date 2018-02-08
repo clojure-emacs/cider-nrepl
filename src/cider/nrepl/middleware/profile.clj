@@ -1,4 +1,19 @@
 (ns cider.nrepl.middleware.profile
+  "This profiler is intended for interactive profiling applications where you do
+  not expect a profiling tool to automatically compensate for JVM
+  warm-up and garbage collection issues. If you are doing numeric
+  computing or writing other purely functional code that can be
+  executed repeatedly without unpleasant side effects, I recommend you
+  at the very least check out Criterium.
+
+  If you are primarily concerned about the influence of JVM-exogenous
+  factors on your code—HTTP requests, SQL queries, other network-
+  or (possibly) filesystem-accessing operations—then this package may
+  be just what the doctor ordered.
+
+  Based on older middleware (nrepl-profile) that's not actively
+  maintained anymore."
+  {:author "Edwin Watkeys"}
   (:require [clojure.string :as s]
             [profile.core :as p]
             [clojure.tools.nrepl.transport :as t]
