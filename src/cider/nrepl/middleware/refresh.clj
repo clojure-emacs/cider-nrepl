@@ -17,9 +17,23 @@
 
 (defonce ^:private refresh-tracker (agent (track/tracker)))
 
+(defn- user-refresh-dirs
+  "Directories to watch and reload, as configured by the user.
+
+  See `clojure.tools.namespace.repl/set-refresh-dirs`.
+
+  The var is resolved at runtime to get the \"real\" clojure.tools.namespace,
+  not the mranderson-ized version bundled with CIDER. Returns `nil` if c.t.n.r
+  isn't loaded. Returns `[]` if c.t.n.r is loaded but no custom dirs have been
+  set."
+  []
+  (some-> (symbol "clojure.tools.namespace.repl" "refresh-dirs")
+          resolve
+          deref))
+
 (defn- scan
   [tracker scan-fn dirs]
-  (apply scan-fn tracker (or (seq dirs) [])))
+  (apply scan-fn tracker (or (seq dirs) (user-refresh-dirs) [])))
 
 ;; We construct the keyword at runtime here because namespaced keyword literals
 ;; in clojure.tools.namespace.repl itself might be rewritten by mranderson - in
@@ -30,10 +44,13 @@
   (false? (get (meta (find-ns sym))
                (keyword "clojure.tools.namespace.repl" "load"))))
 
+;; As documented in clojure.tools.namespace.repl/disable-reload!,
+;; ^{:c.t.n.r/load false} implies ^{:c.t.n.r/unload false}
 (defn- unload-disabled?
   [sym]
-  (false? (get (meta (find-ns sym))
-               (keyword "clojure.tools.namespace.repl" "unload"))))
+  (or (load-disabled? sym)
+      (false? (get (meta (find-ns sym))
+                   (keyword "clojure.tools.namespace.repl" "unload")))))
 
 (defn- remove-disabled
   [tracker]

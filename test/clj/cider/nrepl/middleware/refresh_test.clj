@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.refresh-test
   (:require [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]
+            [clojure.tools.namespace.repl :as c.t.n.r]
             [cider.nrepl.middleware.refresh :as r]
             [orchard.misc :as u]))
 
@@ -122,3 +123,42 @@
                                      :dirs dirs-to-reload})]
       (is (seq (:reloading response)))
       (is (= #{"done" "ok"} (:status response))))))
+
+(deftest user-refresh-dirs-test
+  (testing "returns nil if clojure.tools.namespace isn't loaded"
+    (with-redefs [resolve (constantly nil)]
+      (is (nil? (#'r/user-refresh-dirs)))))
+
+  (testing "honors set-refresh-dirs"
+    (c.t.n.r/set-refresh-dirs "foo" "bar")
+    (is (= ["foo" "bar"] (#'r/user-refresh-dirs)))))
+
+(deftest load-disabled-test
+  (testing "is false by default"
+    (let [ns-name     (gensym "test")
+          ns-obj      (create-ns ns-name)]
+      (is (false? (#'r/load-disabled? ns-name)))))
+
+  (testing "is true when :c.t.n.r/load false"
+    (let [ns-name     (gensym "test")
+          ns-obj      (create-ns ns-name)]
+      (alter-meta! ns-obj assoc :clojure.tools.namespace.repl/load false)
+      (is (true? (#'r/load-disabled? ns-name))))))
+
+(deftest unload-disabled-test
+  (testing "is false by default"
+    (let [ns-name     (gensym "test")
+          ns-obj      (create-ns ns-name)]
+      (is (false? (#'r/unload-disabled? ns-name)))))
+
+  (testing "is true when :c.t.n.r/unload false"
+    (let [ns-name     (gensym "test")
+          ns-obj      (create-ns ns-name)]
+      (alter-meta! ns-obj assoc :clojure.tools.namespace.repl/unload false)
+      (is (true? (#'r/unload-disabled? ns-name)))))
+
+  (testing "is true when :c.t.n.r/load false (implied)"
+    (let [ns-name     (gensym "test")
+          ns-obj      (create-ns ns-name)]
+      (alter-meta! ns-obj assoc :clojure.tools.namespace.repl/load false)
+      (is (true? (#'r/unload-disabled? ns-name))))))
