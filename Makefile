@@ -26,7 +26,8 @@ test-cljs: # .source-deps
 	fi
 
 eastwood:
-	lein with-profile +$(VERSION),+test-clj,+test-cljs,+eastwood eastwood
+	lein with-profile +$(VERSION),+test-clj,+test-cljs,+eastwood eastwood \
+	     "{:namespaces [:source-paths] :exclude-namespaces [cider-nrepl.plugin]}"
 
 cljfmt:
 	lein with-profile +$(VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check

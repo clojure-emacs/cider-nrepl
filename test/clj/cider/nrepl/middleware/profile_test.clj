@@ -47,8 +47,8 @@
            (toggle-profile-ns {:ns "my.ns" :transport (test-transport)})))))
 
 (deftest is-var-profiled-test
-  (testing  "is var profiled"
-      (toggle-profile {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})
+  (testing "is var profiled"
+    (toggle-profile {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})
     (is (= [{:value "profiled" :status #{:done}}]
            (is-var-profiled {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})))
     (toggle-profile {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})
@@ -58,4 +58,4 @@
 (deftest set-max-examples-test
   (testing "max examples"
     (is (= [{:value "5000" :status #{:done}}]
-         (set-max-samples {:max-samples 5000 :transport (test-transport)})))))
+           (set-max-samples {:max-samples 5000 :transport (test-transport)})))))

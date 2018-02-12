@@ -9,6 +9,7 @@
             [orchard.misc :as u]
             [clojure.main :refer [repl-caught]]
             [clojure.tools.namespace.dir :as dir]
+            [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.reload :as reload]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
@@ -30,10 +31,6 @@
   (some-> (symbol "clojure.tools.namespace.repl" "refresh-dirs")
           resolve
           deref))
-
-(defn- scan
-  [tracker scan-fn dirs]
-  (apply scan-fn tracker (or (seq dirs) (user-refresh-dirs) [])))
 
 ;; We construct the keyword at runtime here because namespaced keyword literals
 ;; in clojure.tools.namespace.repl itself might be rewritten by mranderson - in
@@ -158,14 +155,15 @@
         (error-reply {:error e} msg)))))
 
 (defn- refresh-reply
-  [{:keys [dirs scan-fn transport] :as msg}]
+  [{:keys [dirs transport] :as msg}]
   (send-off refresh-tracker
             (fn [tracker]
               (try
                 (before-reply msg)
 
                 (-> tracker
-                    (scan scan-fn dirs)
+                    (dir/scan-dirs (or (seq dirs) (user-refresh-dirs))
+                                   (select-keys msg [:platform :add-all?]))
                     (remove-disabled)
                     (doto (reloading-reply msg))
                     (reload/track-reload)
@@ -190,7 +188,7 @@
 
 (defn handle-refresh [handler msg]
   (case (:op msg)
-    "refresh" (refresh-reply (assoc msg :scan-fn dir/scan))
-    "refresh-all" (refresh-reply (assoc msg :scan-fn dir/scan-all))
+    "refresh" (refresh-reply (assoc msg :platform find/clj))
+    "refresh-all" (refresh-reply (assoc msg :platform find/clj :add-all? true))
     "refresh-clear" (clear-reply msg)
     (handler msg)))
