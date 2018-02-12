@@ -13,16 +13,16 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 
 source-deps: .source-deps
 
-test-clj: # .source-deps
-	lein with-profile +$(VERSION),+test-clj test
+test-clj: .source-deps
+	lein with-profile +$(VERSION),+plugin.mranderson/config,+test-clj test
 
-test-cljs: # .source-deps
+test-cljs: .source-deps
 	if [ "$(JAVA_VERSION)" = "9" ]; then \
-            lein with-profile +$(VERSION),+test-cljs \
+            lein with-profile +$(VERSION),+plugin.mranderson/config,+test-cljs \
                  update-in :jvm-opts concat '["--add-modules" "java.xml.bind"]' \
                  -- test; \
         else \
-            lein with-profile +$(VERSION),+test-cljs test; \
+            lein with-profile +$(VERSION),+plugin.mranderson/config,+test-cljs test; \
 	fi
 
 eastwood:
