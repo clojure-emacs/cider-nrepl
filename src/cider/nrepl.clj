@@ -348,8 +348,6 @@
                                     :requires {}
                                     :returns  {"status" "Done"}}}})
 
-
-
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:doc "Refresh middleware."
    :requires #{"clone" #'wrap-pprint-fn}

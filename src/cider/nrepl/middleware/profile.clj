@@ -128,7 +128,7 @@
 
 (defn handle-profile
   [handler msg]
-  (let [{:keys [op] } msg]
+  (let [{:keys [op]} msg]
     (case op
       "toggle-profile"      (toggle-profile msg)
       "toggle-profile-ns"   (toggle-profile-ns msg)
