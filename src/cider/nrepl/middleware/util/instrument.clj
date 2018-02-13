@@ -342,3 +342,27 @@
     (->> (ns-interns ns)
          (filter (comp :cider/instrumented meta second))
          (map first))))
+
+;;; Instrumentation test support
+;;;
+;;; This code migrated out of the test namespace to avoid a dependency
+;;; on orchard.meta, because mranderson rewriting does not occur on
+;;; the tests.
+
+(def bp-tracker (atom #{}))
+(defmacro bp [value coor & _]
+  (swap! bp-tracker conj [value (:coor coor)])
+  value)
+
+(defn breakpoint-tester [form]
+  (reset! bp-tracker #{})
+  (-> (m/strip-meta form)
+      (tag-form-recursively #'bp)
+      instrument-tagged-code
+      ;; (#(do (prn %) %))
+      ;; A final macroexpand-all to cause the `bp` macro above to
+      ;; execute. In regular usage, this would be a complete
+      ;; expand+eval done by the Clojure compiler.
+      m/macroexpand-all)
+  ;; Replace #'bp with 'bp for easier print and comparison.
+  (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
