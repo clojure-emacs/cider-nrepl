@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.info-test
+(ns cider.nrepl.middleware.info-spec-test
   (:require [clojure.spec.alpha :as s]
             [cider.nrepl.test-session :as session]
             [clojure.test :refer :all]
@@ -22,9 +22,9 @@
 
 (deftest integration-test
   (testing "spec info on a normal function with spec"
-    (let [response (session/message {:op "info" :symbol "ranged-rand" :ns "cider.nrepl.middleware.info-test"})]
+    (let [response (session/message {:op "info" :symbol "ranged-rand" :ns "cider.nrepl.middleware.info-spec-test"})]
       (is (= (:status response) #{"done"}))
-      (is (= (:ns response) "cider.nrepl.middleware.info-test"))
+      (is (= (:ns response) "cider.nrepl.middleware.info-spec-test"))
       (is (= (:name response) "ranged-rand"))
       (is (= (:arglists-str response) "[start end]"))
       (is (nil? (:macro response)))
@@ -49,7 +49,7 @@
       (is (nil? (:spec response)))))
 
   (testing "spec info on clojure.core/let"
-    (let [response (session/message {:op "info" :symbol "let" :ns "cider.nrepl.middleware.info-test"})]
+    (let [response (session/message {:op "info" :symbol "let" :ns "cider.nrepl.middleware.info-spec-test"})]
       (is (= (:status response) #{"done"}))
       (is (= (:ns response) "clojure.core"))
       (is (= (:name response) "let"))
