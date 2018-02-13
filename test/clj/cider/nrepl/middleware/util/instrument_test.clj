@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.util.instrument-test
   (:require [cider.nrepl.middleware.util.instrument :as t]
-            [orchard.meta :as m]
+            [clojure.set :as set]
             [clojure.test :refer :all]
             [clojure.walk :as walk]))
 
@@ -12,26 +12,8 @@
     '(inc 1)
     '(inc 2)))
 
-(def bp-tracker (atom #{}))
-(defmacro bp [value coor & _]
-  (swap! bp-tracker conj [value (:coor coor)])
-  value)
-
-(defn breakpoint-tester [form]
-  (reset! bp-tracker #{})
-  (-> (m/strip-meta form)
-      (t/tag-form-recursively #'bp)
-      t/instrument-tagged-code
-      ;; (#(do (prn %) %))
-      ;; A final macroexpand-all to cause the `bp` macro above to
-      ;; execute. In regular usage, this would be a complete
-      ;; expand+eval done by the Clojure compiler.
-      m/macroexpand-all)
-  ;; Replace #'bp with 'bp for easier print and comparison.
-  (walk/postwalk #(if (= % #'bp) 'bp %) @bp-tracker))
-
 (deftest instrument-defrecord-and-new-test
-  (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
+  (are [exp res] (set/subset? res (t/breakpoint-tester exp))
     '(defrecord TestRec [arg arg2]
        java.lang.Iterable
        (iterator [this] (inc 1)))
@@ -41,7 +23,7 @@
     '#{[(new java.lang.Integer 1) []]}))
 
 (deftest instrument-clauses-test
-  (are [exp res] (clojure.set/subset? res (breakpoint-tester exp))
+  (are [exp res] (set/subset? res (t/breakpoint-tester exp))
     '(cond-> value
        v2 form
        v3 (boogie oogie form))
@@ -72,10 +54,10 @@
     '#{[final [6]] [x [1 1]] [never [4]] [(= (bp x {:coor [1 1]} x) 1) [1]]}))
 
 (deftest instrument-recur-test
-  (is (= (breakpoint-tester '(loop [x '(1 2)]
-                               (if (seq x)
-                                 (recur (rest x))
-                                 x)))
+  (is (= (t/breakpoint-tester '(loop [x '(1 2)]
+                                 (if (seq x)
+                                   (recur (rest x))
+                                   x)))
          '#{[(loop* [x '(1 2)] (if (bp (seq (bp x {:coor [2 1 1]} x)) {:coor [2 1]} (seq x)) (recur (bp (rest (bp x {:coor [2 2 1 1]} x)) {:coor [2 2 1]} (rest x))) (bp x {:coor [2 3]} x))) []]
             [(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]
             [x [2 2 1 1]]
@@ -83,10 +65,10 @@
             [x [2 3]]
             [(seq (bp x {:coor [2 1 1]} x)) [2 1]]}))
 
-  (is (= (breakpoint-tester '(fn [x]
-                               (if (seq x)
-                                 (recur (rest x))
-                                 x)))
+  (is (= (t/breakpoint-tester '(fn [x]
+                                 (if (seq x)
+                                   (recur (rest x))
+                                   x)))
          '#{[(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]
             [x [2 2 1 1]]
             [x [2 1 1]]
@@ -109,17 +91,17 @@
      [(. transport recv) [2 2]]})
 
 (deftest instrument-reify-test
-  (is (= (breakpoint-tester '(reify Transport
-                               (recv [this] (.recv transport))
-                               (send [this response]
-                                 (if (contains? response :value)
-                                   (inspect-reply msg response)
-                                   (.send transport response))
-                                 this)))
+  (is (= (t/breakpoint-tester '(reify Transport
+                                 (recv [this] (.recv transport))
+                                 (send [this response]
+                                   (if (contains? response :value)
+                                     (inspect-reply msg response)
+                                     (.send transport response))
+                                   this)))
          reify-result)))
 
 (deftest instrument-function-call-test
-  (is (= (breakpoint-tester
+  (is (= (t/breakpoint-tester
           '(defn test-fn []
              (let [start-time (System/currentTimeMillis)]
                (Thread/sleep 1000)
@@ -134,37 +116,37 @@
 
 (deftest instrument-try-test
   ;; No breakpoints around `catch`, `finally`, `Exception`, or `e`.
-  (is (= (breakpoint-tester '(try
-                               x
-                               (catch Exception e z)
-                               (finally y)))
+  (is (= (t/breakpoint-tester '(try
+                                 x
+                                 (catch Exception e z)
+                                 (finally y)))
          '#{[y [3 1]]
             [x [1]]
             [z [2 3]]
             [(try (bp x {:coor [1]} x) (catch Exception e (bp z {:coor [2 3]} z)) (finally (bp y {:coor [3 1]} y))) []]})))
 
 (deftest instrument-def
-  (is (= (breakpoint-tester '(def foo (bar)))
+  (is (= (t/breakpoint-tester '(def foo (bar)))
          '#{[(def foo (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
-  (is (= (breakpoint-tester '(def foo "foo doc" (bar)))
+  (is (= (t/breakpoint-tester '(def foo "foo doc" (bar)))
          '#{[(def foo "foo doc" (bp (bar) {:coor [3]} (bar))) []]
             [(bar) [3]]})))
 
 (deftest instrument-set!-test
-  (is (= (breakpoint-tester '(set! foo (bar)))
+  (is (= (t/breakpoint-tester '(set! foo (bar)))
          '#{[(set! foo (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
-  (is (= (breakpoint-tester '(set! (. inst field) (bar)))
+  (is (= (t/breakpoint-tester '(set! (. inst field) (bar)))
          '#{[(set! (. inst field) (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]}))
-  (is (= (breakpoint-tester '(set! (.field inst) (bar)))
+  (is (= (t/breakpoint-tester '(set! (.field inst) (bar)))
          '#{[(set! (. inst field) (bp (bar) {:coor [2]} (bar))) []]
             [(bar) [2]]})))
 
 (deftest instrument-deftest
   (binding [*ns* (the-ns 'cider.nrepl.middleware.util.instrument-test)]
-    (is (= (breakpoint-tester '(deftest foo (bar)))
+    (is (= (t/breakpoint-tester '(deftest foo (bar)))
            '#{[(def foo (fn* ([] (clojure.test/test-var (var foo))))) []]
               [(bar) [2]]}))))
 
@@ -180,6 +162,6 @@
   ;; This is because Namespace objects implement IMeta, but not IObj.
   (let [an-ns (create-ns (with-meta 'foo.bar {:doc "ns docstring"}))]
     (binding [*ns* an-ns]
-      (breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x))
+      (t/breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x))
       ;; If the above did not throw, then we pass
       (is true))))
