@@ -22,8 +22,8 @@ jdk:
   - oraclejdk8
   - oraclejdk9
 stages:
-  - name: test
   - name: check
+  - name: test
   # Deploy only from the home repo where the credentials can be
   # properly decrypted. Never deploy from a pull request job.
   # In addition, ensure we're on the master branch (snapshots)
@@ -78,8 +78,6 @@ jobs:
     - env: VERSION=master TARGET=test-clj
     - env: VERSION=master TARGET=test-cljs
     - env: VERSION=1.9 TARGET=cloverage
-    - env: VERSION=1.9 TARGET=eastwood
-    - env: VERSION=1.9 TARGET=cljfmt
 
 notifications:
   webhooks:
