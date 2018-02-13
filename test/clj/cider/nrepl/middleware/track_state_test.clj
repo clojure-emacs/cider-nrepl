@@ -1,10 +1,7 @@
 (ns cider.nrepl.middleware.track-state-test
   (:require [cider.nrepl.middleware.track-state :as st]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [orchard.meta :as m]
-            [orchard.namespace :as namespace]
-            [clojure.test :refer :all]
-            [clojure.tools.nrepl.transport :as t])
+            [clojure.test :refer :all])
   (:import clojure.tools.nrepl.transport.Transport))
 
 (def some-ns-map {'cider.nrepl.middleware.track-state-test
@@ -23,39 +20,47 @@
            nil
            (catch Exception e true))))
 
+(defn update-and-send-cache-tester
+  "Use the other arity of st/update-and-send-cache to evaluate
+  strictly in test mode."
+  [old-data msg sent-value]
+  (st/update-and-send-cache old-data msg
+                            #{}
+                            (fn [t m] (reset! sent-value m))))
+
 (deftest update-and-send-cache-test
   (let [sent-value (atom nil)]
-    (with-redefs [namespace/jar-namespaces #{}
-                  t/send (fn [t m] (reset! sent-value m))]
-      (let [new-data (st/update-and-send-cache nil msg)]
-        (is (map? new-data))
-        (is (> (count new-data) 100)))
-      (let [{:keys [repl-type changed-namespaces]} @sent-value]
-        (is (= repl-type :clj))
-        (is (map? changed-namespaces))
-        (is (> (count changed-namespaces) 100)))
-      (let [full-cache (st/update-and-send-cache nil msg)
-            get-sent-value (fn [old] (st/update-and-send-cache old msg)
-                             @sent-value)]
-        ;; Return value depends only on the current state.
-        (is (= (st/update-and-send-cache nil msg)
-               (st/update-and-send-cache (into {} (take 5 full-cache)) msg)
-               (st/update-and-send-cache full-cache msg)))
-        ;; Sent message depends on the first arg.
-        (is (= (get-sent-value full-cache)
-               (get-sent-value full-cache)))
-        (is (= (get-sent-value (into {} (drop 3 full-cache)))
-               (get-sent-value (into {} (drop 3 full-cache))))))
+    (let [new-data (update-and-send-cache-tester nil msg sent-value)]
+      (is (map? new-data))
+      (is (< 100 (count new-data))))
+    (let [{:keys [repl-type changed-namespaces]} @sent-value]
+      (is (= :clj repl-type))
+      (is (map? changed-namespaces))
+      (is (< 100 (count changed-namespaces))))
+    (let [full-cache (update-and-send-cache-tester nil msg sent-value)
+          get-sent-value (fn [old] (update-and-send-cache-tester old msg sent-value)
+                           @sent-value)]
+      ;; Return value depends only on the current state.
+      (is (= (update-and-send-cache-tester nil msg sent-value)
+             (update-and-send-cache-tester (into {} (take 5 full-cache)) msg sent-value)
+             (update-and-send-cache-tester full-cache msg sent-value)))
+      ;; Sent message depends on the first arg.
+      (is (= (get-sent-value full-cache)
+             (get-sent-value full-cache)))
+      (is (= (get-sent-value (into {} (drop 3 full-cache)))
+             (get-sent-value (into {} (drop 3 full-cache))))))
       ;; In particular, the sent message only contains the diff.
-      (let [changed-again (:changed-namespaces @sent-value)]
-        (is (map? changed-again))
-        (is (= (count changed-again) 3)))
+
+    (let [changed-again (:changed-namespaces @sent-value)]
+      (is (map? changed-again))
+      (is (= 3 (count changed-again))))
       ;; Check repl-type :cljs
-      (with-redefs [cljs/grab-cljs-env (constantly true)]
-        (st/update-and-send-cache nil msg)
-        (let [{:keys [repl-type changed-namespaces]} @sent-value]
-          (is (= repl-type :cljs))
-          (is (map? changed-namespaces)))))))
+
+    (with-redefs [cljs/grab-cljs-env (constantly true)]
+      (update-and-send-cache-tester nil msg sent-value)
+      (let [{:keys [repl-type changed-namespaces]} @sent-value]
+        (is (= :cljs repl-type))
+        (is (map? changed-namespaces))))))
 
 (def ^:private fn-test-var nil)
 (def ^:private fn-test-def-fn (fn []))
@@ -68,14 +73,14 @@
               :arglists "([name & body])"
               :fn "true"
               :doc "\"Defines a test function with no arguments.  Test functions may call\\n  other tests, so tests may be composed.  If you compose tests, you\\n  should also define a function named test-ns-hook; run-tests will\\n  call test-ns-hook instead of testing all vars.\\n\\n  Note: Actually, the test body goes in the :test metadata on the var,\\n  and the real function (the value of the var) calls test-var on\\n  itself.\\n\\n  When *load-tests* is false, deftest is ignored.\""}}))
-  (is (= (map (comp :fn
+  (is (= [nil "true" "true" "true"]
+         (map (comp :fn
                     (st/filter-core-and-get-meta
                      {'fn-test-var #'fn-test-var
                       'fn-test-def-fn #'fn-test-def-fn
                       'fn-test-defn-fn #'fn-test-defn-fn
                       'fn-test-multi #'fn-test-multi}))
-              '[fn-test-var fn-test-def-fn fn-test-defn-fn fn-test-multi])
-         [nil "true" "true" "true"]))
+              '[fn-test-var fn-test-def-fn fn-test-defn-fn fn-test-multi])))
   (is (-> (find-ns 'clojure.core)
           ns-map st/filter-core-and-get-meta
           seq not)))
@@ -89,20 +94,22 @@
   (is (empty? (st/ns-as-map nil)))
   (let [m (meta #'make-transport-test)]
     ;; #'make-transport refers to the deftest, and not the defn
-    (->> (interleave m/relevant-meta-keys (range))
+    (->> (interleave (#'st/relevant-meta-keys) (range))
          (apply hash-map)
          (alter-meta! #'make-transport-test merge))
+    ;; note: this test inspects the current namespace, so the
+    ;; test conditions below may change as the namespace declaration
+    ;; evolves.
     (let [{:keys [interns aliases] :as ns}
           (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
-      (is (> (count interns) 5))
+      (is (< 5 (count interns)))
       (is (map? interns))
       (is (interns 'ns-as-map-test))
       (is (:test (interns 'ns-as-map-test)))
       (is (= (into #{} (keys (interns 'make-transport-test)))
-             (into #{} m/relevant-meta-keys)))
-      (is (> (count aliases) 2))
-      (is (= (aliases 'st)
-             'cider.nrepl.middleware.track-state)))
+             (into #{} (#'st/relevant-meta-keys))))
+      (is (= 2 (count aliases)))
+      (is (= 'cider.nrepl.middleware.track-state (aliases 'st))))
     (alter-meta! #'make-transport-test (fn [x y] y) m))
   (let [{:keys [interns aliases] :as ns}
         (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
@@ -117,12 +124,13 @@
                  :require-macros {'sym-3 'some-namespace}
                  :requires {'sym-4 'some-namespace}}
         {:keys [aliases interns]} (st/ns-as-map cljs-ns)]
-    (is (= aliases '{sym-3 some-namespace sym-4 some-namespace}))
-    (is (= interns '{sym-0 {:arglists ([]) :macro true}
-                     sym-1 {:arglists ([])}
-                     sym-2 {}
-                     a-var {}
-                     a-fn {:fn "true"}}))))
+    (is (= '{sym-3 some-namespace sym-4 some-namespace} aliases))
+    (is (= '{sym-0 {:arglists ([]) :macro true}
+             sym-1 {:arglists ([])}
+             sym-2 {}
+             a-var {}
+             a-fn {:fn "true"}}
+           interns))))
 
 (deftest calculate-used-aliases-test
   (is (contains? (st/merge-used-aliases some-ns-map nil ns-name)

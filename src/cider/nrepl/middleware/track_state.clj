@@ -43,6 +43,12 @@
     (:fn-var m) (assoc :fn true)))
 
 ;;; Namespaces
+(defn- relevant-meta-keys
+  "Access orchard.meta/relevant-meta-keys. For use in test cases where
+  direct access to the symbol is not possible."
+  []
+  m/relevant-meta-keys)
+
 (defn ns-as-map [object]
   (cond
     ;; Clojure Namespaces
@@ -153,41 +159,53 @@
   The other is :changed-namespaces, which is a map from namespace
   names to namespace data (as returned by `ns-as-map`). This contains
   only namespaces which have changed since we last notified the
-  client."
-  [old-data msg]
-  (let [cljs (cljs/grab-cljs-env msg)
-        find-ns-fn (if cljs
-                     #(cljs-ana/find-ns cljs %)
-                     find-ns)
-        ;; See what has changed compared to the cache. If the cache
-        ;; was empty, everything is considered to have changed (and
-        ;; the cache will then be filled).
-        ns-name-fn (if cljs :name ns-name)
-        ;; Remove all jar namespaces.
-        project-ns-map (fast-reduce (fn [acc ns]
-                                      (let [name (ns-name-fn ns)]
-                                        (if (namespace/jar-namespaces name)
-                                          acc
-                                          (assoc! acc name (ns-as-map ns)))))
-                                    (if cljs
-                                      (vals (cljs-ana/all-ns cljs))
-                                      (all-ns)))
-        project-ns-map (ensure-clojure-core-present old-data
-                                                    project-ns-map
-                                                    cljs)
-        changed-ns-map (-> project-ns-map
-                           ;; Add back namespaces that the project depends on.
-                           (merge-used-aliases (or old-data {}) find-ns-fn)
-                           (calculate-changed-ns-map old-data))]
-    (try (->> (response-for
-               msg :status :state
-               :repl-type (if cljs :cljs :clj)
-               :changed-namespaces (u/transform-value changed-ns-map))
-              (transport/send (:transport msg)))
-         ;; We run async, so the connection might have been closed in
-         ;; the mean time.
-         (catch SocketException _ nil))
-    (merge old-data changed-ns-map)))
+  client.
+
+  The 2-arity call is the intended way to use this function.
+
+  The 4-arity call is provided for testing under mranderson.
+  Allows substitution of supporting fns in the implementation that
+  don't need to exposed otherwise. Be aware when the implementation
+  details change because this arity (and the tests) will need to
+  change also."
+  ([old-data msg]
+   (update-and-send-cache old-data msg
+                          #'namespace/jar-namespaces
+                          #'transport/send))
+  ([old-data msg jar-ns-fn transport-send-fn]
+   (let [cljs           (cljs/grab-cljs-env msg)
+         find-ns-fn     (if cljs
+                          #(cljs-ana/find-ns cljs %)
+                          find-ns)
+         ;; See what has changed compared to the cache. If the cache
+         ;; was empty, everything is considered to have changed (and
+         ;; the cache will then be filled).
+         ns-name-fn     (if cljs :name ns-name)
+         ;; Remove all jar namespaces.
+         project-ns-map (fast-reduce (fn [acc ns]
+                                       (let [name (ns-name-fn ns)]
+                                         (if (jar-ns-fn name)
+                                           acc
+                                           (assoc! acc name (ns-as-map ns)))))
+                                     (if cljs
+                                       (vals (cljs-ana/all-ns cljs))
+                                       (all-ns)))
+         project-ns-map (ensure-clojure-core-present old-data
+                                                     project-ns-map
+                                                     cljs)
+         changed-ns-map (-> project-ns-map
+                            ;; Add back namespaces that the project depends on.
+                            (merge-used-aliases (or old-data {}) find-ns-fn)
+                            (calculate-changed-ns-map old-data))]
+     (try (->> (response-for
+                msg :status :state
+                :repl-type (if cljs :cljs :clj)
+                :changed-namespaces (u/transform-value changed-ns-map))
+               (transport-send-fn (:transport msg)))
+          ;; We run async, so the connection might have been closed in
+          ;; the mean time.
+          (catch SocketException _ nil))
+     (merge old-data changed-ns-map))))
 
 ;;; Middleware
 (defn make-transport
