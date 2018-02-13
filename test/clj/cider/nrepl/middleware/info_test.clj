@@ -6,13 +6,10 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [cider.nrepl.middleware.info :as info]
-            [orchard.java :as java]
-            [orchard.meta :as m]
-            [orchard.misc :as util]
-            [orchard.classloader :refer [class-loader]]
             [cider.nrepl.test-session :as session]
             [cider.test-ns.first-test-ns :as test-ns])
-  (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]))
+  (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
+           [org.apache.commons.lang3 SystemUtils]))
 
 (defn file
   [x]
@@ -23,16 +20,23 @@
   (:resource (info/file-info x)))
 
 (deftest javadoc-url-test
-  (testing "java 1.7"
-    (is (= "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#charAt(int)"
-           (with-redefs [util/java-api-version "7"]
+  (if (SystemUtils/IS_JAVA_1_7)
+    (testing "java 1.7"
+      (is (= "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#charAt(int)"
              (-> (info/info-java 'java.lang.StringBuilder 'charAt)
                  (info/format-response)
                  (get "javadoc"))))))
 
-  (testing "java 1.8"
-    (is (= "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#charAt-int-"
-           (with-redefs [util/java-api-version "8"]
+  (if (SystemUtils/IS_JAVA_1_8)
+    (testing "java 1.8"
+      (is (= "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#charAt-int-"
+             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
+                 (info/format-response)
+                 (get "javadoc"))))))
+
+  (if (SystemUtils/IS_JAVA_9)
+    (testing "java 9"
+      (is (= "http://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#charAt-int-"
              (-> (info/info-java 'java.lang.StringBuilder 'charAt)
                  (info/format-response)
                  (get "javadoc")))))))
@@ -67,39 +71,7 @@
         (is (= (.getPath (file tmp-file-name))
                tmp-file-path))
         (finally
-          (System/clearProperty "fake.class.path"))))
-    (testing "when classpath is a jar"
-      (let [tmp-jar-path "jar:file:fake/clojure.jar"]
-        (try
-          (System/setProperty "fake.class.path" tmp-jar-path)
-          (is (some #{"file:fake/clojure.jar"}
-                    (->> (class-loader) .getURLs (map str))))
-          (finally
-            (System/clearProperty "fake.class.path")))))
-    (testing "include sources when avaliable"
-      (when-let [src-url (java/jdk-resource-url "src.zip")]
-        (try
-          (System/setProperty "fake.class.path" tmp-dir-name)
-          (is (some #{src-url} (.getURLs (class-loader))))
-          (finally
-            (System/clearProperty "fake.class.path")))))))
-
-(deftest special-sym-meta-test
-
-  (testing "Names are correct for `&`, `catch`, `finally`"
-    (is (= '& (:name (m/special-sym-meta '&))))
-    (is (= 'catch (:name (m/special-sym-meta 'catch))))
-    (is (= 'finally (:name (m/special-sym-meta 'finally)))))
-
-  (testing "Name is correct for `clojure.core/import*`"
-    ;; Only compiler special to be namespaced
-    (is (= 'clojure.core/import* (:name (m/special-sym-meta 'clojure.core/import*)))))
-
-  (testing "No ns for &, which uses fn's info"
-    (is (nil? (:ns (m/special-sym-meta '&)))))
-
-  (testing "Returns nil for unknown symbol"
-    (is (nil? (m/special-sym-meta 'unknown)))))
+          (System/clearProperty "fake.class.path"))))))
 
 (deftype T [])
 
@@ -210,12 +182,6 @@
   (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "."})))
   (is (not (info/extract-arglists (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
 
-(deftest var-meta-test
-  ;; Test files can't be found on the class path.
-  (is (:file (m/var-meta #'m/var-meta)))
-  (is (re-find #"cider-nrepl" (:file (#'m/maybe-add-file {:ns (find-ns 'cider.nrepl.middleware.info)}))))
-  (is (not (re-find #"/form-init[^/]*$" (:file (m/var-meta (eval '(do (in-ns 'cider.nrepl.middleware.info) (def pok 10)))))))))
-
 (deftest javadoc-info-unit-test
   (testing "Get an HTTP URL for a Sun/Oracle Javadoc"
     (testing "Javadoc 1.7 format"
@@ -296,17 +262,24 @@
         (is (= (:modifiers response) "#{:public}"))
         (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#getInt")))
 
-      (testing "JDK 1.7 Javadoc URL style"
-        (with-redefs [util/java-api-version "7"]
-          (let [response (session/message {:op "info"
-                                           :class "cider.nrepl.test.TestClass"
+      (if (SystemUtils/IS_JAVA_1_7)
+        (testing "JDK 1.7 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
                                            :member "getInt"})]
             (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt()")))))
 
-      (testing "JDK 1.8 Javadoc URL style"
-        (with-redefs [util/java-api-version "8"]
-          (let [response (session/message {:op "info"
-                                           :class "cider.nrepl.test.TestClass"
+      (if (SystemUtils/IS_JAVA_1_8)
+        (testing "JDK 1.8 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
+                                           :member "getInt"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt--")))))
+
+      (if (SystemUtils/IS_JAVA_9)
+        (testing "JDK 9 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
                                            :member "getInt"})]
             (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt--"))))))
 
@@ -323,17 +296,24 @@
         (is (= (:modifiers response) "#{:private :static}"))
         (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething")))
 
-      (testing "JDK 1.7 Javadoc URL style"
-        (with-redefs [util/java-api-version "7"]
-          (let [response (session/message {:op "info"
-                                           :class "cider.nrepl.test.TestClass"
+      (if (SystemUtils/IS_JAVA_1_7)
+        (testing "JDK 1.7 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
                                            :member "doSomething"})]
             (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething(int,%20int,%20java.lang.String)")))))
 
-      (testing "JDK 1.8 Javadoc URL style"
-        (with-redefs [util/java-api-version "8"]
-          (let [response (session/message {:op "info"
-                                           :class "cider.nrepl.test.TestClass"
+      (if (SystemUtils/IS_JAVA_1_8)
+        (testing "JDK 1.8 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
+                                           :member "doSomething"})]
+            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething-int-int-java.lang.String-")))))
+
+      (if (SystemUtils/IS_JAVA_9)
+        (testing "JDK 9 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "cider.nrepl.test.TestClass"
                                            :member "doSomething"})]
             (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething-int-int-java.lang.String-"))))))
 
@@ -350,19 +330,26 @@
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
         (is (.startsWith (:javadoc response) "http://docs.oracle.com/javase")))
 
-      (testing "JDK 1.7 Javadoc URL style"
-        (with-redefs [util/java-api-version "7"]
-          (let [response (session/message {:op "info"
-                                           :class "java.lang.StringBuilder"
+      (if (SystemUtils/IS_JAVA_1_7)
+        (testing "JDK 1.7 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "java.lang.StringBuilder"
                                            :member "capacity"})]
             (is (= (:javadoc response) "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#capacity()")))))
 
-      (testing "JDK 1.8 Javadoc URL style"
-        (with-redefs [util/java-api-version "8"]
-          (let [response (session/message {:op "info"
-                                           :class "java.lang.StringBuilder"
+      (if (SystemUtils/IS_JAVA_1_8)
+        (testing "JDK 1.8 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "java.lang.StringBuilder"
                                            :member "capacity"})]
-            (is (= (:javadoc response) "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--"))))))
+            (is (= (:javadoc response) "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--")))))
+
+      (if (SystemUtils/IS_JAVA_9)
+        (testing "JDK 9 Javadoc URL style"
+          (let [response (session/message {:op     "info"
+                                           :class  "java.lang.StringBuilder"
+                                           :member "capacity"})]
+            (is (= (:javadoc response) "http://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#capacity--"))))))
 
     (testing "get info on the dot-operator"
       (let [response (session/message {:op "info" :symbol "." :ns "user"})]
