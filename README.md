@@ -58,6 +58,7 @@ under `:repl-options`.
                   cider.nrepl/wrap-spec
                   cider.nrepl/wrap-pprint
                   cider.nrepl/wrap-pprint-fn
+                  cider.nrepl/wrap-profile
                   cider.nrepl/wrap-refresh
                   cider.nrepl/wrap-resource
                   cider.nrepl/wrap-stacktrace
