@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.track-state-test
   (:require [cider.nrepl.middleware.track-state :as st]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.meta :as um]
             [clojure.test :refer :all])
   (:import clojure.tools.nrepl.transport.Transport))
 
@@ -94,7 +95,7 @@
   (is (empty? (st/ns-as-map nil)))
   (let [m (meta #'make-transport-test)]
     ;; #'make-transport refers to the deftest, and not the defn
-    (->> (interleave (#'st/relevant-meta-keys) (range))
+    (->> (interleave um/relevant-meta-keys (range))
          (apply hash-map)
          (alter-meta! #'make-transport-test merge))
     ;; note: this test inspects the current namespace, so the
@@ -107,8 +108,8 @@
       (is (interns 'ns-as-map-test))
       (is (:test (interns 'ns-as-map-test)))
       (is (= (into #{} (keys (interns 'make-transport-test)))
-             (into #{} (#'st/relevant-meta-keys))))
-      (is (= 2 (count aliases)))
+             (into #{} um/relevant-meta-keys)))
+      (is (= 3 (count aliases)))
       (is (= 'cider.nrepl.middleware.track-state (aliases 'st))))
     (alter-meta! #'make-transport-test (fn [x y] y) m))
   (let [{:keys [interns aliases] :as ns}

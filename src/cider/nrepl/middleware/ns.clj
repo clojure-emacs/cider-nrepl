@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.ns
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+            [cider.nrepl.middleware.util.meta :as um]
             [orchard.meta :as m]
             [orchard.misc :as u]
             [orchard.namespace :as ns]
@@ -25,7 +26,7 @@
 (defn ns-vars-with-meta-clj [ns]
   (->> (symbol ns)
        ns-interns
-       (u/update-vals (comp m/relevant-meta meta))
+       (u/update-vals (comp um/relevant-meta meta))
        (u/update-keys name)
        (into (sorted-map))))
 
@@ -45,7 +46,7 @@
 (defn ns-vars-with-meta-cljs [env ns]
   (->> (symbol ns)
        (cljs-analysis/public-vars env)
-       (u/update-vals (comp m/relevant-meta :meta))
+       (u/update-vals (comp um/relevant-meta :meta))
        (u/update-keys name)
        (into (sorted-map))))
 
