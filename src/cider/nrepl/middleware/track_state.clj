@@ -3,6 +3,7 @@
   {:author "Artur Malabarba"}
   (:require [cider.nrepl.middleware.ns :as ns]
             [cider.nrepl.middleware.util.cljs :as cljs]
+            [cider.nrepl.middleware.util.meta :as um]
             [orchard.misc :as u]
             [orchard.meta :as m]
             [orchard.namespace :as namespace]
@@ -34,7 +35,7 @@
                         (when (var? the-var)
                           (let [{the-ns :ns :as the-meta} (var-meta-with-fn the-var)]
                             (when-not (identical? the-ns clojure-core)
-                              [sym (m/relevant-meta the-meta)]))))))))
+                              [sym (um/relevant-meta the-meta)]))))))))
 
 (defn- cljs-meta-with-fn
   "Like (:meta m) but adds {:fn true} if (:fn-var m) is true."
@@ -43,11 +44,6 @@
     (:fn-var m) (assoc :fn true)))
 
 ;;; Namespaces
-(defn- relevant-meta-keys
-  "Access orchard.meta/relevant-meta-keys. For use in test cases where
-  direct access to the symbol is not possible."
-  []
-  m/relevant-meta-keys)
 
 (defn ns-as-map [object]
   (cond
@@ -62,7 +58,7 @@
       {:aliases (merge require-macros requires)
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
-       :interns (merge (u/update-vals #(dissoc (m/relevant-meta (cljs-meta-with-fn %)) :test)
+       :interns (merge (u/update-vals #(dissoc (um/relevant-meta (cljs-meta-with-fn %)) :test)
                                       defs)
                        ;; FIXME: `uses` and `use-macros` are maps from
                        ;; symbols to namespace names:
@@ -79,7 +75,7 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (u/update-vals #(m/relevant-meta (var-meta-with-fn %))))}))
+                   (u/update-vals #(um/relevant-meta (var-meta-with-fn %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.
