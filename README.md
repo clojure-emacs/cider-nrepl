@@ -22,18 +22,22 @@ overview](https://juxt.pro/blog/posts/nrepl.html) of its capabilities.
 
 This section documents some of the major design decisions in cider-nrepl.
 
+While in essence it's just a collection of nREPL middleware we had to
+make a few important design decision here and there that influenced
+the code base and the usability of cider-nrepl in various ways.
+
 ### Editor Agnostic
 
 Although those middlewares were created for use with CIDER almost all
 of them are extremely generic and can be leveraged from other editors.
 
-Projects like `vim-fireplace` and CCW are making use of cider-nrepl
-already.
+Projects like [vim-fireplace][] and [vim-replant][] are making use of
+cider-nrepl already.
 
 ### Isolated Runtime Dependencies
 
 All of cider-nrepl's dependencies are processed with
-[mranderson](https://github.com/benedekfazekas/mranderson), so that
+[mranderson][], so that
 they won't collide with the dependencies of your own projects. This
 basically means that cider-nrepl doesn't have any runtime dependencies in
 the production artifact - just copies of the deps inlined with changed
@@ -61,10 +65,18 @@ See [here](https://github.com/clojure-emacs/cider-nrepl/pull/327).
 ### Reusable Core Logic
 
 cider-nrepl tries to have as little logic as possible and mostly
-provides thin wrappers over existing libraries. Much of its core
-functionality lives in
+provides thin wrappers over existing libraries (e.g. [compliment][],
+[cljfmt][], etc). Much of its core functionality lives in
 [orchard](https://github.com/clojure-emacs/orchard), so that
-eventually it can be used by non-nREPL clients (e.g. Socket REPL clients).
+eventually it can be used by non-nREPL clients (e.g. Socket REPL
+clients).
+
+Very simply put - there's very little code in cider-nrepl that's not
+simply wrapping code from other libraries in nREPL operations.
+
+The primary reason for this is our desire to eventually provide
+support for non-nREPL REPLs in CIDER, but this also means that other
+editors can directly leverage the work we've done so far.
 
 ### ClojureScript Support
 
@@ -281,9 +293,9 @@ Before submitting a patch or a pull request make sure all tests are
 passing and that your patch is in line with the [contribution
 guidelines](.github/CONTRIBUTING.md).
 
-### Working with mranderson (inlining dependencies)
+### Working with mranderson (inlining runtime dependencies)
 
-[mranderson](https://github.com/benedekfazekas/mranderson) is used to
+[mranderson][] is used to
 avoid classpath collisions.
 
 To work with `mranderson` the first thing to do is:
@@ -346,15 +358,24 @@ who have helped so far.
 
 Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
-* [orchard](https://github.com/clojure-emacs/orchard) - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
-* [compliment](https://github.com/alexander-yakushev/compliment) - for Clojure code completion
-* [cljs-tooling](https://github.com/clojure-emacs/cljs-tooling) - for ClojureScript code completion and var info
-* [tools.trace](https://github.com/clojure/tools.trace) - for tracing
-* [tools.namespace](https://github.com/clojure/tools.namespace) - for namespace reloading
-* [cljfmt](https://github.com/weavejester/cljfmt) - for code formatting
+* [orchard][] - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
+* [compliment][] - for Clojure code completion
+* [cljs-tooling][] - for ClojureScript code completion and var info
+* [tools.trace][] - for tracing
+* [tools.namespace][] - for namespace reloading
+* [cljfmt][] - for code formatting
 
 ## License
 
 Copyright © 2013-2018 Bozhidar Batsov
 
 Distributed under the Eclipse Public License, the same as Clojure.
+
+[orchard]: https://github.com/clojure-emacs/orchard
+[compliment]: https://github.com/alexander-yakushev/compliment
+[cljs-tooling]: https://github.com/clojure-emacs/cljs-tooling
+[tools.trace]: https://github.com/clojure/tools.trace
+[tools.namespace]: (https://github.com/clojure/tools.namespace)
+[cljfmt]: https://github.com/weavejester/cljfmt
+[vim-replant]: https://github.com/SevereOverfl0w/vim-replant
+[vim-fireplace]: https://github.com/tpope/vim-fireplace
