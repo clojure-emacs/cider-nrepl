@@ -99,33 +99,67 @@
 ;; of type `:clojure.test.check.clojure-test/shrinking`, which `defspec`
 ;; produces to report failing input before shrinking it.
 
-(defn report
-  "Handle reporting for test events. This takes a test event map as an argument
-  and updates the `current-report` atom to reflect test results and summary
-  statistics."
+(defmulti report
+  "Handle reporting for test events.
+
+  This takes a test event map as an argument and updates the `current-report`
+  atom to reflect test results and summary statistics."
+  :type)
+
+(defmethod report :default [m])
+
+(defmethod report :begin-test-ns
   [m]
+  (let [ns (ns-name (get m :ns (:testing-ns @current-report)))]
+    (swap! current-report
+           #(-> %
+                (assoc :testing-ns ns)
+                (update-in [:summary :ns] inc)))))
+
+(defmethod report :begin-test-var
+  [m]
+  (swap! current-report update-in [:summary :var] inc))
+
+(defn- report-final-status
+  [{:keys [type] :as m}]
   (let [ns (ns-name (get m :ns (:testing-ns @current-report)))
-        v  (last test/*testing-vars*)
-        update! (partial swap! current-report update-in)]
-    (condp get (:type m)
-      #{:begin-test-ns}     (do (update! [:testing-ns] (constantly ns))
-                                (update! [:summary :ns] inc))
-      #{:begin-test-var}    (do (update! [:summary :var] inc))
-      #{:pass :fail :error} (do (update! [:summary :test] inc)
-                                (update! [:summary (:type m)] inc)
-                                (update! [:results ns (:name (meta v))]
-                                         (fnil conj []) (test-result ns v m))
-                                (update! [:gen-input] (constantly nil))) ; reset
+        v (last test/*testing-vars*)]
+    (swap! current-report
+           #(-> %
+                (update-in [:summary :test] inc)
+                (update-in [:summary type] (fnil inc 0))
+                (update-in [:results ns (:name (meta v))]
+                           (fnil conj [])
+                           (test-result ns v m))
+                (assoc :gen-input nil)))))
 
-      #{:com.gfredericks.test.chuck.clojure-test/shrunk}
-      (do (update! [:gen-input] (constantly (-> m :shrunk :smallest))))
+(defmethod report :pass
+  [m]
+  (report-final-status m))
 
-      #{:clojure.test.check.clojure-test/shrinking
-        :clojure.test.check.clojure-test/shrunk}
-      (do (update! [:gen-input]
-                   (constantly (:clojure.test.check.clojure-test/params m))))
+(defmethod report :fail
+  [m]
+  (report-final-status m))
 
-      nil)))
+(defmethod report :error
+  [m]
+  (report-final-status m))
+
+(defmethod report :com.gfredericks.test.chuck.clojure-test/shrunk
+  [m]
+  (swap! current-report assoc :gen-input (-> m :shrunk :smallest)))
+
+(defn- report-shrinking
+  [{:keys [clojure.test.check.clojure-test/params] :as m}]
+  (swap! current-report assoc :gen-input params))
+
+(defmethod report :clojure.test.check.clojure-test/shrinking
+  [m]
+  (report-shrinking m))
+
+(defmethod report :clojure.test.check.clojure-test/shrunk
+  [m]
+  (report-shrinking m))
 
 (defn report-fixture-error
   "Delegate reporting for test fixture errors to the `report` function. This
