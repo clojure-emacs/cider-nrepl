@@ -1,4 +1,4 @@
-.PHONY: test-clj test-cljs eastwood cljfmt cloverage release deploy clean
+.PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean
 
 VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.11-SNAPSHOT
@@ -13,7 +13,7 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 
 source-deps: .source-deps
 
-test-clj: .source-deps
+test-clj: .source-deps smoketest
 	lein with-profile +$(VERSION),+plugin.mranderson/config,+test-clj test
 
 test-cljs: .source-deps
@@ -45,6 +45,14 @@ cloverage:
 	     -e ".*util.instrument" \
 	     -t "^((?!debug-integration-test).)*$$"
 
+install: .source-deps
+	lein with-profile +$(VERSION),+plugin.mranderson/config install
+
+smoketest: install
+	cd test/smoketest && \
+        lein with-profile +$(VERSION) uberjar && \
+        java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
+
 # When releasing, the BUMP variable controls which field in the
 # version string will be incremented in the *next* snapshot
 # version. Typically this is either "major", "minor", or "patch".
@@ -63,4 +71,5 @@ deploy: .source-deps
 
 clean:
 	lein clean
+	cd test/smoketest && lein clean
 	rm -f .source-deps
