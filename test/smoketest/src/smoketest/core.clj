@@ -41,6 +41,7 @@
 (defn check-version
   "Call version middleware and check response."
   [session]
+  ;; This test generates reflection warnings in java9, but passes.
   (let [response (message session {:op :cider-version})
         version-map (:cider-version response)]
     (and (= #{"done"} (:status response))
@@ -55,9 +56,9 @@
   (let [response (message session {:op :classpath})
         classpaths (:classpath response)]
     (and (= (:status response) #{"done"})
-         (> (count classpaths) 1)
+         (> (count classpaths) 0)
          (every? string? classpaths)
-         (some? (some #(re-find #".*clojure-.*jar" %) classpaths)))))
+         (some? (some #(re-find #".*smoketest-.*standalone\.jar" %) classpaths)))))
 
 (defn check-ns-path
   "Call ns middleware and check response."
@@ -82,7 +83,7 @@
   (let [results (nrepl-server-fixture tests)]
     (clojure.pprint/pprint (zipmap testnames results))
     (shutdown-agents)
-    (when-not (and results)
+    (when-not (every? identity results)
       (println "smoketest: FAIL")
       (System/exit 1)))
   (println "smoketest: OK"))
