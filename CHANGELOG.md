@@ -10,3 +10,4 @@
 ### Changes
 
 * Remove support for cljx.
+* Remove support for piggieback 0.1.x.
