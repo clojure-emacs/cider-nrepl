@@ -272,3 +272,11 @@
                    (extract-text normal-page-2)))
       (is (re-find #"Page size: 5, showing page: 2 of 20"
                    (extract-text small-page-2))))))
+
+(deftest print-length-independence-test
+  (testing "*print-length* doesn't break rendering of long collections"
+    (is (re-find #"showing page: \d+ of \d+"
+                 (binding [*print-length* 10]
+                   (first (:value (session/message {:op "eval"
+                                                    :inspect "true"
+                                                    :code "(range 100)"}))))))))
