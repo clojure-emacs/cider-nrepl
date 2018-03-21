@@ -12,9 +12,9 @@
 
 (def eval-result (eval (read-string code)))
 
-(def inspect-result  ["(\"Class\" \": \" (:value \"clojure.lang.PersistentArrayMap\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \"[ :a { :b 1 } ]\" 1) (:newline) \"  \" \"1\" \". \" (:value \"[ :c \\\"a\\\" ]\" 2) (:newline) \"  \" \"2\" \". \" (:value \"[ :d e ]\" 3) (:newline) \"  \" \"3\" \". \" (:value \"[ :f [ 2 3 ] ]\" 4) (:newline))"])
+(def inspect-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentArrayMap\" 0) (:newline) \"Contents: \" (:newline) \"  \" (:value \":a\" 1) \" = \" (:value \"{ :b 1 }\" 2) (:newline) \"  \" (:value \":c\" 3) \" = \" (:value \"\\\"a\\\"\" 4) (:newline) \"  \" (:value \":d\" 5) \" = \" (:value \"e\" 6) (:newline) \"  \" (:value \":f\" 7) \" = \" (:value \"[ 2 3 ]\" 8) (:newline))"])
 
-(def push-result ["(\"Class\" \": \" (:value \"clojure.lang.MapEntry\" 0) (:newline) \"Contents: \" (:newline) \"  \" \"0\" \". \" (:value \":a\" 1) (:newline) \"  \" \"1\" \". \" (:value \"{ :b 1 }\" 2) (:newline) (:newline) \"  Path: (find :a)\")"])
+(def push-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentArrayMap\" 0) (:newline) \"Contents: \" (:newline) \"  \" (:value \":b\" 1) \" = \" (:value \"1\" 2) (:newline) (:newline) \"  Path: :a\")"])
 
 (def next-page-result ["(\"Class\" \": \" (:value \"clojure.lang.PersistentList\" 0) (:newline) \"Contents: \" (:newline) \"  ...\" (:newline) \"  \" \"32\" \". \" (:value \"32\" 1) (:newline) \"  \" \"33\" \". \" (:value \"33\" 2) (:newline) \"  \" \"34\" \". \" (:value \"34\" 3) (:newline) (:newline) \"  Page size: 32, showing page: 2 of 2\")"])
 (def first-page-result
@@ -47,16 +47,16 @@
   (testing "pushing an empty inspector index renders nil"
     (is (= nil-result
            (:value (session/message {:op "inspect-push"
-                                     :idx 1}))))))
+                                     :idx 2}))))))
 
 (deftest push-empty-idempotent-integration-test
   (testing "pushing an empty inspector index is idempotent"
     (is (= nil-result
            (:value (do
                      (session/message {:op "inspect-push"
-                                       :idx 1})
+                                       :idx 2})
                      (session/message {:op "inspect-push"
-                                       :idx 1})))))))
+                                       :idx 2})))))))
 
 (deftest refresh-empty-integration-test
   (testing "refreshing an empty inspector renders nil"
@@ -94,7 +94,7 @@
 
   (testing "inspect-push error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "push exception")))]
-      (let [response (session/message {:op "inspect-push" :idx 1})]
+      (let [response (session/message {:op "inspect-push" :idx 2})]
         (is (= (:status response) #{"inspect-push-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (.startsWith (:err response) "java.lang.Exception: push exception"))
@@ -154,7 +154,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx 1})))))))
+                                       :idx 2})))))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
@@ -185,7 +185,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx 1})
+                                       :idx 2})
                      (session/message {:op "inspect-pop"})))))))
 
 (deftest refresh-integration-test
@@ -215,7 +215,7 @@
                                        :inspect "true"
                                        :code code})
                      (session/message {:op "inspect-push"
-                                       :idx 1})
+                                       :idx 2})
                      (session/message {:op "inspect-refresh"})))))))
 
 (deftest session-binding-integration-test
