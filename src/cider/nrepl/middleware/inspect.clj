@@ -21,9 +21,12 @@
         page-size (or page-size 32)
         inspector (swap-inspector! msg #(-> (assoc % :page-size page-size)
                                             (inspect/start value)))]
-    (transport/send
-     transport
-     (response-for msg :value (:rendered inspector)))))
+    (binding [*print-length* nil]
+      ;; Remove print-length limit because it breaks the output in the middle of
+      ;; the page when inspecting long sequences.
+      (transport/send
+       transport
+       (response-for msg :value (:rendered inspector))))))
 
 (defn inspector-transport
   [{:keys [^Transport transport] :as msg}]
