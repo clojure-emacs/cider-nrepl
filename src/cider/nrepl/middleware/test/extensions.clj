@@ -13,14 +13,15 @@
   [msg expected more]
   (if (seq more)
     `(let [more# (list ~@more)
-           result# (apply = ~expected more#)]
+           expected# ~expected
+           result# (apply = expected# more#)]
        (->> (if result#
               {:type :pass}
               {:type :fail
-               :diffs (->> (remove #(= ~expected %) more#)
-                           (map #(vector % (data/diff ~expected %))))})
+               :diffs (->> (remove #(= expected# %) more#)
+                           (map #(vector % (data/diff expected# %))))})
             (merge {:message ~msg
-                    :expected ~expected
+                    :expected expected#
                     :actual more#})
             test/do-report)
        result#)
