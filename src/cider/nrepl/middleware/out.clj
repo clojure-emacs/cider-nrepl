@@ -40,8 +40,10 @@
 (defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
   operations are forwarded to all output bindings in the sessions of
-  messages.
-  type is either :out or :err."
+  `messages`, in addition to the server's usual PrintWriter (saved in
+  `original-output`).
+
+  `type` is either :out or :err."
   [messages type]
   (PrintWriter. (proxy [Writer] []
                   (close [] (.flush ^Writer this))
@@ -61,10 +63,12 @@
                 true))
 
 (defn print-stream
-  "Returns a PrintStream suitable for binding as java.lang.System/out
-  or java.lang.System/err. All operations are forwarded to all output
-  bindings in the sessions of messages.
-  type is either :out or :err."
+  "Returns a PrintStream suitable for binding as java.lang.System/out or
+  java.lang.System/err. All operations are forwarded to all output
+  bindings in the sessions of messages, in addition to the server's
+  usual PrintWriter (saved in `original-output`).
+
+  `type` is either :out or :err."
   [type]
   (let [printer (case type
                   :out '*out*
