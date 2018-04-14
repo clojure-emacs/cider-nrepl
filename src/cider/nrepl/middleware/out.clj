@@ -9,9 +9,7 @@
   We use an eval message, instead of the clone op, because there's no
   guarantee that the channel that sent the clone message will properly
   handle output replies."
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [clojure.string :as s]
+  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie])
   (:import [java.io PrintWriter Writer PrintStream OutputStream]))
 
