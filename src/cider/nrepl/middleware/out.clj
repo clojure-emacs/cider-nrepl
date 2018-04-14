@@ -17,6 +17,10 @@
 
 (declare unsubscribe-session)
 
+(def stdout-map
+  {:out *out*
+   :err *err*})
+
 (defmacro with-out-binding
   "Run body with v bound to the output stream of each msg in msg-seq.
   type is either :out or :err."
@@ -42,12 +46,15 @@
                   (close [] (.flush ^Writer this))
                   (write
                     ([x]
+                     (.write (stdout-map type) x)
                      (with-out-binding [printer messages type]
                        (.write printer x)))
                     ([x ^Integer off ^Integer len]
+                     (.write (stdout-map type) x off len)
                      (with-out-binding [printer messages type]
                        (.write printer x off len))))
                   (flush []
+                    (.flush (stdout-map type))
                     (with-out-binding [printer messages type]
                       (.flush printer))))
                 true))
