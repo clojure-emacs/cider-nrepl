@@ -17,7 +17,8 @@
 
 (declare unsubscribe-session)
 
-(def stdout-map
+(def original-output
+  "Store the values of the original output streams so we can refer to them."
   {:out *out*
    :err *err*})
 
@@ -46,15 +47,15 @@
                   (close [] (.flush ^Writer this))
                   (write
                     ([x]
-                     (.write (stdout-map type) x)
+                     (.write (original-output type) x)
                      (with-out-binding [printer messages type]
                        (.write printer x)))
                     ([x ^Integer off ^Integer len]
-                     (.write (stdout-map type) x off len)
+                     (.write (original-output type) x off len)
                      (with-out-binding [printer messages type]
                        (.write printer x off len))))
                   (flush []
-                    (.flush (stdout-map type))
+                    (.flush (original-output type))
                     (with-out-binding [printer messages type]
                       (.flush printer))))
                 true))
