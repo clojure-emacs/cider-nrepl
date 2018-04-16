@@ -197,18 +197,34 @@
                               :message "Uncaught exception, not in assertion"})))
       (test/do-report {:type :end-test-var :var v}))))
 
+(defn- var-filter
+  [var include exclude]
+  (let [test-inclusion (if include
+                         #((apply some-fn include) (meta %))
+                         (constantly true))
+        test-exclusion (if exclude
+                         #((complement (apply some-fn exclude)) (meta %))
+                         (constantly true))]
+    (and (test-inclusion var)
+         (test-exclusion var))))
+
 (defn test-vars
-  "Call `test-var` on each var, with the fixtures defined for namespace
-  object `ns`. Filter vars with `selector` metadata marker when `selector` is present."
-  [ns selector vars]
+  "Call `test-var` on each var, with the fixtures defined for namespace object
+  `ns`.  If `include` is a seq, only vars with the metadata marker contained
+  within are tested.  If `exclude` is a seq, vars with the metadata marker
+  contained within are not tested.  If both inclusions and exclusions are
+  present, exclusions take priority over inclusions."
+
+  [ns include exclude vars]
   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
+        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))
+        include (seq (map keyword include))
+        exclude (seq (map keyword exclude))]
     (try (once-fixture-fn
           (fn []
             (doseq [v vars]
               (when (and (:test (meta v))
-                         (or (not selector)
-                             ((keyword selector) (meta v))))
+                         (var-filter v include exclude))
                 (each-fixture-fn (fn [] (test-var v)))))))
          (catch Throwable e
            (report-fixture-error ns e)))))
@@ -216,29 +232,36 @@
 (defn test-ns
   "If the namespace object defines a function named `test-ns-hook`, call that.
   Otherwise, test the specified vars. If no vars are specified, test all vars
-  in the namespace. On completion, return a map of test results. If `selector`
-  is present filter vars that have the `selector` metadata marker."
-  [ns selector vars]
+  in the namespace. On completion, return a map of test results.
+
+  If `include` is a seq, only vars with the metadata marker contained within
+  are tested.  If `exclude` is a seq, vars with the metadata marker contained
+  within are not tested.  If both inclusions and exclusions are present,
+  exclusions take priority over inclusions."
+  [ns include exclude vars]
   (binding [test/report report]
     (test/do-report {:type :begin-test-ns, :ns ns})
     (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
       (test-hook)
-      (test-vars ns selector (or (seq vars)
-                                 (vals (ns-interns ns)))))
+      (test-vars ns include exclude (or (seq vars)
+                                        (vals (ns-interns ns)))))
     (test/do-report {:type :end-test-ns, :ns ns})
     @current-report))
 
 (defn test-nss
-  "Call `test-ns` for each entry in map `m`, in which keys are namespace symbols
-  and values are var symbols to be tested in that namespace (or `nil` to test
-  all vars). Symbols are first resolved to their corresponding objects. If `selector`
-  is present filter vars that have the `selector` metadata marker."
-  [m selector]
+  "Call `test-ns` for each entry in map `m`, in which keys are namespace
+  symbols and values are var symbols to be tested in that namespace (or `nil`
+  to test all vars). Symbols are first resolved to their corresponding objects.
+  If `include` is a seq, only vars with the metadata marker contained within
+  are tested.  If `exclude` is a seq, vars with the metadata marker contained
+  within are not tested.  If both inclusions and exclusions are present,
+  exclusions take priority over inclusions."
+  [m include exclude]
   (report-reset!)
   (doseq [[ns vars] m]
     (->> (map (partial ns-resolve ns) vars)
          (filter identity)
-         (test-ns (the-ns ns) selector)))
+         (test-ns (the-ns ns) include exclude)))
   @current-report)
 
 ;;; ## Metadata Utils
@@ -278,25 +301,25 @@
                            (alter-meta! session# dissoc :thread :eval-msg))))))
 
 (defn handle-test-op
-  [{:keys [ns tests session transport selector] :as msg}]
+  [{:keys [ns tests session transport include exclude] :as msg}]
   (with-interruptible-eval msg
     (if-let [ns (ns/ensure-namespace ns)]
       (let [nss {ns (map u/as-sym tests)}
-            report (test-nss nss selector)]
+            report (test-nss nss include exclude)]
         (reset! results (:results report))
         (t/send transport (response-for msg (u/transform-value report))))
       (t/send transport (response-for msg :status :namespace-not-found)))
     (t/send transport (response-for msg :status :done))))
 
 (defn handle-test-all-op
-  [{:keys [load? session transport selector] :as msg}]
+  [{:keys [load? session transport include exclude] :as msg}]
   (with-interruptible-eval msg
     (let [nss (zipmap (->> (if load?
                              (ns/load-project-namespaces)
                              (ns/loaded-project-namespaces))
                            (filter has-tests?))
                       (repeat nil))
-          report (test-nss nss selector)]
+          report (test-nss nss include exclude)]
       (reset! results (:results report))
       (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
@@ -310,7 +333,7 @@
                               vars (distinct (map :var problems))]
                           (if (seq vars) (assoc ret ns vars) ret)))
                       {} @results)
-          report (test-nss nss nil)]
+          report (test-nss nss nil nil)]
       (reset! results (:results report))
       (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
@@ -334,8 +357,8 @@
 (defn handle-test [handler msg & configuration]
   (let [executor (:executor configuration @default-executor)]
     (case (:op msg)
-      "test"            (handle-test-op (update (assoc msg :executor executor) :selector u/transform-value))
-      "test-all"        (handle-test-all-op (update (assoc msg :executor executor) :selector u/transform-value))
+      "test"            (handle-test-op (assoc msg :executor executor))
+      "test-all"        (handle-test-all-op (assoc msg :executor executor))
       "test-stacktrace" (handle-stacktrace-op (assoc msg :executor executor))
       "retest"          (handle-retest-op (assoc msg :executor executor))
       (handler msg))))
