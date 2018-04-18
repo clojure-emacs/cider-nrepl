@@ -17,7 +17,7 @@
   (cond
     cider-piggieback? (resolve 'cider.piggieback/wrap-cljs-repl)
     cemerick-piggieback? (resolve 'cemerick.piggieback/wrap-cljs-repl)
-    :else nil))
+    :else false))
 
 (defn- maybe-piggieback
   [descriptor descriptor-key]
