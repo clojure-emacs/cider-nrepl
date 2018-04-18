@@ -1,5 +1,5 @@
 (ns cider.nrepl.piggieback-test
-  (:require [cemerick.piggieback :as piggieback]
+  (:require [cider.piggieback :as piggieback]
             [cider.nrepl.test-session :as session]
             [cider.nrepl :refer [cider-middleware]]
             [clojure.test :refer :all]
@@ -14,7 +14,7 @@
                                         (conj (map resolve cider-middleware)
                                               #'piggieback/wrap-cljs-repl))]
        (session/message {:op :eval
-                         :code (nrepl/code (require '[cemerick.piggieback :as piggieback])
+                         :code (nrepl/code (require '[cider.piggieback :as piggieback])
                                            (require '[cljs.repl.node :as node])
                                            (piggieback/cljs-repl (node/repl-env)))})
        (session/message {:op :eval

@@ -11,3 +11,4 @@
 
 * Remove support for cljx.
 * Remove support for piggieback 0.1.x.
+* Require piggieback 0.3 or newer.

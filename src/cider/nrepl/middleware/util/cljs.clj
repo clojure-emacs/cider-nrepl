@@ -1,12 +1,12 @@
 (ns cider.nrepl.middleware.util.cljs)
 
 (defn try-piggieback
-  "If piggieback is loaded, returns `#'cemerick.piggieback/wrap-cljs-repl`, or
+  "If piggieback is loaded, returns `#'cider.piggieback/wrap-cljs-repl`, or
   false otherwise."
   []
   (try
-    (require 'cemerick.piggieback)
-    (resolve 'cemerick.piggieback/wrap-cljs-repl)
+    (require 'cider.piggieback)
+    (resolve 'cider.piggieback/wrap-cljs-repl)
     (catch Exception _)))
 
 (defn- maybe-piggieback
@@ -31,7 +31,7 @@
   "Returns the path in the session map for the ClojureScript compiler
   environment used by piggieback."
   []
-  [(resolve 'cemerick.piggieback/*cljs-compiler-env*)])
+  [(resolve 'cider.piggieback/*cljs-compiler-env*)])
 
 (defn- maybe-deref
   [x]

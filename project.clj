@@ -95,7 +95,7 @@
                         :resource-paths ["test/resources"]
                         :test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[com.cemerick/piggieback "0.2.2"]]}
+                         :dependencies [[cider/piggieback "0.3.0"]]}
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
