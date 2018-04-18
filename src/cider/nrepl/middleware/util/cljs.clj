@@ -7,7 +7,7 @@
        (catch Throwable _ false)))
 
 (def cemerick-piggieback?
-  (try (require 'cider.piggieback) true
+  (try (require 'cemerick.piggieback) true
        (catch Throwable _ false)))
 
 (defn try-piggieback
