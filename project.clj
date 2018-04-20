@@ -60,6 +60,8 @@
                                                      cider.nrepl/wrap-macroexpand
                                                      cider.nrepl/wrap-ns
                                                      cider.nrepl/wrap-out
+                                                     cider.nrepl/wrap-content-type
+                                                     cider.nrepl/wrap-slurp
                                                      cider.nrepl/wrap-pprint
                                                      cider.nrepl/wrap-pprint-fn
                                                      cider.nrepl/wrap-profile
@@ -105,7 +107,8 @@
                       :cljfmt {:indents {as-> [[:inner 0]]
                                          with-debug-bindings [[:inner 0]]
                                          merge-meta [[:inner 0]]
-                                         try-if-let [[:block 1]]}}}
+                                         try-if-let [[:block 1]]
+                                         if-class [[:block 1]]}}}
 
              :eastwood {:plugins [[jonase/eastwood "0.2.5"]]
                         :eastwood {:config-files ["eastwood.clj"]}}})

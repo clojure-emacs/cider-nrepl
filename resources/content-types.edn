@@ -1,0 +1,4 @@
+{"text/edn" ["edn"]
+ "text/clojure" ["clj" "cljc"]
+ "text/clojurescript" ["cljs"]
+ "text/yaml" ["yml" "yaml"]}
