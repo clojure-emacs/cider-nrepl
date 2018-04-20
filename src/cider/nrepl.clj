@@ -70,6 +70,7 @@
              (run-deferred-handler ~handler-fn ~'h ~'msg)
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
+
 ;;; Deferred Middleware Wrappers
 ;; Each middleware is defined in its own namespace, but here we're defining
 ;; deferred versions of the middleware handlers, that load the actual middleware
@@ -123,6 +124,23 @@
               {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
                :optional (merge wrap-pprint-fn-optional-arguments
                                 {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
+
+(def-wrapper wrap-content-type cider.nrepl.middleware.content-type/handle-content-type
+  #{"eval"}
+  {:doc "Middleware that adds `content-type` annotations to the result of the the eval op."
+   :expects #{"eval" "load-file"}
+   :returns {"content-type" "A MIME type for the response, if one can be detected."
+             "content-transfer-encoding" "The encoding (if any) of the content."
+             "body" "The content."}
+   :handles {"content-type-middleware"
+             {:doc "Enhances the `eval` op by adding `content-type` and friends to some responses. Not an op in itself."
+              :optional {"content-type" "If present and non-nil, try to detect and handle content-types."}}}})
+
+(def-wrapper wrap-slurp cider.nrepl.middleware.slurp/handle-slurp
+  {:doc "Middleware that handles slurp requests."
+   :returns {"content-type" "A MIME type for the response, if one can be detected."
+             "content-transfer-encoding" "The encoding (if any) for the content."
+             "body" "The slurped content body."}})
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:doc "Middleware that handles apropos requests"
@@ -488,8 +506,11 @@
     wrap-info
     wrap-inspect
     wrap-macroexpand
+    wrap-slurp
     wrap-ns
     wrap-out
+    wrap-content-type
+    wrap-slurp
     wrap-pprint
     wrap-pprint-fn
     wrap-profile
