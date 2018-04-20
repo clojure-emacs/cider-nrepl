@@ -197,16 +197,20 @@
                               :message "Uncaught exception, not in assertion"})))
       (test/do-report {:type :end-test-var :var v}))))
 
-(defn- var-filter
-  [var include exclude]
-  (let [test-inclusion (if include
+(defn- filter-vars
+  [include exclude vars]
+  (let [include (seq (map keyword include))
+        test-inclusion (if include
                          #((apply some-fn include) (meta %))
                          (constantly true))
+        exclude (seq (map keyword exclude))
         test-exclusion (if exclude
                          #((complement (apply some-fn exclude)) (meta %))
-                         (constantly true))]
-    (and (test-inclusion var)
-         (test-exclusion var))))
+                         (constantly true))
+        test-var-pred #(and (:test (meta %))
+                            (test-inclusion %)
+                            (test-exclusion %))]
+    (filter test-var-pred vars)))
 
 (defn test-vars
   "Call `test-var` on each var, with the fixtures defined for namespace object
@@ -217,15 +221,11 @@
 
   [ns include exclude vars]
   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))
-        include (seq (map keyword include))
-        exclude (seq (map keyword exclude))]
+        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
     (try (once-fixture-fn
           (fn []
-            (doseq [v vars]
-              (when (and (:test (meta v))
-                         (var-filter v include exclude))
-                (each-fixture-fn (fn [] (test-var v)))))))
+            (doseq [v (filter-vars include exclude vars)]
+              (each-fixture-fn (fn [] (test-var v))))))
          (catch Throwable e
            (report-fixture-error ns e)))))
 
@@ -311,6 +311,20 @@
       (t/send transport (response-for msg :status :namespace-not-found)))
     (t/send transport (response-for msg :status :done))))
 
+(defn handle-list-all-op
+  [{:keys [load? session transport include exclude] :as msg}]
+  (with-interruptible-eval msg
+    (let [tests (->> (if load?
+                       (ns/load-project-namespaces)
+                       (ns/loaded-project-namespaces))
+                     (filter has-tests?)
+                     (map (juxt identity #(vals (ns-interns %))))
+                     (map (fn [[ns vars]] [ns (filter-vars include exclude vars)]))
+                     (filter (comp seq last))
+                     (group-by first))]
+      (t/send transport (response-for msg (u/transform-value tests))))
+    (t/send transport (response-for msg :status :done))))
+
 (defn handle-test-all-op
   [{:keys [load? session transport include exclude] :as msg}]
   (with-interruptible-eval msg
@@ -359,6 +373,7 @@
     (case (:op msg)
       "test"            (handle-test-op (assoc msg :executor executor))
       "test-all"        (handle-test-all-op (assoc msg :executor executor))
+      "list-all-tests"  (handle-list-all-op (assoc msg :executor executor))
       "test-stacktrace" (handle-stacktrace-op (assoc msg :executor executor))
       "retest"          (handle-retest-op (assoc msg :executor executor))
       (handler msg))))
