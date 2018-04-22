@@ -311,6 +311,14 @@
       (t/send transport (response-for msg :status :namespace-not-found)))
     (t/send transport (response-for msg :status :done))))
 
+(defn merge-in-test-results-maybe [{:keys [ns name] :as test-var-meta}]
+  (assoc test-var-meta
+         :test-results
+         (-> (deref current-report)
+             :results
+             (get (ns-name ns))
+             (get name))))
+
 (defn handle-list-all-op
   [{:keys [load? session transport include exclude] :as msg}]
   (with-interruptible-eval msg
@@ -318,10 +326,11 @@
                        (ns/load-project-namespaces)
                        (ns/loaded-project-namespaces))
                      (filter has-tests?)
-                     (map (juxt identity #(vals (ns-interns %))))
-                     (map (fn [[ns vars]] [ns (filter-vars include exclude vars)]))
-                     (filter (comp seq last))
-                     (group-by first))]
+                     (mapcat #(vals (ns-interns %)))
+                     (filter-vars include exclude)
+                     (map meta)
+                     (map merge-in-test-results-maybe)
+                     (group-by :ns))]
       (t/send transport (response-for msg (u/transform-value tests))))
     (t/send transport (response-for msg :status :done))))
 
