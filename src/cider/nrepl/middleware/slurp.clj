@@ -10,6 +10,7 @@
             [clojure.tools.nrepl.transport :as transport]
             [clojure.tools.nrepl.misc :refer [response-for]])
   (:import [java.net MalformedURLException URL]
+           java.io.ByteArrayOutputStream
            [java.nio.file Files Path Paths]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,13 +95,19 @@
         (slurp-reply content-type buff))
 
       ;; It's not a file, so just try to open it on up
-      (with-open [conn (.openConnection url)]
-        (let [content-type (normalize-content-type
-                            (.getContentType conn))
-              ;; FIXME (arrdem 2018-04-03):
-              ;;   There's gotta be a better way here
-              buff (.readAllBytes (.getInputStream conn))]
-          (slurp-reply content-type buff))))))
+      (let [conn (.openConnection url)
+            content-type (normalize-content-type
+                          (.getContentType conn))
+            ;; FIXME (arrdem 2018-04-03):
+            ;;   There's gotta be a better way here
+            is (.getInputStream conn)
+            os (ByteArrayOutputStream.)]
+        (loop []
+          (let [b (.read is)]
+            (when (<= 0 b)
+              (.write os b)
+              (recur))))
+        (slurp-reply content-type (.toByteArray os))))))
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove this if-class when we have jdk1.8 min
