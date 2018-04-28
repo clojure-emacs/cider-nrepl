@@ -88,9 +88,9 @@
     (or (and (instance? File value)
              (.exists ^File value))
         (and (instance? URI value)
-             (= (.getScheme ^URI value) "file"))
+             #_(= (.getScheme ^URI value) "file"))
         (and (instance? URL value)
-             (#{"jar" "file"} (.getProtocol ^URL value))))
+             #_(#{"jar" "file"} (.getProtocol ^URL value))))
     (assoc response
            :content-type ["message/external-body"
                           {"access-type" "URL"
