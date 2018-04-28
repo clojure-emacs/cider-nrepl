@@ -87,10 +87,8 @@
     ;; RFC-2017 external-body responses for UR[IL]s and things which are just wrappers thereof
     (or (and (instance? File value)
              (.exists ^File value))
-        (and (instance? URI value)
-             #_(= (.getScheme ^URI value) "file"))
-        (and (instance? URL value)
-             #_(#{"jar" "file"} (.getProtocol ^URL value))))
+        (instance? URI value)
+        (instance? URL value))
     (assoc response
            :content-type ["message/external-body"
                           {"access-type" "URL"
