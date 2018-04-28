@@ -6,7 +6,9 @@
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.tools.nrepl.transport :as transport]
+            [clojure.tools.nrepl.misc :refer [response-for]])
   (:import [java.net MalformedURLException URL]
            [java.nio.file Files Path Paths]))
 
@@ -64,24 +66,20 @@
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove this if-class when we have jdk1.8 min
-(defn base64-string
-  [buff]
+(defn base64-bytes
+  [^bytes buff]
   (if-class java.util.Base64
-    (.encode (Base64/getEncoder) ^bytes buff)))
+    (.encodeToString (Base64/getEncoder) buff)))
 
 (defn slurp-reply [content-type buff]
   (let [^String real-type (first content-type)
         text? (.contains real-type "text")]
-    (cond-> {:content-type content-type}
-      (not text?)
-      (assoc :content-transfer-encoding "base64"
-             :body (base64-string buff))
-
-      ;; FIXME (arrdem 2018-04-03): This is not generally safe, but if
-      ;;   you're on a non-utf-8 platform you already know that.
-      text?
-      (assoc :body (String. buff "utf-8")
-             :content-transfer-encoding "utf-8"))))
+    (if-not text?
+      {:content-type content-type
+       :content-transfer-encoding "base64"
+       :body (base64-bytes buff)}
+      {:content-type content-type
+       :body (String. buff "utf-8")})))
 
 (defn slurp-url-to-content+body
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
@@ -112,8 +110,12 @@
   If the slurp is malformed, or fails, lets the rest of the stack keep going."
   [handler msg]
   (let [{:keys [op url transport]} msg]
-    (handler (if (and (= "slurp" op) url)
-               (if-class java.util.Base64
-                 (slurp-url-to-content+body url)
-                 {:error "`java.util.Base64` cannot be found, `slurp` op is disabled."})
-               msg))))
+    (if (and (= "slurp" op) url)
+      (do (transport/send transport
+                          (response-for msg
+                                        (if-class java.util.Base64
+                                          (slurp-url-to-content+body url)
+                                          {:error "`java.util.Base64` cannot be found, `slurp` op is disabled."})))
+          (transport/send transport
+                          (response-for msg {:status ["done"]})))
+      (handler msg))))
