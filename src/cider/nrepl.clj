@@ -140,7 +140,9 @@
   {:doc "Middleware that handles slurp requests."
    :returns {"content-type" "A MIME type for the response, if one can be detected."
              "content-transfer-encoding" "The encoding (if any) for the content."
-             "body" "The slurped content body."}})
+             "body" "The slurped content body."}
+   :handles {"slurp"
+             {:doc "Slurps a URL from the nREPL server, returning MIME data."}}})
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:doc "Middleware that handles apropos requests"
