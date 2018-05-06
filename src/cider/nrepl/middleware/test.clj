@@ -4,8 +4,10 @@
   (:require [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as st]
             [cider.nrepl.middleware.test.extensions :as extensions]
+            [cider.nrepl.middleware.util.coerce :as util.coerce]
             [orchard.misc :as u]
             [orchard.namespace :as ns]
+            [orchard.query :as query]
             [clojure.pprint :as pp]
             [clojure.test :as test]
             [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
@@ -197,84 +199,54 @@
                               :message "Uncaught exception, not in assertion"})))
       (test/do-report {:type :end-test-var :var v}))))
 
-(defn- var-filter
-  [var include exclude]
-  (let [test-inclusion (if include
-                         #((apply some-fn include) (meta %))
-                         (constantly true))
-        test-exclusion (if exclude
-                         #((complement (apply some-fn exclude)) (meta %))
-                         (constantly true))]
-    (and (test-inclusion var)
-         (test-exclusion var))))
-
 (defn test-vars
   "Call `test-var` on each var, with the fixtures defined for namespace object
-  `ns`.  If `include` is a seq, only vars with the metadata marker contained
-  within are tested.  If `exclude` is a seq, vars with the metadata marker
-  contained within are not tested.  If both inclusions and exclusions are
-  present, exclusions take priority over inclusions."
-
-  [ns include exclude vars]
+  `ns`."
+  [ns vars]
   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))
-        include (seq (map keyword include))
-        exclude (seq (map keyword exclude))]
+        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
     (try (once-fixture-fn
           (fn []
             (doseq [v vars]
-              (when (and (:test (meta v))
-                         (var-filter v include exclude))
-                (each-fixture-fn (fn [] (test-var v)))))))
+              (each-fixture-fn (fn [] (test-var v))))))
          (catch Throwable e
            (report-fixture-error ns e)))))
 
 (defn test-ns
   "If the namespace object defines a function named `test-ns-hook`, call that.
-  Otherwise, test the specified vars. If no vars are specified, test all vars
-  in the namespace. On completion, return a map of test results.
-
-  If `include` is a seq, only vars with the metadata marker contained within
-  are tested.  If `exclude` is a seq, vars with the metadata marker contained
-  within are not tested.  If both inclusions and exclusions are present,
-  exclusions take priority over inclusions."
-  [ns include exclude vars]
+  Otherwise, test the specified vars. On completion, return a map of test
+  results."
+  [ns vars]
   (binding [test/report report]
     (test/do-report {:type :begin-test-ns, :ns ns})
     (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
       (test-hook)
-      (test-vars ns include exclude (or (seq vars)
-                                        (vals (ns-interns ns)))))
+      (test-vars ns vars))
     (test/do-report {:type :end-test-ns, :ns ns})
     @current-report))
+
+(defn test-var-query
+  "Call `test-ns` for each var found via var-query."
+  [var-query]
+  (report-reset!)
+  (doseq [[ns vars] (group-by
+                     (comp :ns meta)
+                     (query/vars var-query))]
+    (test-ns ns vars))
+  @current-report)
 
 (defn test-nss
   "Call `test-ns` for each entry in map `m`, in which keys are namespace
   symbols and values are var symbols to be tested in that namespace (or `nil`
-  to test all vars). Symbols are first resolved to their corresponding objects.
-  If `include` is a seq, only vars with the metadata marker contained within
-  are tested.  If `exclude` is a seq, vars with the metadata marker contained
-  within are not tested.  If both inclusions and exclusions are present,
-  exclusions take priority over inclusions."
-  [m include exclude]
+  to test all vars). Symbols are first resolved to their corresponding
+  objects."
+  [m]
   (report-reset!)
   (doseq [[ns vars] m]
     (->> (map (partial ns-resolve ns) vars)
          (filter identity)
-         (test-ns (the-ns ns) include exclude)))
+         (test-ns (the-ns ns))))
   @current-report)
-
-;;; ## Metadata Utils
-
-(defn has-tests?
-  "Return a truthy value if the namespace has any `:test` metadata."
-  [ns]
-  (when-let [ns-obj
-             (if (instance? clojure.lang.Namespace ns)
-               ns
-               (find-ns ns))]
-    (seq (filter (comp :test meta val)
-                 (ns-interns ns-obj)))))
 
 ;;; ## Middleware
 
@@ -300,29 +272,41 @@
                              ~@body)
                            (alter-meta! session# dissoc :thread :eval-msg))))))
 
-(defn handle-test-op
-  [{:keys [ns tests session transport include exclude] :as msg}]
-  (with-interruptible-eval msg
-    (if-let [ns (ns/ensure-namespace ns)]
-      (let [nss {ns (map u/as-sym tests)}
-            report (test-nss nss include exclude)]
+(defn handle-test-var-query-op
+  [{:keys [var-query transport] :as msg}]
+  (with-interruptible-eval
+    msg
+    (try
+      (let [report (test-var-query
+                    (-> var-query
+                        (assoc-in [:ns-query :has-tests?] true)
+                        (assoc :test? true)
+                        (util.coerce/var-query)))]
         (reset! results (:results report))
         (t/send transport (response-for msg (u/transform-value report))))
-      (t/send transport (response-for msg :status :namespace-not-found)))
+      (catch clojure.lang.ExceptionInfo e
+        (let [d (ex-data e)]
+          (if (::util.coerce/id d)
+            (case (::util.coerce/id d)
+              :namespace-not-found (t/send transport (response-for msg :status :namespace-not-found)))
+            (throw e)))))
     (t/send transport (response-for msg :status :done))))
 
+(defn handle-test-op
+  [{:keys [ns tests include exclude] :as msg}]
+  (handle-test-var-query-op
+   (merge msg {:var-query {:ns-query {:exactly [ns]}
+                           :include-meta-key include
+                           :exclude-meta-key exclude
+                           :exactly tests}})))
+
 (defn handle-test-all-op
-  [{:keys [load? session transport include exclude] :as msg}]
-  (with-interruptible-eval msg
-    (let [nss (zipmap (->> (if load?
-                             (ns/load-project-namespaces)
-                             (ns/loaded-project-namespaces))
-                           (filter has-tests?))
-                      (repeat nil))
-          report (test-nss nss include exclude)]
-      (reset! results (:results report))
-      (t/send transport (response-for msg (u/transform-value report))))
-    (t/send transport (response-for msg :status :done))))
+  [{:keys [load? include exclude] :as msg}]
+  (handle-test-var-query-op
+   (merge msg {:var-query {:ns-query {:project? true
+                                      :load-project-ns? load?}
+                           :include-meta-key include
+                           :exclude-meta-key exclude}})))
 
 (defn handle-retest-op
   [{:keys [session transport] :as msg}]
@@ -333,7 +317,7 @@
                               vars (distinct (map :var problems))]
                           (if (seq vars) (assoc ret ns vars) ret)))
                       {} @results)
-          report (test-nss nss nil nil)]
+          report (test-nss nss)]
       (reset! results (:results report))
       (t/send transport (response-for msg (u/transform-value report))))
     (t/send transport (response-for msg :status :done))))
@@ -357,6 +341,7 @@
 (defn handle-test [handler msg & configuration]
   (let [executor (:executor configuration @default-executor)]
     (case (:op msg)
+      "test-var-query"  (handle-test-var-query-op (assoc msg :executor executor))
       "test"            (handle-test-op (assoc msg :executor executor))
       "test-all"        (handle-test-all-op (assoc msg :executor executor))
       "test-stacktrace" (handle-stacktrace-op (assoc msg :executor executor))

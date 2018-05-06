@@ -436,11 +436,14 @@
   {:doc "Middleware that handles testing requests."
    :requires #{#'session #'wrap-pprint-fn}
    :expects #{#'pr-values}
-   :handles {"test"
-             {:doc "Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+   :handles {"test-var-query"
+             {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+              :optional wrap-pprint-fn-optional-arguments}
+             "test"
+             {:doc "[DEPRECATED] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-pprint-fn-optional-arguments}
              "test-all"
-             {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "[DEPRECATED] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-pprint-fn-optional-arguments}
              "test-stacktrace"
              {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."

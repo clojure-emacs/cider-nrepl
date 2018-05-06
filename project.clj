@@ -30,7 +30,7 @@
 
   :test-selectors {:default (fn [test-meta]
                               (if-let [min-version (:min-clj-version test-meta)]
-                                (>= (compare (clojure-version) min-version) 0 )
+                                (>= (compare (clojure-version) min-version) 0)
                                 true))}
 
   :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]}
