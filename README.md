@@ -250,7 +250,7 @@ Middleware        | Op(s)      | Description
 `wrap-refresh`    | `refresh/refresh-all/refresh-clear` | Code reloading.
 `wrap-resource`   | `resource` | Return resource path.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
-`wrap-test`       | `test/retest/test-stacktrace` | Test execution, reporting, and inspection.
+`wrap-test`       | `test-var-query/retest/test-stacktrace` | Test execution, reporting, and inspection.
 `wrap-trace`      | `toggle-trace-var`/`toggle-trace-ns` | Toggle tracing of a given var or ns.
 `wrap-out`        | | Echo the server's output stream to client sessions.
 `wrap-undef`      | `undef`    | Undefine a var.
