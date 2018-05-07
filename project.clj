@@ -74,8 +74,7 @@
                                                      cider.nrepl/wrap-tracker
                                                      cider.nrepl/wrap-undef
                                                      cider.nrepl/wrap-version]}
-                   :dependencies [[org.clojure/tools.nrepl "0.2.13"]
-                                  ;; For developing the Leiningen plugin.
+                   :dependencies [;; For developing the Leiningen plugin.
                                   [leiningen-core "2.8.1"]
                                   ;; For the boot tasks namespace
                                   [boot/base "2.7.2"]
