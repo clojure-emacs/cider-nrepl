@@ -298,7 +298,7 @@
    (merge msg {:var-query {:ns-query {:exactly [ns]}
                            :include-meta-key include
                            :exclude-meta-key exclude
-                           :exactly tests}})))
+                           :exactly (map #(str ns "/" %) tests)}})))
 
 (defn handle-test-all-op
   [{:keys [load? include exclude] :as msg}]
