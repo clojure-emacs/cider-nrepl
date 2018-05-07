@@ -13,15 +13,19 @@
   [ns-query]
   (-> ns-query
       (update-some :exactly
-                   #(map (fn [ns-string]
-                           (if-let [ns (find-ns (symbol ns-string))]
-                             ns
-                             (throw (ex-info "Namespace not found"
-                                             {::id :namespace-not-found
-                                              :namespace-string ns-string}))))
-                         %))
+                   #(seq
+                     (map (fn [ns-string]
+                            (if-let [ns (find-ns (symbol ns-string))]
+                              ns
+                              (throw (ex-info "Namespace not found"
+                                              {::id :namespace-not-found
+                                               :namespace-string ns-string}))))
+                          %)))
       (update :project? some?)
-      (update :load-project-ns? some?)
+      (update :load-project-ns? (fn [x]
+                                  (cond
+                                    (= x []) false
+                                    :else (some? x))))
       (update :has-tests? some?)
       (update-some :include-regexps #(map re-pattern %))
       (update-some :exclude-regexps #(map re-pattern %))))
@@ -30,7 +34,7 @@
   [var-query]
   (-> var-query
       (update :ns-query ns-query)
-      (update-some :exactly #(map (comp find-ns symbol) %))
+      (update-some :exactly #(seq (keep (comp find-var symbol) %)))
       (update :test? some?)
       (update :private? some?)
       (update-some :include-meta-key #(map keyword %))
