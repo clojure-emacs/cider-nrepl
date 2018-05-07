@@ -96,7 +96,8 @@
                         :resource-paths ["test/resources"]
                         :test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[cider/piggieback "0.3.2"]]}
+                         :dependencies [[org.clojure/tools.nrepl "0.2.13"]
+                                        [cider/piggieback "0.3.2"]]}
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
