@@ -15,6 +15,19 @@
   (is (= (class @test/default-executor)
          java.util.concurrent.ThreadPoolExecutor)))
 
+(deftest only-selected-tests
+  (testing "only single test is run with test"
+    (are [tests] (let [{:keys [results] :as test-result}
+                       (session/message
+                        {:op "test"
+                         :ns "cider.nrepl.middleware.test-filter-tests"
+                         :tests (map name tests)})]
+                   (is (= tests (keys (:cider.nrepl.middleware.test-filter-tests results)))))
+      [:a-puff-of-smoke-test]
+      [:a-smokey-test]
+      [:a-puff-of-smoke-test :a-smokey-test]
+      [:a-puff-of-smoke-test :a-smokey-test :yet-an-other-test])))
+
 (deftest only-smoke-test-run-test-deprecated
   (testing "only test marked as smoke is run when test-all is used"
     (let [{:keys [results] :as test-result} (session/message {:op            "test-all"
