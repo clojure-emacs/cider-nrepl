@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.17.0 (2018-05-07)
+
 ### New features
 
 * Extracted part of the nREPL-agnostic functionality to `orchard`.
