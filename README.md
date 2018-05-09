@@ -252,7 +252,7 @@ Middleware        | Op(s)      | Description
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
 `wrap-test`       | `test-var-query/retest/test-stacktrace` | Test execution, reporting, and inspection.
 `wrap-trace`      | `toggle-trace-var`/`toggle-trace-ns` | Toggle tracing of a given var or ns.
-`wrap-out`        | | Echo the server's output stream to client sessions.
+`wrap-out`        | `out-subscribe`/`out-unsubscribe` | Echo the server's output stream to client sessions.
 `wrap-undef`      | `undef`    | Undefine a var.
 `wrap-version`    | `cider-version` | The CIDER-nREPL version map.
 
