@@ -246,7 +246,7 @@ Middleware        | Op(s)      | Description
 `wrap-spec`         | `spec-list/spec-form/spec-example` | Spec browsing.
 `wrap-pprint`     | | Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.
 `wrap-pprint-fn`  | | Provides a common pretty-printing interface for other middlewares that need to perform customisable pretty-printing.
-`wrap-profile`    | `toggle-profile/toggle-profile-ns/is-var-profiled/profile-summary/profile-var-summary/clear-profile/get-max-samples/set-max-samples` | Provides Profiling support for [Profiling](https://github.com/thunknyc/profile)
+`wrap-profile`    | `toggle-profile/toggle-profile-ns/is-var-profiled/profile-summary/profile-var-summary/clear-profile/get-max-samples/set-max-samples` | Provides profiling support based on the [profile](https://github.com/thunknyc/profile) library.
 `wrap-refresh`    | `refresh/refresh-all/refresh-clear` | Code reloading.
 `wrap-resource`   | `resource` | Return resource path.
 `wrap-stacktrace` | `stacktrace` | Cause and stacktrace analysis for exceptions.
