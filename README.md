@@ -379,7 +379,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [compliment]: https://github.com/alexander-yakushev/compliment
 [cljs-tooling]: https://github.com/clojure-emacs/cljs-tooling
 [tools.trace]: https://github.com/clojure/tools.trace
-[tools.namespace]: (https://github.com/clojure/tools.namespace)
+[tools.namespace]: https://github.com/clojure/tools.namespace
 [cljfmt]: https://github.com/weavejester/cljfmt
 [vim-replant]: https://github.com/SevereOverfl0w/vim-replant
 [vim-fireplace]: https://github.com/tpope/vim-fireplace
