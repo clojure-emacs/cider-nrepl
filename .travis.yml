@@ -8,8 +8,6 @@ script:
   - make $TARGET
 env:
   matrix:
-    - VERSION=1.7 TARGET=test-clj
-    - VERSION=1.7 TARGET=test-cljs
     - VERSION=1.8 TARGET=test-clj
     - VERSION=1.8 TARGET=test-cljs
     - VERSION=1.9 TARGET=test-clj

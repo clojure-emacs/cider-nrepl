@@ -47,7 +47,7 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.7.0"]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.8.0"]]}
 
              :dev {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
                                                      cider.nrepl/wrap-classpath
@@ -80,8 +80,6 @@
                                   [boot/base "2.7.2"]
                                   [boot/core "2.7.2"]]}
 
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]
-                                  [org.clojure/clojurescript "1.7.228" :scope "provided"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.8.51" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
