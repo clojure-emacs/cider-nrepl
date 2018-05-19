@@ -2,7 +2,7 @@
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
   (:require [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.middleware.info :as info]
+            [orchard.info :as info]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [orchard.namespace :as namespace]
             [clojure.repl :as repl]
@@ -74,7 +74,7 @@
              :fn  (str/join "/" (cons fn anons))
              :var (str ns "/" fn)
              ;; Full file path
-             :file-url (or (some-> (info/info-clj 'user (symbol (str ns "/" fn)))
+             :file-url (or (some-> (info/info 'user (symbol (str ns "/" fn)))
                                    :file
                                    path->url
                                    u/transform-value)

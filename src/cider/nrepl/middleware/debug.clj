@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.debug
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.info :as info]
+  (:require [orchard.info :as info]
             [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as stacktrace]

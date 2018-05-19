@@ -11,131 +11,29 @@
   (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
            [org.apache.commons.lang3 SystemUtils]))
 
-(defn file
-  [x]
-  (:file (info/file-info x)))
-
-(defn relative
-  [x]
-  (:resource (info/file-info x)))
-
-(deftest javadoc-url-test
-  (if (SystemUtils/IS_JAVA_1_7)
-    (testing "java 1.7"
-      (is (= "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#charAt(int)"
-             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
-                 (info/format-response)
-                 (get "javadoc"))))))
-
-  (if (SystemUtils/IS_JAVA_1_8)
-    (testing "java 1.8"
-      (is (= "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#charAt-int-"
-             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
-                 (info/format-response)
-                 (get "javadoc"))))))
-
-  (if (SystemUtils/IS_JAVA_9)
-    (testing "java 9"
-      (is (= "http://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#charAt-int-"
-             (-> (info/info-java 'java.lang.StringBuilder 'charAt)
-                 (info/format-response)
-                 (get "javadoc")))))))
-
-(deftest resource-path-test
-  (is (= (class (file (subs (str (clojure.java.io/resource "clojure/core.clj")) 4)))
-         java.net.URL))
-  (is (= (class (file "clojure/core.clj"))
-         java.net.URL))
-  (is (= (class (file "clojure-1.7.0.jar:clojure/core.clj"))
-         java.net.URL))
-  (is (= (class (file "test/clj/cider/nrepl/middleware/info_test.clj"))
-         java.net.URL))
-  (is (relative "clojure/core.clj"))
-  (is (nil? (relative "notclojure/core.clj")))
-  (is (nil? (info/resource-path "jar:file:fake.jar!/fake/file.clj"))))
-
-(deftest boot-resource-path-test
-  (let [tmp-dir-name (System/getProperty "java.io.tmpdir")
-        tmp-file-name "boot-test.txt"
-        tmp-file-path (str tmp-dir-name (System/getProperty "file.separator") tmp-file-name)]
-    (spit tmp-file-path "test")
-    (testing "when fake.class.path is not set"
-      (is (not (= (class (file tmp-file-name))
-                  java.net.URL)))
-      (is (= (file tmp-file-name) tmp-file-name)))
-    (testing "when fake.class.path is set"
-      (try
-        (System/setProperty "fake.class.path" tmp-dir-name)
-        (is (= (class (file tmp-file-name))
-               java.net.URL))
-        (is (= (.getPath (file tmp-file-name))
-               tmp-file-path))
-        (finally
-          (System/clearProperty "fake.class.path"))))))
-
-(deftype T [])
-
-(deftest info-test
-  (is (info/info-clj 'cider.nrepl.middleware.info 'io))
-
-  (is (info/info-clj 'cider.nrepl.middleware.info 'info-clj))
-
-  (is (info/info-clj 'cider.nrepl.middleware.info 'java.lang.Class))
-  (is (info/info-clj 'cider.nrepl.middleware.info 'Class/forName))
-  (is (info/info-clj 'cider.nrepl.middleware.info '.toString))
-
-  (is (not (info/info-clj 'clojure.core (gensym "non-existing"))))
-  (is (info/info-clj 'cider.nrepl.middleware.info-test 'T)
-      "Check that deftype T (which returns nil for .getPackage), doesn't throw")
-
-  (is (= (the-ns 'clojure.core) (:ns (info/info-clj 'cider.nrepl.middleware.info 'str))))
-
-  ;; special forms are marked as such and nothing else is (for all syms in ns)
-  (let [ns 'cider.nrepl.middleware.info
-        spec-forms (into '#{letfn fn let loop} (keys @#'repl/special-doc-map))
-        infos (->> (into spec-forms (keys (ns-map ns)))
-                   (map (partial info/info-clj ns)))]
-    (is (= spec-forms (->> (-> (group-by :special-form infos)
-                               (get true))
-                           (map :name)
-                           (set)))))
-
-  (is (info/info-java 'clojure.lang.Atom 'swap))
-
+(deftest format-response-test
   (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online
-               (-> (info/info-java 'java.lang.Object 'toString)
+               (-> (info/info {:class "java.lang.Object" :member "toString"})
                    (info/format-response)
                    (get "javadoc"))))
 
-  (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core"})))
 
-  (is (-> (info/info-clj 'cider.nrepl.middleware.info 'clojure.core)
+  (is (-> (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core"})
           (dissoc :file)
           (info/format-response)))
 
-  (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core//)))
-  (is (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'clojure.core/+)))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core//"})))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core/+"})))
   ;; used to crash, sym is parsed as a class name
-  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'notincanter.core))))
+  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "notincanter.core"}))))
   ;; unfound nses should fall through
-  (is (nil? (info/format-response (info/info-clj 'cider.nrepl.middleware.nonexistent-namespace 'a-var))))
-
-  ;; handle zero-lenth input
-  (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
-  (is (nil? (info/info {:ns "" :symbol ""})))
-
-  ;; either symbol or (class method) should be passed
-  (is (thrown? Exception
-               (info/info {:ns "cider.nrepl.middleware.info-test"
-                           :class "Thread"})))
-
-  ;; this is a replacement for (is (not (thrown? ..)))
-  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
+  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :symbol "a-var"})))))
 
 (deftest response-test
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
         {:keys [arglists column line added static doc]} (meta v)]
-    (is (= (dissoc (info/format-response (info/info-clj 'cider.nrepl.middleware.info 'assoc)) "file")
+    (is (= (dissoc (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "assoc"})) "file")
            {"ns" "clojure.core"
             "name" "assoc"
             "arglists-str" (->> (map pr-str arglists)
@@ -147,71 +45,18 @@
             "line" line
             "resource" "clojure/core.clj"}))))
 
-;;;; eldoc
-(def test-eldoc-info {:arglists '([x] [x y])})
+(deftest info-test
+    ;; handle zero-lenth input
+  (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
+  (is (nil? (info/info {:ns "" :symbol ""})))
 
-(def test-eldoc-info-special-form {:forms ['(.instanceMember instance args*)
-                                           '(.instanceMember Classname args*)
-                                           '(Classname/staticMethod args*)
-                                           'Classname/staticField]
-                                   :special-form true})
+  ;; either symbol or (class method) should be passed
+  (is (thrown? Exception
+               (info/info {:ns "cider.nrepl.middleware.info-test"
+                           :class "Thread"})))
 
-(def test-eldoc-info-candidates
-  {:candidates '{X {:arglists ([x])}
-                 Y {:arglists ([x] [x y z])}
-                 Z {:arglists ([])}}})
-
-(deftest test-extract-arglists
-  (is (= (info/extract-arglists test-eldoc-info) '([x] [x y])))
-  (is (= (info/extract-arglists test-eldoc-info-candidates)
-         '([] [x] [x y z])))
-  (is (= (info/extract-arglists test-eldoc-info-special-form)
-         '([.instanceMember instance args*]
-           [.instanceMember Classname args*]
-           [Classname/staticMethod args*]
-           [Classname/staticField]))))
-
-(deftest format-arglists-test
-  (is (= (info/format-arglists (info/extract-arglists test-eldoc-info)) '(["x"] ["x" "y"])))
-  (is (= (info/format-arglists (info/extract-arglists test-eldoc-info-candidates))
-         '([] ["x"] ["x" "y" "z"]))))
-
-(deftest test-extract-arglists
-  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "map"})))
-  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol ".toString"})))
-  (is (info/extract-arglists (info/info {:ns "clojure.core" :symbol "."})))
-  (is (not (info/extract-arglists (info/info {:ns "clojure.core" :symbol (gensym "non-existing")})))))
-
-(deftest javadoc-info-unit-test
-  (testing "Get an HTTP URL for a Sun/Oracle Javadoc"
-    (testing "Javadoc 1.7 format"
-      (let [reply      (info/javadoc-info "java/lang/StringBuilder.html#capacity()")
-            url        (:javadoc reply)
-            exp-suffix "/docs/api/java/lang/StringBuilder.html#capacity()"]
-        (is (.endsWith url exp-suffix))))
-
-    (testing "Javadoc 1.8 format"
-      (let [reply      (info/javadoc-info "java/lang/StringBuilder.html#capacity--")
-            url        (:javadoc reply)
-            exp-suffix "/docs/api/java/lang/StringBuilder.html#capacity--"]
-        (is (.endsWith url exp-suffix)))))
-
-  (testing "Get general URL for a clojure javadoc"
-    (let [reply    (info/javadoc-info "clojure/java/io.clj")
-          url      (:javadoc reply)
-          url-type (class url)
-          exp-type java.net.URL]
-      (is (= url-type exp-type))))
-
-  (testing "Get URL for commonly used Java libraries via the *remote-javadocs* mechanism"
-    (let [reply    (info/javadoc-info "com/amazonaws/services/lambda/AWSLambdaClient.html#listFunctions()")
-          url      (:javadoc reply)]
-      (is (= url "http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/lambda/AWSLambdaClient.html#listFunctions()"))))
-
-  (testing "Get fall through URL type for other Javadocs (external libs?)"
-    (let [reply (info/javadoc-info "http://some/other/url")
-          url (:javadoc reply)]
-      (is (= url "http://some/other/url")))))
+  ;; this is a replacement for (is (not (thrown? ..)))
+  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
 
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
@@ -411,7 +256,7 @@
         (is (= ns "cider.nrepl.middleware.info-test"))))
 
     (testing "see also"
-      (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "info" :symbol "map" :ns "clojure.core"})]
         (is (= (:see-also response)
                ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"])))
       (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
@@ -545,7 +390,7 @@
         (is (:pp-stacktrace response)))))
 
   (testing "handle the exception thrown if there's a mocked eldoc retreival error "
-    (with-redefs [info/extract-arglists (fn [& _] (throw (Exception. "eldoc-exception")))]
+    (with-redefs [info/eldoc-reply (fn [& _] (throw (Exception. "eldoc-exception")))]
       (let [response (session/message {:op "eldoc" :symbol "test" :ns "user"})]
         (is (= (:status response) #{"eldoc-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
