@@ -87,7 +87,8 @@
                            (and class member) (clj-info/info-java class member)
                            :else (throw (Exception.
                                          "Either \"symbol\", or (\"class\", \"member\") must be supplied")))
-            see-also (clj-info/see-also ns symbol)]
+            ;; we have to use the resolved (real) namespace and name here
+            see-also (clj-info/see-also (:ns var-info) (:name var-info))]
         (if (seq see-also)
           (merge {:see-also see-also} var-info)
           var-info)))))

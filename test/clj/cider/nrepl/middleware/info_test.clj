@@ -33,7 +33,7 @@
 (deftest response-test
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
         {:keys [arglists column line added static doc]} (meta v)]
-    (is (= (dissoc (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "assoc"})) "file")
+    (is (= (dissoc (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "assoc"})) "file" "see-also")
            {"ns" "clojure.core"
             "name" "assoc"
             "arglists-str" (->> (map pr-str arglists)
@@ -256,7 +256,7 @@
         (is (= ns "cider.nrepl.middleware.info-test"))))
 
     (testing "see also"
-      (let [response (session/message {:op "info" :symbol "map" :ns "clojure.core"})]
+      (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:see-also response)
                ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"])))
       (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
