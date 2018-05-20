@@ -3,14 +3,19 @@
   ;; namespace is used by every connection.
   (:require [cider.nrepl.print-method]))
 
+;; TODO: Figure out how to read the version from project.clj to avoid duplication
+(def version-string
+  "The current version for cider-nrepl as a string."
+  "0.18.0-snapshot")
+
 (def version
-  "Current version of CIDER nREPL, map of :major, :minor, :incremental, and :qualifier."
-  (let [version-string "0.18.0-snapshot"]
-    (assoc (->> version-string
-                (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
-                rest
-                (zipmap [:major :minor :incremental :qualifier]))
-           :version-string version-string)))
+  "Current version of CIDER nREPL as a map.
+  Map of :major, :minor, :incremental, and :qualifier."
+  (assoc (->> version-string
+              (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
+              rest
+              (zipmap [:major :minor :incremental :qualifier]))
+         :version-string version-string))
 
 (defn cider-version-reply
   "Returns CIDER-nREPL's version as a map which contains `:major`,
