@@ -1,4 +1,6 @@
 (ns cider-nrepl.plugin
+  "Provides a simple way to setup the CIDER nREPL middleware in
+  Leiningen projects."
   (:require [clojure.java.io :as io]
             [leiningen.core.main :as lein]))
 
