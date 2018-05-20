@@ -10,7 +10,8 @@
 
 (def version
   "Current version of CIDER nREPL as a map.
-  Map of :major, :minor, :incremental, and :qualifier."
+  Map of :major, :minor, :incremental, :qualifier,
+  and :version-string."
   (assoc (->> version-string
               (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
               rest
