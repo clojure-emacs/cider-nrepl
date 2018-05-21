@@ -1,3 +1,5 @@
+;; TODO: The plugin test is broken due to
+;; https://github.com/technomancy/leiningen/issues/2369
 (ns cider-nrepl.plugin-test
   (:require #_[cider-nrepl.plugin :as plugin]
             [cider.nrepl :refer [cider-middleware]]
