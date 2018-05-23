@@ -20,20 +20,31 @@
   (mapcat (comp handle-seq-var require-and-resolve symbol)
           middleware-var-strs))
 
-(defn- start-nrepl
-  [handler]
-  (let [nrepl-port (io/file ".nrepl-port")
+(defn start-nrepl
+  [opts]
+  (let [{:keys [handler middleware bind port] :as server}
+        opts
+
+        handler (cond-> (or handler nrepl.server/default-handler)
+                  middleware (apply (->mw-list middleware)))
+
         {:keys [server-socket port] :as server}
-        (nrepl.server/start-server :handler handler)
-        bind (-> server-socket (.getInetAddress) (.getHostName))]
-    (doto nrepl-port
+        (nrepl.server/start-server :handler handler
+                                   :bind bind
+                                   :port port)
+
+        bind
+        (-> server-socket (.getInetAddress) (.getHostName))]
+    (doto (io/file ".nrepl-port")
       (spit port)
       (.deleteOnExit))
     (println (format "nREPL server started on port %d on host %s - nrepl://%s:%d" port bind bind port))
     server))
 
 (defn init
-  [middleware-syms]
-  (start-nrepl (apply nrepl.server/default-handler (->mw-list middleware-syms)))
-  ;; Return nil so the value doesn't print
-  nil)
+  ([]
+   (init nil))
+  ([opts]
+   (start-nrepl opts)
+   ;; Return nil so the value doesn't print
+   nil))
