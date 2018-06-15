@@ -155,7 +155,7 @@ it on the command line through the `cider.tasks/add-middleware` task
 functionality):
 
 ```
-boot -d org.clojure/tools.nrepl:0.2.12 -d cider/cider-nrepl:0.x.y-SNAPSHOT -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl -s wait
+boot -d org.clojure/tools.nrepl:0.2.12 -d cider/cider-nrepl:0.x.y-SNAPSHOT -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version cider.tasks/nrepl-server wait
 ```
 
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
@@ -164,14 +164,15 @@ Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 (set-env! :dependencies '[[org.clojure/tools.nrepl "0.2.12"]
                           [cider/cider-nrepl "0.x.y-SNAPSHOT"]])
 
-(require '[cider.tasks :refer [add-middleware]])
+(require '[cider.tasks :refer [add-middleware nrepl-server]])
 
 (task-options! add-middleware {:middleware '[cider.nrepl.middleware.apropos/wrap-apropos
                                              cider.nrepl.middleware.version/wrap-version]})
 ```
 
-And then launching `boot add-middleware repl -s wait`. Note that this
-is not necessary when using the standard `cider-jack-in`.
+And then launching `boot add-middleware nrepl-server wait`.
+
+Note that this is not necessary when using the standard `cider-jack-in`.
 
 For more information visit [boot-clj wiki](https://github.com/boot-clj/boot/wiki/Cider-REPL).
 
