@@ -8,22 +8,29 @@
   (require (symbol (namespace thing)))
   (resolve thing))
 
+(def resolve-mw-xf
+  (comp (map require-and-resolve)
+        (keep identity)))
+
 (defn- handle-seq-var
   [var]
   (let [x @var]
     (if (sequential? x)
-      (map require-and-resolve x)
+      (into [] resolve-mw-xf x)
       [var])))
+
+(def mw-xf
+  (comp (map symbol)
+        resolve-mw-xf
+        (mapcat handle-seq-var)))
 
 (defn- ->mw-list
   [middleware-var-strs]
-  (mapcat (comp handle-seq-var require-and-resolve symbol)
-          middleware-var-strs))
+  (into [] mw-xf middleware-var-strs))
 
 (defn start-nrepl
   [opts]
-  (let [{:keys [handler middleware bind port] :as server}
-        opts
+  (let [{:keys [handler middleware bind port]} opts
 
         handler (cond-> (or handler nrepl.server/default-handler)
                   middleware (apply (->mw-list middleware)))
