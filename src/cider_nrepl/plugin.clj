@@ -16,6 +16,8 @@
                  v))
     v))
 
+;; Exists for the sole purpose of modifying the current project's metadata.
+;; See https://github.com/technomancy/leiningen/blob/master/doc/PLUGINS.md#project-middleware
 (defn middleware
   [{:keys [dependencies exclusions] :as project}]
   (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.5.2")
