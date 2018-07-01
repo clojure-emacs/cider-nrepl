@@ -41,9 +41,9 @@
   "Returns the path in the session map for the ClojureScript compiler
   environment used by piggieback."
   []
-  [(if cider-piggieback?
-     (resolve 'cider.piggieback/*cljs-compiler-env*)
-     (resolve 'cemerick.piggieback/*cljs-compiler-env*))])
+  [(if cemerick-piggieback?
+     (resolve 'cemerick.piggieback/*cljs-compiler-env*)
+     (resolve 'cider.piggieback/*cljs-compiler-env*))])
 
 (defn- maybe-deref
   [x]
