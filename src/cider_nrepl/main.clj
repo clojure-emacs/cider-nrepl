@@ -30,7 +30,7 @@
 
 (defn start-nrepl
   [opts]
-  (let [{:keys [handler middleware bind port]} opts
+  (let [{:keys [handler middleware bind port] :or {port 0 bind "::"}} opts
 
         handler (cond-> (or handler nrepl.server/default-handler)
                   middleware (apply (->mw-list middleware)))
@@ -51,7 +51,7 @@
 (defn init
   ([]
    (init nil))
-  ([opts]
-   (start-nrepl opts)
+  ([handlers]
+   (start-nrepl {:handler handlers})
    ;; Return nil so the value doesn't print
    nil))
