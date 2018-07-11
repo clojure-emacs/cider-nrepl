@@ -30,6 +30,6 @@
     (util/dbug* "nREPL middleware: %s\n" (vec default-mws))
     (boot.core/with-pass-thru [_]
       (require 'cider-nrepl.main)
-      ((resolve 'cider-nrepl.main/init) {:middleware default-mws
-                                         :port port
-                                         :bind bind}))))
+      ((resolve 'cider-nrepl.main/start-nrepl) {:middleware default-mws
+                                                :port port
+                                                :bind bind}))))
