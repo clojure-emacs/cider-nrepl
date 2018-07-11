@@ -53,7 +53,7 @@
   [{:keys [bind port] :as opts}]
   (let [handler
         (build-handler opts)
-        
+
         {:keys [server-socket port] :as server}
         (nrepl.server/start-server :handler handler
                                    :bind (or bind "::")

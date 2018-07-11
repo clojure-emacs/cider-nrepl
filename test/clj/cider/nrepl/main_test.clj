@@ -1,4 +1,4 @@
-(ns cider.nrepl.main-test 
+(ns cider.nrepl.main-test
   (:require [cider.nrepl :refer [wrap-debug cider-middleware]]
             [cider-nrepl.main :as m]
             [clojure.test :refer :all]
@@ -6,8 +6,7 @@
             [clojure.tools.nrepl.server :as nrepl.server]
             [clojure.tools.nrepl.transport :as transport]))
 
-(defn start-stop-nrepl-session
-  [opts]
+(defn start-stop-nrepl-session [opts]
   (with-open [server    (#'m/start-nrepl opts)
               transport (nrepl/connect :port (:port server))]
     (transport/send transport {:op "clone" :id 1})
@@ -22,7 +21,7 @@
   (testing "passing a specific handler should work"
     (let [opts {:handler nrepl.server/default-handler}]
       (start-stop-nrepl-session opts)))
-  
+
   (testing "passing a sequence instead of a map shouldn't crash"
     (let [opts ["cider.nrepl/cider-middleware"]]
       (start-stop-nrepl-session opts)))
@@ -41,5 +40,4 @@
                 :port nil
                 :bind nil}]
       (start-stop-nrepl-session opts))))
-
 
