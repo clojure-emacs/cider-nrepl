@@ -56,7 +56,7 @@
 
         {:keys [server-socket port] :as server}
         (nrepl.server/start-server :handler handler
-                                   :bind (or bind "::")
+                                   :bind (or bind "localhost")
                                    :port (or port 0))
 
         bind
