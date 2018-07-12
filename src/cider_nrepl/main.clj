@@ -29,11 +29,8 @@
   (into [] mw-xf middleware-var-strs))
 
 (defn- build-handler
-  [{:keys [handler middleware]}]
-  (let [handler (or handler nrepl.server/default-handler)]
-    (if middleware
-      (apply handler (->mw-list middleware))
-      (handler))))
+  [middleware]
+  (apply nrepl.server/default-handler (->mw-list middleware)))
 
 (defn start-nrepl
   "Starts a socket-based nREPL server. Accepts a map with the following keys:
@@ -50,9 +47,11 @@
      representing middleware you wish to mix in to the nREPL handler. Vars can
      resolve to a sequence of vars, in which case they'll be flattened into the
      list of middleware."
-  [{:keys [bind port] :as opts}]
+  [{:keys [handler middleware bind port] :as opts}]
   (let [handler
-        (build-handler opts)
+        (if handler
+          (handler)
+          (build-handler middleware))
 
         {:keys [server-socket port] :as server}
         (nrepl.server/start-server :handler handler
