@@ -11,10 +11,10 @@
             [orchard.misc :as misc]
             [orchard.meta :as m]
             [clojure.java.io :as io]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.middleware.session :as session]
-            [clojure.tools.nrepl.transport :as transport])
+            [nrepl.middleware.interruptible-eval :refer [*msg*]]
+            [nrepl.misc :refer [response-for]]
+            [nrepl.middleware.session :as session]
+            [nrepl.transport :as transport])
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;;;; # The Debugger

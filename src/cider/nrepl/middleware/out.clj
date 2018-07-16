@@ -10,7 +10,7 @@
   guarantee that the channel that sent the clone message will properly
   handle output replies."
   (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :as ie])
+            [nrepl.middleware.interruptible-eval :as ie])
   (:import [java.io PrintWriter Writer PrintStream OutputStream]))
 
 (declare unsubscribe-session)

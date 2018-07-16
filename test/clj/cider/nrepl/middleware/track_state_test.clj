@@ -3,7 +3,7 @@
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.meta :as um]
             [clojure.test :refer :all])
-  (:import clojure.tools.nrepl.transport.Transport))
+  (:import nrepl.transport.Transport))
 
 (def some-ns-map {'cider.nrepl.middleware.track-state-test
                   (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))})

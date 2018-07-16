@@ -1,14 +1,14 @@
 (ns cider.nrepl.middleware.slurp
   "Rich reading & handling for CIDER.
-  
+
   Goes with middleware.content-types, providing the capability to
   convert URLs to values which can be handled nicely."
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.tools.nrepl.transport :as transport]
-            [clojure.tools.nrepl.misc :refer [response-for]])
+            [nrepl.transport :as transport]
+            [nrepl.misc :refer [response-for]])
   (:import [java.net MalformedURLException URL]
            java.io.ByteArrayOutputStream
            [java.nio.file Files Path Paths]))

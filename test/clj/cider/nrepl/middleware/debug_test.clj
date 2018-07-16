@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.debug-test
   (:require [clojure.test :refer :all]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.transport :as t]
+            [nrepl.middleware.interruptible-eval :refer [*msg*]]
+            [nrepl.transport :as t]
             [cider.nrepl.middleware.util.instrument :as ins]
             [cider.nrepl.middleware.debug  :as d]
             [clojure.walk :as walk]))

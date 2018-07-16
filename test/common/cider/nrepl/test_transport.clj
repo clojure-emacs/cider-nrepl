@@ -1,7 +1,7 @@
 (ns cider.nrepl.test-transport
   "A transport for testing"
   (:use
-   [clojure.tools.nrepl.transport :only [Transport]]))
+   [nrepl.transport :only [Transport]]))
 
 (defrecord TestTransport [msgs]
   Transport

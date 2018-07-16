@@ -16,8 +16,8 @@
   {:author "Edwin Watkeys"}
   (:require [clojure.string :as s]
             [profile.core :as p]
-            [clojure.tools.nrepl.transport :as t]
-            [clojure.tools.nrepl.misc :refer [response-for]]))
+            [nrepl.transport :as t]
+            [nrepl.misc :refer [response-for]]))
 
 (defn send-exception
   [e msg transport]

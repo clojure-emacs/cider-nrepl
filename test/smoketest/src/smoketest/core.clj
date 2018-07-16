@@ -1,6 +1,6 @@
 (ns smoketest.core
-  (:require [clojure.tools.nrepl :as nrepl]
-            [clojure.tools.nrepl.server :refer [start-server]])
+  (:require [nrepl.core :as nrepl]
+            [nrepl.server :refer [start-server]])
   (:gen-class))
 
 ;; The cider-nrepl "smoke test" replicates a small sampling of the

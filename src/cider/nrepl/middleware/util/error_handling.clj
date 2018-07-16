@@ -3,8 +3,8 @@
   errors/exceptions that might arise from doing so."
   (:refer-clojure :exclude [error-handler])
   (:require [clojure.set :as set]
-            [clojure.tools.nrepl.transport :as transport]
-            [clojure.tools.nrepl.misc :refer [response-for]]
+            [nrepl.transport :as transport]
+            [nrepl.misc :refer [response-for]]
             [clojure.walk :as walk])
   (:import java.io.InputStream
            clojure.lang.RT))
@@ -85,7 +85,7 @@
 
 (defn- shallow-bencodable?
   "Returns false if `item`'s type can't be bencoded as defined by the
-  algorithm in `clojure.tools.nrepl.bencode/write-bencode`. Does not
+  algorithm in `nrepl.bencode/write-bencode`. Does not
   examine the elements of a collection to ensure that the enclosed
   elements are also bencodable, and so you probably actually want to
   use `deep-bencodable-or-fail` or write something similar."
@@ -104,7 +104,7 @@
 (defn- deep-bencodable-or-fail
   "Walks through the data structure provided by `item` and returns
   true if it -- and all nested elements -- are bencodable as defined
-  by the algorithm in `clojure.tools.nrepl.bencode/write-bencode`. If
+  by the algorithm in `nrepl.bencode/write-bencode`. If
   any part of `input` is not bencodable, will throw an
   `IllegalArgumentException`. See `cider-nrepl` bug #332 at
   https://github.com/clojure-emacs/cider-nrepl/issues/332 for further

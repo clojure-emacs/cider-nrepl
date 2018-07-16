@@ -1,8 +1,8 @@
 (ns cider.nrepl
-  (:require [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.session :refer [session]]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-            [clojure.tools.nrepl.server :as nrepl-server]
+  (:require [nrepl.middleware :refer [set-descriptor!]]
+            [nrepl.middleware.session :refer [session]]
+            [nrepl.middleware.pr-values :refer [pr-values]]
+            [nrepl.server :as nrepl-server]
             [cider.nrepl.version :as version]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.pprint :as pprint]

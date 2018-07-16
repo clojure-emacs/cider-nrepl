@@ -1,9 +1,9 @@
 (ns cider.nrepl.middleware.util.nrepl
   "Common utilities for interaction with the client."
   (:require
-   [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-   [clojure.tools.nrepl.misc :refer [response-for]]
-   [clojure.tools.nrepl.transport :as transport]))
+   [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as transport]))
 
 (defn notify-client
   "Send user level notification to client as a response to request `msg`.

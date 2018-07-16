@@ -43,7 +43,7 @@
   [4] https://tools.ietf.org/html/rfc2017"
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require [cider.nrepl.middleware.slurp :refer [slurp-reply]])
-  (:import clojure.tools.nrepl.transport.Transport
+  (:import nrepl.transport.Transport
            java.awt.Image
            [java.io ByteArrayOutputStream File OutputStream]
            [java.net URI URL]
@@ -80,7 +80,7 @@
   [{:keys [session value] :as response}]
   (cond
     ;; FIXME (arrdem 2018-04-03):
-    ;; 
+    ;;
     ;;   This could be more generic in terms of tolerating more
     ;;   protocols / schemes
 
@@ -96,7 +96,7 @@
            :body "")
 
     ;; FIXME (arrdem 2018-04-03):
-    ;; 
+    ;;
     ;;   This is super snowflakey in terms of only supporting base64
     ;;   coding this one kind of object.  This could definitely be
     ;;   more generic / open to extension but hey at least it's

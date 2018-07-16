@@ -1,7 +1,7 @@
 (ns cider-nrepl.main
   (:require
    [clojure.java.io :as io]
-   [clojure.tools.nrepl.server :as nrepl.server]))
+   [nrepl.server :as nrepl.server]))
 
 (defn- require-and-resolve
   [thing]
@@ -34,7 +34,7 @@
 
 (defn start-nrepl
   "Starts a socket-based nREPL server. Accepts a map with the following keys:
- 
+
    * :port — defaults to 0, which autoselects an open port
 
    * :bind — bind address, by default \"::\" (falling back to \"localhost\" if

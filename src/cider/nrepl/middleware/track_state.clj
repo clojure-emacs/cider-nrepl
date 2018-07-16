@@ -9,10 +9,10 @@
             [orchard.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
             [clojure.tools.namespace.find :as ns-find]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
+            [nrepl.misc :refer [response-for]]
+            [nrepl.transport :as transport])
   (:import (clojure.lang Namespace MultiFn)
-           clojure.tools.nrepl.transport.Transport
+           nrepl.transport.Transport
            java.net.SocketException))
 
 (def clojure-core (try (find-ns 'clojure.core)

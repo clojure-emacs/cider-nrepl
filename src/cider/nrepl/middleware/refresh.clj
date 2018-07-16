@@ -12,9 +12,9 @@
             [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.reload :as reload]
             [clojure.tools.namespace.track :as track]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport]))
+            [nrepl.middleware.interruptible-eval :refer [*msg*]]
+            [nrepl.misc :refer [response-for]]
+            [nrepl.transport :as transport]))
 
 (defonce ^:private refresh-tracker (agent (track/tracker)))
 
