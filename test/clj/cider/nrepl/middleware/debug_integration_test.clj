@@ -562,7 +562,7 @@
                    :coor [3 1 1 1]})
         file (:file msg)]
     (.startsWith file "jar:file:")
-    (.endsWith file "/clojure/tools/nrepl/server.clj"))
+    (.endsWith file "/nrepl/server.clj"))
 
   (--> :continue)
   (<-- {:value "{:transport 23}"})
