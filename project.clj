@@ -6,7 +6,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[nrepl "0.4.1"]
+  :dependencies [[nrepl "0.4.2"]
                  ^:source-dep [cider/orchard "0.3.0"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
