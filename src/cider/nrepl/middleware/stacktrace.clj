@@ -113,7 +113,7 @@
   to `clojure.lang.Compiler` or `nrepl.*` as `:tooling` to
   distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
+  (let [tool-regex #"^clojure\.lang\.Compiler|^nrepl\.|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(if (tool? %)
                  (flag-frame % :tooling)
