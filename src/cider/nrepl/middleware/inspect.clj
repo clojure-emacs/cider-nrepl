@@ -2,10 +2,7 @@
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
             [orchard.inspect :as inspect]
-            [orchard.misc :as u]
-            [nrepl.misc :refer [response-for]]
-            [nrepl.transport :as transport])
-  (:import nrepl.transport.Transport))
+            [orchard.misc :as u]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl
