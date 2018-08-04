@@ -74,8 +74,8 @@
   `type` is either :out or :err."
   [type]
   (let [printer (case type
-                  :out '*out*
-                  :err '*err*)]
+                  :out 'clojure.core/*out*
+                  :err 'clojure.core/*err*)]
     (PrintStream. (proxy [OutputStream] []
                     (close [] (.flush ^OutputStream this))
                     (write
