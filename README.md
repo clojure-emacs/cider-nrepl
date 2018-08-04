@@ -182,7 +182,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ```
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.19.0-SNAPSHOT"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.18.0-SNAPSHOT"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
 ```
 
 Note that `clj` was introduced in Clojure 1.9.
