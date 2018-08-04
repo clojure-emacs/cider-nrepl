@@ -1,12 +1,7 @@
 (ns cider-nrepl.main
   (:require
-   [clojure.java.io :as io]))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (require
-   '[clojure.tools.nrepl.server :as nrepl.server])
-  (require
-   '[nrepl.server]))
+   [clojure.java.io :as io]
+   nrepl.server))
 
 (defn- require-and-resolve
   [thing]
