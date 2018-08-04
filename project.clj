@@ -94,7 +94,7 @@
                         :resource-paths ["test/resources"]
                         :test-paths ["test/clj"]}
              :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[cider/piggieback "0.3.0"]]}
+                         :dependencies [[cider/piggieback "0.3.8"]]}
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
