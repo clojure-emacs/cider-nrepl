@@ -14,10 +14,15 @@
   Based on older middleware (nrepl-profile) that's not actively
   maintained anymore."
   {:author "Edwin Watkeys"}
-  (:require [clojure.string :as s]
-            [profile.core :as p]
-            [nrepl.transport :as t]
-            [nrepl.misc :refer [response-for]]))
+  (:require [profile.core :as p]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.misc :refer [response-for]]
+   '[clojure.tools.nrepl.transport :as t])
+  (require
+   '[nrepl.misc :refer [response-for]]
+   '[nrepl.transport :as t]))
 
 (defn send-exception
   [e msg transport]

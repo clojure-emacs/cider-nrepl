@@ -3,11 +3,17 @@
   errors/exceptions that might arise from doing so."
   (:refer-clojure :exclude [error-handler])
   (:require [clojure.set :as set]
-            [nrepl.transport :as transport]
-            [nrepl.misc :refer [response-for]]
             [clojure.walk :as walk])
   (:import java.io.InputStream
            clojure.lang.RT))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.misc :refer [response-for]]
+   '[clojure.tools.nrepl.transport :as transport])
+  (require
+   '[nrepl.misc :refer [response-for]]
+   '[nrepl.transport :as transport]))
 
 (def ^:private print-cause-trace
   (delay

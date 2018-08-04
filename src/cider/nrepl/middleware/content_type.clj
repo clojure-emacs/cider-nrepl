@@ -43,12 +43,18 @@
   [4] https://tools.ietf.org/html/rfc2017"
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require [cider.nrepl.middleware.slurp :refer [slurp-reply]])
-  (:import nrepl.transport.Transport
-           java.awt.Image
+  (:import java.awt.Image
            [java.io ByteArrayOutputStream File OutputStream]
            [java.net URI URL]
            java.nio.file.Path
            javax.imageio.ImageIO))
+
+;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
+;; The assumption is that if someone is using old lein repl or boot repl
+;; they'll end up using the tools.nrepl, otherwise the modern one.
+(if (find-ns 'clojure.tools.nrepl)
+  (import 'clojure.tools.nrepl.transport.Transport)
+  (import 'nrepl.transport.Transport))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

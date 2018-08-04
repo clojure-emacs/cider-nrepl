@@ -6,12 +6,18 @@
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [nrepl.transport :as transport]
-            [nrepl.misc :refer [response-for]])
+            [clojure.string :as str])
   (:import [java.net MalformedURLException URL]
            java.io.ByteArrayOutputStream
            [java.nio.file Files Path Paths]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.transport :as transport])
+  (require
+   '[nrepl.misc :refer (response-for)]
+   '[nrepl.transport :as transport]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

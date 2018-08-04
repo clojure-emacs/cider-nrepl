@@ -1,4 +1,4 @@
-(def VERSION "0.19.0-SNAPSHOT")
+(def VERSION "0.18.0-SNAPSHOT")
 
 (defproject cider/cider-nrepl VERSION
   :description "nREPL middlewares for CIDER"
@@ -6,7 +6,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[nrepl "0.4.2"]
+  :dependencies [[nrepl "0.4.4"]
                  ^:source-dep [cider/orchard "0.3.0"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
