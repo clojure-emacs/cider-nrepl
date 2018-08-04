@@ -2,9 +2,9 @@
   (:require [cider.nrepl :refer [wrap-debug cider-middleware]]
             [cider-nrepl.main :as m]
             [clojure.test :refer :all]
-            [clojure.tools.nrepl :as nrepl]
-            [clojure.tools.nrepl.server :as nrepl.server]
-            [clojure.tools.nrepl.transport :as transport]))
+            [nrepl.core :as nrepl]
+            [nrepl.server :as nrepl.server]
+            [nrepl.transport :as transport]))
 
 (defn start-stop-nrepl-session [opts]
   (with-open [server    (#'m/start-nrepl opts)
@@ -40,4 +40,3 @@
                 :port nil
                 :bind nil}]
       (start-stop-nrepl-session opts))))
-

@@ -1,6 +1,6 @@
 (ns cider.nrepl.test.server
   (:require
-   [clojure.tools.nrepl.server :as nrepl.server]))
+   [nrepl.server :as nrepl.server]))
 
 ;; This exists to work around https://dev.clojure.org/jira/browse/NREPL-87
 (defn start-server

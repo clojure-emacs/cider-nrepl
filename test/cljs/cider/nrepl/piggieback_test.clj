@@ -3,8 +3,8 @@
             [cider.nrepl.test-session :as session]
             [cider.nrepl :refer [cider-middleware]]
             [clojure.test :refer :all]
-            [clojure.tools.nrepl :as nrepl]
-            [clojure.tools.nrepl.server :as server]))
+            [nrepl.core :as nrepl]
+            [nrepl.server :as server]))
 
 (def piggieback-fixture
   (compose-fixtures

@@ -9,9 +9,14 @@
   We use an eval message, instead of the clone op, because there's no
   guarantee that the channel that sent the clone message will properly
   handle output replies."
-  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :as ie])
+  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import [java.io PrintWriter Writer PrintStream OutputStream]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.middleware.interruptible-eval :as ieval])
+  (require
+   '[nrepl.middleware.interruptible-eval :as ieval]))
 
 (declare unsubscribe-session)
 
@@ -29,7 +34,7 @@
                                              (case ~type
                                                :out #'*out*
                                                :err #'*err*))]
-       (try (binding [ie/*msg* ~'msg]
+       (try (binding [ieval/*msg* ~'msg]
               ~@body)
             ;; If a channel is faulty, dissoc it.
             (catch Exception ~'e

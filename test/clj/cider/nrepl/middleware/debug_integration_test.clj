@@ -3,15 +3,15 @@
             [cider.nrepl.middleware.debug :as d]
             [cider.nrepl.test.server :refer [start-server]]
             [clojure.test :refer :all]
-            [clojure.tools.nrepl :as nrepl]
-            [clojure.tools.nrepl.server :as nrepl.server]
-            [clojure.tools.nrepl.transport :as transport]
+            [nrepl.core :as nrepl]
+            [nrepl.server :as nrepl.server]
+            [nrepl.transport :as transport]
             [clojure.java.io :as io])
   (:import java.util.UUID
            [java.util.concurrent TimeUnit LinkedBlockingQueue]))
 
 ;;; Helpers for starting an nRepl session
-;;; We do not use clojure.tools.nrepl/client-session here because it
+;;; We do not use nrepl/client-session here because it
 ;;; is built with the expectation that each message sent to the server
 ;;; results in a response message. When that does not happen (as in
 ;;; the case of "init-debugger"), it blocks forever.
@@ -537,13 +537,13 @@
     (<-- {:status ["done"]})))
 
 (deftest step-in-to-function-in-jar-test
-  ;; Step into clojure.tools.nrepl.server/handle*. To do this, we need to find
+  ;; Step into nrepl.server/handle*. To do this, we need to find
   ;; and instrument the source, which is in a jar file. Note that this function
   ;; is used because it is not marked as a :source-dep, so we can rely on the
   ;; namespace remaining unmunged, which is important when these tests run on
   ;; travis CI.
   (--> :eval "(ns user.test.step-in
-                (:require [clojure.tools.nrepl.server :as server]))")
+                (:require [nrepl.server :as server]))")
   (<-- {:ns "user.test.step-in"})
   (<-- {:status ["done"]})
 
@@ -562,7 +562,7 @@
                    :coor [3 1 1 1]})
         file (:file msg)]
     (.startsWith file "jar:file:")
-    (.endsWith file "/clojure/tools/nrepl/server.clj"))
+    (.endsWith file "/nrepl/server.clj"))
 
   (--> :continue)
   (<-- {:value "{:transport 23}"})

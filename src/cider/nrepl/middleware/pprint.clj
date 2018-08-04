@@ -1,13 +1,25 @@
 (ns cider.nrepl.middleware.pprint
   (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [orchard.misc :as u]
-            [clojure.pprint :refer [pprint *print-right-margin*]]
-            [clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-            [clojure.tools.nrepl.middleware.session :as session]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
-  (:import clojure.tools.nrepl.transport.Transport))
+            [clojure.pprint :refer [pprint *print-right-margin*]]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (do
+    (require
+     '[clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
+     '[clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
+     '[clojure.tools.nrepl.middleware.session :as session]
+     '[clojure.tools.nrepl.misc :refer [response-for]]
+     '[clojure.tools.nrepl.transport :as transport])
+    (import 'clojure.tools.nrepl.transport.Transport))
+  (do
+    (require
+     '[nrepl.middleware.interruptible-eval :refer [*msg*]]
+     '[nrepl.middleware.pr-values :refer [pr-values]]
+     '[nrepl.middleware.session :as session]
+     '[nrepl.misc :refer [response-for]]
+     '[nrepl.transport :as transport])
+    (import 'nrepl.transport.Transport)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -7,15 +7,22 @@
             [orchard.namespace :as namespace]
             [clojure.repl :as repl]
             [clojure.string :as str]
-            [clojure.tools.nrepl.middleware.session :refer [session]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as t]
             [orchard.misc :as u]
             [orchard.java :as java]
             [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.tools.namespace.find :as nsfind])
   (:import (clojure.lang Compiler$CompilerException)))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.middleware.session :refer (session)]
+   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.transport :as t])
+  (require
+   '[nrepl.middleware.session :refer (session)]
+   '[nrepl.misc :refer (response-for)]
+   '[nrepl.transport :as t]))
 
 ;;; ## Stacktraces
 
@@ -110,10 +117,10 @@
 
 (defn flag-tooling
   "Walk the call stack from top to bottom, flagging frames below the first call
-  to `clojure.lang.Compiler` or `clojure.tools.nrepl.*` as `:tooling` to
+  to `clojure.lang.Compiler` or `(clojure.tools.)nrepl.*` as `:tooling` to
   distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl|^cider\."
+  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl\.|^nrepl\.|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(if (tool? %)
                  (flag-frame % :tooling)

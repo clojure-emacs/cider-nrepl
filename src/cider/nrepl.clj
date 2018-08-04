@@ -1,12 +1,23 @@
 (ns cider.nrepl
-  (:require [clojure.tools.nrepl.middleware :refer [set-descriptor!]]
-            [clojure.tools.nrepl.middleware.session :refer [session]]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-            [clojure.tools.nrepl.server :as nrepl-server]
-            [cider.nrepl.version :as version]
+  (:require [cider.nrepl.version :as version]
             [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.print-method]))
+
+;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
+;; The assumption is that if someone is using old lein repl or boot repl
+;; they'll end up using the tools.nrepl, otherwise the modern one.
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.middleware :refer [set-descriptor!]]
+   '[clojure.tools.nrepl.middleware.session :refer [session]]
+   '[clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
+   '[clojure.tools.nrepl.server :as nrepl-server])
+  (require
+   '[nrepl.middleware :refer [set-descriptor!]]
+   '[nrepl.middleware.session :refer [session]]
+   '[nrepl.middleware.pr-values :refer [pr-values]]
+   '[nrepl.server :as nrepl-server]))
 
 (def delayed-handlers
   "Map of `delay`s holding deferred middleware handlers."

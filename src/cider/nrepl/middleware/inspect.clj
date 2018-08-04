@@ -3,9 +3,24 @@
             [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
             [orchard.inspect :as inspect]
             [orchard.misc :as u]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
-  (:import clojure.tools.nrepl.transport.Transport))
+            [nrepl.misc :refer [response-for]]
+            [nrepl.transport :as transport])
+  (:import nrepl.transport.Transport))
+
+;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
+;; The assumption is that if someone is using old lein repl or boot repl
+;; they'll end up using the tools.nrepl, otherwise the modern one.
+(if (find-ns 'clojure.tools.nrepl)
+  (do
+    (require
+     '[clojure.tools.nrepl.misc :refer [response-for]]
+     '[clojure.tools.nrepl.transport :as transport])
+    (import 'clojure.tools.nrepl.transport.Transport))
+  (do
+    (require
+     '[nrepl.misc :refer [response-for]]
+     '[nrepl.transport :as transport])
+    (import 'nrepl.transport.Transport)))
 
 (def ^:dynamic *inspector* (inspect/fresh))
 

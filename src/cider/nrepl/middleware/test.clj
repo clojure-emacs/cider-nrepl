@@ -9,11 +9,19 @@
             [orchard.namespace :as ns]
             [orchard.query :as query]
             [clojure.pprint :as pp]
-            [clojure.test :as test]
-            [clojure.tools.nrepl.middleware.interruptible-eval :as ie]
-            [clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as t]))
+            [clojure.test :as test]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.middleware.interruptible-eval :as ie]
+   '[clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
+   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.transport :as t])
+  (require
+   '[nrepl.middleware.interruptible-eval :as ie]
+   '[nrepl.middleware.pr-values :refer [pr-values]]
+   '[nrepl.misc :refer (response-for)]
+   '[nrepl.transport :as t]))
 
 ;;; ## Overview
 ;;

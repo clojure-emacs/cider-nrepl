@@ -2,8 +2,8 @@
   (:require [cider.nrepl :refer [cider-nrepl-handler]]
             [cider.nrepl.test.server :refer [start-server]]
             [clojure.test :refer :all]
-            [clojure.tools.nrepl :as nrepl]
-            [clojure.tools.nrepl.transport :as transport]))
+            [nrepl.core :as nrepl]
+            [nrepl.transport :as transport]))
 
 (def ^:dynamic *handler* cider-nrepl-handler)
 (def ^:dynamic *session* nil)

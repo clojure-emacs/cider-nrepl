@@ -8,12 +8,21 @@
             [orchard.meta :as m]
             [orchard.namespace :as namespace]
             [cljs-tooling.util.analysis :as cljs-ana]
-            [clojure.tools.namespace.find :as ns-find]
-            [clojure.tools.nrepl.misc :refer [response-for]]
-            [clojure.tools.nrepl.transport :as transport])
+            [clojure.tools.namespace.find :as ns-find])
   (:import (clojure.lang Namespace MultiFn)
-           clojure.tools.nrepl.transport.Transport
            java.net.SocketException))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (do
+    (require
+     '[clojure.tools.nrepl.misc :refer [response-for]]
+     '[clojure.tools.nrepl.transport :as transport])
+    (import 'clojure.tools.nrepl.transport.Transport))
+  (do
+    (require
+     '[nrepl.misc :refer [response-for]]
+     '[nrepl.transport :as transport])
+    (import 'nrepl.transport.Transport)))
 
 (def clojure-core (try (find-ns 'clojure.core)
                        (catch Exception e nil)))
