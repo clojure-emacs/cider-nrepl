@@ -20,12 +20,12 @@
   (require
    '[clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
    '[clojure.tools.nrepl.middleware.session :as session]
-   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.misc :refer [response-for]]
    '[clojure.tools.nrepl.transport :as transport])
   (require
    '[nrepl.middleware.interruptible-eval :refer [*msg*]]
    '[nrepl.middleware.session :as session]
-   '[nrepl.misc :refer (response-for)]
+   '[nrepl.misc :refer [response-for]]
    '[nrepl.transport :as transport]))
 
 ;;;; # The Debugger

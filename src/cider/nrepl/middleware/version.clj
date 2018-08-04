@@ -4,10 +4,10 @@
 
 (if (find-ns 'clojure.tools.nrepl)
   (require
-   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.misc :refer [response-for]]
    '[clojure.tools.nrepl.transport :as transport])
   (require
-   '[nrepl.misc :refer (response-for)]
+   '[nrepl.misc :refer [response-for]]
    '[nrepl.transport :as transport]))
 
 (defn handle-version [handler msg]

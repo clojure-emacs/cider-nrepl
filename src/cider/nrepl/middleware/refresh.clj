@@ -16,11 +16,11 @@
 (if (find-ns 'clojure.tools.nrepl)
   (require
    '[clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-   '[clojure.tools.nrepl.misc :refer (response-for)]
+   '[clojure.tools.nrepl.misc :refer [response-for]]
    '[clojure.tools.nrepl.transport :as transport])
   (require
    '[nrepl.middleware.interruptible-eval :refer [*msg*]]
-   '[nrepl.misc :refer (response-for)]
+   '[nrepl.misc :refer [response-for]]
    '[nrepl.transport :as transport]))
 
 (defonce ^:private refresh-tracker (agent (track/tracker)))
