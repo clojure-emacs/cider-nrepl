@@ -26,13 +26,13 @@ cider/piggieback.
 
 * Extracted part of the nREPL-agnostic functionality to `orchard`.
 * Added a profiling middleware.
-* Support for orchard var-query in apropos
-* Support for orchard var-query in test, introducing new test-var-query
+* Support for orchard var-query in apropos.
+* Support for orchard var-query in test, introducing new test-var-query.
 
 ### Changes
 
 * Remove support for cljx.
 * Remove support for piggieback 0.1.x.
-* Require piggieback 0.3 or newer.
-* Deprecate test and test-all
-* Deprecated non-test-var filters in apropos
+* Add support for piggieback 0.3 or newer (aka `cider/piggieback`).
+* Deprecate the `test` and `test-all` ops.
+* Deprecated non-test-var filters in the `apropos` middleware.
