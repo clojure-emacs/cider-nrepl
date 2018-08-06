@@ -4,19 +4,19 @@
 
 # CIDER nREPL
 
-A collection of [nREPL](https://github.com/clojure-emacs/nREPL)
-middleware designed to enhance
+A collection of [nREPL](https://github.com/nrepl/nREPL)
+middleware originally designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
-[CIDER's manual](https://cider.readthedocs.io) instead.
+[CIDER's manual](http://docs.cider.mx) instead.
 
 If you're trying to use cider-nrepl for some other purpose, the
 sections below outline how to include it in a project.
 
-People who are new to nREPL might benefit from reading [this nice
-overview](https://juxt.pro/blog/posts/nrepl.html) of its capabilities.
+People who are new to nREPL might benefit from reading [its
+manual](https://nrepl.readthedocs.io).
 
 ## Design
 
