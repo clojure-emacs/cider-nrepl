@@ -1,6 +1,6 @@
 (defproject smoketest "0.1.0-SNAPSHOT"
   :dependencies [[nrepl "0.4.2"]
-                 [cider/cider-nrepl "0.18.0-SNAPSHOT"]]
+                 [cider/cider-nrepl "0.18.0"]]
   :exclusions [org.clojure/clojure]
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
