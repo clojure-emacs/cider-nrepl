@@ -6,7 +6,7 @@
 ;; TODO: Figure out how to read the version from project.clj to avoid duplication
 (def version-string
   "The current version for cider-nrepl as a string."
-  "0.18.0")
+  "0.19.0-snapshot")
 
 (def version
   "Current version of CIDER nREPL as a map.
