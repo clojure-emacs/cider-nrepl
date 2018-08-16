@@ -5,6 +5,7 @@
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
 
   :dependencies [[nrepl "0.4.4"]
                  ^:source-dep [cider/orchard "0.3.0"]
