@@ -451,9 +451,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (def ^:dynamic *tmp-forms* (atom {}))
 (def ^:dynamic *do-locals* true)
+(def ^:dynamic *STATE__* nil)
+
 
 (defmacro with-initial-debug-bindings
-  "Let-wrap `body` with STATE__ map containing code, file, line, column etc.
+  "Let-wrap `body` with *STATE__* map containing code, file, line, column etc.
   STATE__ is an anaphoric variable available to all breakpoint macros. Ends with
   __ to avid conflicts with user locals and to signify that it's an internal
   variable which is cleaned in `sanitize-env' along other clojure's
@@ -461,20 +463,24 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   {:style/indent 1}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
-  `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
-                            (-> {:code code
-                                 ;; Passing clojure.lang.Namespace object
-                                 ;; as :original-ns breaks nREPL in bewildering
-                                 ;; ways.
-                                 :original-id id, :original-ns (str (or ns *ns*))
-                                 :file file, :line line, :column column}
-                                ;; There's an nrepl bug where the column starts counting
-                                ;; at 1 if it's after the first line. Since this is a
-                                ;; top-level sexp, a (= col 1) is much more likely to be
-                                ;; wrong than right.
-                                (update :column #(if (= % 1) 0 %))))
-                    :forms @*tmp-forms*}]
-     ~@body))
+  `(do
+     ;; Setting a root var because deftype does not respect locals.
+     (def *STATE__* {:msg ~(let [{:keys [code id file line column ns]} *msg*]
+                             (-> {:code code
+                                  ;; Passing clojure.lang.Namespace object
+                                  ;; as :original-ns breaks nREPL in bewildering
+                                  ;; ways.
+                                  :original-id id, :original-ns (str (or ns *ns*))
+                                  :file file, :line line, :column column}
+                                 ;; There's an nrepl bug where the column starts counting
+                                 ;; at 1 if it's after the first line. Since this is a
+                                 ;; top-level sexp, a (= col 1) is much more likely to be
+                                 ;; wrong than right.
+                                 (update :column #(if (= % 1) 0 %))))
+                     :forms @*tmp-forms*})
+     ~@body
+     (def *STATE__* nil)))
+
 
 (defn break
   "Breakpoint function.
@@ -509,14 +515,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form {:keys [coor]} original-form]
   (let [val-form (if (looks-step-innable? form)
                    (let [[fn-sym & args] form]
-                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'STATE__))
+                     `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~*STATE__*))
                    form)
         locals (when *do-locals*
                  (sanitize-env &env))]
     ;; Keep original forms in a separate atom to save some code
     ;; size. Unfortunately same trick wouldn't work for locals.
     (swap! *tmp-forms* assoc coor original-form)
-    `(break ~coor ~val-form ~locals ~'STATE__)))
+    `(break ~coor ~val-form ~locals ~*STATE__*)))
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
@@ -545,7 +551,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         ;; once. Next time, we need to test the condition again.
         `(let [old-breaks# @*skip-breaks*]
            (when-not ~condition
-             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'STATE__)) false))
+             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~*STATE__*)) false))
            (try
              (expand-break ~form ~dbg-state ~original-form)
              (finally (reset! *skip-breaks* old-breaks#))))
