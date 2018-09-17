@@ -186,6 +186,29 @@ with the following "magic" incantation:
 clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.18.0"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
 ```
 
+There are also two convenient aliases you can employ (see this project's `deps.edn`):
+
+```clojure
+{...
+ :aliases
+ {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}
+                           cider/cider-nrepl {:mvn/version "0.18.0"}}
+              :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
+
+  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}
+                            org.clojure/clojurescript {:mvn/version "1.10.339"}
+                            cider/cider-nrepl {:mvn/version "0.18.0"}
+                            cider/piggieback {:mvn/version "0.3.9"}}
+               :main-opts ["-m" "nrepl.cmdline" "--middleware"
+                           "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
+```
+
+Which then allow you to simply run:
+
+```
+clj -A:cider-clj
+```
+
 Note that `clj` was introduced in Clojure 1.9.
 
 ### Via embedding nREPL in your app
