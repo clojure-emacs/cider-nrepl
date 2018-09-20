@@ -479,8 +479,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     :forms @*tmp-forms*}]
      ~@body))
 
-(declare wrap-debug-bindings)
-
 
 (defn break
   "Breakpoint function.
