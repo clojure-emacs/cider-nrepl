@@ -10,8 +10,10 @@
             [cider.nrepl.middleware.util.instrument :as ins]
             [orchard.misc :as misc]
             [orchard.meta :as m]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.walk :as walk])
   (:import [clojure.lang Compiler$LocalBinding]))
+
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl
@@ -403,12 +405,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                              (merge var-meta)
                              (assoc :file full-path))]
           (let [iform `(with-initial-debug-bindings
-                         ~(ins/instrument-tagged-code (debug-reader form)))]
+                        (ins/instrument-tagged-code (debug-reader form)))]
             ;; (ins/print-form iform true)
             (eval iform)
             (let [instrumented @v]
               (eval form)
               (alter-meta! v assoc ::instrumented instrumented))))))))
+
 
 (defn safe-to-debug?
   "Some namespaces are not safe to debug, because doing so can cause a stack
@@ -475,6 +478,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                                 (update :column #(if (= % 1) 0 %))))
                     :forms @*tmp-forms*}]
      ~@body))
+
+(declare wrap-debug-bindings)
+
 
 (defn break
   "Breakpoint function.
@@ -564,10 +570,22 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form]
   (ins/tag-form-recursively form #'breakpoint-if-interesting))
 
+
+(defmacro wrap-debug-bindings [form]
+  "Find first point of instrumentation and wrap it in state."
+  (letfn [(breakpoint? [f]
+            (and (seq? f) (= (first f) #'breakpoint-if-interesting)))
+          (bind-state-or-continue [f]
+            (if (breakpoint? f)
+              `(with-initial-debug-bindings ~f)
+              (walk f)))
+          (walk [form]
+            (walk/walk bind-state-or-continue identity form))]
+    `(with-initial-debug-bindings ~(walk form))))
+
+
 (defn instrument-and-eval [form]
-  (let [form1 `(with-initial-debug-bindings
-                 ~(ins/instrument-tagged-code form))]
-    ;; (ins/print-form form1 true false)
+  (let [form1 `(wrap-debug-bindings ~(ins/instrument-tagged-code form))]
     (try
       (binding [*tmp-forms* (atom {})]
         (eval form1))
