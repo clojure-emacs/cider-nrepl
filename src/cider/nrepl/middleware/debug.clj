@@ -405,7 +405,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                              (merge var-meta)
                              (assoc :file full-path))]
           (let [iform `(with-initial-debug-bindings
-                        (ins/instrument-tagged-code (debug-reader form)))]
+                        ~(ins/instrument-tagged-code (debug-reader form)))]
             ;; (ins/print-form iform true)
             (eval iform)
             (let [instrumented @v]
