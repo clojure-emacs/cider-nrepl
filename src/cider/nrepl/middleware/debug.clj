@@ -476,6 +476,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     :forms @*tmp-forms*}]
      ~@body))
 
+(defmacro breakpoint-with-initial-debug-bindings
+  {:style/indent 1}
+  [form dbg-state original-form]
+  `(with-initial-debug-bindings
+     (breakpoint-if-interesting
+       ~form ~dbg-state ~original-form)))
+
 (defn break
   "Breakpoint function.
   Send the result of form and its coordinates to the client and wait for
@@ -550,23 +557,24 @@ this map (identified by a key), and will `dissoc` it afterwards."}
              (expand-break ~form ~dbg-state ~original-form)
              (finally (reset! *skip-breaks* old-breaks#))))
         `(expand-break ~form ~dbg-state ~original-form)))))
+
 ;;; ## Data readers
 ;;
 ;; Set in `src/data_readers.clj`.
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/tag-form form #'breakpoint-if-interesting))
+  (ins/tag-form form #'breakpoint-with-initial-debug-bindings))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
   `form` itself is also marked."
   [form]
-  (ins/tag-form-recursively form #'breakpoint-if-interesting))
+  (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-interesting)
+                #'breakpoint-with-initial-debug-bindings))
 
 (defn instrument-and-eval [form]
-  (let [form1 `(with-initial-debug-bindings
-                 ~(ins/instrument-tagged-code form))]
+  (let [form1 (ins/instrument-tagged-code form)]
     ;; (ins/print-form form1 true false)
     (try
       (binding [*tmp-forms* (atom {})]
