@@ -570,7 +570,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 
 (defmacro wrap-debug-bindings [form]
-  "Find first point of instrumentation and wrap it in state."
+  "Find each subtree rooted at a #'breakpoint-if-interesting form
+and wrap it in initial state bindings."
   (letfn [(breakpoint? [f]
             (and (seq? f) (= (first f) #'breakpoint-if-interesting)))
           (bind-state-or-continue [f]
@@ -579,6 +580,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
               (walk f)))
           (walk [form]
             (walk/walk bind-state-or-continue identity form))]
+    ;; Unfortunately the outer form also wrapped with a breakpoint,
+    ;; so we have to also wrap that. Note, the reason to wrap
+    ;; additional non-root forms is to ensure that root forms that
+    ;; are not closures (e.g. deftype, defrecord) are still wrapped
+    ;; with debug bindings.
     `(with-initial-debug-bindings ~(walk form))))
 
 
