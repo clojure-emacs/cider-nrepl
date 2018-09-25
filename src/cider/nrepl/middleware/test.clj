@@ -171,6 +171,12 @@
   [m]
   (report-shrinking m))
 
+(defmethod report :matcher-combinators/mismatch
+  [m]
+  (report-final-status (assoc m
+                              :type :fail
+                              :actual (:markup m))))
+
 (defn report-fixture-error
   "Delegate reporting for test fixture errors to the `report` function. This
   finds the erring test fixture in the stacktrace and binds it as the current

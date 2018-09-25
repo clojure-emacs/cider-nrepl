@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#546](https://github.com/clojure-emacs/cider-nrepl/pull/546): Added support for matcher-combinators to the test middleware.
+
 ## 0.18.0 (2018-08-06)
 
 ### New features
