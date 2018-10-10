@@ -41,7 +41,8 @@
   [2] https://github.com/technomancy/nrepl-discover/blob/master/src/nrepl/discover/samples.clj#L135
   [3] https://tools.ietf.org/html/rfc2045
   [4] https://tools.ietf.org/html/rfc2017"
-  {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
+  {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"
+             "Arne 'plexus' Brasseur <arne@arnebrasseur.net>"]}
   (:require
    [cider.nrepl.middleware.slurp :refer [slurp-reply]])
   (:import
@@ -74,43 +75,45 @@
   (as-url [^URL u]
     u))
 
-(defn response+content-type
-  "Consumes an nREPL response, having a `:value`. If the `:value` is
-  recognized as an AWT Image, a File, or a File URI, rewrite the
-  response to have a `:content-type` being a MIME type of the content,
-  and a `:body` to re-use the RFC term for the message payload."
-  [{:keys [value] :as response}]
-  (cond
-    ;; FIXME (arrdem 2018-04-03):
-    ;;
-    ;;   This could be more generic in terms of tolerating more
-    ;;   protocols / schemes
+(defn external-body-response
+  "Partial response map having an external-body content-type referring to the given URL.
 
-    ;; RFC-2017 external-body responses for UR[IL]s and things which are just wrappers thereof
-    (or (and (instance? File value)
-             (.exists ^File value))
-        (instance? URI value)
-        (instance? URL value))
-    (assoc response
-           :content-type ["message/external-body"
-                          {"access-type" "URL"
-                           "URL" (.toString ^URL (as-url value))}]
-           :body "")
+  See RFC-2017: Definition of the URL MIME External-Body Access-Type."
+  [value]
+  {:content-type ["message/external-body"
+                  {"access-type" "URL"
+                   "URL" (.toString ^URL (as-url value))}]
+   :body ""})
 
-    ;; FIXME (arrdem 2018-04-03):
-    ;;
-    ;;   This is super snowflakey in terms of only supporting base64
-    ;;   coding this one kind of object.  This could definitely be
-    ;;   more generic / open to extension but hey at least it's
-    ;;   re-using machinery.
+(defmulti content-type-response
+  "Consumes an nREPL response, having a `:value`. If the `:value` is of a
+  recognized type, then rewrite the response to have a `:content-type` being a
+  MIME type of the content, and a `:body` to re-use the RFC term for the message
+  payload.
 
-    (instance? java.awt.Image value)
-    (with-open [bos (ByteArrayOutputStream.)]
-      (merge response
-             (when (ImageIO/write ^RenderedImage value "png" ^OutputStream bos)
-               (slurp-reply "" ["image/png" {}] (.toByteArray bos)))))
+  Dispatches on the [[clojure.core/type]] of the value, i.e. the metadata
+  `:type` value, or the class."
+  (comp type :value))
 
-    :else response))
+(defmethod content-type-response :default [response]
+  response)
+
+(defmethod content-type-response URI [{:keys [value] :as response}]
+  (merge response (external-body-response value)))
+
+(defmethod content-type-response URL [{:keys [value] :as response}]
+  (merge response (external-body-response value)))
+
+(defmethod content-type-response File [{^File file :value :as response}]
+  (if (.exists file)
+    (merge response (external-body-response file))
+    response))
+
+(defmethod content-type-response java.awt.Image [{^java.awt.Image image :value :as response}]
+  (with-open [bos (ByteArrayOutputStream.)]
+    (ImageIO/write image "png" ^OutputStream bos)
+    (merge response (when (ImageIO/write ^RenderedImage value "png" ^OutputStream bos)
+                      (slurp-reply "" ["image/png" {}] (.toByteArray bos))))))
 
 (defn content-type-transport
   "Transport proxy which allows this middleware to intercept responses
@@ -123,8 +126,8 @@
     (recv [_this timeout]
       (.recv transport timeout))
 
-    (send [_this response]
-      (.send transport (response+content-type response)))))
+    (send [this response]
+      (.send transport (content-type-response response)))))
 
 (defn handle-content-type
   "Handler for inspecting the results of the `eval` op, attempting to
