@@ -205,20 +205,30 @@
 
 (defn extract-location
   "If the cause is a compiler exception, extract the useful location information
-  from its message. Include relative path for simpler reporting."
-  [{:keys [class message] :as cause}]
+  from its message or from `:location` if provided.
+  Include relative path for simpler reporting."
+  [{:keys [class message location] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
-    (let [[_ msg file line column]
-          (re-find #"(.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
+    (if-not (empty? location)
       (assoc cause
-             :message msg
-             :file file
-             :file-url (some-> file
+             :file (:clojure.error/source location)
+             :file-url (some-> (:clojure.error/source location)
                                path->url
                                u/transform-value)
-             :path (relative-path file)
-             :line (Integer/parseInt line)
-             :column (Integer/parseInt column)))
+             :path (relative-path (:clojure.error/source location))
+             :line (:clojure.error/line location)
+             :column (:clojure.error/column location))
+      (let [[_ msg file line column]
+            (re-find #"(.*?), compiling:\((.*):(\d+):(\d+)\)" message)]
+        (assoc cause
+               :message msg
+               :file file
+               :file-url (some-> file
+                                 path->url
+                                 u/transform-value)
+               :path (relative-path file)
+               :line (Integer/parseInt line)
+               :column (Integer/parseInt column))))
     cause))
 
 ;; CLJS REPLs use :repl-env to store huge amounts of analyzer/compiler state
@@ -289,8 +299,12 @@
         (assoc m
                :message "Spec assertion failed."
                :spec (prepare-spec-data data pprint-fn))
-        (assoc m
-               :data (with-out-str (pprint-fn data))))
+        (-> m
+            (assoc :data (with-out-str (pprint-fn data)))
+            (assoc :location
+                   (select-keys data [:clojure.error/line :clojure.error/column
+                                      :clojure.error/phase :clojure.error/source
+                                      :clojure.error/symbol]))))
       m)))
 
 (defn analyze-causes
