@@ -11,3 +11,6 @@
 
 (deftest yet-an-other-test
   (is true "yet an other"))
+
+(deftest test-with-map-as-message
+  (is true {:key "val"}))

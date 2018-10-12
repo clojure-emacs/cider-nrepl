@@ -52,8 +52,8 @@
                                                               :exclude       ["integration"]})
           tests (keys (:cider.nrepl.middleware.test-filter-tests results))]
       (is ((set (keys results)) :cider.nrepl.middleware.test-filter-tests) "ns that contains smoke is present")
-      (is (= 2 (count tests)) "only one test was run")
-      (is (= #{:a-puff-of-smoke-test :yet-an-other-test} (set tests)) "only the test marked 'smoke' was run")))
+      (is (= 3 (count tests)) "only one test was run")
+      (is (= #{:a-puff-of-smoke-test :yet-an-other-test :test-with-map-as-message} (set tests)) "only the test marked 'smoke' was run")))
   (testing "marked test is still run if filter is not used"
     (let [{:keys [results] :as test-result} (session/message {:op            "test"
                                                               :ns            "cider.nrepl.middleware.test-filter-tests"})
@@ -86,8 +86,8 @@
                                                                           :exclude-meta-key ["integration"]}})
           tests (keys (:cider.nrepl.middleware.test-filter-tests results))]
       (is ((set (keys results)) :cider.nrepl.middleware.test-filter-tests) "ns that contains smoke is present")
-      (is (= 2 (count tests)) "only one test was run")
-      (is (= #{:a-puff-of-smoke-test :yet-an-other-test} (set tests)) "only the test marked 'smoke' was run")))
+      (is (= 3 (count tests)) "only one test was run")
+      (is (= #{:a-puff-of-smoke-test :yet-an-other-test :test-with-map-as-message} (set tests)) "only the test marked 'smoke' was run")))
   (testing "marked test is still run if filter is not used"
     (let [{:keys [results] :as test-result} (session/message {:op "test-var-query"
                                                               :var-query {:ns-query {:exactly ["cider.nrepl.middleware.test-filter-tests"]}}})
@@ -95,3 +95,14 @@
       (is ((set (keys results)) :cider.nrepl.middleware.test-filter-tests) "ns that contains smoke is present")
       (is (< 1 (count tests)) "more tests were run")
       (is ((set tests) :a-puff-of-smoke-test) "smoke test is still present without a filter"))))
+
+(deftest run-test-with-map-as-documentation-message
+  (testing "documentation message map is returned as string"
+    (let [{:keys [results] :as test-result} (session/message {:op "test"
+                                                              :ns "cider.nrepl.middleware.test-filter-tests"
+                                                              :tests ["test-with-map-as-message"]})]
+      (is (= (str {:key "val"}) (-> results
+                                    :cider.nrepl.middleware.test-filter-tests
+                                    :test-with-map-as-message
+                                    first
+                                    :message))))))

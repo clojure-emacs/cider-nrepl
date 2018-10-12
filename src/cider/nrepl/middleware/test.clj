@@ -9,7 +9,8 @@
             [orchard.namespace :as ns]
             [orchard.query :as query]
             [clojure.pprint :as pp]
-            [clojure.test :as test]))
+            [clojure.test :as test]
+            [clojure.walk :as walk]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require
@@ -291,11 +292,15 @@
   (with-interruptible-eval
     msg
     (try
-      (let [report (test-var-query
-                    (-> var-query
-                        (assoc-in [:ns-query :has-tests?] true)
-                        (assoc :test? true)
-                        (util.coerce/var-query)))]
+      (let [report (->> (test-var-query
+                         (-> var-query
+                             (assoc-in [:ns-query :has-tests?] true)
+                             (assoc :test? true)
+                             (util.coerce/var-query)))
+                        (walk/postwalk (fn [x] (if (and (map? x)
+                                                        (contains? x :message))
+                                                 (update x :message str)
+                                                 x))))]
         (reset! results (:results report))
         (t/send transport (response-for msg (u/transform-value report))))
       (catch clojure.lang.ExceptionInfo e
