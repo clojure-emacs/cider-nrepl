@@ -144,4 +144,34 @@
             :line 1
             :column 42}
            (extract-location {:class "clojure.lang.Compiler$CompilerException"
-                              :message "java.lang.NegativeArraySizeException, compiling:(/foo/bar/baz.clj:1:42)"})))))
+                              :message "java.lang.NegativeArraySizeException, compiling:(/foo/bar/baz.clj:1:42)"}))))
+  (testing "extract-location with location-data already present"
+    (= {:class "clojure.lang.Compiler$CompilerException"
+        :message "Syntax error macroexpanding clojure.core/let at (1:1)."
+        :file nil
+        :file-url nil
+        :path "/foo/bar/baz.clj"
+        :line 1
+        :column 42}
+       (extract-location {:class "clojure.lang.Compiler$CompilerException"
+                          :location {:clojure.error/line 1
+                                     :clojure.error/column 42
+                                     :clojure.error/source "/foo/bar/baz.clj"
+                                     :clojure.error/phase :macroexpand
+                                     :clojure.error/symbol 'clojure.core/let}
+                          :message "Syntax error macroexpanding clojure.core/let at (1:1)."}))))
+
+(deftest analyze-cause-test
+  (testing "check that location-data is returned"
+    (let [e (ex-info "wat?" {:clojure.error/line 1
+                             :clojure.error/column 42
+                             :clojure.error/source "/foo/bar/baz.clj"
+                             :clojure.error/phase :macroexpand
+                             :clojure.error/symbol 'clojure.core/let})
+          cause (analyze-cause e identity)]
+      (is (= {:clojure.error/line 1
+              :clojure.error/column 42
+              :clojure.error/source "/foo/bar/baz.clj"
+              :clojure.error/phase :macroexpand
+              :clojure.error/symbol 'clojure.core/let}
+             (:location cause))))))
