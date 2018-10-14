@@ -6,6 +6,10 @@
 
 * [#546](https://github.com/clojure-emacs/cider-nrepl/pull/546): Added support for matcher-combinators to the test middleware.
 
+### Changes
+
+* [#550](https://github.com/clojure-emacs/cider-nrepl/pull/550): Always return test documentation messages as strings.
+
 ## 0.18.0 (2018-08-06)
 
 ### New features
