@@ -20,7 +20,7 @@
                  ;; See https://github.com/clojure-emacs/cider/issues/2176 for details
                  ^:source-dep [org.clojure/java.classpath "0.2.3"]
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
-                 ^:source-dep [org.clojure/tools.trace "0.7.9"]
+                 ^:source-dep [org.clojure/tools.trace "0.7.10"]
                  ^:source-dep [org.clojure/tools.reader "1.1.3.1"]]
   :plugins [[thomasa/mranderson "0.4.8"]]
   :exclusions [org.clojure/clojure]
