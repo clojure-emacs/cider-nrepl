@@ -18,7 +18,7 @@
                  ;; Not used directly in cider-nrepl, but needed because of tool.namespace
                  ;; and the way MrAnderson processes dependencies
                  ;; See https://github.com/clojure-emacs/cider/issues/2176 for details
-                 ^:source-dep [org.clojure/java.classpath "0.2.3"]
+                 ^:source-dep [org.clojure/java.classpath "0.3.0"]
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
                  ^:source-dep [org.clojure/tools.trace "0.7.10"]
                  ^:source-dep [org.clojure/tools.reader "1.3.0"]]
