@@ -14,7 +14,7 @@
                  ^:source-dep [fipp "0.6.13"]
                  ^:source-dep [compliment "0.3.6"]
                  ^:source-dep [cljs-tooling "0.3.0"]
-                 ^:source-dep [cljfmt "0.5.7" :exclusions [org.clojure/clojurescript]]
+                 ^:source-dep [cljfmt "0.6.1" :exclusions [org.clojure/clojurescript]]
                  ;; Not used directly in cider-nrepl, but needed because of tool.namespace
                  ;; and the way MrAnderson processes dependencies
                  ;; See https://github.com/clojure-emacs/cider/issues/2176 for details
