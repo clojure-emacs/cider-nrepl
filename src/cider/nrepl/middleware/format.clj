@@ -4,7 +4,7 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cljfmt.core :as fmt]
-   [clojure.string :as string]
+   [clojure.string :as str]
    [clojure.tools.reader.edn :as edn]
    [clojure.tools.reader.reader-types :as readers]))
 
@@ -29,8 +29,8 @@
   [edn pprint-fn]
   (->> (read-edn edn)
        (map #(with-out-str (pprint-fn %)))
-       string/join
-       string/trim))
+       str/join
+       str/trim))
 
 (defn format-edn-reply
   [{:keys [edn pprint-fn] :as msg}]
