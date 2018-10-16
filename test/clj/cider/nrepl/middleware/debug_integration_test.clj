@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.debug-integration-test
+(ns ^:debugger cider.nrepl.middleware.debug-integration-test
   (:require
    [cider.nrepl :refer [wrap-debug]]
    [cider.nrepl.middleware.debug :as d]
