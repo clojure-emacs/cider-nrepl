@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.debug-test
+(ns ^:debugger cider.nrepl.middleware.debug-test
   (:require
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.debug  :as d]
@@ -202,7 +202,7 @@
                      :line    :line
                      :column  :column}]
       (let [m (eval `(d/with-initial-debug-bindings
-                       (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10))))]
+                         (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10))))]
         (are [k v] (= (k m) v)
           :value       11
           :debug-value "11"
@@ -215,14 +215,14 @@
       (reset! d/debugger-message [:fake])
       ;; Locals capturing
       (is (= (:value (eval `(d/with-initial-debug-bindings
-                              (let [~'x 10] (d/breakpoint-if-interesting
-                                             (locals)
-                                             {:coor [1]} nil)))))
+                                (let [~'x 10] (d/breakpoint-if-interesting
+                                               (locals)
+                                               {:coor [1]} nil)))))
              '{x 10}))
       ;; Top-level sexps are not debugged, just returned.
       (is (= (eval `(d/with-initial-debug-bindings
-                      (let [~'x 10] (d/breakpoint-if-interesting
-                                     (locals)
-                                     {:coor []}
-                                     nil))))
+                        (let [~'x 10] (d/breakpoint-if-interesting
+                                       (locals)
+                                       {:coor []}
+                                       nil))))
              '{x 10})))))
