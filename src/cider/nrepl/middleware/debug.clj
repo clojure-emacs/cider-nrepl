@@ -67,9 +67,9 @@
 ;;; Variables and functions used for navigating between breakpoints.
 (def ^:dynamic *skip-breaks*
   "Map used to determine whether to skip a breakpoint.
-  Don't set or examine this directly, it is bound in the session
-  binding map, use `skip-breaks!` and `skip-breaks?` instead.
-  Its value is discarded at the end each eval session."
+  Don't set or examine this directly, it is bound in the session binding map,
+  use `skip-breaks!` and `skip-breaks?` instead. Its value is reset at the
+  beginning each eval session."
   (atom nil))
 
 (defn- random-uuid-str
@@ -90,7 +90,9 @@
   "True if the breakpoint at coordinates should be skipped.
 
   The `*skip-breaks*` map stores a `mode`, `coordinates`, the `code` that it
-  applies to, and a `force?` flag. Behaviour depends on the `mode`:
+  applies to, and a `force?` flag.
+
+  Behaviour depends on the `mode`:
    - :all - return true, skipping all breaks
    - :trace - return false, skip nothing
    - :deeper - return true if the given coordinates are deeper than the
@@ -101,29 +103,30 @@
   For :deeper and :before, if we are not in the same code (i.e. we have stepped
   into another instrumented function and code argument doesn't match old code in
   *skip-breaks*), then return the value of `force?`."
-  [coordinates code]
-  (if (seq coordinates)
-    (when-let [{mode :mode skip-coords :coor
-                code-to-skip :code force? :force?} @*skip-breaks*]
-      (let [same-defn? (identical? code-to-skip code)]
-        (case mode
-          ;; From :continue, skip everything.
-          :all    true
-          ;; From :trace, never skip.
-          :trace  false
-          ;; From :out, skip some breaks.
-          :deeper (if same-defn?
-                    (let [parent (take (count skip-coords) coordinates)]
-                      (and (seq= skip-coords parent)
-                           (> (count coordinates) (count parent))))
-                    force?)
-          ;; From :here, skip some breaks.
-          :before (if same-defn?
-                    (ins/coord< coordinates skip-coords)
-                    force?))))
-    ;; We don't breakpoint top-level sexps, because their return value
-    ;; is already displayed anyway.
-    true))
+  [coor STATE__]
+  (or (and STATE__ @(:skip STATE__))
+      (if (seq coor)
+        (when-let [{mode :mode skip-coords :coor
+                    code-to-skip :code force? :force?} @*skip-breaks*]
+          (let [same-defn? (identical? code-to-skip (get-in STATE__ [:msg :code]))]
+            (case mode
+              ;; From :continue, skip everything.
+              :all    true
+              ;; From :trace, never skip.
+              :trace  false
+              ;; From :out, skip some breaks.
+              :deeper (if same-defn?
+                        (let [parent (take (count skip-coords) coor)]
+                          (and (seq= skip-coords parent)
+                               (> (count coor) (count parent))))
+                        force?)
+              ;; From :here, skip some breaks.
+              :before (if same-defn?
+                        (ins/coord< coor skip-coords)
+                        force?))))
+        ;; We don't breakpoint top-level sexps, because their return value
+        ;; is already displayed anyway.
+        true)))
 
 (defn skip-breaks!
   "Set the value of *skip-breaks* for the top-level breakpoint.
@@ -281,8 +284,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
    (eval-with-locals (or code (read-debug-input dbg-state :expression prompt))
                      dbg-state)))
 
-(declare read-debug-command)
-
 (defn- debug-inspect
   "Inspect `inspect-value`."
   [page-size inspect-value]
@@ -305,6 +306,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (def debug-commands
   {"c" :continue
+   "C" :Continue
    "e" :eval
    "h" :here
    "i" :in
@@ -336,51 +338,58 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   provide additional parameters. For instance, if this map has a :code entry,
   its value is used for operations such as :eval, which would otherwise
   interactively prompt for an expression."
-  [value dbg-state]
-  (let [commands     (cond-> debug-commands
-                       (not (map? *msg*))         (dissoc "q")
-                       (nil? (:locals dbg-state))    (dissoc "e" "j" "l" "p")
-                       (cljs/grab-cljs-env *msg*) identity)
-        response-raw (read-debug-input dbg-state commands nil)
-        dbg-state       (dissoc dbg-state :inspect)
+  [coor value locals STATE__]
+  (loop [value     value
+         dbg-state (assoc (:msg STATE__)
+                          :debug-value (pr-short value)
+                          :coor coor
+                          :locals locals)]
+    (let [commands     (cond-> debug-commands
+                         (not (map? *msg*))         (dissoc "q")
+                         (nil? (:locals dbg-state)) (dissoc "e" "j" "l" "p")
+                         (cljs/grab-cljs-env *msg*) identity)
+          response-raw (read-debug-input dbg-state commands nil)
+          dbg-state    (dissoc dbg-state :inspect)
 
-        {:keys [code coord response page-size force?]
-         :or {page-size 32}} (if (map? response-raw)
-                               response-raw
-                               {:response response-raw})]
-    (reset! step-in-to-next? false)
-    (case response
-      :next       value
-      :in         (do (reset! step-in-to-next? true)
-                      value)
-      :continue   (do (skip-breaks! :all)
-                      value)
-      :out        (do (skip-breaks! :deeper (butlast (:coor dbg-state)) (:code dbg-state) force?)
-                      value)
-      :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
-                      value)
-      :stacktrace (do (debug-stacktrace)
-                      (recur value dbg-state))
-      :trace      (do (skip-breaks! :trace)
-                      value)
-      :locals     (->> (debug-inspect page-size (:locals dbg-state))
-                       (assoc dbg-state :inspect)
-                       (recur value))
-      :inspect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
-                    (->> (debug-inspect page-size val)
+          {:keys [code coord response page-size force?]
+           :or   {page-size 32}} (if (map? response-raw)
+                                   response-raw
+                                   {:response response-raw})]
+      (reset! step-in-to-next? false)
+      (case response
+        :next       value
+        :in         (do (reset! step-in-to-next? true)
+                        value)
+        :continue   (do (reset! (:skip STATE__) true)
+                        value)
+        :Continue   (do (skip-breaks! :all)
+                        value)
+        :out        (do (skip-breaks! :deeper (butlast (:coor dbg-state)) (:code dbg-state) force?)
+                        value)
+        :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
+                        value)
+        :stacktrace (do (debug-stacktrace)
+                        (recur value dbg-state))
+        :trace      (do (skip-breaks! :trace)
+                        value)
+        :locals     (->> (debug-inspect page-size (:locals dbg-state))
                          (assoc dbg-state :inspect)
                          (recur value))
-                    (recur value dbg-state))
-      :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
-                    val
-                    (recur value dbg-state))
-      :eval       (try-if-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
-                    (recur value (assoc dbg-state :debug-value (pr-short val)))
-                    (recur value dbg-state))
-      :quit       (abort!)
-      (do (abort!)
-          (throw (ex-info "Invalid input from `read-debug-input`."
-                          {:response-raw response-raw}))))))
+        :inspect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
+                      (->> (debug-inspect page-size val)
+                           (assoc dbg-state :inspect)
+                           (recur value))
+                      (recur value dbg-state))
+        :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
+                      val
+                      (recur value dbg-state))
+        :eval       (try-if-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
+                      (recur value (assoc dbg-state :debug-value (pr-short val)))
+                      (recur value dbg-state))
+        :quit       (abort!)
+        (do (abort!)
+            (throw (ex-info "Invalid input from `read-debug-input`."
+                            {:response-raw response-raw})))))))
 
 (defn print-step-indented [depth form value]
   (print (apply str (repeat (dec depth) "| ")))
@@ -473,6 +482,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                                 ;; top-level sexp, a (= col 1) is much more likely to be
                                 ;; wrong than right.
                                 (update :column #(if (= % 1) 0 %))))
+                    ;; the coor of first form is used as the debugger session id
+                    :session-id (atom nil)
+                    :skip (atom false)
                     :forms @*tmp-forms*}]
      ~@body))
 
@@ -481,15 +493,19 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
      (breakpoint-if-interesting
-       ~form ~dbg-state ~original-form)))
+      ~form ~dbg-state ~original-form)))
 
 (defn break
   "Breakpoint function.
   Send the result of form and its coordinates to the client and wait for
   response with `read-debug-command`'."
   [coor val locals STATE__]
+  (if-let [first-coor @(:session-id STATE__)]
+    (when (= first-coor coor)
+      (reset! (:skip STATE__) false))
+    (reset! (:session-id STATE__) coor))
   (cond
-    (skip-breaks? coor (get-in STATE__ [:msg :code])) val
+    (skip-breaks? coor STATE__) val
     ;; The length of `coor` is a good indicator of current code
     ;; depth.
     (= (:mode @*skip-breaks*) :trace)
@@ -497,15 +513,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         val)
     ;; Most common case - ask for input.
     :else
-    (read-debug-command val (assoc (:msg STATE__)
-                                   :debug-value (pr-short val)
-                                   :coor coor
-                                   :locals locals))))
+    (read-debug-command coor val locals STATE__)))
 
 (defn apply-instrumented-maybe
   "Apply var-fn or its instrumented version to args."
   [var-fn args coor STATE__]
-  (let [stepin (step-in? var-fn coor (get-in STATE__ [:msg :code]))]
+  (let [stepin (step-in? var-fn coor STATE__)]
     (apply (if stepin
              (::instrumented (meta var-fn))
              var-fn)

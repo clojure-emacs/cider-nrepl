@@ -9,6 +9,12 @@
 
 (def ^:const bfkey :cider.nrepl.middleware.util.instrument/breakfunction)
 
+;; dummy STATE__
+(defn STATE []
+  {:msg {:original-ns "user"}
+   :session-id (atom nil)
+   :skip (atom false)})
+
 (deftest irrelevant-return-value-test
   (are [x] (let [exp (clojure.walk/macroexpand-all x)]
              (= exp (clojure.walk/macroexpand-all `(d/breakpoint-if-interesting ~exp [] nil))))
@@ -40,12 +46,13 @@
     (is (not (#'d/skip-breaks? [1 2] nil)))
     (is (not (#'d/skip-breaks? [2 2 1] nil)))
 
-    (let [code "(foo (bar blah x))"]
+    (let [code "(foo (bar blah x))"
+          state (assoc-in (STATE) [:msg :code] code)]
       (#'d/skip-breaks! :deeper [1 2] code nil)
-      (is (d/skip-breaks? [] code))
-      (is (not (#'d/skip-breaks? [1 2] code)))
-      (is (not (#'d/skip-breaks? [2 2 1] code)))
-      (is (#'d/skip-breaks? [1 2 3] code)))))
+      (is (d/skip-breaks? [] state))
+      (is (not (#'d/skip-breaks? [1 2] state)))
+      (is (not (#'d/skip-breaks? [2 2 1] state)))
+      (is (#'d/skip-breaks? [1 2 3] state)))))
 
 (defn- send-override
   [value]
@@ -91,30 +98,30 @@
   ;; Check functionality
   (with-redefs [d/abort! (constantly :aborted)
                 t/send   (send-override :quit)]
-    (is (= :aborted (#'d/read-debug-command 'value (add-locals {})))))
+    (is (= :aborted (#'d/read-debug-command nil 'value (locals) (STATE)))))
   (with-redefs [t/send (send-override :next)]
-    (is (= 'value (#'d/read-debug-command 'value (add-locals {})))))
+    (is (= 'value (#'d/read-debug-command nil 'value (locals) (STATE)))))
   (binding [*msg* {:session (atom {})}
             d/*skip-breaks* (atom {:mode :all})]
     (with-redefs [t/send (send-override :continue)]
-      (is (= 'value (#'d/read-debug-command 'value (add-locals {}))))
-      (is (#'d/skip-breaks? nil nil))))
+      (is (= 'value (#'d/read-debug-command nil 'value (locals) (STATE))))
+      (is (#'d/skip-breaks? nil (STATE)))))
   (binding [*msg* {:session (atom {})}
             d/*skip-breaks* (atom {:mode :all})]
     (with-redefs [t/send (send-override :out)]
-      (is (= 'value (#'d/read-debug-command 'value (add-locals {:coor [1 2 3]}))))
-      (is (#'d/skip-breaks? [1 2 3] nil))
-      (is (#'d/skip-breaks? [1 2 4] nil))
-      (is (not (#'d/skip-breaks? [1 2] nil)))))
+      (is (= 'value (#'d/read-debug-command [1 2 3] 'value (locals) (STATE))))
+      (is (#'d/skip-breaks? [1 2 3] (STATE)))
+      (is (#'d/skip-breaks? [1 2 4] (STATE)))
+      (is (not (#'d/skip-breaks? [1 2] (STATE))))))
   (with-redefs [t/send (send-override :inject)]
-    (is (= :inject (#'d/read-debug-command 'value (add-locals {}))))))
+    (is (= :inject (#'d/read-debug-command nil 'value (locals) (STATE))))))
 
 (deftest read-debug-command-eval-test
   (let [replies (atom [:eval 100 :next])]
     (with-redefs [t/send (fn [trans {:keys [key]}]
                            (deliver (@d/promises key) (str (first @replies)))
                            (swap! replies rest))]
-      (is (= 'value (#'d/read-debug-command 'value (add-locals {})))))))
+      (is (= 'value (#'d/read-debug-command nil 'value (locals) (STATE)))))))
 
 (deftest read-eval-expression-test
   (reset! d/debugger-message {})
@@ -192,7 +199,7 @@
 
 (deftest breakpoint
   ;; Map merging
-  (with-redefs [d/read-debug-command (fn [v e] (assoc e :value v))
+  (with-redefs [d/read-debug-command (fn [_ v _ s] (assoc (:msg s) :value v))
                 d/debugger-message   (atom [:fake])
                 d/*skip-breaks*      (atom nil)]
     (binding [*msg* {:session (atom {})
@@ -201,12 +208,11 @@
                      :file    :file
                      :line    :line
                      :column  :column}]
-      (let [m (eval `(d/with-initial-debug-bindings
-                         (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10))))]
+      (let [form `(d/with-initial-debug-bindings
+                    (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10)))
+            m (eval form)]
         (are [k v] (= (k m) v)
           :value       11
-          :debug-value "11"
-          :coor        [6]
           :file        :file
           :line        :line
           :column      :column
@@ -215,14 +221,16 @@
       (reset! d/debugger-message [:fake])
       ;; Locals capturing
       (is (= (:value (eval `(d/with-initial-debug-bindings
-                                (let [~'x 10] (d/breakpoint-if-interesting
-                                               (locals)
-                                               {:coor [1]} nil)))))
+                              (let [~'x 10]
+                                (d/breakpoint-if-interesting
+                                 (locals)
+                                 {:coor [1]} nil)))))
              '{x 10}))
       ;; Top-level sexps are not debugged, just returned.
       (is (= (eval `(d/with-initial-debug-bindings
-                        (let [~'x 10] (d/breakpoint-if-interesting
-                                       (locals)
-                                       {:coor []}
-                                       nil))))
+                      (let [~'x 10]
+                        (d/breakpoint-if-interesting
+                         (locals)
+                         {:coor []}
+                         nil))))
              '{x 10})))))
