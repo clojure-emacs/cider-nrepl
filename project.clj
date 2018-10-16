@@ -12,7 +12,7 @@
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
                  ^:source-dep [fipp "0.6.13"]
-                 ^:source-dep [compliment "0.3.6"]
+                 ^:source-dep [compliment "0.3.7-SNAPSHOT"]
                  ^:source-dep [cljs-tooling "0.3.0"]
                  ^:source-dep [cljfmt "0.6.1" :exclusions [org.clojure/clojurescript]]
                  ;; Not used directly in cider-nrepl, but needed because of tool.namespace
