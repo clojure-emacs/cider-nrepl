@@ -1,14 +1,16 @@
 (ns cider.nrepl.middleware.debug-integration-test
-  (:require [cider.nrepl :refer [wrap-debug]]
-            [cider.nrepl.middleware.debug :as d]
-            [cider.nrepl.test.server :refer [start-server]]
-            [clojure.test :refer :all]
-            [nrepl.core :as nrepl]
-            [nrepl.server :as nrepl.server]
-            [nrepl.transport :as transport]
-            [clojure.java.io :as io])
-  (:import java.util.UUID
-           [java.util.concurrent TimeUnit LinkedBlockingQueue]))
+  (:require
+   [cider.nrepl :refer [wrap-debug]]
+   [cider.nrepl.middleware.debug :as d]
+   [cider.nrepl.test.server :refer [start-server]]
+   [clojure.test :refer :all]
+   [nrepl.core :as nrepl]
+   [nrepl.server :as nrepl.server]
+   [nrepl.transport :as transport]
+   [clojure.java.io :as io])
+  (:import
+   java.util.UUID
+   [java.util.concurrent TimeUnit LinkedBlockingQueue]))
 
 ;;; Helpers for starting an nRepl session
 ;;; We do not use nrepl/client-session here because it

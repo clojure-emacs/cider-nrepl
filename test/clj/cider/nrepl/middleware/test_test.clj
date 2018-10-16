@@ -1,9 +1,10 @@
 (ns cider.nrepl.middleware.test-test
-  (:require [cider.nrepl.middleware.test :as test]
-            ;; Ensure tested tests are loaded:
-            cider.nrepl.middleware.test-filter-tests
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.test :as test]
+   ;; Ensure tested tests are loaded:
+   cider.nrepl.middleware.test-filter-tests
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
 

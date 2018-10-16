@@ -1,10 +1,11 @@
 (ns cider.nrepl.main-test
-  (:require [cider.nrepl :refer [wrap-debug cider-middleware]]
-            [cider-nrepl.main :as m]
-            [clojure.test :refer :all]
-            [nrepl.core :as nrepl]
-            [nrepl.server :as nrepl.server]
-            [nrepl.transport :as transport]))
+  (:require
+   [cider.nrepl :refer [wrap-debug cider-middleware]]
+   [cider-nrepl.main :as m]
+   [clojure.test :refer :all]
+   [nrepl.core :as nrepl]
+   [nrepl.server :as nrepl.server]
+   [nrepl.transport :as transport]))
 
 (defn start-stop-nrepl-session [opts]
   (with-open [server    (#'m/start-nrepl opts)

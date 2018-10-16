@@ -1,8 +1,9 @@
 (ns cider.nrepl.middleware.util.instrument-test
-  (:require [cider.nrepl.middleware.util.instrument :as t]
-            [clojure.set :as set]
-            [clojure.test :refer :all]
-            [clojure.walk :as walk]))
+  (:require
+   [cider.nrepl.middleware.util.instrument :as t]
+   [clojure.set :as set]
+   [clojure.test :refer :all]
+   [clojure.walk :as walk]))
 
 (deftest dont-break?-test
   (are [x] (#'t/dont-break? x)

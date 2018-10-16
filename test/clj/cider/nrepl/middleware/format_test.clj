@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.format-test
-  (:require [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (def ugly-code-sample
   "( let [x 3

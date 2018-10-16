@@ -1,9 +1,10 @@
 (ns cider.nrepl.middleware.macroexpand-test
   (:refer-clojure :exclude [zero? zipmap])
-  (:require [cider.nrepl.test-session :as session]
-            [clojure.set :as set]
-            [clojure.string]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.test-session :as session]
+   [clojure.set :as set]
+   [clojure.string]
+   [clojure.test :refer :all]))
 
 (use-fixtures :once session/session-fixture)
 

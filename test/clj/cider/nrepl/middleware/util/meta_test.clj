@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.util.meta-test
-  (:require [cider.nrepl.middleware.util.meta :as um]
-            [clojure.repl :as repl]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.util.meta :as um]
+   [clojure.test :refer :all]))
 
 (defn- test-fn "docstring"
   ([a b] nil)

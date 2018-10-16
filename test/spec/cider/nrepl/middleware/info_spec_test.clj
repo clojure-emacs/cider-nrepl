@@ -1,10 +1,11 @@
 (ns cider.nrepl.middleware.info-spec-test
-  (:require [clojure.spec.alpha :as s]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]
-            [cider.test-ns.first-test-ns]
-            [cider.test-ns.second-test-ns]
-            [cider.test-ns.third-test-ns]))
+  (:require
+   [cider.nrepl.test-session :as session]
+   [clojure.spec.alpha :as s]
+   [clojure.test :refer :all]
+   [cider.test-ns.first-test-ns]
+   [cider.test-ns.second-test-ns]
+   [cider.test-ns.third-test-ns]))
 
 (defn ranged-rand
   "Returns random int in range start <= rand < end."

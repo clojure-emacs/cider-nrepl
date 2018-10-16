@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.classpath-test
-  (:require [cider.nrepl.test-session :as session]
-            [cider.nrepl.middleware.classpath :refer :all]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.test-session :as session]
+   [cider.nrepl.middleware.classpath :refer :all]
+   [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
 

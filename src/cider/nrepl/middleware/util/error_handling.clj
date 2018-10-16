@@ -2,10 +2,12 @@
   "Utilities to safely reply to op requests and help deal with the
   errors/exceptions that might arise from doing so."
   (:refer-clojure :exclude [error-handler])
-  (:require [clojure.set :as set]
-            [clojure.walk :as walk])
-  (:import java.io.InputStream
-           clojure.lang.RT))
+  (:require
+   [clojure.set :as set]
+   [clojure.walk :as walk])
+  (:import
+   java.io.InputStream
+   clojure.lang.RT))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require

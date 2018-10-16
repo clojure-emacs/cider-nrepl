@@ -4,12 +4,14 @@
   Goes with middleware.content-types, providing the capability to
   convert URLs to values which can be handled nicely."
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import [java.net MalformedURLException URL]
-           java.io.ByteArrayOutputStream
-           [java.nio.file Files Path Paths]))
+  (:require
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.string :as str])
+  (:import
+   [java.net MalformedURLException URL]
+   java.io.ByteArrayOutputStream
+   [java.nio.file Files Path Paths]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require

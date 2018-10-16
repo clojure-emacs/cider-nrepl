@@ -1,8 +1,9 @@
 (ns cider.nrepl.middleware.cljs-inspect-test
-  (:require [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
-            [cider.nrepl.middleware.inspect :as i]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
+   [cider.nrepl.middleware.inspect :as i]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (def nil-result ["(\"nil\" (:newline))"])
 

@@ -1,15 +1,14 @@
 (ns cider.nrepl.middleware.info-test
-  (:require [clojure.data]
-            [clojure.test :refer :all]
-            [clojure.java.io :as io]
-            [clojure.repl :as repl]
-            [clojure.set :as set]
-            [clojure.string :as str]
-            [cider.nrepl.middleware.info :as info]
-            [cider.nrepl.test-session :as session]
-            [cider.test-ns.first-test-ns :as test-ns])
-  (:import [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
-           [org.apache.commons.lang3 SystemUtils]))
+  (:require
+   [clojure.data]
+   [clojure.test :refer :all]
+   [clojure.string :as str]
+   [cider.nrepl.middleware.info :as info]
+   [cider.nrepl.test-session :as session]
+   [cider.test-ns.first-test-ns :as test-ns])
+  (:import
+   [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
+   [org.apache.commons.lang3 SystemUtils]))
 
 (deftest format-response-test
   (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online

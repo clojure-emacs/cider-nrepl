@@ -1,9 +1,10 @@
 (ns cider.nrepl.middleware.profile-test
-  (:require [cider.nrepl.middleware.profile :refer :all]
-            [cider.nrepl.test-session :as session]
-            [cider.nrepl.test-transport :refer [test-transport]]
-            [clojure.string :as str]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.profile :refer :all]
+   [cider.nrepl.test-session :as session]
+   [cider.nrepl.test-transport :refer [test-transport]]
+   [clojure.string :as str]
+   [clojure.test :refer :all]))
 
 (defn with-clear-profile
   [f]

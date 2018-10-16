@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.test.extensions-test
-  (:require [clojure.test :refer :all]
-            [cider.nrepl.middleware.test.extensions :as extensions]))
+  (:require
+   [cider.nrepl.middleware.test.extensions :as extensions]
+   [clojure.test :refer :all]))
 
 (deftest =-body-test
   (testing "Only evalulates expected form once"

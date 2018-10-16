@@ -1,10 +1,11 @@
 (ns cider.nrepl.piggieback-test
-  (:require [cider.piggieback :as piggieback]
-            [cider.nrepl.test-session :as session]
-            [cider.nrepl :refer [cider-middleware]]
-            [clojure.test :refer :all]
-            [nrepl.core :as nrepl]
-            [nrepl.server :as server]))
+  (:require
+   [cider.piggieback :as piggieback]
+   [cider.nrepl.test-session :as session]
+   [cider.nrepl :refer [cider-middleware]]
+   [clojure.test :refer :all]
+   [nrepl.core :as nrepl]
+   [nrepl.server :as server]))
 
 (def piggieback-fixture
   (compose-fixtures

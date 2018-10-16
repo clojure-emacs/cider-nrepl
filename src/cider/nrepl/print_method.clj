@@ -1,12 +1,13 @@
 (ns cider.nrepl.print-method
-  (:require [clojure.main :as main])
-  (:import [clojure.lang AFunction Atom MultiFn Namespace]
-           java.io.Writer))
-
-;; Extending `print-method` defined in clojure.core, to provide
-;; prettier versions of some objects. This applies to anything that
-;; calls `print-method`, which includes return values, `pr`, `print`
-;; and the likes.
+  "Extending `print-method` defined in clojure.core, to provide
+  prettier versions of some objects. This applies to anything that
+  calls `print-method`, which includes return values, `pr`, `print`
+  and the likes."
+  (:require
+   [clojure.main :as main])
+  (:import
+   [clojure.lang AFunction Atom MultiFn Namespace]
+   java.io.Writer))
 
 (def ^:dynamic *pretty-objects*
   "If true, cider prettifies some object descriptions.

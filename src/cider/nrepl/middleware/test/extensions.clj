@@ -3,9 +3,10 @@
 
   These are kept in a separate namespace because they are, by definition,
   opinionated."
-  (:require [clojure.data :as data]
-            [clojure.pprint :as pp]
-            [clojure.test :as test :refer [assert-expr]]))
+  (:require
+   [clojure.data :as data]
+   [clojure.pprint :as pp]
+   [clojure.test :as test :refer [assert-expr]]))
 
 ;; From pjstadig/humane-test-output
 ;; https://github.com/pjstadig/humane-test-output

@@ -1,7 +1,9 @@
 (ns cider.nrepl.print-method-test
-  (:require [cider.nrepl.print-method :refer :all]
-            [clojure.test :refer :all])
-  (:import java.util.regex.Pattern))
+  (:require
+   [cider.nrepl.print-method :refer :all]
+   [clojure.test :refer :all])
+  (:import
+   java.util.regex.Pattern))
 
 (defn dummy-fn [o])
 

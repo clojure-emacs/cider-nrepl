@@ -1,8 +1,9 @@
 (ns cider.nrepl.middleware.trace-test
-  (:require [cider.nrepl.middleware.trace :refer :all]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]
-            [cider.test-ns.first-test-ns]))
+  (:require
+   [cider.nrepl.middleware.trace :refer :all]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]
+   [cider.test-ns.first-test-ns]))
 
 (use-fixtures :each session/session-fixture)
 

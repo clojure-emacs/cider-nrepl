@@ -1,8 +1,9 @@
 (ns cider.nrepl
-  (:require [cider.nrepl.version :as version]
-            [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.print-method]))
+  (:require
+   [cider.nrepl.version :as version]
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.pprint :as pprint]
+   [cider.nrepl.print-method]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl

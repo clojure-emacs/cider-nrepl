@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.refresh-test
-  (:require [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]
-            [cider.nrepl.middleware.refresh :as r]))
+  (:require
+   [cider.nrepl.middleware.refresh :as r]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
 

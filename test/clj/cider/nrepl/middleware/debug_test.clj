@@ -1,10 +1,11 @@
 (ns cider.nrepl.middleware.debug-test
-  (:require [clojure.test :refer :all]
-            [nrepl.middleware.interruptible-eval :refer [*msg*]]
-            [nrepl.transport :as t]
-            [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.debug  :as d]
-            [clojure.walk :as walk]))
+  (:require
+   [cider.nrepl.middleware.util.instrument :as ins]
+   [cider.nrepl.middleware.debug  :as d]
+   [clojure.test :refer :all]
+   [clojure.walk :as walk]
+   [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.transport :as t]))
 
 (def ^:const bfkey :cider.nrepl.middleware.util.instrument/breakfunction)
 

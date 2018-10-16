@@ -1,8 +1,8 @@
 (ns cider.nrepl.middleware.slurp-test
-  (:require [clojure.test :as t]
-            [cider.nrepl.middleware.slurp
-             :refer [if-class slurp-url-to-content+body]]
-            [clojure.java.io :as io]))
+  (:require
+   [cider.nrepl.middleware.slurp :refer [if-class slurp-url-to-content+body]]
+   [clojure.java.io :as io]
+   [clojure.test :as t]))
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove these if-classes when we have jdk1.8 min

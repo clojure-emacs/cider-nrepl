@@ -1,7 +1,8 @@
 (ns cider.tasks
-  (:require [boot.core :refer [deftask]]
-            [boot.repl :as repl]
-            [boot.util :as util]))
+  (:require
+   [boot.core :refer [deftask]]
+   [boot.repl :as repl]
+   [boot.util :as util]))
 
 (deftask add-middleware
   "CIDER middleware injection task

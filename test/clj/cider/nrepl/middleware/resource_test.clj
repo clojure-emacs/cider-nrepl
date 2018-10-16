@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.resource-test
-  (:require [cider.nrepl.test-session :as session]
-            [cider.nrepl.middleware.resource :as r]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.test-session :as session]
+   [cider.nrepl.middleware.resource :as r]
+   [clojure.test :refer :all]))
 
 (use-fixtures :once session/session-fixture)
 (deftest resource-op-test

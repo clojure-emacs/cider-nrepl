@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.util.error-handling-test
-  (:require [clojure.test :refer :all]
-            [cider.nrepl.middleware.util.error-handling :as err]
-            [cider.nrepl.test-transport :as tt]))
+  (:require
+   [cider.nrepl.middleware.util.error-handling :as err]
+   [cider.nrepl.test-transport :as tt]
+   [clojure.test :refer :all]))
 
 (deftest op-handler-test
   (is (= {:id 5 :status #{:test :done}}  (err/op-handler :test {:id 5})))

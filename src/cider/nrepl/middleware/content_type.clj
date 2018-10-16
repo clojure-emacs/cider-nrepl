@@ -42,12 +42,14 @@
   [3] https://tools.ietf.org/html/rfc2045
   [4] https://tools.ietf.org/html/rfc2017"
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
-  (:require [cider.nrepl.middleware.slurp :refer [slurp-reply]])
-  (:import java.awt.Image
-           [java.io ByteArrayOutputStream File OutputStream]
-           [java.net URI URL]
-           java.nio.file.Path
-           javax.imageio.ImageIO))
+  (:require
+   [cider.nrepl.middleware.slurp :refer [slurp-reply]])
+  (:import
+   java.awt.Image
+   [java.io ByteArrayOutputStream File OutputStream]
+   [java.net URI URL]
+   java.nio.file.Path
+   javax.imageio.ImageIO))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl

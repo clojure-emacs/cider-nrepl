@@ -1,8 +1,8 @@
 (ns cider.nrepl.middleware.stacktrace-test
-  (:require [clojure.string :as string]
-            [cider.nrepl.middleware.stacktrace :refer :all]
-            [clojure.pprint :refer [pprint]]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.stacktrace :refer :all]
+   [clojure.pprint :refer [pprint]]
+   [clojure.test :refer :all]))
 
 ;; # Utils
 

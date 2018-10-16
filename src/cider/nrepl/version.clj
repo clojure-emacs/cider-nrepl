@@ -1,8 +1,9 @@
 (ns cider.nrepl.version
   ;; We require print-method here because `cider.nrepl.version`
   ;; namespace is used by every connection.
-  (:require [cider.nrepl.print-method]
-            [clojure.java.io :as io]))
+  (:require
+   [cider.nrepl.print-method]
+   [clojure.java.io :as io]))
 
 (def version-string
   "The current version for cider-nrepl as a string."

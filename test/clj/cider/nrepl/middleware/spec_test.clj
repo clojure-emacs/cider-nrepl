@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.spec-test
-  (:require [cider.nrepl.middleware.spec :as cider-spec]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.spec :as cider-spec]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 ;; integration tests
 

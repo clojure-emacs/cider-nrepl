@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.cljs-pprint-test
-  (:require [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (use-fixtures :once piggieback-fixture)
 

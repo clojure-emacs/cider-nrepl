@@ -1,8 +1,9 @@
 (ns cider.nrepl.middleware.util.instrument
   "Generic instrumentation for clojure code"
   {:author "Artur Malabarba"}
-  (:require [orchard.meta :as m]
-            [clojure.walk :as walk]))
+  (:require
+   [clojure.walk :as walk]
+   [orchard.meta :as m]))
 
 ;;;; # Instrumentation
 ;;;

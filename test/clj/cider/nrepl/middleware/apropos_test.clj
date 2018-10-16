@@ -1,8 +1,9 @@
 (ns cider.nrepl.middleware.apropos-test
-  (:require [cider.nrepl.middleware.apropos :refer [apropos]]
-            [clojure.test :refer :all]
-            [cider.nrepl.test-session :as session]
-            [clojure.string :as str]))
+  (:require
+   [cider.nrepl.middleware.apropos :refer [apropos]]
+   [cider.nrepl.test-session :as session]
+   [clojure.string :as str]
+   [clojure.test :refer :all]))
 
 (def ^:private ^{:doc "Can't. See. Me"} private-var [:a :b :c])
 

@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.version-test
-  (:require [cider.nrepl.version :as v]
-            [cider.nrepl.test-session :as session]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.version :as v]
+   [cider.nrepl.test-session :as session]
+   [clojure.test :refer :all]))
 
 (deftest cider-version-test
   (let [outer-map (#'v/cider-version-reply {})

@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.out-test
-  (:require [cider.nrepl.middleware.out :as o]
-            [clojure.test :refer :all]))
+  (:require
+   [cider.nrepl.middleware.out :as o]
+   [clojure.test :refer :all]))
 
 (defn random-str []
   (->> #(format "%x" (rand-int 15))
