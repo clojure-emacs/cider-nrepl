@@ -17,7 +17,7 @@ env:
     - secure: "D2Ie7dUZ9nQOIWtkRl2XWZeijSL8expUXP3GziSqQV1scJzwexxnUsRvWOkc2YU8+6IIGz9tcyt9RrEFUVF31VZgRSHh8P5rGGCzI2l99djKhYFfSErElwgoAJZFtOzougZK66/Gtb5uDo5L/wlKHkl4st3miqm+mEvfJITDjRQ="
 jdk:
   - oraclejdk8
-  - oraclejdk9
+  - openjdk11
 stages:
   - name: check
   - name: test
