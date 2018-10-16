@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.pprint
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [orchard.misc :as u]
-            [clojure.pprint :refer [pprint *print-right-margin*]]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [clojure.pprint :refer [pprint *print-right-margin*]]
+   [orchard.misc :as u]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (do

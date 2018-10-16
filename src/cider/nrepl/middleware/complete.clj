@@ -1,10 +1,11 @@
 (ns cider.nrepl.middleware.complete
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.misc :as u]
-            [compliment.core :as jvm-complete]
-            [compliment.utils :as jvm-complete-utils]
-            [cljs-tooling.complete :as cljs-complete]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cljs-tooling.complete :as cljs-complete]
+   [compliment.core :as jvm-complete]
+   [compliment.utils :as jvm-complete-utils]
+   [orchard.misc :as u]))
 
 (defn complete
   [{:keys [ns symbol context extra-metadata] :as msg}]

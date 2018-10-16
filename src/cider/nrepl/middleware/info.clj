@@ -1,18 +1,13 @@
 (ns cider.nrepl.middleware.info
-  (:require [clojure.edn :as edn]
-            [clojure.string :as str]
-            [clojure.java.io :as io]
-            [clojure.java.javadoc :as javadoc]
-            [orchard.classloader :refer [class-loader]]
-            [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.java :as java]
-            [orchard.misc :as u]
-            [orchard.meta :as m]
-            [orchard.info :as clj-info]
-            [orchard.eldoc :as eldoc]
-            [cljs-tooling.info :as cljs-info]
-            [orchard.spec :as spec]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cljs-tooling.info :as cljs-info]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [orchard.eldoc :as eldoc]
+   [orchard.info :as clj-info]
+   [orchard.misc :as u]))
 
 (declare format-response)
 

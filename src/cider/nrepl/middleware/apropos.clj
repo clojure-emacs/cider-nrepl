@@ -1,9 +1,10 @@
 (ns cider.nrepl.middleware.apropos
   "Search symbols and docs matching a regular expression"
   {:author "Jeff Valk"}
-  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.apropos :as apropos]
-            [cider.nrepl.middleware.util.coerce :as util.coerce]))
+  (:require
+   [cider.nrepl.middleware.util.coerce :as util.coerce]
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [orchard.apropos :as apropos]))
 
 ;;; ## Middleware
 

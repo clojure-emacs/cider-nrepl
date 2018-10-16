@@ -1,8 +1,8 @@
 (ns cider.nrepl.middleware.inspect
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
-            [orchard.inspect :as inspect]
-            [orchard.misc :as u]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
+   [orchard.inspect :as inspect]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl

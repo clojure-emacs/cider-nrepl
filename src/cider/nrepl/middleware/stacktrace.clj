@@ -1,18 +1,16 @@
 (ns cider.nrepl.middleware.stacktrace
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
-  (:require [cider.nrepl.middleware.pprint :as pprint]
-            [orchard.info :as info]
-            [cider.nrepl.middleware.util.cljs :as cljs]
-            [orchard.namespace :as namespace]
-            [clojure.repl :as repl]
-            [clojure.string :as str]
-            [orchard.misc :as u]
-            [orchard.java :as java]
-            [clojure.java.io :as io]
-            [clojure.set :as set]
-            [clojure.tools.namespace.find :as nsfind])
-  (:import (clojure.lang Compiler$CompilerException)))
+  (:require
+   [clojure.repl :as repl]
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [orchard.info :as info]
+   [orchard.java :as java]
+   [orchard.misc :as u]
+   [orchard.namespace :as namespace])
+  (:import
+   (clojure.lang Compiler$CompilerException)))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require

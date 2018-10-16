@@ -1,16 +1,15 @@
 (ns cider.nrepl.middleware.track-state
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.ns :as ns]
-            [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.meta :as um]
-            [orchard.misc :as u]
-            [orchard.meta :as m]
-            [orchard.namespace :as namespace]
-            [cljs-tooling.util.analysis :as cljs-ana]
-            [clojure.tools.namespace.find :as ns-find])
-  (:import (clojure.lang Namespace MultiFn)
-           java.net.SocketException))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.meta :as um]
+   [cljs-tooling.util.analysis :as cljs-ana]
+   [orchard.misc :as u]
+   [orchard.namespace :as namespace])
+  (:import
+   (clojure.lang Namespace MultiFn)
+   java.net.SocketException))
 
 (if (find-ns 'clojure.tools.nrepl)
   (do

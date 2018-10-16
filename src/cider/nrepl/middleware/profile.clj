@@ -14,7 +14,8 @@
   Based on older middleware (nrepl-profile) that's not actively
   maintained anymore."
   {:author "Edwin Watkeys"}
-  (:require [profile.core :as p]))
+  (:require
+   [profile.core :as p]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require

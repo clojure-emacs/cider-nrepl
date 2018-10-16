@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.classpath
-  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.classpath :as cp]))
+  (:require
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [orchard.classpath :as cp]))
 
 (defn classpath-reply [msg]
   {:classpath (map str (cp/classpath))})

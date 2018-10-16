@@ -4,10 +4,9 @@
   report its return value.
   Implemented as an extension of the debugger."
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.debug :as d]
-            [cider.nrepl.middleware.util.instrument :as ins]
-            [orchard.meta :as m]
-            [clojure.walk :as walk]))
+  (:require
+   [cider.nrepl.middleware.debug :as d]
+   [cider.nrepl.middleware.util.instrument :as ins]))
 
 (defn pr-very-short [val]
   (binding [*print-length* 3, *print-level* 2]

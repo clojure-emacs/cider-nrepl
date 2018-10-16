@@ -1,14 +1,16 @@
 (ns cider.nrepl.middleware.macroexpand
   "Macroexpansion middleware."
   {:author "Bozhidar Batsov"}
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.misc :as u]
-            [cljs-tooling.util.analysis :as cljs-ana]
-            [clojure.pprint :as pp]
-            [clojure.tools.reader :as reader]
-            [clojure.walk :as walk])
-  (:import [clojure.lang Var]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cljs-tooling.util.analysis :as cljs-ana]
+   [clojure.pprint :as pp]
+   [clojure.tools.reader :as reader]
+   [clojure.walk :as walk]
+   [orchard.misc :as u])
+  (:import
+   [clojure.lang Var]))
 
 ;; Common helpers
 

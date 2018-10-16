@@ -1,11 +1,12 @@
 (ns cider.nrepl.middleware.format
   "Code and EDN formatting functionality."
   (:refer-clojure :exclude [read-string])
-  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cljfmt.core :as fmt]
-            [clojure.string :as string]
-            [clojure.tools.reader.edn :as edn]
-            [clojure.tools.reader.reader-types :as readers]))
+  (:require
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cljfmt.core :as fmt]
+   [clojure.string :as string]
+   [clojure.tools.reader.edn :as edn]
+   [clojure.tools.reader.reader-types :as readers]))
 
 ;;; Code formatting
 (defn format-code-reply

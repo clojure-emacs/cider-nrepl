@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.spec
-  (:require [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [orchard.spec :as spec-utils]))
+  (:require
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [orchard.spec :as spec-utils]))
 
 ;; Replies
 

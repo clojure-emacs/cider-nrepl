@@ -1,12 +1,12 @@
 (ns cider.nrepl.middleware.ns
-  (:require [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [cider.nrepl.middleware.util.meta :as um]
-            [orchard.meta :as m]
-            [orchard.misc :as u]
-            [orchard.namespace :as ns]
-            [cljs-tooling.info :as cljs-info]
-            [cljs-tooling.util.analysis :as cljs-analysis]))
+  (:require
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.meta :as um]
+   [cljs-tooling.info :as cljs-info]
+   [cljs-tooling.util.analysis :as cljs-analysis]
+   [orchard.misc :as u]
+   [orchard.namespace :as ns]))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.

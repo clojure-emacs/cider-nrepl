@@ -4,14 +4,14 @@
   ;; `refresh-tracker` is reset with every refresh. This only has any effect
   ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
   ;; checkout dependency - tools.namespace doesn't reload source in JARs.
-  (:require [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
-            [orchard.misc :as u]
-            [clojure.main :refer [repl-caught]]
-            [clojure.tools.namespace.dir :as dir]
-            [clojure.tools.namespace.find :as find]
-            [clojure.tools.namespace.reload :as reload]
-            [clojure.tools.namespace.track :as track]))
+  (:require
+   [cider.nrepl.middleware.stacktrace :refer [analyze-causes]]
+   [clojure.main :refer [repl-caught]]
+   [clojure.tools.namespace.dir :as dir]
+   [clojure.tools.namespace.find :as find]
+   [clojure.tools.namespace.reload :as reload]
+   [clojure.tools.namespace.track :as track]
+   [orchard.misc :as u]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require

@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.trace
-  (:require [clojure.string :as s]
-            [clojure.tools.trace :as trace]
-            [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]))
+  (:require
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [clojure.tools.trace :as trace]))
 
 (defn toggle-trace-var
   [{:keys [ns sym transport] :as msg}]

@@ -1,16 +1,15 @@
 (ns cider.nrepl.middleware.test
   "Test execution, reporting, and inspection"
   {:author "Jeff Valk"}
-  (:require [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.middleware.stacktrace :as st]
-            [cider.nrepl.middleware.test.extensions :as extensions]
-            [cider.nrepl.middleware.util.coerce :as util.coerce]
-            [orchard.misc :as u]
-            [orchard.namespace :as ns]
-            [orchard.query :as query]
-            [clojure.pprint :as pp]
-            [clojure.test :as test]
-            [clojure.walk :as walk]))
+  (:require
+   [cider.nrepl.middleware.test.extensions :as extensions]
+   [cider.nrepl.middleware.util.coerce :as util.coerce]
+   [clojure.pprint :as pp]
+   [clojure.test :as test]
+   [clojure.walk :as walk]
+   [orchard.misc :as u]
+   [orchard.query :as query]
+   [cider.nrepl.middleware.stacktrace :as st]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require
