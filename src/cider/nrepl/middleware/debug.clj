@@ -1,18 +1,18 @@
 (ns cider.nrepl.middleware.debug
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
-  (:require [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
-            [cider.nrepl.middleware.pprint :as pprint]
-            [cider.nrepl.middleware.stacktrace :as stacktrace]
-            [cider.nrepl.middleware.util.cljs :as cljs]
-            [cider.nrepl.middleware.util.instrument :as ins]
-            [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
-            [clojure.java.io :as io]
-            [orchard.info :as info]
-            [orchard.inspect :as inspect]
-            [orchard.meta :as m]
-            [orchard.misc :as misc])
-  (:import [clojure.lang Compiler$LocalBinding]))
+  (:require
+   [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+   [cider.nrepl.middleware.stacktrace :as stacktrace]
+   [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.instrument :as ins]
+   [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
+   [orchard.info :as info]
+   [orchard.inspect :as inspect]
+   [orchard.meta :as m]
+   [orchard.misc :as misc])
+  (:import
+   [clojure.lang Compiler$LocalBinding]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
 ;; The assumption is that if someone is using old lein repl or boot repl
