@@ -1,16 +1,17 @@
 (ns cider.nrepl.middleware.debug
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
-  (:require [orchard.info :as info]
-            [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+  (:require [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
             [cider.nrepl.middleware.pprint :as pprint]
             [cider.nrepl.middleware.stacktrace :as stacktrace]
             [cider.nrepl.middleware.util.cljs :as cljs]
-            [orchard.inspect :as inspect]
             [cider.nrepl.middleware.util.instrument :as ins]
-            [orchard.misc :as misc]
+            [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
+            [clojure.java.io :as io]
+            [orchard.info :as info]
+            [orchard.inspect :as inspect]
             [orchard.meta :as m]
-            [clojure.java.io :as io])
+            [orchard.misc :as misc])
   (:import [clojure.lang Compiler$LocalBinding]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
@@ -429,8 +430,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       (instrument-var-for-step-in v)
       true
       (catch Exception e
-        ;; TODO - how do we inform the user that we failed?
-        (println (.getMessage e))
+        (notify-client @debugger-message (.getMessage e) :error)
         false))))
 
 (defn looks-step-innable?
@@ -581,9 +581,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         (eval form1))
       (catch java.lang.RuntimeException e
         (if (re-matches #".*Method code too large!.*" (.getMessage e))
-          (do (println "WARNING: Method code too large!"
-                       "Locals and evaluation in local context won't be available.")
-              ;; Re-try without locals
+          (do (notify-client (str "Method code too large!\n"
+                                  "Locals and evaluation in local context won't be available.")
+                             :warning)
+              ;; re-try without locals
               (binding [*tmp-forms* (atom {})
                         *do-locals* false]
                 (eval form1)))
