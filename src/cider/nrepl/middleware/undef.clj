@@ -5,7 +5,7 @@
    [orchard.misc :as u]))
 
 (defn undef
-  [{:keys [ns symbol] :as msg}]
+  [{:keys [ns symbol]}]
   (let [[ns symbol] (map u/as-sym [ns symbol])]
     (ns-unalias ns symbol)
     (ns-unmap ns symbol)
