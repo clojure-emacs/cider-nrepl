@@ -97,6 +97,7 @@
 
 (def-debug-op :next)
 (def-debug-op :continue)
+(def-debug-op :Continue)
 (def-debug-op :in)
 
 (defmethod debugger-send :out [_ & [force?]]
@@ -214,6 +215,28 @@
     (<-- {:debug-value "4" :coor [3 2 1]})
     (--> :continue)
     (<-- {:value "8"})
+    (<-- {:status ["done"]})))
+
+(deftest continue-non-stop
+
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
+  (--> :eval "(do (defn foo [a] #dbg (* a 2))
+                  (defn boo [] (dotimes [n 5] (foo n)) :fin))")
+  (<-- {:value "#'user.test.debug/boo"})
+  (<-- {:status ["done"]})
+
+  (testing "continue-non-stop"
+    (--> :eval "(boo)")
+    (<-- {:debug-value "0" :coor [1 3 1]}) ; a in foo
+    (--> :continue)
+    (<-- {:debug-value "1" :coor [1 3 1]}) ; a in foo
+    (--> :continue)
+    (<-- {:debug-value "2" :coor [1 3 1]}) ; a in foo
+    (--> :Continue)
+    (<-- {:value ":fin"})
     (<-- {:status ["done"]})))
 
 (deftest call-instrumented-fn-when-stepping-out-test
@@ -566,6 +589,6 @@
     (.startsWith file "jar:file:")
     (.endsWith file "/nrepl/server.clj"))
 
-  (--> :continue)
+  (--> :Continue)
   (<-- {:value "{:transport 23}"})
   (<-- {:status ["done"]}))
