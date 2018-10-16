@@ -4,7 +4,7 @@
    [clojure.tools.trace :as trace]))
 
 (defn toggle-trace-var
-  [{:keys [ns sym transport] :as msg}]
+  [{:keys [ns sym]}]
   (if-let [v (ns-resolve (symbol ns) (symbol sym))]
     (if (trace/traceable? v)
       (if (trace/traced? v)
@@ -18,7 +18,7 @@
 (def traced-ns (atom #{}))
 
 (defn toggle-trace-ns
-  [{:keys [ns transport] :as msg}]
+  [{:keys [ns]}]
   (if-let [ns (find-ns (symbol ns))]
     (if (contains? @traced-ns ns)
       (do (trace/untrace-ns ns)
