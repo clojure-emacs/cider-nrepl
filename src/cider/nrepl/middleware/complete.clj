@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.complete
-  (:require [clojure.string :as s]
-            [cider.nrepl.middleware.util.cljs :as cljs]
+  (:require [cider.nrepl.middleware.util.cljs :as cljs]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [orchard.misc :as u]
             [compliment.core :as jvm-complete]
