@@ -6,12 +6,29 @@
    [cljfmt.core :as fmt]
    [clojure.string :as str]
    [clojure.tools.reader.edn :as edn]
-   [clojure.tools.reader.reader-types :as readers]))
+   [clojure.tools.reader.reader-types :as readers]
+   [clojure.walk :as walk]))
 
 ;;; Code formatting
+(defn- keyword->symbol [kw]
+  (.sym ^clojure.lang.Keyword kw))
+
+(defn- generate-user-indents [indents]
+  (reduce-kv
+   (fn [acc kw rule]
+     (assoc acc
+            (keyword->symbol kw)
+            (walk/postwalk #(cond-> % (string? %) keyword) rule)))
+   fmt/default-indents
+   indents))
+
 (defn format-code-reply
-  [{:keys [code] :as msg}]
-  {:formatted-code (fmt/reformat-string code)})
+  [{:keys [code options] :as msg}]
+  (let [opts (some-> options
+                     (select-keys [:indents :alias-map])
+                     (update :indents generate-user-indents)
+                     (update :alias-map #(reduce-kv (fn [m k v] (assoc m (name k) v)) {} %)))]
+    {:formatted-code (fmt/reformat-string code opts)}))
 
 ;;; EDN formatting
 (defn- read-edn
