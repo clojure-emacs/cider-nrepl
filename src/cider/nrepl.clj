@@ -226,6 +226,7 @@
    :handles {"format-code"
              {:doc "Reformats the given Clojure code, returning the result as a string."
               :requires {"code" "The code to format."}
+              :optional {"options" "Configuration map for cljfmt."}
               :returns {"formatted-code" "The formatted code."}}
              "format-edn"
              {:doc "Reformats the given EDN data, returning the result as a string."
