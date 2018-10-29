@@ -409,3 +409,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [cljfmt]: https://github.com/weavejester/cljfmt
 [vim-replant]: https://github.com/SevereOverfl0w/vim-replant
 [vim-fireplace]: https://github.com/tpope/vim-fireplace
+[mranderson]: https://github.com/benedekfazekas/mranderson
