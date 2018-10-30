@@ -333,7 +333,11 @@
                :return {"status" "done" "path" "The path to the file containing ns."}}
               "ns-load-all"
               {:doc "Loads all project namespaces."
-               :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}}}))
+               :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
+              "ns-aliases"
+              {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
+               :requires {"ns" "The namespace to use."}
+               :return {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}}}))
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   (cljs/expects-piggieback

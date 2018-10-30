@@ -1,4 +1,5 @@
 (ns cider.nrepl.middleware.ns
+  (:refer-clojure :exclude [ns-aliases])
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
@@ -96,6 +97,26 @@
   [msg]
   {:loaded-ns (ns/load-project-namespaces)})
 
+(defn- ns-aliases-clj [ns]
+  (->> (symbol ns)
+       clojure.core/ns-aliases
+       (u/update-vals ns-name)
+       u/transform-value))
+
+(defn- ns-aliases-cljs [env ns]
+  (->> (cljs-analysis/ns-aliases env ns)
+       (remove (fn [[k v]] (= k v)))
+       (into {})
+       u/transform-value))
+
+(defn ns-aliases [{:keys [ns] :as msg}]
+  (if-let [cljs-env (cljs/grab-cljs-env msg)]
+    (ns-aliases-cljs cljs-env ns)
+    (ns-aliases-clj ns)))
+
+(defn- ns-aliases-reply [msg]
+  {:ns-aliases (ns-aliases msg)})
+
 (defn handle-ns [handler msg]
   (with-safe-transport handler msg
     "ns-list" ns-list-reply
@@ -103,4 +124,5 @@
     "ns-vars" ns-vars-reply
     "ns-vars-with-meta" ns-vars-with-meta-reply
     "ns-path" ns-path-reply
-    "ns-load-all" ns-load-all-reply))
+    "ns-load-all" ns-load-all-reply
+    "ns-aliases" ns-aliases-reply))
