@@ -81,6 +81,12 @@
   (is (= (count (ns-list-vars-by-name 'ns-list-vars-by-name-test)) 1))
   (is (not (seq (ns-list-vars-by-name 'all-your-base-are-belong-to-us)))))
 
+(deftest ns-aliases-integration-test
+  (let [aliases (:ns-aliases (session/message {:op "ns-aliases"
+                                               :ns "cider.nrepl.middleware.ns-test"}))]
+    (is (map? aliases))
+    (is (= (:cider-ns aliases) "cider.nrepl.middleware.ns"))))
+
 (deftest error-handling-test
   (testing "ns-list op error handling"
     (with-redefs [cider-ns/ns-list (fn [& _] (throw (Exception. "ns-list error")))]
@@ -115,4 +121,12 @@
         (is (.startsWith (:err response) "java.lang.Exception: ns-path error"))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-path-error" "done"}))
+        (is (:pp-stacktrace response)))))
+
+  (testing "ns-aliases op error handling"
+    (with-redefs [cider-ns/ns-aliases (fn [& _] (throw (Exception. "ns-aliases error")))]
+      (let [response (session/message {:op "ns-aliases" :name "testing-function"})]
+        (is (.startsWith (:err response) "java.lang.Exception: ns-aliases error"))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (= (:status response) #{"ns-aliases-error" "done"}))
         (is (:pp-stacktrace response))))))
