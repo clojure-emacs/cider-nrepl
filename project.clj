@@ -11,7 +11,7 @@
                  ^:source-dep [cider/orchard "0.3.3"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
-                 ^:source-dep [fipp "0.6.13"]
+                 ^:source-dep [fipp "0.6.14"]
                  ^:source-dep [compliment "0.3.7-SNAPSHOT"]
                  ^:source-dep [cljs-tooling "0.3.0"]
                  ^:source-dep [cljfmt "0.6.1" :exclusions [org.clojure/clojurescript]]
