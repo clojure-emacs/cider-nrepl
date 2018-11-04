@@ -1,7 +1,7 @@
 .PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean
 
 VERSION ?= 1.9
-export CLOVERAGE_VERSION = 1.0.11-SNAPSHOT
+export CLOVERAGE_VERSION = 1.0.13
 
 # The test-cljs target needs to be modified if working with JDK9
 JAVA_VERSION = $(shell lein with-profile +sysutils \
