@@ -13,11 +13,11 @@
   (+ start (long (rand (- end start)))))
 
 (s/fdef ranged-rand
-        :args (s/and (s/cat :start int? :end int?)
-                     #(< (:start %) (:end %)))
-        :ret int?
-        :fn (s/and #(>= (:ret %) (-> % :args :start))
-                   #(< (:ret %) (-> % :args :end))))
+  :args (s/and (s/cat :start int? :end int?)
+               #(< (:start %) (:end %)))
+  :ret int?
+  :fn (s/and #(>= (:ret %) (-> % :args :start))
+             #(< (:ret %) (-> % :args :end))))
 
 (use-fixtures :each session/session-fixture)
 
