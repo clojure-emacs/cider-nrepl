@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.util.instrument-test
+(ns ^:debugger cider.nrepl.middleware.util.instrument-test
   (:require
    [cider.nrepl.middleware.util.instrument :as t]
    [clojure.set :as set]
@@ -70,11 +70,13 @@
                                  (if (seq x)
                                    (recur (rest x))
                                    x)))
-         '#{[(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]
-            [x [2 2 1 1]]
-            [x [2 1 1]]
-            [x [2 3]]
-            [(seq (bp x {:coor [2 1 1]} x)) [2 1]]})))
+         '#{[x [2 2 1 1]]
+            [(fn* ([x] (if (bp (seq (bp x {:coor [2 1 1]} x)) {:coor [2 1]} (seq x))
+                         (recur (bp (rest (bp x {:coor [2 2 1 1]} x)) {:coor [2 2 1]} (rest x)))
+                         (bp x {:coor [2 3]} x))))
+             []]
+            [x [2 3]] [(seq (bp x {:coor [2 1 1]} x)) [2 1]] [x [2 1 1]]
+            [(rest (bp x {:coor [2 2 1 1]} x)) [2 2 1]]})))
 
 ;; Factor this into a separate variable, otherwise Eastwood fails with
 ;; "method code too large".

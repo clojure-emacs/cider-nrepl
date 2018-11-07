@@ -155,6 +155,29 @@
     (<-- {:value "2"})                  ; (let ...)
     (<-- {:status ["done"]})))
 
+(deftest debug-recur-test
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
+  (--> :eval
+       "#dbg
+          (defn foo [a]
+           (if (pos? a)
+             (recur (dec a))
+             :done))")
+  (<-- {:value "#'user.test.debug/foo"})
+  (<-- {:status ["done"]})
+
+  (testing "recur on fn"
+    (--> :eval "(foo 1)")
+    (<-- {:debug-value "1" :coor [3 1 1]}) ; a
+    (--> :continue)
+    (<-- {:debug-value "0" :coor [3 1 1]}) ; a
+    (--> :continue)
+    (<-- {:value ":done"})
+    (<-- {:status ["done"]})))
+
 (deftest debug-ops-test
   (--> :eval "(ns user.test.debug)")
   (<-- {:ns "user.test.debug"})
