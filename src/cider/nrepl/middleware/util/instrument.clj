@@ -161,12 +161,13 @@
        :else form))))
 
 (defn- contains-recur?
-  "Return true if form is not a `loop` and a `recur` is found in it."
+  "Return true if form is not a `loop` or a `fn` and a `recur` is found in it."
   [form]
   (if (seq? form)
     (case (first form)
       recur true
       loop* false
+      fn*   false
       (some contains-recur? (rest form)))))
 
 (defn- dont-break?
@@ -302,7 +303,7 @@
                         (vary-meta f1 assoc :cider/instrumented (name (:name (meta br))))
                         f1))
                     (m/strip-meta f keys))]
-          ;; also strip meta of the meta
+         ;; also strip meta of the meta
          (with-meta f (strip-instrumentation-meta (meta f))))
        f))
    form))
