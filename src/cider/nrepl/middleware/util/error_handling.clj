@@ -37,7 +37,8 @@
   used as the value for the :status key."
   [ex & statuses]
   (merge {:ex (str (class ex))
-          :err (with-out-str (@print-cause-trace ex))}
+          :err (with-out-str (@print-cause-trace ex))
+          :root-ex (-> (#'clojure.main/root-cause ex) class str)}
          (when statuses {:status (set statuses)})))
 
 (defn pp-stacktrace

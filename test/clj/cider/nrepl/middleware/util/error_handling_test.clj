@@ -58,3 +58,11 @@
       (is (deep-bencodable? [:a :vector 1 {:a :map} 2 '(:a {:bad-map *ns*} :list) 3])
           "Should pass since *ns* is inside a quoted list and doesn't get evaluated")
       (is (thrown? IllegalArgumentException (deep-bencodable? [:a :vector 1 {:a :map} 2 [:sub :vec :bad *ns*] '(:a :list) 3]))))))
+
+(deftest error-handler-root-ex
+  (let [e (Exception. "testing" (Throwable. "root-cause"))
+        e2 (Exception. "testing2")]
+    (is (= "class java.lang.Throwable"
+           (:root-ex (err/error-handler :done {:id 1} e))))
+    (is (= "class java.lang.Exception"
+           (:root-ex (err/error-handler :done {:id 2} e2))))))
