@@ -12,7 +12,8 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
-   [java.io PrintWriter Writer PrintStream OutputStream]))
+   [java.io PrintWriter Writer PrintStream OutputStream]
+   [java.util TimerTask Timer]))
 
 (if (find-ns 'clojure.tools.nrepl)
   (require
@@ -73,26 +74,31 @@
   bindings in the sessions of messages, in addition to the server's
   usual PrintWriter (saved in `original-output`).
 
-  `type` is either :out or :err."
-  [type]
-  (let [printer (case type
-                  :out 'clojure.core/*out*
-                  :err 'clojure.core/*err*)]
-    (PrintStream. (proxy [OutputStream] []
-                    (close [] (.flush ^OutputStream this))
-                    (write
-                      ([int-or-bytes]
-                       (.write @(resolve printer)
-                               (if (instance? Integer int-or-bytes)
-                                 int-or-bytes
-                                 (String. int-or-bytes))))
-                      ([bytes ^Integer off ^Integer len]
-                       (let [byte-range (byte-array
-                                         (take len (drop off bytes)))]
-                         (.write @(resolve printer) (String. byte-range)))))
-                    (flush []
-                      (.flush @(resolve printer))))
-                  true)))
+  `printer` is the printer var, either #'clojure.core/*out* or
+  #'clojure.core/*err*."
+  [printer]
+  (let [delay 100
+        print-timer (Timer.)
+        print-flusher (proxy [TimerTask] []
+                        (run []
+                          (.flush ^PrintWriter @printer)))]
+    (.scheduleAtFixedRate print-timer print-flusher delay delay)
+    (PrintStream.
+     (proxy [OutputStream] []
+       (close []
+         (.cancel print-flusher)
+         (.cancel print-timer)
+         (.flush ^OutputStream this))
+       (write
+         ([int-or-bytes]
+          (if (instance? Integer int-or-bytes)
+            (.write ^PrintWriter @printer ^Integer int-or-bytes)
+            (.write ^PrintWriter @printer (String. ^"[B" int-or-bytes))))
+         ([^"[B" bytes ^Integer off ^Integer len]
+          (let [byte-range (byte-array (take len (drop off bytes)))]
+            (.write ^PrintWriter @printer (String. byte-range)))))
+       (flush []
+         (.flush ^PrintWriter @printer))))))
 
 ;;; Known eval sessions
 (def tracked-sessions-map
@@ -105,8 +111,8 @@
         err-writer (forking-printer (vals new-state) :err)]
     (alter-var-root #'*out* (constantly out-writer))
     (alter-var-root #'*err* (constantly err-writer))
-    (System/setOut (print-stream :out))
-    (System/setErr (print-stream :err))))
+    (System/setOut (print-stream #'*out*))
+    (System/setErr (print-stream #'*err*))))
 
 (add-watch tracked-sessions-map :update-out tracked-sessions-map-watch)
 
