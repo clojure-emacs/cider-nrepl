@@ -6,6 +6,7 @@
   (:require
    [clojure.data :as data]
    [clojure.pprint :as pp]
+   [lambdaisland.deep-diff :as dd]
    [clojure.test :as test :refer [assert-expr]]))
 
 ;; From pjstadig/humane-test-output
@@ -20,7 +21,7 @@
               {:type :pass}
               {:type :fail
                :diffs (->> (remove #(= expected# %) more#)
-                           (map #(vector % (data/diff expected# %))))})
+                           (map #(vector % (dd/diff expected# %))))})
             (merge {:message ~msg
                     :expected expected#
                     :actual more#})
@@ -40,8 +41,7 @@
 (defn diffs-result
   "Convert diffs data to form appropriate for transport."
   [diffs]
-  (let [pprint-str #(with-out-str (pp/pprint %))]
-    (map (fn [[a [removed added]]]
-           [(pprint-str a)
-            [(pprint-str removed) (pprint-str added)]])
+  (let [dd-pprint-str #(with-out-str (dd/pretty-print %))]
+    (map (fn [[a diff]]
+           [(dd-pprint-str a) (dd-pprint-str diff)])
          diffs)))
