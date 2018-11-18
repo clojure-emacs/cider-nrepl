@@ -73,6 +73,7 @@
                   f))
                f)))))
 
+
 (defn info
   [{:keys [ns symbol class member] :as msg}]
   (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
@@ -86,7 +87,28 @@
             see-also (clj-info/see-also (:ns var-info) (:name var-info))]
         (if (seq see-also)
           (merge {:see-also see-also} var-info)
-          var-info)))))
+          (if-let [p (:protocol var-info)]
+            (let [proto (deref p)
+                  x (filter #(extends? proto
+                                       %)
+                            (filter #(class? %)
+                                    (map val (mapcat ns-imports (all-ns)))))
+                  xs (map (fn [x]
+                            (let [xs (str/split (pr-str x)
+                                                #"\.")]
+                              (str (str/replace (str/join  "." (drop-last xs))
+                                                #"\_"
+                                                "-")
+                                   "/map->"
+                                   (last xs))))
+                          x)]
+              {:candidates (into {}
+                                 (map (fn [s]
+                                        [s (clj-info/info ns
+                                                          (u/as-sym s))])
+                                      xs))})
+            var-info))))))
+
 
 (defn info-reply
   [msg]
