@@ -81,7 +81,7 @@
         print-timer (Timer.)
         print-flusher (proxy [TimerTask] []
                         (run []
-                          (.flush ^PrintWriter @printer)))]
+                          (.flush ^Writer @printer)))]
     (.scheduleAtFixedRate print-timer print-flusher delay delay)
     (PrintStream.
      (proxy [OutputStream] []
@@ -92,13 +92,13 @@
        (write
          ([int-or-bytes]
           (if (instance? Integer int-or-bytes)
-            (.write ^PrintWriter @printer ^Integer int-or-bytes)
-            (.write ^PrintWriter @printer (String. ^"[B" int-or-bytes))))
+            (.write ^Writer @printer ^Integer int-or-bytes)
+            (.write ^Writer @printer (String. ^"[B" int-or-bytes))))
          ([^"[B" bytes ^Integer off ^Integer len]
           (let [byte-range (byte-array (take len (drop off bytes)))]
-            (.write ^PrintWriter @printer (String. byte-range)))))
+            (.write ^Writer @printer (String. byte-range)))))
        (flush []
-         (.flush ^PrintWriter @printer))))))
+         (.flush ^Writer @printer))))))
 
 ;;; Known eval sessions
 (def tracked-sessions-map
