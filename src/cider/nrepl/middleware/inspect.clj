@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.inspect
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
+   [cider.nrepl.middleware.util.error-handling :refer [base-error-response
+                                                       with-safe-transport]]
    [orchard.inspect :as inspect]))
 
 ;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
@@ -41,14 +42,24 @@
        (response-for msg :value (:rendered inspector))))))
 
 (defn inspector-transport
-  [{:keys [^Transport transport] :as msg}]
+  [{:keys [^Transport transport, session] :as msg}]
   (reify Transport
     (recv [this] (.recv transport))
     (recv [this timeout] (.recv transport timeout))
     (send [this response]
-      (if (contains? response :value)
-        (inspect-reply msg response)
-        (.send transport response))
+      (cond (contains? response :value)
+            (inspect-reply msg response)
+
+            ;; If the eval errored, propagate the exception as error in the
+            ;; inspector middleware, so that the client CIDER code properly
+            ;; renders it instead of silently ignoring it.
+            (contains? (:status response) :eval-error)
+            (let [e (or (@session #'*e)
+                        (Exception. (or (:ex response) "")))
+                  resp (base-error-response msg e :inspect-eval-error :done)]
+              (.send transport resp))
+
+            :else (.send transport response))
       this)))
 
 (defn eval-msg
@@ -61,48 +72,39 @@
   [handler msg]
   (handler (eval-msg msg)))
 
-(defn- success [{:keys [transport] :as msg} inspector]
-  (transport/send transport (response-for msg :value (:rendered inspector) :status :done)))
-
-(defn- failure [{:keys [transport] :as msg} err err-kw]
-  (transport/send transport (base-error-response msg err err-kw :done)))
+(defn- inspector-response [msg inspector]
+  (response-for msg :value (:rendered inspector) :status :done))
 
 (defn pop-reply [msg]
-  (try (success msg (swap-inspector! msg inspect/up))
-       (catch Exception e (failure msg e :inspect-pop-error))))
+  (inspector-response msg (swap-inspector! msg inspect/up)))
 
 (defn push-reply [msg]
-  (try (success msg (swap-inspector! msg inspect/down (:idx msg)))
-       (catch Exception e (failure msg e :inspect-push-error))))
+  (inspector-response msg (swap-inspector! msg inspect/down (:idx msg))))
 
 (defn refresh-reply [msg]
-  (try (success msg (swap-inspector! msg #(or % (inspect/fresh))))
-       (catch Exception e (failure msg e :inspect-refresh-error))))
+  (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
 
 (defn get-path-reply [{:keys [session] :as msg}]
-  (try (success msg (:path (get session #'*inspector*)))
-       (catch Exception e (failure msg e :inspect-get-path-error))))
+  (:path (get session #'*inspector*)))
 
 (defn next-page-reply [msg]
-  (try (success msg (swap-inspector! msg inspect/next-page))
-       (catch Exception e (failure msg e :inspect-next-page-error))))
+  (inspector-response msg (swap-inspector! msg inspect/next-page)))
 
 (defn prev-page-reply [msg]
-  (try (success msg (swap-inspector! msg inspect/prev-page))
-       (catch Exception e (failure msg e :inspect-prev-page-error))))
+  (inspector-response msg (swap-inspector! msg inspect/prev-page)))
 
 (defn set-page-size-reply [msg]
-  (try (success msg (swap-inspector! msg inspect/set-page-size (:page-size msg)))
-       (catch Exception e (failure msg e :inspect-set-page-size-error))))
+  (inspector-response msg (swap-inspector! msg inspect/set-page-size (:page-size msg))))
 
 (defn handle-inspect [handler msg]
-  (case (:op msg)
-    "eval" (eval-reply handler msg)
-    "inspect-pop" (pop-reply msg)
-    "inspect-push" (push-reply msg)
-    "inspect-refresh" (refresh-reply msg)
-    "inspect-get-path" (get-path-reply msg)
-    "inspect-next-page" (next-page-reply msg)
-    "inspect-prev-page" (prev-page-reply msg)
-    "inspect-set-page-size" (set-page-size-reply msg)
-    (handler msg)))
+  (if (= (:op msg) "eval")
+    (eval-reply handler msg)
+
+    (with-safe-transport handler msg
+      "inspect-pop" pop-reply
+      "inspect-push" push-reply
+      "inspect-refresh" refresh-reply
+      "inspect-get-path" get-path-reply
+      "inspect-next-page" next-page-reply
+      "inspect-prev-page" prev-page-reply
+      "inspect-set-page-size" set-page-size-reply)))

@@ -13,6 +13,10 @@
 * [#550](https://github.com/clojure-emacs/cider-nrepl/pull/550): Always return test documentation messages as strings.
 * [#563](https://github.com/clojure-emacs/cider-nrepl/pull/563): Add :root-ex key to error summary that contains the classname of the root cause.
 
+### Bugs fixed
+
+* [#573](https://github.com/clojure-emacs/cider-nrepl/pull/573): Fix inspector silently doing nothing if eval errored
+
 ## 0.18.0 (2018-08-06)
 
 ### New features
