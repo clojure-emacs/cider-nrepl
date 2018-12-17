@@ -17,7 +17,7 @@ If you're trying to use cider-nrepl for some other purpose, the
 sections below outline how to include it in a project.
 
 People who are new to nREPL might benefit from reading [its
-manual](https://nrepl.xyz).
+manual](https://nrepl.org).
 
 ## Design
 
