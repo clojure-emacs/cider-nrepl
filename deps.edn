@@ -3,7 +3,7 @@
         cider/orchard {:mvn/version "0.3.1"}
         thunknyc/profile {:mvn/version "0.5.2"}
         mvxcvi/puget {:mvn/version "1.0.2"}
-        fipp {:mvn/version "0.6.12"}
+        fipp {:mvn/version "0.6.14"}
         compliment {:mvn/version "0.3.6"}
         cljs-tooling {:mvn/version "0.3.0"}
         cljfmt {:mvn/version "0.5.7" :exclusions [org.clojure/clojurescript]}}
