@@ -109,5 +109,5 @@
                                          try-if-let [[:block 1]]
                                          if-class [[:block 1]]}}}
 
-             :eastwood {:plugins [[jonase/eastwood "0.2.5"]]
-                        :eastwood {:config-files ["eastwood.clj"]}}})
+             :eastwood {:plugins [[jonase/eastwood "0.3.4"]]
+                        :eastwood {:config-files ["eastwood.clj"] :exclude-namespaces [cider-nrepl.plugin cider.tasks cider.nrepl.test-session]}}})
