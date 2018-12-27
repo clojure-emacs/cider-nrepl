@@ -30,9 +30,14 @@
   :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
 
   :test-selectors {:default (fn [test-meta]
-                              (if-let [min-version (:min-clj-version test-meta)]
-                                (>= (compare (clojure-version) min-version) 0)
-                                true))
+                              (let [parse-version (fn [v] (mapv #(Integer/parseInt (re-find #"\d+" %)) (clojure.string/split v #"\.")))
+                                    clojure-version (parse-version (clojure-version))]
+                                (and (if-let [min-version (:min-clj-version test-meta)]
+                                       (>= (compare clojure-version (parse-version min-version)) 0)
+                                       true)
+                                     (if-let [max-version (:max-clj-version test-meta)]
+                                       (>= (compare (parse-version max-version) clojure-version) 0)
+                                       true))))
                    :debugger :debugger}
 
   :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]}
