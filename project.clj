@@ -22,7 +22,7 @@
                  ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
                  ^:source-dep [org.clojure/tools.trace "0.7.10"]
                  ^:source-dep [org.clojure/tools.reader "1.2.2"]
-                 ^:source-dep [lambdaisland/deep-diff "0.0-15"]]
+                 ^:source-dep [lambdaisland/deep-diff "0.0-25"]]
   :plugins [[thomasa/mranderson "0.4.9"]]
   :exclusions [org.clojure/clojure]
 

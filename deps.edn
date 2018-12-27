@@ -6,7 +6,7 @@
         fipp {:mvn/version "0.6.12"}
         compliment {:mvn/version "0.3.6"}
         cljs-tooling {:mvn/version "0.3.0"}
-        lambdaisland/deep-diff {:mvn/version "0.0-15"}
+        lambdaisland/deep-diff {:mvn/version "0.0-25"}
         cljfmt {:mvn/version "0.5.7" :exclusions [org.clojure/clojurescript]}}
  :aliases
  {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}}

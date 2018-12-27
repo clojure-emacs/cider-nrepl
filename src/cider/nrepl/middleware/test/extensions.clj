@@ -4,29 +4,35 @@
   These are kept in a separate namespace because they are, by definition,
   opinionated."
   (:require
-   [clojure.data :as data]
-   [clojure.pprint :as pp]
-   [lambdaisland.deep-diff :as dd]
+   [cider.nrepl.middleware.test.diff :as diff]
    [clojure.test :as test :refer [assert-expr]]))
+
+(if (find-ns 'clojure.tools.nrepl)
+  (require
+   '[clojure.tools.nrepl.middleware.interruptible-eval :as ie])
+  (require
+   '[nrepl.middleware.interruptible-eval :as ie]))
 
 ;; From pjstadig/humane-test-output
 ;; https://github.com/pjstadig/humane-test-output
 (defn =-body
   [msg expected more]
   (if (seq more)
-    `(let [more# (list ~@more)
-           expected# ~expected
-           result# (apply = expected# more#)]
-       (->> (if result#
-              {:type :pass}
-              {:type :fail
-               :diffs (->> (remove #(= expected# %) more#)
-                           (map #(vector % (dd/diff expected# %))))})
-            (merge {:message ~msg
-                    :expected expected#
-                    :actual more#})
-            test/do-report)
-       result#)
+    (do
+      `(let [more#     (list ~@more)
+             expected# ~expected
+             result#   (apply = expected# more#)]
+         (->> (if result#
+                {:type :pass}
+                {:type  :fail
+                 :diffs (->> more#
+                             (remove #(= expected# %))
+                             (map #(vector % (diff/diff ie/*msg* expected# %))))})
+              (merge {:message  ~msg
+                      :expected expected#
+                      :actual   more#})
+              test/do-report)
+         result#))
     `(throw (Exception. "= expects more than one argument"))))
 
 (defmethod assert-expr '= [msg [_ expected & more]]
@@ -41,7 +47,6 @@
 (defn diffs-result
   "Convert diffs data to form appropriate for transport."
   [diffs]
-  (let [dd-pprint-str #(with-out-str (dd/pretty-print %))]
-    (map (fn [[a diff]]
-           [(dd-pprint-str a) (dd-pprint-str diff)])
-         diffs)))
+  (map (fn [[actual diff]]
+         (diff/pprint ie/*msg* actual diff))
+       diffs))
