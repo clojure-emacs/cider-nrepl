@@ -1,6 +1,6 @@
 .PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean check_node
 
-VERSION ?= 1.9
+CLOJURE_VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.13
 
 # The test-cljs target needs to be modified if working with JDK9
@@ -14,23 +14,17 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 source-deps: .source-deps
 
 test-clj: .source-deps smoketest
-	lein with-profile +$(VERSION),+plugin.mranderson/config,+test-clj test
+	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-clj test
 
-test-cljs: .source-deps
-	if [ "$(JAVA_VERSION)" = "9" ]; then \
-            lein with-profile +$(VERSION),+plugin.mranderson/config,+test-cljs \
-                 update-in :jvm-opts concat '["--add-modules" "java.xml.bind"]' \
-                 -- test; \
-        else \
-            lein with-profile +$(VERSION),+plugin.mranderson/config,+test-cljs test; \
-	fi
+test-cljs: .source-deps check_node
+	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-cljs test
 
 eastwood:
-	lein with-profile +$(VERSION),+test-clj,+test-cljs,+eastwood eastwood \
+	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+eastwood eastwood \
 	     "{:namespaces [:source-paths] :exclude-namespaces [cider-nrepl.plugin]}"
 
 cljfmt:
-	lein with-profile +$(VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check
+	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check
 
 
 # Cloverage can't handle some of the code in this project.  For now we
@@ -39,18 +33,18 @@ cljfmt:
 # exact. See issue #457 for details.
 
 cloverage:
-	lein with-profile +$(VERSION),+test-clj,+cloverage cloverage --codecov \
+	lein with-profile +$(CLOJURE_VERSION),+test-clj,+cloverage cloverage --codecov \
 	     -e ".*java.parser" \
 	     -e "cider-nrepl.plugin" \
 	     -e ".*util.instrument" \
 	     -t "^((?!debug-integration-test).)*$$"
 
 install: .source-deps
-	lein with-profile +$(VERSION),+plugin.mranderson/config install
+	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config install
 
 smoketest: install
 	cd test/smoketest && \
-        lein with-profile +$(VERSION) uberjar && \
+        lein with-profile +$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
 
 check_node:
@@ -63,14 +57,14 @@ check_node:
 BUMP ?= patch
 
 release:
-	lein with-profile +$(VERSION) release $(BUMP)
+	lein with-profile +$(CLOJURE_VERSION) release $(BUMP)
 
 # Deploying requires the caller to set environment variables as
 # specified in project.clj to provide a login and password to the
 # artifact repository.
 
 deploy: .source-deps
-	lein with-profile +$(VERSION),+plugin.mranderson/config deploy clojars
+	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 clean:
 	lein clean
