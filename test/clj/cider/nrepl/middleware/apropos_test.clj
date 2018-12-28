@@ -5,9 +5,10 @@
    [clojure.string :as str]
    [clojure.test :refer :all]))
 
-(def ^:private ^{:doc "Can't. See. Me"} private-var [:a :b :c])
+(def ^:private ^{:doc "Can't. See. Me"} my-private-var [:a :b :c])
 
 (use-fixtures :each session/session-fixture)
+
 (deftest integration-test
   (testing "Apropos op, typical case"
     (let [response (session/message {:op "apropos" :query "handle-apropos"})
@@ -18,22 +19,22 @@
 
   (testing "Apropos op, but specialized cases (invoked with prefix argument)"
     (testing "Fails to get a private var because private? unset"
-      (let [response (session/message {:op "apropos" :query "private-var"})
+      (let [response (session/message {:op "apropos" :query "my-private-var"})
             match    (get-in response [:apropos-matches 0])]
         (is (= (:status response) #{"done"}))
         (is (empty? match))))
 
     (testing "Gets a private var using a case insensitive query"
-      (let [response (session/message {:op "apropos" :query "PrIvAtE-VaR" :privates? "t"})
+      (let [response (session/message {:op "apropos" :query "My-Private-Var" :privates? "t"})
             match    (get-in response [:apropos-matches 0])]
         (is (= (:status response) #{"done"}))
         (is (= (:type match) "variable"))
-        (is (= (:name match) "cider.nrepl.middleware.apropos-test/private-var"))
+        (is (= (:name match) "cider.nrepl.middleware.apropos-test/my-private-var"))
         (is (= (:doc  match) "Can't."))))
 
     (testing "Fails to get a private var due to case-mismatch in a case sensitive query"
       (let [response (session/message {:op "apropos"
-                                       :query "PrIvAtE-VaR"
+                                       :query "My-Private-Var"
                                        :privates? "t"
                                        :case-sensitive? "t"})
             match (get-in response [:apropos-matches 0])]
