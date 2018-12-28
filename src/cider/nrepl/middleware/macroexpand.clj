@@ -200,11 +200,12 @@
   in the context of the given :ns, using the provided :expander.
   and :display-namespaces options."
   [{:keys [code expander ns] :as msg}]
-  (->> (let [expander-fn (resolve-expander-cljs msg)]
-         (cljs/with-cljs-env msg
-           (cljs/with-cljs-ns ns
-             (expander-fn (reader/read-string code)))))
-       (walk/prewalk (post-expansion-walker-cljs msg))))
+  (let [expander-fn (resolve-expander-cljs msg)
+        code (reader/read-string code)]
+    (walk/prewalk (post-expansion-walker-cljs msg)
+                  (cljs/with-cljs-env msg
+                    (cljs/with-cljs-ns ns
+                      (expander-fn code))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
