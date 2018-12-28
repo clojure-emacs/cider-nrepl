@@ -49,7 +49,7 @@
   [x]
   (if (instance? clojure.lang.IDeref x) @x x))
 
-(defn- grab-cljs-env*
+(defn grab-cljs-env*
   [msg]
   (let [path (cljs-env-path)]
     (some-> msg
@@ -84,7 +84,7 @@
 (defmacro with-cljs-env [msg & body]
   (try
     (require 'cljs.env)
-    `(binding [cljs.env/*compiler* ~(grab-cljs-env* msg)]
+    `(binding [cljs.env/*compiler* (grab-cljs-env* ~msg)]
        ~@body)
     (catch Exception _)))
 
