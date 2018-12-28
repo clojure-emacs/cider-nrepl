@@ -51,10 +51,10 @@
          #(.endsWith (:file-url %) "!/clojure/core.clj")
          (filter #(= "clojure.core" (:ns %))
                  frames1)))
-    (is (every?
-         #(.startsWith (:file-url %) "file:/")
-         (filter #(some-> % :ns (.contains "cider"))
-                 frames1))))
+    (is (->> (filter #(some-> % :ns (.contains "cider")) frames1)
+             (remove (comp #{"invoke" "invokeStatic"} :method)) ;; these don't have a file-url
+             (every?
+              #(.startsWith (:file-url %) "file:/")))))
   (testing "Clojure ns, fn, and var"
     ;; All Clojure frames should have non-nil :ns :fn and :var attributes.
     (is (every? #(every? identity ((juxt :ns :fn :var) %))
