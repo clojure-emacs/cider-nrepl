@@ -121,8 +121,15 @@
                                                                              (binding [*print-level* 3]
                                                                                (clojure.pprint/pprint object))))))))
   (testing "compilation errors"
-    (is (re-find #"Unable to resolve symbol: not-defined in this context"
-                 (:message (first causes3))))))
+    (let [clojure-version ((juxt :major :minor) *clojure-version*)]
+      (if (< (compare clojure-version [1 10]) 0)
+        ;; 1.8 / 1.9
+        (is (re-find #"Unable to resolve symbol: not-defined in this context"
+                     (:message (first causes3))))
+
+        ;; 1.10+
+        (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
+                     (:message (first causes3))))))))
 
 (deftest compilation-errors-test
   (testing "extract-location"
