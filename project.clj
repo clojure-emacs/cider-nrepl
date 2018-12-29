@@ -8,7 +8,7 @@
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
 
   :dependencies [[nrepl "0.5.3"]
-                 ^:source-dep [cider/orchard "0.3.4-SNAPSHOT"]
+                 ^:source-dep [cider/orchard "0.3.4"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.0.2"]
                  ^:source-dep [fipp "0.6.14"]
