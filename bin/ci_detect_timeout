@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# A successful ClojureScript build takes 2~3 minutes, however sometimes it will
+# block until CI times out, and we're not sure yet why.
+#
+# To further diagnose this issue we now start a background shell which after five
+# minutes will print the stacktraces of all threads of all active JVMs using
+# jcmd/jstack. Hopefully this provides some insight in what/where the tests get
+# stuck.
+#
+# Additionally this kills all Java processes after five minutes so CI finishes a
+# little quicker.
+
+sleep 300 # 5 minutes
+
+function hr() {
+    echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+}
+
+echo
+hr
+echo "           TIMEOUT, PRINTING STACK TRACES."
+hr
+
+jcmd | grep -v jcmd | while read pid cmd
+do
+    echo "---> " $cmd
+    echo
+    jstack $pid 2>&1
+    hr
+    echo
+done
+
+echo "KILLING JAVA PROCESSES"
+echo
+
+jcmd | grep -v jcmd | while read pid cmd
+do
+    echo "kill -9 ${pid} # ${cmd}"
+    kill -9 $pid
+done
