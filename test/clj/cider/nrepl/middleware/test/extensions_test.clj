@@ -10,12 +10,9 @@
                   `(let [~'r (atom nil)]
                      (with-redefs [test/do-report (fn [r#]
                                                     (reset! ~'r r#))]
-                       ~(extensions/=-body "" {:foo :bar} [{:foo :baz} {:baz :nat}])
+                       ~(extensions/=-body "" {:foo :bar} [{:foo :baz}])
                        (deref ~'r))))]
-      (is (= [[{:foo :baz} {:foo #lambdaisland.deep_diff.diff.Mismatch{:- :bar, :+ :baz}}]
-              [{:baz :nat} {#lambdaisland.deep_diff.diff.Insertion{:+ :baz} :nat
-                            #lambdaisland.deep_diff.diff.Deletion{:- :foo} :bar}]]
-             (:diffs report)))))
+      (is (= 1 (count (:diffs report))))))
   (testing "Only evalulates expected form once"
     (let [x (eval
              `(let [~'x (atom 0)]

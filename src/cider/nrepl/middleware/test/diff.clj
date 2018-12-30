@@ -8,6 +8,12 @@
 
 (defmulti pprint (fn [m _actual _diff] (:diff-backend m)))
 
+(defmethod diff :default [m a b]
+  (diff (assoc m :diff-backend :data-diff) a b))
+
+(defmethod pprint :default [m actual diff]
+  (pprint (assoc m :diff-backend :data-diff) actual diff))
+
 (defmethod diff :deep-diff [_ a b]
   (deep-diff/diff a b))
 

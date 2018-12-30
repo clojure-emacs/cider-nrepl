@@ -98,12 +98,6 @@
    "print-meta" "Value to bind to `*print-meta*` when pretty-printing. Defaults to the value bound in the current REPL session."
    "print-right-margin" "Value to bind to `clojure.pprint/*print-right-margin*` when pretty-printing. Defaults to the value bound in the current REPL session."})
 
-(def-wrapper wrap-diff-backend cider.nrepl.middleware.test/handle-diff-backend
-  (fn [msg] true)
-  {:doc "Middleware that adds the diff backend to be used for producing the diff of expected vs actual in tests.
-Valid options are `:data-diff` to use `clojure.data/diff` and :deep-diff to use `lambdaisland.deep-diff/diff."
-   :requires #{#'session}})
-
 (def-wrapper wrap-pprint-fn cider.nrepl.middleware.pprint/handle-pprint-fn
   (fn [msg] true)
   {:doc "Middleware that provides a common interface for other middlewares that
@@ -457,7 +451,7 @@ Valid options are `:data-diff` to use `clojure.data/diff` and :deep-diff to use 
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
-   :requires #{#'session #'wrap-pprint-fn #'wrap-diff-backend}
+   :requires #{#'session #'wrap-pprint-fn}
    :expects #{#'pr-values}
    :handles {"test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
@@ -540,7 +534,6 @@ Valid options are `:data-diff` to use `clojure.data/diff` and :deep-diff to use 
     wrap-content-type
     wrap-slurp
     wrap-pprint
-    wrap-diff-backend
     wrap-pprint-fn
     wrap-profile
     wrap-refresh

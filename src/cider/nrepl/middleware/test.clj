@@ -355,11 +355,6 @@
         (t/send transport (response-for msg :status :no-error)))
       (t/send transport (response-for msg :status :done)))))
 
-(defn handle-diff-backend [handler {:keys [diff-backend]
-                                    :or   {diff-backend :deep-diff}
-                                    :as   msg}]
-  (handler (assoc msg :diff-backend diff-backend)))
-
 ;; Before tools.nrepl-0.2.10, `default-executor` was private and
 ;; before 0.2.9 it didn't even exist.
 (def default-executor (delay (if-let [def (resolve 'ie/default-executor)]
