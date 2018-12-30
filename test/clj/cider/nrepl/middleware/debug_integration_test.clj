@@ -42,7 +42,7 @@
     (transport/send *transport* msg)))
 
 (defn nrepl-recv []
-  (let [msg (transport/recv *transport* 200)]
+  (let [msg (transport/recv *transport* 500)]
     (dbg "<==" msg)
     msg))
 
@@ -113,6 +113,10 @@
         assertions (for [[k v] expected]
                      `(is (= ~v (get ~msg-sym ~k)) (str "Message: " ~msg-sym)))]
     `(let [~msg-sym (nrepl-recv)]
+       (when (nil? ~msg-sym)
+         (throw (ex-info (str "Unexpected timeout waiting for nREPL response. "
+                              "Expected message: " (prn-str ~expected))
+                         {})))
        ~@assertions
        (when-let [k# (:key ~msg-sym)]
          (.put *debugger-key* k#))
