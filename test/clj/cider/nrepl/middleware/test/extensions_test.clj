@@ -1,7 +1,6 @@
 (ns cider.nrepl.middleware.test.extensions-test
   (:require
    [cider.nrepl.middleware.test.extensions :as extensions]
-   [lambdaisland.deep-diff :as dd]
    [clojure.test :as test :refer :all]))
 
 (deftest =-body-test

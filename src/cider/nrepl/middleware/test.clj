@@ -4,12 +4,12 @@
   (:require
    [cider.nrepl.middleware.test.extensions :as extensions]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
+   [cider.nrepl.middleware.test.diff :as diff]
    [clojure.pprint :as pp]
    [clojure.test :as test]
    [clojure.walk :as walk]
    [orchard.misc :as u]
    [orchard.query :as query]
-   [lambdaisland.deep-diff :as dd]
    [cider.nrepl.middleware.stacktrace :as st]))
 
 (if (find-ns 'clojure.tools.nrepl)
@@ -79,19 +79,17 @@
          t :type} m
         c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get-in (@current-report :results) [ns (:name (meta v))]))
-        gen-input (:gen-input @current-report)
-        dd-pprint-str  #(with-out-str (dd/pretty-print %))
-        pprint-str #(with-out-str (pp/pprint %))]
+        gen-input (:gen-input @current-report)]
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
            {:ns ns, :var (:name (meta v)), :index i, :context c}
            (when (and (#{:fail :error} t) (not fault))
-             {:expected (dd-pprint-str expected)})
+             {:expected (diff/pprint ie/*msg* expected)})
            (when (and (#{:fail} t) gen-input)
-             {:gen-input (dd-pprint-str gen-input)})
+             {:gen-input (diff/pprint ie/*msg* gen-input)})
            (when (#{:fail} t)
-             {:actual (dd-pprint-str actual)})
+             {:actual (diff/pprint ie/*msg* actual)})
            (when diffs
              {:diffs (extensions/diffs-result diffs)})
            (when (#{:error} t)

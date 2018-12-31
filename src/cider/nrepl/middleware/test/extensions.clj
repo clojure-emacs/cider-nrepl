@@ -48,5 +48,8 @@
   "Convert diffs data to form appropriate for transport."
   [diffs]
   (map (fn [[actual diff]]
-         (diff/pprint ie/*msg* actual diff))
+         [(diff/pprint ie/*msg* actual)
+          (if (map? diff)
+            (diff/pprint ie/*msg* diff)
+            (mapv (partial diff/pprint ie/*msg*) diff))])
        diffs))
