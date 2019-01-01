@@ -103,13 +103,13 @@ Use the convenient plugin for defaults, either in your project's
 `~/.lein/profiles.clj`.
 
 ```clojure
-:plugins [[cider/cider-nrepl "0.18.0"]]
+:plugins [[cider/cider-nrepl "0.19.0"]]
 ```
 
 A minimal `profiles.clj` for CIDER would be:
 
 ```clojure
-{:user {:plugins [[cider/cider-nrepl "0.18.0"]]}}
+{:user {:plugins [[cider/cider-nrepl "0.19.0"]]}}
 ```
 
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev
@@ -117,7 +117,7 @@ Or (if you know what you're doing) add `cider-nrepl` to your `:dev
 under `:repl-options`.
 
 ```clojure
-:dependencies [[cider/cider-nrepl "0.18.0"]]
+:dependencies [[cider/cider-nrepl "0.19.0"]]
 :repl-options {:nrepl-middleware
                  [cider.nrepl/wrap-apropos
                   cider.nrepl/wrap-classpath
@@ -156,14 +156,14 @@ it on the command line through the `cider.tasks/add-middleware` task
 functionality):
 
 ```
-boot -d nrepl:0.5.3 -d cider/cider-nrepl:0.18.0 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version cider.tasks/nrepl-server wait
+boot -d nrepl:0.5.3 -d cider/cider-nrepl:0.19.0 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version cider.tasks/nrepl-server wait
 ```
 
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 
 ```clojure
 (set-env! :dependencies '[[nrepl "0.5.3"]
-                          [cider/cider-nrepl "0.18.0"]])
+                          [cider/cider-nrepl "0.19.0"]])
 
 (require '[cider.tasks :refer [add-middleware nrepl-server]])
 
@@ -183,7 +183,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ```
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.18.0"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.19.0"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
 ```
 
 There are also two convenient aliases you can employ (see this project's `deps.edn`):
@@ -192,12 +192,12 @@ There are also two convenient aliases you can employ (see this project's `deps.e
 {...
  :aliases
  {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}
-                           cider/cider-nrepl {:mvn/version "0.18.0"}}
+                           cider/cider-nrepl {:mvn/version "0.19.0"}}
               :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
 
   :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.9.0"}
                             org.clojure/clojurescript {:mvn/version "1.10.339"}
-                            cider/cider-nrepl {:mvn/version "0.18.0"}
+                            cider/cider-nrepl {:mvn/version "0.19.0"}
                             cider/piggieback {:mvn/version "0.3.9"}}
                :main-opts ["-m" "nrepl.cmdline" "--middleware"
                            "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
@@ -295,7 +295,7 @@ release starts immediately after the previous one has been
 shipped. Bugfix/point releases (if any) address only serious bugs and
 never contain new features.
 
-Prior to cider-nrepl 0.18, CIDER and cider-nrepl releases
+**Note:** Prior to cider-nrepl 0.18, CIDER and cider-nrepl releases
 were always done in sync. As most editors started relying on cider-nrepl
 this was eventually changed and now cider-nrepl releases happen on their
 own schedule.
@@ -397,7 +397,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
 ## License
 
-Copyright © 2013-2018 Bozhidar Batsov
+Copyright © 2013-2019 Bozhidar Batsov
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
