@@ -1,13 +1,14 @@
 (ns cider.nrepl.middleware.util.cljs)
 
-;; piggieback 0.3 changed the namespace of the library, so in
-;; order to support 0.2 and 0.3 we need to do a bit of extra work
+;; there's a plan to rename the main namespace of
+;; piggieback to piggieback.core and the following code
+;; simply paves the way for this
 (def cider-piggieback?
   (try (require 'cider.piggieback) true
        (catch Throwable _ false)))
 
-(def cemerick-piggieback?
-  (try (require 'cemerick.piggieback) true
+(def nrepl-piggieback?
+  (try (require 'piggieback.core) true
        (catch Throwable _ false)))
 
 (defn try-piggieback
@@ -16,7 +17,7 @@
   []
   (cond
     cider-piggieback? (resolve 'cider.piggieback/wrap-cljs-repl)
-    cemerick-piggieback? (resolve 'cemerick.piggieback/wrap-cljs-repl)
+    nrepl-piggieback? (resolve 'piggieback.core/wrap-cljs-repl)
     :else false))
 
 (defn- maybe-piggieback
@@ -41,8 +42,8 @@
   "Returns the path in the session map for the ClojureScript compiler
   environment used by piggieback."
   []
-  [(if cemerick-piggieback?
-     (resolve 'cemerick.piggieback/*cljs-compiler-env*)
+  [(if nrepl-piggieback?
+     (resolve 'piggieback.core/*cljs-compiler-env*)
      (resolve 'cider.piggieback/*cljs-compiler-env*))])
 
 (defn- maybe-deref
