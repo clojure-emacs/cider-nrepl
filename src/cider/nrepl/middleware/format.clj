@@ -45,7 +45,7 @@
 (defn- format-edn
   [edn pprint-fn]
   (->> (read-edn edn)
-       (map #(with-out-str (pprint-fn %)))
+       (map #(pprint-fn %))
        str/join
        str/trim))
 

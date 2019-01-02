@@ -249,7 +249,7 @@
   of pretty printed problems. The content of the returned map is modeled after
   `clojure.spec/explain-printer`."
   [ed pprint-fn]
-  (let [pp-str #(with-out-str (pprint-fn %))
+  (let [pp-str #(pprint-fn %)
         problems (sort-by #(count (:path %))
                           (or (:clojure.spec/problems ed)
                               (:clojure.spec.alpha/problems ed)))]
