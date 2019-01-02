@@ -11,7 +11,11 @@
   (:import
    nrepl.transport.Transport))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DEPRECATED in favour of the built-in pprint support added in nREPL 0.5 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: Remove this middleware (or make it a no-op).
 
 ;; fipp-printer and puget-printer are not loaded in the main `(ns)` form
 ;; because they are optional features that take hundreds of milliseconds
