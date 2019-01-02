@@ -83,7 +83,7 @@
                                                      cider.nrepl/wrap-undef
                                                      cider.nrepl/wrap-version]}
                    :dependencies [;; For developing the Leiningen plugin.
-                                  [leiningen-core "2.8.3"]
+                                  [leiningen-core "2.8.2"]
                                   ;; For the boot tasks namespace
                                   [boot/base "2.8.2"]
                                   [boot/core "2.8.2"]]}

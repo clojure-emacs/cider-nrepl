@@ -21,7 +21,7 @@
 ;; See https://github.com/technomancy/leiningen/blob/master/doc/PLUGINS.md#project-middleware
 (defn middleware
   [{:keys [dependencies exclusions] :as project}]
-  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.8.3")
+  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.8.2")
         clojure-excluded?   (some #(= % 'org.clojure/clojure) exclusions)
         clojure-version     (when-not clojure-excluded?
                               (->> dependencies
