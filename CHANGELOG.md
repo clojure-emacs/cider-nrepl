@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* Add print functions compatible with nREPL 0.5 to `cider.nrepl.pprint` namespace.
+
 ### Changes
 
 * **(Breaking)** Drop support for nREPL 0.2.x (aka `tools.nrepl`). Now nREPL 0.4+ is required.
