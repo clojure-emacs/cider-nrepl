@@ -2,6 +2,7 @@
   "Generic instrumentation for clojure code"
   {:author "Artur Malabarba"}
   (:require
+   clojure.pprint
    [clojure.walk :as walk]
    [orchard.meta :as m]))
 
