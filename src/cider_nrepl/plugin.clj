@@ -5,7 +5,7 @@
    [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
-;; Keep in sync with VERSION-FORM in project.clj
+;; Keep in sync with the version in project.clj
 (defn- version
   []
   (let [v (-> (io/resource "cider/cider-nrepl/project.clj")
