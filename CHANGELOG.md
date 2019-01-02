@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+### Changes
+
+* **(Breaking)** Drop support for nREPL 0.2.x (aka `tools.nrepl`). Now nREPL 0.4+ is required.
+* **(Breaking)** Drop support for Piggieback 0.2.x (aka `cemerick.piggieback`).  Now Piggieback 0.3+ is required.
+
 ## 0.19.0 (2019-01-01)
 
 ### New features
