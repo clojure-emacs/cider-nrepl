@@ -15,15 +15,9 @@
   maintained anymore."
   {:author "Edwin Watkeys"}
   (:require
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as t]
    [profile.core :as p]))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (require
-   '[clojure.tools.nrepl.misc :refer [response-for]]
-   '[clojure.tools.nrepl.transport :as t])
-  (require
-   '[nrepl.misc :refer [response-for]]
-   '[nrepl.transport :as t]))
 
 (defn send-exception
   [e msg transport]

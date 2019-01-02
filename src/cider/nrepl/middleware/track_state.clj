@@ -5,23 +5,14 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [cljs-tooling.util.analysis :as cljs-ana]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as transport]
    [orchard.misc :as u]
    [orchard.namespace :as namespace])
   (:import
    (clojure.lang Namespace MultiFn)
-   java.net.SocketException))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (do
-    (require
-     '[clojure.tools.nrepl.misc :refer [response-for]]
-     '[clojure.tools.nrepl.transport :as transport])
-    (import 'clojure.tools.nrepl.transport.Transport))
-  (do
-    (require
-     '[nrepl.misc :refer [response-for]]
-     '[nrepl.transport :as transport])
-    (import 'nrepl.transport.Transport)))
+   java.net.SocketException
+   nrepl.transport.Transport))
 
 (def clojure-core (try (find-ns 'clojure.core)
                        (catch Exception e nil)))

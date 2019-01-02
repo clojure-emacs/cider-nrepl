@@ -2,26 +2,18 @@
   "Test execution, reporting, and inspection"
   {:author "Jeff Valk"}
   (:require
+   [cider.nrepl.middleware.stacktrace :as st]
    [cider.nrepl.middleware.test.extensions :as extensions]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [clojure.pprint :as pp]
    [clojure.test :as test]
    [clojure.walk :as walk]
+   [nrepl.middleware.interruptible-eval :as ie]
+   [nrepl.middleware.pr-values :refer [pr-values]]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as t]
    [orchard.misc :as u]
-   [orchard.query :as query]
-   [cider.nrepl.middleware.stacktrace :as st]))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (require
-   '[clojure.tools.nrepl.middleware.interruptible-eval :as ie]
-   '[clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-   '[clojure.tools.nrepl.misc :refer [response-for]]
-   '[clojure.tools.nrepl.transport :as t])
-  (require
-   '[nrepl.middleware.interruptible-eval :as ie]
-   '[nrepl.middleware.pr-values :refer [pr-values]]
-   '[nrepl.misc :refer [response-for]]
-   '[nrepl.transport :as t]))
+   [orchard.query :as query]))
 
 ;;; ## Overview
 ;;

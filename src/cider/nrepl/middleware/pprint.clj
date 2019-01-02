@@ -2,25 +2,14 @@
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [clojure.pprint :refer [pprint *print-right-margin*]]
-   [orchard.misc :as u]))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (do
-    (require
-     '[clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-     '[clojure.tools.nrepl.middleware.pr-values :refer [pr-values]]
-     '[clojure.tools.nrepl.middleware.session :as session]
-     '[clojure.tools.nrepl.misc :refer [response-for]]
-     '[clojure.tools.nrepl.transport :as transport])
-    (import 'clojure.tools.nrepl.transport.Transport))
-  (do
-    (require
-     '[nrepl.middleware.interruptible-eval :refer [*msg*]]
-     '[nrepl.middleware.pr-values :refer [pr-values]]
-     '[nrepl.middleware.session :as session]
-     '[nrepl.misc :refer [response-for]]
-     '[nrepl.transport :as transport])
-    (import 'nrepl.transport.Transport)))
+   [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.pr-values :refer [pr-values]]
+   [nrepl.middleware.session :as session]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as transport]
+   [orchard.misc :as u])
+  (:import
+   nrepl.transport.Transport))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -5,22 +5,15 @@
    [clojure.repl :as repl]
    [clojure.set :as set]
    [clojure.string :as str]
+   [nrepl.middleware.session :refer [session]]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as t]
    [orchard.info :as info]
    [orchard.java :as java]
    [orchard.misc :as u]
    [orchard.namespace :as namespace])
   (:import
    (clojure.lang Compiler$CompilerException)))
-
-(if (find-ns 'clojure.tools.nrepl)
-  (require
-   '[clojure.tools.nrepl.middleware.session :refer [session]]
-   '[clojure.tools.nrepl.misc :refer [response-for]]
-   '[clojure.tools.nrepl.transport :as t])
-  (require
-   '[nrepl.middleware.session :refer [session]]
-   '[nrepl.misc :refer [response-for]]
-   '[nrepl.transport :as t]))
 
 ;;; ## Stacktraces
 

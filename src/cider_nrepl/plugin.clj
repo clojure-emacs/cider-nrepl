@@ -21,7 +21,7 @@
 ;; See https://github.com/technomancy/leiningen/blob/master/doc/PLUGINS.md#project-middleware
 (defn middleware
   [{:keys [dependencies exclusions] :as project}]
-  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.5.2")
+  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.8.3")
         clojure-excluded?   (some #(= % 'org.clojure/clojure) exclusions)
         clojure-version     (when-not clojure-excluded?
                               (->> dependencies
@@ -35,19 +35,19 @@
                                   true
 
                                   (nil? clojure-version)
-                                  ;; Lein 2.5.2+ uses Clojure 1.7 by default, which would be OK.
+                                  ;; Lein 2.8.3+ uses Clojure 1.8 by default, which would be OK.
                                   lein-version-ok?
 
                                   :else
                                   ;; There is a Clojure version depended on, it must check out.
-                                  (lein/version-satisfies? clojure-version "1.7.0"))]
+                                  (lein/version-satisfies? clojure-version "1.8.0"))]
 
     (when-not lein-version-ok?
-      (lein/warn "Warning: cider-nrepl requires Leiningen 2.5.2 or greater."))
+      (lein/warn "Warning: cider-nrepl requires Leiningen 2.8.3 or greater."))
     (when-not clojure-version-ok?
-      (lein/warn "Warning: cider-nrepl requires Clojure 1.7 or greater."))
+      (lein/warn "Warning: cider-nrepl requires Clojure 1.8 or greater."))
     (when clojure-excluded?
-      (lein/warn "Warning: Clojure is excluded, assuming an appropriate fork (Clojure 1.7 or later) is provided."))
+      (lein/warn "Warning: Clojure is excluded, assuming an appropriate fork (Clojure 1.8 or later) is provided."))
     (when-not (and lein-version-ok? clojure-version-ok?)
       (lein/warn "Warning: cider-nrepl will not be included in your project."))
 

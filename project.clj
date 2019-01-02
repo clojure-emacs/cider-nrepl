@@ -83,7 +83,7 @@
                                                      cider.nrepl/wrap-undef
                                                      cider.nrepl/wrap-version]}
                    :dependencies [;; For developing the Leiningen plugin.
-                                  [leiningen-core "2.8.1"]
+                                  [leiningen-core "2.8.3"]
                                   ;; For the boot tasks namespace
                                   [boot/base "2.8.2"]
                                   [boot/core "2.8.2"]]}
@@ -120,4 +120,4 @@
                                          if-class [[:block 1]]}}}
 
              :eastwood {:plugins [[jonase/eastwood "0.3.4"]]
-                        :eastwood {:config-files ["eastwood.clj"] :exclude-namespaces [cider-nrepl.plugin cider.tasks cider.nrepl.test-session] :exclude-linters [:implicit-dependencies]}}})
+                        :eastwood {:config-files ["eastwood.clj"] :exclude-namespaces [cider-nrepl.plugin cider.tasks cider.nrepl.test-session]}}})

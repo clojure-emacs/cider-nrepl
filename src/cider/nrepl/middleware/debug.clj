@@ -7,27 +7,16 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
+   [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.session :as session]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
    [orchard.meta :as m]
    [orchard.misc :as misc])
   (:import
    [clojure.lang Compiler$LocalBinding]))
-
-;; Compatibility with the legacy tools.nrepl and the new nREPL 0.4.x.
-;; The assumption is that if someone is using old lein repl or boot repl
-;; they'll end up using the tools.nrepl, otherwise the modern one.
-(if (find-ns 'clojure.tools.nrepl)
-  (require
-   '[clojure.tools.nrepl.middleware.interruptible-eval :refer [*msg*]]
-   '[clojure.tools.nrepl.middleware.session :as session]
-   '[clojure.tools.nrepl.misc :refer [response-for]]
-   '[clojure.tools.nrepl.transport :as transport])
-  (require
-   '[nrepl.middleware.interruptible-eval :refer [*msg*]]
-   '[nrepl.middleware.session :as session]
-   '[nrepl.misc :refer [response-for]]
-   '[nrepl.transport :as transport]))
 
 ;;;; # The Debugger
 ;;;

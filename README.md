@@ -92,9 +92,10 @@ hackers to make this a reality.
 
 ### Prerequisites
 
-`cider-nrepl` supports only Clojure(Script) 1.7+ and Java 7+.
+`cider-nrepl` supports only Clojure(Script) 1.8+ and Java 8+.
 
-Leiningen users will need to have version 2.5.2 or newer installed.
+Leiningen users will need to have version 2.8.3 or newer installed.
+Boot users will need to have version 2.8.2 or newer installed.
 
 ### Via Leiningen
 
