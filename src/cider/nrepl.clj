@@ -104,27 +104,8 @@
 
          Middlewares further down the stack can then look up the `:pprint-fn`
          slot and call it where necessary."
-   :requires #{#'session}})
-
-(def-wrapper wrap-pprint cider.nrepl.middleware.pprint/handle-pprint
-  #{"eval" "load-file"}
-  (cljs/expects-piggieback
-   {:doc "Middleware that adds a pretty-printing option to the eval op.
-           Passing a non-nil value in the `:pprint` slot will cause eval to call
-           clojure.pprint/pprint on its result. The `:right-margin` slot can be
-           used to bind `*clojure.pprint/*print-right-margin*` during the
-           evaluation. (N.B., the encoding used to transmit the request map
-           `msg` across the wire will convert presumably falsey values into
-           truthy values. If you don't want something to be pretty printed,
-           remove the `:pprint` key entirely from your request map, don't try
-           and set the value to nil, false, or string representations of the
-           above)."
-    :requires #{"clone" #'pr-values #'wrap-pprint-fn}
-    :expects #{"eval" "load-file"}
-    :handles {"pprint-middleware"
-              {:doc "Enhances the `eval` op by adding pretty-printing. Not an op in itself."
-               :optional (merge wrap-pprint-fn-optional-arguments
-                                {"pprint" "If present and non-nil, pretty-print the result of evaluation."})}}}))
+   :requires #{#'session}
+   :expects #{"eval" "load-file"}})
 
 (def-wrapper wrap-content-type cider.nrepl.middleware.content-type/handle-content-type
   #{"eval"}
@@ -522,7 +503,6 @@
     wrap-out
     wrap-content-type
     wrap-slurp
-    wrap-pprint
     wrap-pprint-fn
     wrap-profile
     wrap-refresh

@@ -5,93 +5,11 @@
 
 (use-fixtures :once session/session-fixture)
 
-(deftest wrap-pprint-test
-  (let [code "[1 2 3 4 5 6 7 8 9 0]"]
-    (testing "wrap-pprint does not interfere with normal :eval requests"
-      (is (= [code]
-             (:value (session/message {:op :eval
-                                       :code code}))))
-
-      (is (= nil
-             (:pprint-out (session/message {:op :eval
-                                            :code code})))))
-
-    (testing "wrap-pprint elides the :value slot from responses"
-      (let [response (session/message {:op :eval
-                                       :code code
-                                       :pprint "true"})]
-        (is (not (contains? response :value)))))
-
-    (testing "wrap-pprint ensures that :eval requests are pretty-printed"
-      (is (= "[1 2 3 4 5 6 7 8 9 0]\n"
-             (:pprint-out (session/message {:op :eval
-                                            :code code
-                                            :pprint "true"})))))
-
-    (testing "wrap-pprint respects the :print-length slot"
-      (is (= "[1 2 ...]\n"
-             (:pprint-out (session/message {:op :eval
-                                            :code code
-                                            :pprint "true"
-                                            :print-length 2})))))
-
-    (testing "wrap-pprint respects the :print-level slot"
-      (is (= "[0 [1 #]]\n"
-             (:pprint-out (session/message {:op :eval
-                                            :code "[0 [1 [2]]]"
-                                            :pprint "true"
-                                            :print-level 2})))))
-
-    (testing "wrap-pprint respects the :print-right-margin slot"
-      (is (= "[1\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 0]\n"
-             (:pprint-out (session/message {:op :eval
-                                            :code code
-                                            :pprint "true"
-                                            :print-right-margin 10})))))
-
-    (testing "wrap-pprint does not escape special characters when printing strings"
-      (is (= "abc\ndef\tghi\n"
-             (:pprint-out (session/message {:op :eval
-                                            :code "\"abc\ndef\tghi\""
-                                            :pprint "true"}))))))
-
-  (testing "wrap-pprint correctly sends a sentinel value after each evaluation"
-    (let [message {:op :eval
-                   :code "[1 2 3] [4 5 6]"
-                   :pprint "true"}
-          responses (->> (session/message message false)
-                         (map #(dissoc % :id :session :ns :state))
-                         (filter not-empty))]
-      (is (= responses [{:pprint-out "[1 2 3]\n"}
-                        {:pprint-sentinel {}}
-                        {:pprint-out "[4 5 6]\n"}
-                        {:pprint-sentinel {}}
-                        {:status ["done"]}]))))
-
-  (testing "fipp-pprint works"
-    (let [message {:op :eval
-                   :code "{nil [nil nil nil #{nil} nil nil nil]}"
-                   :pprint "true"
-                   :pprint-fn "cider.nrepl.middleware.pprint/fipp-pprint"
-                   :print-right-margin 10}]
-      (is (= "{nil\n [nil\n  nil\n  nil\n  #{nil}\n  nil\n  nil\n  nil]}\n"
-             (:pprint-out (session/message (dissoc message :pprint-fn)))))
-      (is (= "{nil [nil\n      nil\n      nil\n      #{nil}\n      nil\n      nil\n      nil]}\n"
-             (:pprint-out (session/message message)))))
-
-    (let [message {:op :eval
-                   :code "{nil [nil nil nil #{nil} nil nil nil]}"
-                   :pprint "true"
-                   :pprint-fn "cider.nrepl.middleware.pprint/fipp-pprint"}]
-      (is (= "{nil [nil nil nil #{nil} nil nil nil]}\n"
-             (:pprint-out (session/message message)))))))
-
-(deftest wrap-pprint-custom-pprint-fn-test
+#_(deftest wrap-pprint-custom-pprint-fn-test
   (testing "fipp-pprint respects the :print-meta slot"
     (is (= "^{:a :b}\n{}\n"
            (:pprint-out (session/message {:op :eval
                                           :code "^{:a :b} {}"
-                                          :pprint "true"
                                           :pprint-fn "cider.nrepl.middleware.pprint/fipp-pprint"
                                           :print-meta "true"})))))
 
@@ -121,73 +39,5 @@
     (is (= "^{:a :b}\n{}\n"
            (:pprint-out (session/message {:op :eval
                                           :code "^{:a :b} {}"
-                                          :pprint "true"
                                           :pprint-fn "cider.nrepl.middleware.pprint/fipp-pprint"
                                           :print-meta "true"}))))))
-
-(deftest ^{:max-clj-version "1.9.0"} wrap-pprint-resolve-pprint-fn-1.9-test
-  (testing "non-resolvable pprint-fn"
-    (testing "non-existing ns"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn "never-used-ns-example/pprint"})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class java.lang.IllegalArgumentException"))
-        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
-        (is (.startsWith (:err response) "IllegalArgumentException No such namespace: nev"))))
-
-    (testing "non-existing Var"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn "clojure.core/never-used-pprint-example"})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class java.lang.IllegalArgumentException"))
-        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
-        (is (.startsWith (:err response) "IllegalArgumentException clojure.core/never-used"))))
-
-    (testing "nil input"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn nil})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class java.lang.NullPointerException"))
-        (is (= (:root-ex response) "class java.lang.NullPointerException"))
-        (is (.startsWith (:err response) "NullPointerException   clojure.lang.Var.find"))))))
-
-(deftest ^{:min-clj-version "1.10.0"} wrap-pprint-resolve-pprint-fn-1.10-test
-  (testing "non-resolvable pprint-fn"
-    (testing "non-existing ns"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn "never-used-ns-example/pprint"})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class clojure.lang.ExceptionInfo"))
-        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
-
-        (is (.startsWith (:err response) "Error printing return value (IllegalArgumentException) at clojure.lang.Var/find "))
-        (is (.contains (:err response) "No such namespace: never-used-ns-example"))))
-
-    (testing "non-existing Var"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn "clojure.core/never-used-pprint-example"})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class clojure.lang.ExceptionInfo"))
-        (is (= (:root-ex response) "class java.lang.IllegalArgumentException"))
-        (is (.startsWith (:err response) "Error printing return value (IllegalArgumentException) at cider.nrepl.middleware.pprint/resolve-pprint-fn"))
-        (is (.contains (:err response) "clojure.core/never-used-pprint-example is not resolvable to a var"))))
-
-    (testing "nil input"
-      (let [response (session/message {:op :eval
-                                       :code "nil"
-                                       :pprint "true"
-                                       :pprint-fn nil})]
-        (is (= (:status response) #{"eval-error" "done"}))
-        (is (= (:ex response) "class clojure.lang.ExceptionInfo"))
-        (is (= (:root-ex response) "class java.lang.NullPointerException"))
-        (is (.startsWith (:err response) "Error printing return value (NullPointerException) at clojure.lang.Var/find"))))))

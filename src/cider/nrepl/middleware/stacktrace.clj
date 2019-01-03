@@ -248,8 +248,8 @@
   Take in a map `ed` as returned by `clojure.spec/explain-data` and return a map
   of pretty printed problems. The content of the returned map is modeled after
   `clojure.spec/explain-printer`."
-  [ed pprint-fn]
-  (let [pp-str #(pprint-fn %)
+  [ed pprint-fn print-options]
+  (let [pp-str #(pprint-fn % print-options)
         problems (sort-by #(count (:path %))
                           (or (:clojure.spec/problems ed)
                               (:clojure.spec.alpha/problems ed)))]
@@ -280,7 +280,7 @@
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
-  [^Exception e pprint-fn]
+  [^Exception e pprint-fn print-options]
   (let [m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
@@ -289,9 +289,9 @@
               (:clojure.spec.alpha/failure data))
         (assoc m
                :message "Spec assertion failed."
-               :spec (prepare-spec-data data pprint-fn))
+               :spec (prepare-spec-data data pprint-fn print-options))
         (-> m
-            (assoc :data (with-out-str (pprint-fn data)))
+            (assoc :data (pprint-fn data print-options))
             (assoc :location
                    (select-keys data [:clojure.error/line :clojure.error/column
                                       :clojure.error/phase :clojure.error/source
@@ -303,18 +303,18 @@
   for each. For `ex-info` exceptions response contains :data slot with pretty
   printed data. For clojure.spec asserts, :spec slot contains a map of pretty
   printed components describing spec failures."
-  [e pprint-fn]
+  [e pprint-fn print-options]
   (->> e
        (iterate #(.getCause ^Exception %))
        (take-while identity)
-       (map (comp extract-location #(analyze-cause % pprint-fn)))))
+       (map (comp extract-location #(analyze-cause % pprint-fn print-options)))))
 
 ;;; ## Middleware
 
 (defn handle-stacktrace
-  [_ {:keys [session transport pprint-fn] :as msg}]
+  [_ {:keys [session transport pprint-fn print-options] :as msg}]
   (if-let [e (@session #'*e)]
-    (doseq [cause (analyze-causes e pprint-fn)]
+    (doseq [cause (analyze-causes e pprint-fn print-options)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
   (t/send transport (response-for msg :status :done)))

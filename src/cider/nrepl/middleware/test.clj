@@ -336,11 +336,11 @@
     (t/send transport (response-for msg :status :done))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index session transport pprint-fn] :as msg}]
+  [{:keys [ns var index session transport pprint-fn print-options] :as msg}]
   (with-interruptible-eval msg
     (let [[ns var] (map u/as-sym [ns var])]
       (if-let [e (get-in @results [ns var index :error])]
-        (doseq [cause (st/analyze-causes e pprint-fn)]
+        (doseq [cause (st/analyze-causes e pprint-fn print-options)]
           (t/send transport (response-for msg cause)))
         (t/send transport (response-for msg :status :no-error)))
       (t/send transport (response-for msg :status :done)))))

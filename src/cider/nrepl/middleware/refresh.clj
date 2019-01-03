@@ -90,12 +90,12 @@
 
 (defn- error-reply
   [{:keys [error error-ns]}
-   {:keys [pprint-fn session transport] :as msg}]
+   {:keys [pprint-fn print-options session transport] :as msg}]
 
   (transport/send
    transport
    (response-for msg (cond-> {:status :error}
-                       error (assoc :error (analyze-causes error pprint-fn))
+                       error (assoc :error (analyze-causes error pprint-fn print-options))
                        error-ns (assoc :error-ns error-ns))))
 
   (binding [*msg* msg

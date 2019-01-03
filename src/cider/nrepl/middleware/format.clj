@@ -43,15 +43,15 @@
           (recur (conj forms form)))))))
 
 (defn- format-edn
-  [edn pprint-fn]
+  [edn pprint-fn print-options]
   (->> (read-edn edn)
-       (map #(pprint-fn %))
-       str/join
+       (map #(pprint-fn % print-options))
+       (str/join "\n")
        str/trim))
 
 (defn format-edn-reply
-  [{:keys [edn pprint-fn] :as msg}]
-  {:formatted-edn (format-edn edn pprint-fn)})
+  [{:keys [edn pprint-fn print-options] :as msg}]
+  {:formatted-edn (format-edn edn pprint-fn print-options)})
 
 ;;; Middleware op handling
 (defn handle-format [handler msg]

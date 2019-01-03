@@ -216,7 +216,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
                        {:status :eval-error
-                        :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*))]
+                        :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*) (:print-options *msg*))]
                                    (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)

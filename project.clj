@@ -70,7 +70,6 @@
                                                      cider.nrepl/wrap-out
                                                      cider.nrepl/wrap-content-type
                                                      cider.nrepl/wrap-slurp
-                                                     cider.nrepl/wrap-pprint
                                                      cider.nrepl/wrap-pprint-fn
                                                      cider.nrepl/wrap-profile
                                                      cider.nrepl/wrap-refresh

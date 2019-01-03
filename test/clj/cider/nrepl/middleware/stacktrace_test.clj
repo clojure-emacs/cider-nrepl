@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.stacktrace-test
   (:require
    [cider.nrepl.middleware.stacktrace :refer :all]
-   [clojure.pprint :refer [pprint]]
+   [cider.nrepl.pprint :refer [pprint]]
    [clojure.test :refer :all]))
 
 ;; # Utils
@@ -12,7 +12,8 @@
    (try (eval form)
         (catch Exception e
           e))
-   pprint))
+   pprint
+   {}))
 
 (defn stack-frames
   [form]
@@ -111,15 +112,11 @@
 
 (deftest cause-data-pretty-printing-test
   (testing "print-length"
-    (is (= "{:a (0 1 2 ...)}\n"
-           (:data (analyze-cause (ex-info "" {:a (range)}) (fn [object]
-                                                             (binding [*print-length* 3]
-                                                               (clojure.pprint/pprint object))))))))
+    (is (= "{:a (0 1 2 ...)}"
+           (:data (analyze-cause (ex-info "" {:a (range)}) pprint {:length 3})))))
   (testing "print-level"
-    (is (= "{:a {#}}\n"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) (fn [object]
-                                                                             (binding [*print-level* 3]
-                                                                               (clojure.pprint/pprint object))))))))
+    (is (= "{:a {#}}"
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) pprint {:level 3})))))
   (testing "compilation errors"
     (let [clojure-version ((juxt :major :minor) *clojure-version*)]
       (if (< (compare clojure-version [1 10]) 0)
