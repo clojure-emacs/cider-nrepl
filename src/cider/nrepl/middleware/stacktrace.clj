@@ -108,10 +108,10 @@
 
 (defn flag-tooling
   "Walk the call stack from top to bottom, flagging frames below the first call
-  to `clojure.lang.Compiler` or `(clojure.tools.)nrepl.*` as `:tooling` to
+  to `clojure.lang.Compiler` or `nrepl.*` as `:tooling` to
   distinguish compilation and nREPL middleware frames from user code."
   [frames]
-  (let [tool-regex #"^clojure\.lang\.Compiler|^clojure\.tools\.nrepl\.|^nrepl\.|^cider\."
+  (let [tool-regex #"^clojure\.lang\.Compiler|^nrepl\.|^cider\."
         tool? #(re-find tool-regex (or (:name %) ""))
         flag  #(if (tool? %)
                  (flag-frame % :tooling)
