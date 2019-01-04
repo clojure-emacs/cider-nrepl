@@ -2,7 +2,7 @@
   (:require
    [cider.nrepl.middleware.stacktrace :refer :all]
    [clojure.spec.alpha :as s]
-   [clojure.pprint :refer [pprint]]
+   [cider.nrepl.pprint :refer [pprint]]
    [clojure.test :refer :all]))
 
 (s/check-asserts true)
@@ -13,7 +13,8 @@
    (try (eval form)
         (catch Exception e
           e))
-   pprint))
+   pprint
+   {}))
 
 (defn stack-frames
   [form]

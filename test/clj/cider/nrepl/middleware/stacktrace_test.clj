@@ -172,7 +172,7 @@
                              :clojure.error/source "/foo/bar/baz.clj"
                              :clojure.error/phase :macroexpand
                              :clojure.error/symbol 'clojure.core/let})
-          cause (analyze-cause e identity)]
+          cause (analyze-cause e identity {})]
       (is (= {:clojure.error/line 1
               :clojure.error/column 42
               :clojure.error/source "/foo/bar/baz.clj"

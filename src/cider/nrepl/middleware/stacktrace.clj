@@ -291,7 +291,9 @@
                :message "Spec assertion failed."
                :spec (prepare-spec-data data pprint-fn print-options))
         (-> m
-            (assoc :data (pprint-fn data print-options))
+            (assoc :data (if (not-empty print-options)
+                            (pprint-fn data print-options)
+                            (pprint-fn data)))
             (assoc :location
                    (select-keys data [:clojure.error/line :clojure.error/column
                                       :clojure.error/phase :clojure.error/source
