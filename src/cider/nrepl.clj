@@ -81,11 +81,8 @@
 
 (def wrap-pprint-fn-optional-arguments
   "Common pprint arguments for CIDER's middleware."
-  {"pprint-fn" "The namespace-qualified name of a single-arity function to use for pretty-printing. Defaults to `clojure.pprint/pprint`."
-   "print-length" "Value to bind to `*print-length*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-level" "Value to bind to `*print-level*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-meta" "Value to bind to `*print-meta*` when pretty-printing. Defaults to the value bound in the current REPL session."
-   "print-right-margin" "Value to bind to `clojure.pprint/*print-right-margin*` when pretty-printing. Defaults to the value bound in the current REPL session."})
+  {"pprint-fn" "The namespace-qualified name of a 1 or 2-arity function to use for pretty-printing. Defaults to `cider.nrepl.pprint/pprint`."
+   "print-params" "A map of configuration entries that the pprint-fn will understand. Those would typically be specific to the pprint-fn in question."})
 
 (def-wrapper wrap-pprint-fn cider.nrepl.middleware.pprint/handle-pprint-fn
   (fn [msg] true)
@@ -94,16 +91,18 @@
 
          A namespace-qualified name of the function to be used for printing can
          be optionally passed in the `:pprint-fn` slot, the default value being
-         `clojure.pprint/pprint`.
+         `cider.nrepl.pprint/pprint`. The function name can be passed as
+         a string or symbol. Note that function should take 1 or two params - the
+         object to print and the an optional map of print params. The params should
+         be passed as `:print-params` - a map of key/value params. If they were passed
+         by the client as with string keys, this middleware will convert the keys to
+         keywords.
 
-         The `:pprint-fn` slot will be replaced with a closure that calls the
-         given printing function with `*print-length*`, `*print-level*`,
-         `*print-meta*`, and `clojure.pprint/*print-right-margin*` bound to the
-         values of the `:print-length`, `:print-level`, `:print-meta`, and
-         `:print-right-margin` slots respectively.
+         The `:pprint-fn` slot will be replaced with the var that maps to the name
+         that was initially passed.
 
          Middlewares further down the stack can then look up the `:pprint-fn`
-         slot and call it where necessary."
+         slot, call it where necessary, and pass it the value of the `:print-params` slot."
    :requires #{#'session}
    :expects #{"eval" "load-file"}})
 
