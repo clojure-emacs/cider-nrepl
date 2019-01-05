@@ -125,7 +125,7 @@
       (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))
       (is (:pp-stacktrace response))))
 
-  (testing "format-edn respects the :print-right-margin slot"
+  (testing "format-edn respects the :right-margin print config"
     (let [wide-edn-sample     "[1 2 3 4 5 6       7 8     9    0]"
           normal-reply        (session/message {:op  "format-edn" :edn wide-edn-sample})
           narrow-margin-reply (session/message {:op "format-edn"

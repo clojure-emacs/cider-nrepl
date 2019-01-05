@@ -200,7 +200,7 @@
              "format-edn"
              {:doc "Reformats the given EDN data, returning the result as a string."
               :requires {"edn" "The data to format."}
-              :optional {"print-right-margin" "The maximum column width of the formatted result."
+              :optional {"print-options" "A map of params for the print function."
                          "pprint-fn" "Fully qualified name of the print function to be used."}
               :returns {"formatted-edn" "The formatted data."}}}})
 
