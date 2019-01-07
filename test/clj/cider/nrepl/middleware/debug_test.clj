@@ -188,8 +188,7 @@
            2))))
 
 (deftest pr-short-test
-  (reset! d/print-length 4)
-  (reset! d/print-level 2)
+  (reset! d/print-options {:length 4, :level 2})
   (is (< (count (d/pr-short [1 2 3 4 5 6 7 8 9 10]))
          (count (pr-str [1 2 3 4 5 6 7 8 9 10]))))
   (is (< (count (d/pr-short [[[1 2 3 4]]]))

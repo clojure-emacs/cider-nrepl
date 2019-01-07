@@ -175,15 +175,15 @@ input requests. `read-debug-input` will halt until it finds its input in
 this map (identified by a key), and will `dissoc` it afterwards."}
   promises (atom {}))
 
-(defonce print-length (atom nil))
-(defonce print-level (atom nil))
+(defonce print-options (atom nil))
 (defonce step-in-to-next? (atom false))
 
 (defn pr-short
   "Like `pr-str` but limited in length and depth."
   [x]
-  (binding [*print-length* @print-length
-            *print-level*  @print-level]
+  (binding [*print-length* (:length @print-options)
+            *print-level*  (:level @print-options)]
+    ;; TODO: Make it possible to use a random print function here
     (pr-str x)))
 
 (defn- locals-for-message
@@ -620,12 +620,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn- initialize
   "Initialize the channel used for debug-input requests."
-  [{:keys [print-length print-level] :as msg}]
+  [{:keys [print-options] :as msg}]
   (when (map? @debugger-message)
     (debugger-send :status :done))
   ;; The above is just bureaucracy. The below is important.
-  (reset! @#'print-length print-length)
-  (reset! @#'print-level print-level)
+  (reset! @#'print-options print-options)
   (reset! debugger-message msg))
 
 (defn- instrumented-defs-reply
