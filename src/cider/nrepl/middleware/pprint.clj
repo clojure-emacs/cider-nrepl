@@ -18,10 +18,17 @@
 ;; TODO: Remove this middleware (or make it a no-op).
 
 (defn- resolve-pprint-fn
-  [sym]
-  (if-let [pp-fn (-> sym u/as-sym find-var)]
-    pp-fn
-    (throw (IllegalArgumentException. (format "%s is not resolvable to a var" sym)))))
+  "Resolve a namespaced symbol to a printer var. Returns the var or nil if
+  the argument is nil or not resolvable."
+  [var-sym]
+  (when-let [var-sym (and var-sym (symbol var-sym))]
+    (try
+      (require (symbol (namespace var-sym)))
+      (resolve var-sym)
+      (catch Exception ex
+        (nrepl.misc/log ex "Couldn't resolve printer function" var-sym)
+        (require 'cider.nrepl.pprint)
+        (resolve 'cider.nrepl.pprint/pprint)))))
 
 (defn handle-pprint-fn
   [handler msg]
