@@ -1,15 +1,7 @@
 (ns cider.nrepl.middleware.pprint
   (:require
-   [cider.nrepl.middleware.util.cljs :as cljs]
    cider.nrepl.pprint
-   [nrepl.middleware.interruptible-eval :refer [*msg*]]
-   [nrepl.middleware.pr-values :refer [pr-values]]
-   [nrepl.middleware.session :as session]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]
-   [orchard.misc :as u])
-  (:import
-   nrepl.transport.Transport))
+   nrepl.misc))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DEPRECATED in favour of the built-in pprint support added in nREPL 0.5 ;;
@@ -27,8 +19,7 @@
       (resolve var-sym)
       (catch Exception ex
         (nrepl.misc/log ex "Couldn't resolve printer function" var-sym)
-        (require 'cider.nrepl.pprint)
-        (resolve 'cider.nrepl.pprint/pprint)))))
+        cider.nrepl.pprint/pprint))))
 
 (defn handle-pprint-fn
   [handler msg]
