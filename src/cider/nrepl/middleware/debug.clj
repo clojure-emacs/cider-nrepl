@@ -290,7 +290,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     :causes [{:class "StackTrace"
               :message "Harmless user-requested stacktrace"
               :stacktrace (-> (Exception. "Dummy")
-                              (stacktrace/analyze-causes (:pprint-fn *msg*))
+                              (stacktrace/analyze-causes (:pprint-fn *msg*) (:print-options *msg*))
                               last :stacktrace)}]}))
 
 (def debug-commands
