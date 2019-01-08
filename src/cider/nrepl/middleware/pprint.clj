@@ -2,7 +2,6 @@
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    cider.nrepl.pprint
-   [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.pr-values :refer [pr-values]]
    [nrepl.middleware.session :as session]
@@ -26,9 +25,7 @@
 
 (defn handle-pprint-fn
   [handler msg]
-  (let [{:keys [pprint-fn print-options session]
+  (let [{:keys [pprint-fn]
          :or {pprint-fn 'cider.nrepl.pprint/pprint}}
         msg]
-    (handler (assoc msg
-                    :pprint-fn (resolve-pprint-fn pprint-fn)
-                    :print-options (walk/keywordize-keys print-options)))))
+    (handler (assoc msg :pprint-fn (resolve-pprint-fn pprint-fn)))))

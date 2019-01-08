@@ -3,12 +3,10 @@
   All functions here are simple wrappers that ensure a consistent API:
 
   * has one and two params signatures - object to print and a map of print options
-  * the keys of the print options map can be strings, as bencode clients can't send keywords
   * functions return the printed object as a string"
   {:added "0.20.0"}
   (:require
-   [clojure.pprint :as pp]
-   [clojure.walk :as walk]))
+   [clojure.pprint :as pp]))
 
 (defn pprint
   "A simple wrapper around `clojure.pprint/write`.
@@ -17,7 +15,7 @@
   ([object]
    (pprint object {}))
   ([object opts]
-   (let [opts (assoc (walk/keywordize-keys opts) :stream nil)]
+   (let [opts (assoc opts :stream nil)]
      (apply pp/write object (vec (flatten (vec opts)))))))
 
 (def ^:private fipp-printer
@@ -31,7 +29,7 @@
    (fipp-pprint object {}))
   ([object opts]
    (with-out-str
-     (@fipp-printer object (walk/keywordize-keys opts)))))
+     (@fipp-printer object opts))))
 
 (def ^:private puget-printer
   (delay
@@ -43,4 +41,4 @@
   ([object]
    (puget-pprint object {}))
   ([object opts]
-   (@puget-printer object (walk/keywordize-keys opts))))
+   (@puget-printer object opts)))
