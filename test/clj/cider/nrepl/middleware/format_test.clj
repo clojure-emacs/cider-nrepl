@@ -144,10 +144,10 @@
       (is (= #{"done"} status))))
 
   #_(testing "format-edn returns an error if the :pprint-fn is unresolvable"
-    (let [{:keys [err ex status] :as response} (session/message {:op "format-edn"
-                                                                 :edn "{:b 2 :c 3 :a 1}"
-                                                                 :pprint-fn "fake.nrepl.pprint/puget-pprint"})]
-      (is (.startsWith err "java.lang.IllegalArgumentException: No such namespace: fa"))
-      (is (= "class java.lang.IllegalArgumentException" ex))
-      (is (= #{"done" "format-edn-error"} status))
-      (is (:pp-stacktrace response)))))
+      (let [{:keys [err ex status] :as response} (session/message {:op "format-edn"
+                                                                   :edn "{:b 2 :c 3 :a 1}"
+                                                                   :pprint-fn "fake.nrepl.pprint/puget-pprint"})]
+        (is (.startsWith err "java.lang.IllegalArgumentException: No such namespace: fa"))
+        (is (= "class java.lang.IllegalArgumentException" ex))
+        (is (= #{"done" "format-edn-error"} status))
+        (is (:pp-stacktrace response)))))
