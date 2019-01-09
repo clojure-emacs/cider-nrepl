@@ -4,9 +4,10 @@
 /checkouts
 pom.xml
 pom.xml.asc
+nashorn_code_cache
 *.jar
 *.class
-.cljs_node_repl
+.cljs_nashorn_repl
 .lein-deps-sum
 .lein-failures
 .lein-plugins

@@ -16,8 +16,8 @@
                                               #'piggieback/wrap-cljs-repl))]
        (session/message {:op :eval
                          :code (nrepl/code (require '[cider.piggieback :as piggieback])
-                                           (require '[cljs.repl.node :as node])
-                                           (piggieback/cljs-repl (node/repl-env)))})
+                                           (require '[cljs.repl.nashorn :as nashorn])
+                                           (piggieback/cljs-repl (nashorn/repl-env)))})
        (session/message {:op :eval
                          :code (nrepl/code (require 'clojure.data))})
        (f)
