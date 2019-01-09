@@ -1,4 +1,4 @@
-.PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean check_node detect_timeout
+.PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean detect_timeout
 
 CLOJURE_VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.13
@@ -16,7 +16,7 @@ source-deps: .source-deps
 test-clj: .source-deps smoketest
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-clj test
 
-test-cljs: .source-deps check_node detect_timeout
+test-cljs: .source-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-cljs test
 
 eastwood:
@@ -47,8 +47,6 @@ smoketest: install
         lein with-profile +$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
 
-check_node:
-	which node
 
 # Run a background process that prints all JVM stacktraces after five minutes,
 # then kills all JVMs, to help diagnose issues with ClojureScript tests getting
