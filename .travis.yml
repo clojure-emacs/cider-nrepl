@@ -1,5 +1,5 @@
 language: clojure
-lein: 2.8.1
+lein: 2.8.3
 sudo: false
 cache:
   directories:
