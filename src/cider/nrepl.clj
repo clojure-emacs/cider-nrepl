@@ -259,6 +259,10 @@
               {:doc "Sets the page size in paginated view to specified value."
                :requires {"page-size" "New page size."
                           "session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-clear"
+              {:doc "Clears the state state of the inspector."
+               :requires {"session" "The current session"}
                :returns {"status" "\"done\""}}}}))
 
 (def-wrapper wrap-macroexpand cider.nrepl.middleware.macroexpand/handle-macroexpand
