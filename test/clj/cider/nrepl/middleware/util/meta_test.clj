@@ -16,9 +16,9 @@
           :doc "\"docstring\""}))
   (is (= (:macro (um/relevant-meta (meta #'deftest)))
          "true"))
-  (let [m (meta #'dummy-test)]
-    ;; #'strip-meta-test refers to the deftest, and not the defn
-    (alter-meta! #'dummy-test merge {:indent 1 :cider-instrumented 2 :something-else 3})
-    (is (= (um/relevant-meta (meta #'dummy-test))
-           {:indent "1", :test (pr-str (:test (meta #'dummy-test)))}))
-    (alter-meta! #'dummy-test (fn [x y] y) m)))
+  (let [the-meta (meta #'dummy-test)]
+    (is (= (um/relevant-meta (merge the-meta {:indent 1
+                                              :cider-instrumented 2
+                                              :something-else 3}))
+           {:indent "1"
+            :test (pr-str (:test the-meta))}))))
