@@ -1,7 +1,6 @@
 (ns cider.nrepl.middleware.profile-test
   (:require
    [cider.nrepl.middleware.profile :refer :all]
-   [cider.nrepl.test-session :as session]
    [cider.nrepl.test-transport :refer [test-transport]]
    [clojure.string :as str]
    [clojure.test :refer :all]))
@@ -11,7 +10,7 @@
   (f)
   (clear-profile {:transport (test-transport)}))
 
-(use-fixtures :each with-clear-profile session/session-fixture)
+(use-fixtures :each with-clear-profile)
 
 (deftest toggle-profile-test
   (testing "profile toggling"
