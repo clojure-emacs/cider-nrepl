@@ -20,8 +20,7 @@ test-cljs: .source-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-cljs test
 
 eastwood:
-	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+eastwood eastwood \
-	     "{:namespaces [:source-paths] :exclude-namespaces [cider-nrepl.plugin]}"
+	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+eastwood eastwood
 
 cljfmt:
 	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check
