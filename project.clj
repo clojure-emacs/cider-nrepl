@@ -57,31 +57,7 @@
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.8.0"]]}
 
-             :dev {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
-                                                     cider.nrepl/wrap-classpath
-                                                     cider.nrepl/wrap-complete
-                                                     cider.nrepl/wrap-debug
-                                                     cider.nrepl/wrap-enlighten
-                                                     cider.nrepl/wrap-format
-                                                     cider.nrepl/wrap-info
-                                                     cider.nrepl/wrap-inspect
-                                                     cider.nrepl/wrap-macroexpand
-                                                     cider.nrepl/wrap-ns
-                                                     cider.nrepl/wrap-out
-                                                     cider.nrepl/wrap-content-type
-                                                     cider.nrepl/wrap-slurp
-                                                     cider.nrepl/wrap-pprint-fn
-                                                     cider.nrepl/wrap-profile
-                                                     cider.nrepl/wrap-refresh
-                                                     cider.nrepl/wrap-resource
-                                                     cider.nrepl/wrap-spec
-                                                     cider.nrepl/wrap-stacktrace
-                                                     cider.nrepl/wrap-test
-                                                     cider.nrepl/wrap-trace
-                                                     cider.nrepl/wrap-tracker
-                                                     cider.nrepl/wrap-undef
-                                                     cider.nrepl/wrap-version]}
-                   :dependencies [;; For developing the Leiningen plugin.
+             :dev {:dependencies [;; For developing the Leiningen plugin.
                                   [leiningen-core "2.8.3"]
                                   ;; For the boot tasks namespace
                                   [boot/base "2.8.2"]
@@ -106,6 +82,31 @@
              :test-cljs {:test-paths ["test/cljs"]
                          :dependencies [[cider/piggieback "0.3.10"]
                                         [javax.xml.bind/jaxb-api "2.3.1"]]}
+
+             :repl {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
+                                                      cider.nrepl/wrap-classpath
+                                                      cider.nrepl/wrap-complete
+                                                      cider.nrepl/wrap-content-type
+                                                      cider.nrepl/wrap-debug
+                                                      cider.nrepl/wrap-enlighten
+                                                      cider.nrepl/wrap-format
+                                                      cider.nrepl/wrap-info
+                                                      cider.nrepl/wrap-inspect
+                                                      cider.nrepl/wrap-macroexpand
+                                                      cider.nrepl/wrap-ns
+                                                      cider.nrepl/wrap-out
+                                                      cider.nrepl/wrap-pprint-fn
+                                                      cider.nrepl/wrap-profile
+                                                      cider.nrepl/wrap-refresh
+                                                      cider.nrepl/wrap-resource
+                                                      cider.nrepl/wrap-slurp
+                                                      cider.nrepl/wrap-spec
+                                                      cider.nrepl/wrap-stacktrace
+                                                      cider.nrepl/wrap-test
+                                                      cider.nrepl/wrap-trace
+                                                      cider.nrepl/wrap-tracker
+                                                      cider.nrepl/wrap-undef
+                                                      cider.nrepl/wrap-version]}}
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
