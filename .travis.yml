@@ -35,12 +35,6 @@ stages:
         AND ( branch = master OR branch =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ )
 jobs:
   include:
-    # Test OpenJDK against latest Clojure stable
-    - env: CLOJURE_VERSION=1.10 TARGET=test-clj
-      jdk: openjdk11
-    - env: CLOJURE_VERSION=1.10 TARGET=test-cljs
-      jdk: openjdk11
-
     # Test Clojure master against a single JDK
     - env: CLOJURE_VERSION=master TARGET=test-clj
       jdk: openjdk11
