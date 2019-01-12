@@ -4,7 +4,7 @@
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]))
 
-(use-fixtures :each piggieback-fixture)
+(use-fixtures :once piggieback-fixture)
 
 (deftest cljs-complete-test
   (let [response (session/message {:op "complete"
