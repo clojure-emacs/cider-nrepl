@@ -85,6 +85,9 @@
 (defn set-page-size-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/set-page-size (:page-size msg))))
 
+(defn clear-reply [msg]
+  (inspector-response msg (swap-inspector! msg (constantly (inspect/fresh)))))
+
 (defn handle-inspect [handler msg]
   (if (= (:op msg) "eval")
     (eval-reply handler msg)
@@ -96,4 +99,5 @@
       "inspect-get-path" get-path-reply
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
-      "inspect-set-page-size" set-page-size-reply)))
+      "inspect-set-page-size" set-page-size-reply
+      "inspect-clear" clear-reply)))
