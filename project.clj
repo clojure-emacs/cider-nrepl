@@ -120,7 +120,7 @@
 
              :eastwood {:plugins [[jonase/eastwood "0.3.4"]]
                         :eastwood {:config-files ["eastwood.clj"]
-                                   :exclude-namespaces [cider-nrepl.plugin
-                                                        cider.tasks
-                                                        cider.nrepl.test-session]
+                                   ;; TODO: Add :test-paths once
+                                   ;; https://github.com/jonase/eastwood/issues/298
+                                   ;; is resolved
                                    :namespaces [:source-paths]}}})
