@@ -3,9 +3,13 @@
    [cider.piggieback :as piggieback]
    [cider.nrepl.test-session :as session]
    [cider.nrepl :refer [cider-middleware]]
+   [cljs.repl.nashorn :as nashorn]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
    [nrepl.server :as server]))
+
+(def repl-env
+  (delay (nashorn/repl-env)))
 
 (def piggieback-fixture
   (compose-fixtures
@@ -18,8 +22,7 @@
        (dorun (session/message
                {:op :eval
                 :code (nrepl/code (require '[cider.piggieback :as piggieback])
-                                  (require '[cljs.repl.nashorn :as nashorn])
-                                  (piggieback/cljs-repl (nashorn/repl-env)))}))
+                                  (piggieback/cljs-repl @cider.nrepl.piggieback-test/repl-env))}))
        (dorun (session/message {:op :eval
                                 :code (nrepl/code (require 'clojure.data))}))
        (f)
