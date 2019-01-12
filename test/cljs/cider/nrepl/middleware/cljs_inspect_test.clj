@@ -23,7 +23,13 @@
 
 ;; integration tests
 
-(use-fixtures :each piggieback-fixture)
+(defn with-fresh-inspector
+  [f]
+  (dorun (session/message {:op "inspect-clear"}))
+  (f))
+
+(use-fixtures :once piggieback-fixture)
+(use-fixtures :each with-fresh-inspector)
 
 (deftest nil-integration-test
   (testing "nil renders correctly"
