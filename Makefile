@@ -33,7 +33,6 @@ cljfmt:
 
 cloverage:
 	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+cloverage cloverage --codecov \
-	     -e ".*java.parser" \
 	     -e ".*util.instrument" \
 	     -t "^((?!debug-integration-test).)*$$"
 
