@@ -32,7 +32,7 @@ cljfmt:
 # exact. See issue #457 for details.
 
 cloverage:
-	lein with-profile +$(CLOJURE_VERSION),+test-clj,+cloverage cloverage --codecov \
+	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+cloverage cloverage --codecov \
 	     -e ".*java.parser" \
 	     -e ".*util.instrument" \
 	     -t "^((?!debug-integration-test).)*$$"
