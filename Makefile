@@ -3,7 +3,6 @@
 CLOJURE_VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.13
 
-# The test-cljs target needs to be modified if working with JDK9
 JAVA_VERSION = $(shell lein with-profile +sysutils \
                        sysutils :java-version-simple | cut -d " " -f 2)
 
