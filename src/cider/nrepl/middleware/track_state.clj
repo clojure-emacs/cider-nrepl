@@ -22,9 +22,9 @@
 (defn- var-meta-with-fn
   "Like clojure.core/meta but adds {:fn true} for functions and macros.
   Should only be used for vars."
-  [var]
-  (cond-> (meta var)
-    (or (fn? @var) (instance? MultiFn @var)) (assoc :fn true)))
+  [the-var]
+  (cond-> (meta the-var)
+    (or (fn? @the-var) (instance? MultiFn @the-var)) (assoc :fn true)))
 
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
