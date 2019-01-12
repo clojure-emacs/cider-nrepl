@@ -1,9 +1,9 @@
 (ns cider.nrepl.test-session
   (:require
    [cider.nrepl :refer [cider-nrepl-handler]]
-   [cider.nrepl.test.server :refer [start-server]]
    [clojure.test :refer :all]
-   [nrepl.core :as nrepl]))
+   [nrepl.core :as nrepl]
+   [nrepl.server :refer [start-server]]))
 
 (def ^:dynamic *handler* cider-nrepl-handler)
 (def ^:dynamic *session* nil)
