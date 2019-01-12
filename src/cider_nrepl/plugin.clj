@@ -2,26 +2,17 @@
   "Provides a simple way to setup the CIDER nREPL middleware in
   Leiningen projects."
   (:require
+   [cider.nrepl.version :refer [version-string]]
    [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
-;; Keep in sync with the version in project.clj
-(defn- version
-  []
-  (let [v (-> (io/resource "cider/cider-nrepl/project.clj")
-              slurp
-              read-string
-              (nth 2))]
-    (assert (string? v)
-            (str "Something went wrong, version is not a string: "
-                 v))
-    v))
+(def min-lein-version "2.8.2")
 
 ;; Exists for the sole purpose of modifying the current project's metadata.
 ;; See https://github.com/technomancy/leiningen/blob/master/doc/PLUGINS.md#project-middleware
 (defn middleware
   [{:keys [dependencies exclusions] :as project}]
-  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) "2.8.2")
+  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) min-lein-version)
         clojure-excluded?   (some #(= % 'org.clojure/clojure) exclusions)
         clojure-version     (when-not clojure-excluded?
                               (->> dependencies
@@ -55,7 +46,7 @@
       (and clojure-version-ok? lein-version-ok?)
       (-> (update-in [:dependencies]
                      (fnil into [])
-                     [['cider/cider-nrepl (version)]])
+                     [['cider/cider-nrepl version-string]])
           (update-in [:repl-options :nrepl-middleware]
                      (fnil into [])
                      (do (require 'cider.nrepl)
