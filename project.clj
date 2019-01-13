@@ -69,6 +69,8 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.9.946" :scope "provided"]
                                   [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]
+                   ;; TODO: Merge the tests in this dir in to test/clj once we
+                   ;; drop support for Clojure 1.8
                    :test-paths ["test/spec"]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]
                                    [org.clojure/clojurescript "1.10.63" :scope "provided"]]
