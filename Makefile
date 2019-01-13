@@ -12,7 +12,7 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 
 source-deps: .source-deps
 
-test: .source-deps smoketest
+test: .source-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config test
 
 eastwood:
