@@ -21,16 +21,8 @@ eastwood:
 cljfmt:
 	lein with-profile +$(CLOJURE_VERSION),+cljfmt cljfmt check
 
-
-# Cloverage can't handle some of the code in this project.  For now we
-# must filter problematic namespaces (`-e`) and tests (`-t`) from
-# instrumentation. Note: this means for now coverage reporting isn't
-# exact. See issue #457 for details.
-
 cloverage:
-	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage --codecov \
-	     -e ".*util.instrument" \
-	     -t "^((?!debug-integration-test).)*$$"
+	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage
 
 install: .source-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config install

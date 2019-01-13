@@ -114,7 +114,12 @@
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
              :cloverage [:test
-                         {:plugins [[lein-cloverage "1.0.13"]]}]
+                         {:plugins [[lein-cloverage "1.0.13"]]
+                          :cloverage {:codecov? true
+                                      ;; Cloverage can't handle some of the code
+                                      ;; in this project; see issue #457
+                                      :ns-exclude-regex [#".*util.instrument"]
+                                      :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
                       {:plugins [[lein-cljfmt "0.6.1"]]
