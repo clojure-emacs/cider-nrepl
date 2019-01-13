@@ -8,12 +8,9 @@ script:
   - make $TARGET
 env:
   matrix:
-    - CLOJURE_VERSION=1.8 TARGET=test-clj
-    - CLOJURE_VERSION=1.8 TARGET=test-cljs
-    - CLOJURE_VERSION=1.9 TARGET=test-clj
-    - CLOJURE_VERSION=1.9 TARGET=test-cljs
-    - CLOJURE_VERSION=1.10 TARGET=test-clj
-    - CLOJURE_VERSION=1.10 TARGET=test-cljs
+    - CLOJURE_VERSION=1.8 TARGET=test
+    - CLOJURE_VERSION=1.9 TARGET=test
+    - CLOJURE_VERSION=1.10 TARGET=test
   global:
     - secure: "bCp4gU7XgeqLnqKwEpJarnKPbGljHyLE2rZnub4mEHD8kcvh6LoEkG/2QCtnSETj8zrQJwyMuEDGUwPgjmzQ/aEn6UiIYmv7ka6QnLBxOxhqQTbDtG7HssfkeT5b67LgOyQX7ejK88vnmH+OeWXM7kOOvUwVy5BVgsYyr2f1cGU="
     - secure: "D2Ie7dUZ9nQOIWtkRl2XWZeijSL8expUXP3GziSqQV1scJzwexxnUsRvWOkc2YU8+6IIGz9tcyt9RrEFUVF31VZgRSHh8P5rGGCzI2l99djKhYFfSErElwgoAJZFtOzougZK66/Gtb5uDo5L/wlKHkl4st3miqm+mEvfJITDjRQ="
@@ -36,9 +33,7 @@ stages:
 jobs:
   include:
     # Test Clojure master against a single JDK
-    - env: CLOJURE_VERSION=master TARGET=test-clj
-      jdk: openjdk11
-    - env: CLOJURE_VERSION=master TARGET=test-cljs
+    - env: CLOJURE_VERSION=master TARGET=test
       jdk: openjdk11
 
     # Coverage analysis
@@ -63,7 +58,6 @@ jobs:
 
   fast_finish: true      # don't wait for allowed failures before build finish
   allow_failures:
-    - env: CLOJURE_VERSION=master TARGET=test-clj
-    - env: CLOJURE_VERSION=master TARGET=test-cljs
+    - env: CLOJURE_VERSION=master TARGET=test
     - env: CLOJURE_VERSION=1.10 TARGET=cloverage
     - jdk: openjdk-ea

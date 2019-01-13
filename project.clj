@@ -28,7 +28,9 @@
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
-  :test-paths ["test/common"] ;; See `test-clj` and `test-cljs` profiles below.
+  :source-paths ["src"]
+  :resource-paths ["resources"]
+  :test-paths ["test/clj" "test/cljs" "test/common"]
 
   :test-selectors {:default (fn [test-meta]
                               (let [parse-version (fn [v] (mapv #(Integer/parseInt (re-find #"\d+" %)) (clojure.string/split v #"\.")))
@@ -57,16 +59,16 @@
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.8.0"]]}
 
-             :dev {:dependencies [;; For developing the Leiningen plugin.
-                                  [leiningen-core "2.8.3"]
-                                  ;; For the boot tasks namespace
-                                  [boot/base "2.8.2"]
-                                  [boot/core "2.8.2"]]}
+             :dev {:dependencies [[boot/base "2.8.2"]
+                                  [boot/core "2.8.2"]
+                                  [leiningen-core "2.8.3"]]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
-                                  [org.clojure/clojurescript "1.8.51" :scope "provided"]]}
+                                  [org.clojure/clojurescript "1.8.51" :scope "provided"]
+                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.9.946" :scope "provided"]]
+                                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
+                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]
                    :test-paths ["test/spec"]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]
                                    [org.clojure/clojurescript "1.10.63" :scope "provided"]]
@@ -75,13 +77,10 @@
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]
                                      [org.clojure/clojurescript "1.10.439" :scope "provided"]]}
 
-             :test-clj {:source-paths ["test/src"]
-                        :java-source-paths ["test/java"]
-                        :resource-paths ["test/resources"]
-                        :test-paths ["test/clj"]}
-             :test-cljs {:test-paths ["test/cljs"]
-                         :dependencies [[cider/piggieback "0.3.10"]
-                                        [javax.xml.bind/jaxb-api "2.3.1"]]}
+             :test {:source-paths ["test/src"]
+                    :java-source-paths ["test/java"]
+                    :resource-paths ["test/resources"]
+                    :dependencies [[cider/piggieback "0.3.10"]]}
 
              :repl {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
                                                       cider.nrepl/wrap-classpath
