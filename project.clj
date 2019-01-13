@@ -84,45 +84,50 @@
                     :resource-paths ["test/resources"]
                     :dependencies [[cider/piggieback "0.3.10"]]}
 
-             :repl {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
-                                                      cider.nrepl/wrap-classpath
-                                                      cider.nrepl/wrap-complete
-                                                      cider.nrepl/wrap-content-type
-                                                      cider.nrepl/wrap-debug
-                                                      cider.nrepl/wrap-enlighten
-                                                      cider.nrepl/wrap-format
-                                                      cider.nrepl/wrap-info
-                                                      cider.nrepl/wrap-inspect
-                                                      cider.nrepl/wrap-macroexpand
-                                                      cider.nrepl/wrap-ns
-                                                      cider.nrepl/wrap-out
-                                                      cider.nrepl/wrap-pprint-fn
-                                                      cider.nrepl/wrap-profile
-                                                      cider.nrepl/wrap-refresh
-                                                      cider.nrepl/wrap-resource
-                                                      cider.nrepl/wrap-slurp
-                                                      cider.nrepl/wrap-spec
-                                                      cider.nrepl/wrap-stacktrace
-                                                      cider.nrepl/wrap-test
-                                                      cider.nrepl/wrap-trace
-                                                      cider.nrepl/wrap-tracker
-                                                      cider.nrepl/wrap-undef
-                                                      cider.nrepl/wrap-version]}}
+             ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
+             :repl ^:repl [:test
+                           {:repl-options {:nrepl-middleware [cider.nrepl/wrap-apropos
+                                                              cider.nrepl/wrap-classpath
+                                                              cider.nrepl/wrap-complete
+                                                              cider.nrepl/wrap-content-type
+                                                              cider.nrepl/wrap-debug
+                                                              cider.nrepl/wrap-enlighten
+                                                              cider.nrepl/wrap-format
+                                                              cider.nrepl/wrap-info
+                                                              cider.nrepl/wrap-inspect
+                                                              cider.nrepl/wrap-macroexpand
+                                                              cider.nrepl/wrap-ns
+                                                              cider.nrepl/wrap-out
+                                                              cider.nrepl/wrap-pprint-fn
+                                                              cider.nrepl/wrap-profile
+                                                              cider.nrepl/wrap-refresh
+                                                              cider.nrepl/wrap-resource
+                                                              cider.nrepl/wrap-slurp
+                                                              cider.nrepl/wrap-spec
+                                                              cider.nrepl/wrap-stacktrace
+                                                              cider.nrepl/wrap-test
+                                                              cider.nrepl/wrap-trace
+                                                              cider.nrepl/wrap-tracker
+                                                              cider.nrepl/wrap-undef
+                                                              cider.nrepl/wrap-version]}}]
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 
-             :cloverage {:plugins [[lein-cloverage "1.0.13"]]}
+             :cloverage [:test
+                         {:plugins [[lein-cloverage "1.0.13"]]}]
 
-             :cljfmt {:plugins [[lein-cljfmt "0.6.1"]]
-                      :cljfmt {:indents {as-> [[:inner 0]]
-                                         with-debug-bindings [[:inner 0]]
-                                         merge-meta [[:inner 0]]
-                                         try-if-let [[:block 1]]
-                                         if-class [[:block 1]]}}}
+             :cljfmt [:test
+                      {:plugins [[lein-cljfmt "0.6.1"]]
+                       :cljfmt {:indents {as-> [[:inner 0]]
+                                          with-debug-bindings [[:inner 0]]
+                                          merge-meta [[:inner 0]]
+                                          try-if-let [[:block 1]]
+                                          if-class [[:block 1]]}}}]
 
-             :eastwood {:plugins [[jonase/eastwood "0.3.4"]]
-                        :eastwood {:config-files ["eastwood.clj"]
-                                   ;; TODO: Add :test-paths once
-                                   ;; https://github.com/jonase/eastwood/issues/298
-                                   ;; is resolved
-                                   :namespaces [:source-paths]}}})
+             :eastwood [:test
+                        {:plugins [[jonase/eastwood "0.3.4"]]
+                         :eastwood {:config-files ["eastwood.clj"]
+                                    ;; TODO: Add :test-paths once
+                                    ;; https://github.com/jonase/eastwood/issues/298
+                                    ;; is resolved
+                                    :namespaces [:source-paths]}}]})
