@@ -37,7 +37,8 @@ jobs:
       jdk: openjdk11
 
     # Coverage analysis
-    - env: CLOJURE_VERSION=1.10 TARGET=cloverage
+    - stage: test
+      env: CLOJURE_VERSION=1.10 TARGET=cloverage
       jdk: openjdk11
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
 
