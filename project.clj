@@ -57,7 +57,7 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.8.0"]]}
+  :profiles {:provided [:1.8]
 
              :dev {:dependencies [[boot/base "2.8.2"]
                                   [boot/core "2.8.2"]
