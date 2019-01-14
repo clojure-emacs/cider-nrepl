@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.20.0 (2019-01-14)
+
 ### New features
 
 * Add print functions compatible with nREPL 0.5 to `cider.nrepl.pprint` namespace.
