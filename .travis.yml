@@ -21,48 +21,38 @@ jdk:
   - openjdk-ea
 stages:
   - name: check
+    jdk: openjdk11
   - name: test
-  # Deploy only from the home repo where the credentials can be
-  # properly decrypted. Never deploy from a pull request job.
-  # In addition, ensure we're on the master branch (snapshots)
-  # or a branch with semver naming (releases).
   - name: deploy
+    jdk: openjdk11
+    # Deploy only from the home repo where the credentials can be
+    # properly decrypted. Never deploy from a pull request job.
+    # In addition, ensure we're on the master branch (snapshots)
+    # or a branch with semver naming (releases).
     if: repo = clojure-emacs/cider-nrepl
         AND type != pull_request
         AND ( branch = master OR branch =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ )
 jobs:
   include:
-    # Test Clojure master against a single JDK
-    - env: CLOJURE_VERSION=master TARGET=test
+    - stage: check
+      env: CLOJURE_VERSION=1.10 TARGET=eastwood
+
+    - stage: check
+      env: CLOJURE_VERSION=1.10 TARGET=cljfmt
+
+    - stage: test
+      env: CLOJURE_VERSION=master TARGET='test smoketest'
       jdk: openjdk11
 
-    # Coverage analysis
     - stage: test
       env: CLOJURE_VERSION=1.10 TARGET=cloverage
       jdk: openjdk11
       after_success: bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
 
-    # Test Clojure master against a single JDK
-    - stage: test
-      env: CLOJURE_VERSION=master TARGET='test smoketest'
-      jdk: openjdk11
-
-    # Eastwood linter
-    - stage: check
-      env: CLOJURE_VERSION=1.10 TARGET=eastwood
-      jdk: openjdk11
-
-    # Check cljfmt
-    - stage: check
-      env: CLOJURE_VERSION=1.10 TARGET=cljfmt
-      jdk: openjdk11
-
-    # Deployment
     - stage: deploy
       env: TARGET=deploy
-      jdk: openjdk11
 
-  fast_finish: true      # don't wait for allowed failures before build finish
+  fast_finish: true
   allow_failures:
     - jdk: openjdk-ea
     - env: CLOJURE_VERSION=master TARGET='test smoketest'
