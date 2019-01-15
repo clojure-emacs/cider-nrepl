@@ -33,6 +33,7 @@ stages:
     if: repo = clojure-emacs/cider-nrepl
         AND type != pull_request
         AND ( branch = master OR branch =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ )
+
 jobs:
   include:
     - stage: check
@@ -53,6 +54,7 @@ jobs:
     - stage: deploy
       env: TARGET=deploy
 
+matrix:
   fast_finish: true
   allow_failures:
     - jdk: openjdk-ea
