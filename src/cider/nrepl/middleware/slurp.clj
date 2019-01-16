@@ -65,7 +65,8 @@
 
 (defn get-file-content-type [^Path p]
   (or (get known-content-types (split-last (.toString p) "."))
-      (Files/probeContentType p)))
+      (Files/probeContentType p)
+      "application/octet-stream"))
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove this if-class when we have jdk1.8 min
