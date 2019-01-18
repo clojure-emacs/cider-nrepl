@@ -74,7 +74,7 @@
 ;;; Agents, futures, delays, promises, etc
 (defn- deref-name [c]
   (let [class-name (translate-class-name c)]
-    (if-let [[_ short-name] (re-find #"^clojure\.lang\.([^.]+)" class-name)]
+    (if-let [[_ ^String short-name] (re-find #"^clojure\.lang\.([^.]+)" class-name)]
       (.toLowerCase short-name)
       (case (second (re-find #"^clojure\.core/(.+)/reify" class-name))
         "future-call" "future"

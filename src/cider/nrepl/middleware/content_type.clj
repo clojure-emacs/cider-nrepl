@@ -46,6 +46,7 @@
    [cider.nrepl.middleware.slurp :refer [slurp-reply]])
   (:import
    java.awt.Image
+   [java.awt.image RenderedImage]
    [java.io ByteArrayOutputStream File OutputStream]
    [java.net URI URL]
    java.nio.file.Path
@@ -94,7 +95,7 @@
     (assoc response
            :content-type ["message/external-body"
                           {"access-type" "URL"
-                           "URL" (.toString (as-url value))}]
+                           "URL" (.toString ^URL (as-url value))}]
            :body "")
 
     ;; FIXME (arrdem 2018-04-03):
@@ -107,7 +108,7 @@
     (instance? java.awt.Image value)
     (with-open [bos (ByteArrayOutputStream.)]
       (merge response
-             (when (ImageIO/write ^Image value "png" ^OutputStream bos)
+             (when (ImageIO/write ^RenderedImage value "png" ^OutputStream bos)
                (slurp-reply "" ["image/png" {}] (.toByteArray bos)))))
 
     :else response))
