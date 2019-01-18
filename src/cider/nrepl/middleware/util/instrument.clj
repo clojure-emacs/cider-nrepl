@@ -252,8 +252,8 @@
   [x y]
   (if (seq x)
     (if (seq y)
-      (let [fa (first x)
-            fb (first y)]
+      (let [^int fa (first x)
+            ^int fb (first y)]
         (if (= fa fb)
           (recur (rest x) (rest y))
           (< fa fb)))

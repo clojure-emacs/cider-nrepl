@@ -66,7 +66,7 @@
   []
   (letfn [(hex [] (format "%x" (rand-int 15)))
           (nhex [n] (apply str (repeatedly n hex)))]
-    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 (rand-int 14))))]
+    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 ^int (rand-int 14))))]
       (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
            "-" rhex (nhex 3) "-" (nhex 12)))))
 
@@ -139,7 +139,7 @@
   (if (map? *msg*)
     (do
       (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
-      (.stop (:thread (meta (:session *msg*)))))
+      (.stop ^Thread (:thread (meta (:session *msg*)))))
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
     ;; the user won't be offered the :quit option if there's no *msg*.
@@ -380,7 +380,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
             (throw (ex-info "Invalid input from `read-debug-input`."
                             {:response-raw response-raw})))))))
 
-(defn print-step-indented [depth form value]
+(defn print-step-indented [^long depth form value]
   (print (apply str (repeat (dec depth) "| ")))
   (binding [*print-length* 4
             *print-level*  2]
