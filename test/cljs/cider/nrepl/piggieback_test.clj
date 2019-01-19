@@ -3,9 +3,13 @@
    [cider.piggieback :as piggieback]
    [cider.nrepl.test-session :as session]
    [cider.nrepl :refer [cider-middleware]]
+   [cljs.repl.nashorn :as nashorn]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
    [nrepl.server :as server]))
+
+(def repl-env
+  (delay (nashorn/repl-env)))
 
 (def piggieback-fixture
   (compose-fixtures
@@ -14,12 +18,13 @@
      (binding [session/*handler* (apply server/default-handler
                                         (conj (map resolve cider-middleware)
                                               #'piggieback/wrap-cljs-repl))]
-       (session/message {:op :eval
-                         :code (nrepl/code (require '[cider.piggieback :as piggieback])
-                                           (require '[cljs.repl.nashorn :as nashorn])
-                                           (piggieback/cljs-repl (nashorn/repl-env)))})
-       (session/message {:op :eval
-                         :code (nrepl/code (require 'clojure.data))})
+       ;; TODO check the result of this; we shouldn't run any tests if it fails
+       (dorun (session/message
+               {:op :eval
+                :code (nrepl/code (require '[cider.piggieback :as piggieback])
+                                  (piggieback/cljs-repl @cider.nrepl.piggieback-test/repl-env))}))
+       (dorun (session/message {:op :eval
+                                :code (nrepl/code (require 'clojure.data))}))
        (f)
        (session/message {:op :eval
                          :code (nrepl/code :cljs/quit)})))))

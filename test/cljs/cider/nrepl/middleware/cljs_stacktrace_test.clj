@@ -4,7 +4,7 @@
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]))
 
-(use-fixtures :each piggieback-fixture)
+(use-fixtures :once piggieback-fixture)
 
 (deftest cljs-stacktrace-test
   (testing "no last error"

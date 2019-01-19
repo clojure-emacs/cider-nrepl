@@ -1,9 +1,8 @@
-.PHONY: test-clj test-cljs eastwood cljfmt cloverage install smoketest release deploy clean detect_timeout
+.PHONY: test eastwood cljfmt cloverage install smoketest release deploy clean detect_timeout
 
 CLOJURE_VERSION ?= 1.9
 export CLOVERAGE_VERSION = 1.0.13
 
-# The test-cljs target needs to be modified if working with JDK9
 JAVA_VERSION = $(shell lein with-profile +sysutils \
                        sysutils :java-version-simple | cut -d " " -f 2)
 
@@ -13,31 +12,17 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 
 source-deps: .source-deps
 
-test-clj: .source-deps smoketest
-	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-clj test
-
-test-cljs: .source-deps
-	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config,+test-cljs test
+test: .source-deps
+	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config test
 
 eastwood:
-	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+eastwood eastwood \
-	     "{:namespaces [:source-paths] :exclude-namespaces [cider-nrepl.plugin]}"
+	lein with-profile +$(CLOJURE_VERSION),+eastwood eastwood
 
 cljfmt:
-	lein with-profile +$(CLOJURE_VERSION),+test-clj,+test-cljs,+cljfmt cljfmt check
-
-
-# Cloverage can't handle some of the code in this project.  For now we
-# must filter problematic namespaces (`-e`) and tests (`-t`) from
-# instrumentation. Note: this means for now coverage reporting isn't
-# exact. See issue #457 for details.
+	lein with-profile +$(CLOJURE_VERSION),+cljfmt cljfmt check
 
 cloverage:
-	lein with-profile +$(CLOJURE_VERSION),+test-clj,+cloverage cloverage --codecov \
-	     -e ".*java.parser" \
-	     -e "cider-nrepl.plugin" \
-	     -e ".*util.instrument" \
-	     -t "^((?!debug-integration-test).)*$$"
+	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage
 
 install: .source-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config install

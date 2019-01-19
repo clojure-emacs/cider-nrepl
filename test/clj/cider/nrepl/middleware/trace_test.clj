@@ -19,18 +19,18 @@
       (is (= {:var-status "not-found" :status #{:toggle-trace-error :done}}
              (toggle-trace-var {:ns "clojure.core" :sym "mappp"}))))
 
-    (testing "toogle-trace-var-op not traceable var, should return `not-traceable`"
+    (testing "toggle-trace-var-op not traceable var, should return `not-traceable`"
       (is (= {:var-name "#'clojure.core/and" :var-status "not-traceable"}
              (toggle-trace-var {:ns "clojure.core" :sym "and"}))))))
 
 (deftest toggle-trace-ns-test
-  (testing "toogling"
+  (testing "toggling"
     (is (= {:ns-status "traced"}
            (toggle-trace-ns {:ns "clojure.core"})))
     (is (= {:ns-status "untraced"}
            (toggle-trace-ns {:ns "clojure.core"}))))
 
-  (testing "toogle-trace-ns-op missing ns should return `not-found`"
+  (testing "toggle-trace-ns-op missing ns should return `not-found`"
     (is (= {:ns-status "not-found"}
            (toggle-trace-ns {:ns "clojure.corex"})))))
 
