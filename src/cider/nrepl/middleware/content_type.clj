@@ -106,9 +106,9 @@
 
     (instance? java.awt.Image value)
     (with-open [bos (ByteArrayOutputStream.)]
-      (ImageIO/write ^Image value "png" ^OutputStream bos)
       (merge response
-             (slurp-reply ["image/png" {}] (.toByteArray bos))))
+             (when (ImageIO/write ^Image value "png" ^OutputStream bos)
+               (slurp-reply ["image/png" {}] (.toByteArray bos)))))
 
     :else response))
 
