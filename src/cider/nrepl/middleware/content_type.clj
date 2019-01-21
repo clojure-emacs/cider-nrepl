@@ -108,7 +108,7 @@
     (with-open [bos (ByteArrayOutputStream.)]
       (merge response
              (when (ImageIO/write ^Image value "png" ^OutputStream bos)
-               (slurp-reply ["image/png" {}] (.toByteArray bos)))))
+               (slurp-reply "" ["image/png" {}] (.toByteArray bos)))))
 
     :else response))
 

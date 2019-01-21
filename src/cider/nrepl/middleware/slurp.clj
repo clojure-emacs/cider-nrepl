@@ -65,7 +65,8 @@
 
 (defn get-file-content-type [^Path p]
   (or (get known-content-types (split-last (.toString p) "."))
-      (Files/probeContentType p)))
+      (Files/probeContentType p)
+      "application/octet-stream"))
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove this if-class when we have jdk1.8 min
@@ -74,15 +75,23 @@
   (if-class java.util.Base64
     (.encodeToString (Base64/getEncoder) buff)))
 
-(defn slurp-reply [content-type buff]
+(defn slurp-reply [location content-type buff]
   (let [^String real-type (first content-type)
+        binary? (= "application/octet-stream" real-type)
         text? (.contains real-type "text")]
-    (if-not text?
+    (cond
+      binary?
+      {:content-type content-type
+       :body (str "#binary[location=" location ",size=" (count buff) "]")}
+
+      text?
+      {:content-type content-type
+       :body (String. buff "utf-8")}
+
+      :default
       {:content-type content-type
        :content-transfer-encoding "base64"
-       :body (base64-bytes buff)}
-      {:content-type content-type
-       :body (String. buff "utf-8")})))
+       :body (base64-bytes buff)})))
 
 (defn slurp-url-to-content+body
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
@@ -91,10 +100,9 @@
                     (catch MalformedURLException e nil))]
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))
-            content-type (normalize-content-type
-                          (get-file-content-type p))
+            content-type (normalize-content-type (get-file-content-type p))
             buff (Files/readAllBytes p)]
-        (slurp-reply content-type buff))
+        (slurp-reply p content-type buff))
 
       ;; It's not a file, so just try to open it on up
       (let [conn (.openConnection url)
@@ -109,7 +117,7 @@
             (when (<= 0 b)
               (.write os b)
               (recur))))
-        (slurp-reply content-type (.toByteArray os))))))
+        (slurp-reply url content-type (.toByteArray os))))))
 
 ;; FIXME (arrdem 2018-04-11):
 ;;   Remove this if-class when we have jdk1.8 min
