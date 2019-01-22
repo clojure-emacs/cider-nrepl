@@ -21,10 +21,8 @@ jdk:
   - openjdk-ea
 stages:
   - name: check
-    jdk: openjdk11
   - name: test
   - name: deploy
-    jdk: openjdk11
     # Deploy only from the home repo where the credentials can be
     # properly decrypted. Never deploy from a pull request job.
     # In addition, ensure we're on the master branch (snapshots)
@@ -37,9 +35,11 @@ jobs:
   include:
     - stage: check
       env: CLOJURE_VERSION=1.10 TARGET=eastwood
+      jdk: openjdk11
 
     - stage: check
       env: CLOJURE_VERSION=1.10 TARGET=cljfmt
+      jdk: openjdk11
 
     - stage: test
       env: CLOJURE_VERSION=1.10 TARGET=cloverage
@@ -48,6 +48,7 @@ jobs:
 
     - stage: deploy
       env: TARGET=deploy
+      jdk: openjdk11
 
 matrix:
   fast_finish: true
