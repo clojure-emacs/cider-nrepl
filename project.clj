@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
 
-  :dependencies [[nrepl "0.5.3"]
+  :dependencies [[nrepl "0.6.0"]
                  ^:source-dep [cider/orchard "0.4.0"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.1.0"]

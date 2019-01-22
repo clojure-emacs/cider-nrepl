@@ -161,7 +161,7 @@ boot -d nrepl:0.5.3 -d cider/cider-nrepl:0.20.0 -i "(require 'cider.tasks)" cide
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 
 ```clojure
-(set-env! :dependencies '[[nrepl "0.5.3"]
+(set-env! :dependencies '[[nrepl "0.6.0"]
                           [cider/cider-nrepl "0.20.0"]])
 
 (require '[cider.tasks :refer [add-middleware nrepl-server]])
