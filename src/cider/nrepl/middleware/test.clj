@@ -263,47 +263,35 @@
   the nREPL session."
   (atom {}))
 
-(defmacro with-interruptible-eval
-  "Run body mimicking interruptible-eval."
-  [msg & body]
-  `(let [session# (:session ~msg)]
-     ;; Before tools.nrepl-0.2.10, `queue-eval` was private.
-     (@#'ie/queue-eval session# (:executor ~msg)
-                       (fn []
-                         (alter-meta! session# assoc
-                                      :thread (Thread/currentThread)
-                                      :eval-msg ~msg)
-                         (binding [ie/*msg* ~msg]
-                           (with-bindings @session#
-                             ~@body)
-                           (alter-meta! session# dissoc :thread :eval-msg))))))
-
 (defn handle-test-var-query-op
-  [{:keys [var-query transport] :as msg}]
-  (with-interruptible-eval
-    msg
-    (try
-      (let [stringify-msg (fn [report]
-                            (walk/postwalk (fn [x] (if (and (map? x)
-                                                            (contains? x :message))
-                                                     (update x :message str)
-                                                     x))
-                                           report))
-            report (-> var-query
-                       (assoc-in [:ns-query :has-tests?] true)
-                       (assoc :test? true)
-                       (util.coerce/var-query)
-                       test-var-query
-                       stringify-msg)]
-        (reset! results (:results report))
-        (t/send transport (response-for msg (u/transform-value report))))
-      (catch clojure.lang.ExceptionInfo e
-        (let [d (ex-data e)]
-          (if (::util.coerce/id d)
-            (case (::util.coerce/id d)
-              :namespace-not-found (t/send transport (response-for msg :status :namespace-not-found)))
-            (throw e)))))
-    (t/send transport (response-for msg :status :done))))
+  [{:keys [var-query transport session id] :as msg}]
+  (let [{:keys [exec]} (meta session)]
+    (exec id
+          (fn []
+            (with-bindings (assoc @session #'ie/*msg* msg)
+              (try
+                (let [stringify-msg (fn [report]
+                                      (walk/postwalk (fn [x] (if (and (map? x)
+                                                                      (contains? x :message))
+                                                               (update x :message str)
+                                                               x))
+                                                     report))
+                      report (-> var-query
+                                 (assoc-in [:ns-query :has-tests?] true)
+                                 (assoc :test? true)
+                                 (util.coerce/var-query)
+                                 test-var-query
+                                 stringify-msg)]
+                  (reset! results (:results report))
+                  (t/send transport (response-for msg (u/transform-value report))))
+                (catch clojure.lang.ExceptionInfo e
+                  (let [d (ex-data e)]
+                    (if (::util.coerce/id d)
+                      (case (::util.coerce/id d)
+                        :namespace-not-found (t/send transport (response-for msg :status :namespace-not-found)))
+                      (throw e)))))))
+          (fn []
+            (t/send transport (response-for msg {:status :done}))))))
 
 (defn handle-test-op
   [{:keys [ns tests include exclude] :as msg}]
@@ -322,41 +310,42 @@
                            :exclude-meta-key exclude}})))
 
 (defn handle-retest-op
-  [{:keys [session transport] :as msg}]
-  (with-interruptible-eval msg
-    (let [nss (reduce (fn [ret [ns tests]]
-                        (let [problems (filter (comp #{:fail :error} :type)
-                                               (mapcat val tests))
-                              vars (distinct (map :var problems))]
-                          (if (seq vars) (assoc ret ns vars) ret)))
-                      {} @results)
-          report (test-nss nss)]
-      (reset! results (:results report))
-      (t/send transport (response-for msg (u/transform-value report))))
-    (t/send transport (response-for msg :status :done))))
+  [{:keys [transport session id] :as msg}]
+  (let [{:keys [exec]} (meta session)]
+    (exec id
+          (fn []
+            (with-bindings (assoc @session #'ie/*msg* msg)
+              (let [nss (reduce (fn [ret [ns tests]]
+                                  (let [problems (filter (comp #{:fail :error} :type)
+                                                         (mapcat val tests))
+                                        vars (distinct (map :var problems))]
+                                    (if (seq vars) (assoc ret ns vars) ret)))
+                                {} @results)
+                    report (test-nss nss)]
+                (reset! results (:results report))
+                (t/send transport (response-for msg (u/transform-value report))))))
+          (fn []
+            (t/send transport (response-for msg :status :done))))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index session transport pprint-fn print-options] :as msg}]
-  (with-interruptible-eval msg
-    (let [[ns var] (map u/as-sym [ns var])]
-      (if-let [e (get-in @results [ns var index :error])]
-        (doseq [cause (st/analyze-causes e pprint-fn print-options)]
-          (t/send transport (response-for msg cause)))
-        (t/send transport (response-for msg :status :no-error)))
-      (t/send transport (response-for msg :status :done)))))
-
-;; Before tools.nrepl-0.2.10, `default-executor` was private and
-;; before 0.2.9 it didn't even exist.
-(def default-executor (delay (if-let [def (resolve 'ie/default-executor)]
-                               @@def
-                               (@#'ie/configure-executor))))
+  [{:keys [ns var index transport session id pprint-fn print-options] :as msg}]
+  (let [{:keys [exec]} (meta session)]
+    (exec id
+          (fn []
+            (with-bindings (assoc @session #'ie/*msg* msg)
+              (let [[ns var] (map u/as-sym [ns var])]
+                (if-let [e (get-in @results [ns var index :error])]
+                  (doseq [cause (st/analyze-causes e pprint-fn print-options)]
+                    (t/send transport (response-for msg cause)))
+                  (t/send transport (response-for msg :status :no-error))))))
+          (fn []
+            (t/send transport (response-for msg :status :done))))))
 
 (defn handle-test [handler msg & configuration]
-  (let [executor (:executor configuration @default-executor)]
-    (case (:op msg)
-      "test-var-query"  (handle-test-var-query-op (assoc msg :executor executor))
-      "test"            (handle-test-op (assoc msg :executor executor))
-      "test-all"        (handle-test-all-op (assoc msg :executor executor))
-      "test-stacktrace" (handle-stacktrace-op (assoc msg :executor executor))
-      "retest"          (handle-retest-op (assoc msg :executor executor))
-      (handler msg))))
+  (case (:op msg)
+    "test-var-query"  (handle-test-var-query-op msg)
+    "test"            (handle-test-op msg)
+    "test-all"        (handle-test-all-op msg)
+    "test-stacktrace" (handle-stacktrace-op msg)
+    "retest"          (handle-retest-op msg)
+    (handler msg)))
