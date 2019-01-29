@@ -127,8 +127,7 @@
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
-                                          try-if-let [[:block 1]]
-                                          if-class [[:block 1]]}}}]
+                                          try-if-let [[:block 1]]}}}]
 
              :eastwood [:test
                         {:plugins [[jonase/eastwood "0.3.4"]]

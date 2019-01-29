@@ -11,23 +11,12 @@
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport])
   (:import
-   [java.net MalformedURLException URL]
-   java.io.ByteArrayOutputStream
-   [java.nio.file Files Path Paths]))
+   (java.io ByteArrayOutputStream)
+   (java.net MalformedURLException URL)
+   (java.nio.file Files Path Paths)
+   (java.util Base64)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmacro if-class
-  "Conditional compilation macro for when a given class is available.
-
-  If the given class can be resolved, expands to `then-expr`,
-  otherwise expands to `else-expr`. `else-expr` defaults to `nil`."
-  ([classname then-expr]
-   `(if-class ~classname ~then-expr nil))
-  ([classname then-expr else-expr]
-   (if (try (eval `(import ~classname)) true
-            (catch ClassNotFoundException e false))
-     then-expr else-expr)))
 
 (def known-content-types
   (->> (io/resource "content-types.edn")
@@ -68,12 +57,9 @@
       (Files/probeContentType p)
       "application/octet-stream"))
 
-;; FIXME (arrdem 2018-04-11):
-;;   Remove this if-class when we have jdk1.8 min
 (defn base64-bytes
   [^bytes buff]
-  (if-class java.util.Base64
-    (.encodeToString (Base64/getEncoder) buff)))
+  (.encodeToString (Base64/getEncoder) buff))
 
 (defn slurp-reply [location content-type buff]
   (let [^String real-type (first content-type)
@@ -119,8 +105,6 @@
               (recur))))
         (slurp-reply url content-type (.toByteArray os))))))
 
-;; FIXME (arrdem 2018-04-11):
-;;   Remove this if-class when we have jdk1.8 min
 (defn handle-slurp
   "Message handler which just responds to slurp ops.
 
@@ -129,10 +113,7 @@
   (let [{:keys [op url transport]} msg]
     (if (and (= "slurp" op) url)
       (do (transport/send transport
-                          (response-for msg
-                                        (if-class java.util.Base64
-                                          (slurp-url-to-content+body url)
-                                          {:error "`java.util.Base64` cannot be found, `slurp` op is disabled."})))
+                          (response-for msg (slurp-url-to-content+body url)))
           (transport/send transport
                           (response-for msg {:status ["done"]})))
       (handler msg))))
