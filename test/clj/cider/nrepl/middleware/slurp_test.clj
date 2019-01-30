@@ -22,7 +22,7 @@
 
 (t/deftest test-unrecognized-file
   (let [resp (slurp-url-to-content+body
-              (.toString (io/resource "unknown.bin")))]
+              (.toString (io/resource "unknown.unknown")))]
     (t/is (= ["application/octet-stream" {}] (:content-type resp)))
     (t/is (str/starts-with? (:body resp) "#binary[location="))
-    (t/is (str/ends-with? (:body resp) ",size=3]"))))
+    (t/is (str/ends-with? (:body resp) ",size=681]"))))
