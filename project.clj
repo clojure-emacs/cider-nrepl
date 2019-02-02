@@ -8,7 +8,7 @@
   :dependencies [[nrepl "0.5.3"]
                  ^:source-dep [cider/orchard "0.4.0"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
-                 ^:source-dep [mvxcvi/puget "1.0.2"]
+                 ^:source-dep [mvxcvi/puget "1.1.0"]
                  ^:source-dep [fipp "0.6.14"]
                  ^:source-dep [compliment "0.3.8"]
                  ^:source-dep [cljs-tooling "0.3.1"]
