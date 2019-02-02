@@ -116,19 +116,19 @@
            (:data (analyze-cause (ex-info "" {:a (range)}) pprint {:length 3})))))
   (testing "print-level"
     (is (= "{:a {#}}"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) pprint {:level 3})))))
-  (testing "compilation errors"
-    (let [clojure-version ((juxt :major :minor) *clojure-version*)]
-      (if (< (compare clojure-version [1 10]) 0)
-        ;; 1.8 / 1.9
-        (is (re-find #"Unable to resolve symbol: not-defined in this context"
-                     (:message (first causes3))))
-
-        ;; 1.10+
-        (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
-                     (:message (first causes3))))))))
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) pprint {:level 3}))))))
 
 (deftest compilation-errors-test
+  (let [clojure-version ((juxt :major :minor) *clojure-version*)]
+    (if (< (compare clojure-version [1 10]) 0)
+      ;; 1.8 / 1.9
+      (is (re-find #"Unable to resolve symbol: not-defined in this context"
+                   (:message (first causes3))))
+
+      ;; 1.10+
+      (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
+                   (:message (first causes3))))))
+
   (testing "extract-location"
     (is (= {:class "clojure.lang.Compiler$CompilerException"
             :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"
