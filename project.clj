@@ -79,7 +79,7 @@
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[cider/piggieback "0.3.10"]]}
+                    :dependencies [[cider/piggieback "0.4.0"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
