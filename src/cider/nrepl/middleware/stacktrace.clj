@@ -5,6 +5,7 @@
    [clojure.repl :as repl]
    [clojure.set :as set]
    [clojure.string :as str]
+   [nrepl.middleware.print :as print]
    [nrepl.middleware.session :refer [session]]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
@@ -13,7 +14,8 @@
    [orchard.misc :as u]
    [orchard.namespace :as namespace])
   (:import
-   (clojure.lang Compiler$CompilerException)))
+   (clojure.lang Compiler$CompilerException)
+   (java.io StringWriter)))
 
 ;;; ## Stacktraces
 
@@ -247,21 +249,20 @@
   Take in a map `ed` as returned by `clojure.spec/explain-data` and return a map
   of pretty printed problems. The content of the returned map is modeled after
   `clojure.spec/explain-printer`."
-  [ed pprint-fn print-options]
-  (let [pp-str #(pprint-fn % print-options)
-        problems (sort-by #(count (:path %))
+  [ed pprint-str]
+  (let [problems (sort-by #(count (:path %))
                           (or (:clojure.spec/problems ed)
                               (:clojure.spec.alpha/problems ed)))]
     {:spec (pr-str (or (:clojure.spec/spec ed)
                        (:clojure.spec.alpha/spec ed)))
-     :value (pp-str (or (:clojure.spec/value ed)
-                        (:clojure.spec.alpha/value ed)))
+     :value (pprint-str (or (:clojure.spec/value ed)
+                            (:clojure.spec.alpha/value ed)))
      :problems (for [{:keys [in val
                              pred reason
                              via path]
                       :as prob} problems]
                  (->> {:in (when (seq in) (pr-str in))
-                       :val (pp-str val)
+                       :val (pprint-str val)
                        :predicate (pr-str (@spec-abbrev pred))
                        :reason reason
                        :spec (when (seq via) (pr-str (last via)))
@@ -272,15 +273,18 @@
                                                 (set/difference (set (keys prob)))
                                                 (select-keys prob))]
                                 (when (seq extras)
-                                  (pp-str extras)))}
+                                  (pprint-str extras)))}
                       (filter clojure.core/val)
                       (into {})))}))
 
 (defn analyze-cause
   "Return a map describing the exception cause. If `ex-data` exists, a `:data`
   key is appended."
-  [^Exception e pprint-fn print-options]
-  (let [m {:class (.getName (class e))
+  [^Exception e print-fn]
+  (let [pprint-str #(let [writer (StringWriter.)]
+                      (print-fn % writer)
+                      (str writer))
+        m {:class (.getName (class e))
            :message (.getMessage e)
            :stacktrace (analyze-stacktrace e)}]
     (if-let [data (filtered-ex-data e)]
@@ -288,15 +292,14 @@
               (:clojure.spec.alpha/failure data))
         (assoc m
                :message "Spec assertion failed."
-               :spec (prepare-spec-data data pprint-fn print-options))
+               :spec (prepare-spec-data data pprint-str))
         (-> m
-            (assoc :data (if (not-empty print-options)
-                           (pprint-fn data print-options)
-                           (pprint-fn data)))
-            (assoc :location
-                   (select-keys data [:clojure.error/line :clojure.error/column
-                                      :clojure.error/phase :clojure.error/source
-                                      :clojure.error/symbol]))))
+            (assoc :data (pprint-str data)
+                   :location (select-keys data [:clojure.error/line
+                                                :clojure.error/column
+                                                :clojure.error/phase
+                                                :clojure.error/source
+                                                :clojure.error/symbol]))))
       m)))
 
 (defn analyze-causes
@@ -304,19 +307,19 @@
   for each. For `ex-info` exceptions response contains :data slot with pretty
   printed data. For clojure.spec asserts, :spec slot contains a map of pretty
   printed components describing spec failures."
-  [e pprint-fn print-options]
+  [e print-fn]
   (->> e
        (iterate #(.getCause ^Exception %))
        (into [] (comp (take-while identity)
-                      (map #(analyze-cause % pprint-fn print-options))
+                      (map #(analyze-cause % print-fn))
                       (map extract-location)))))
 
 ;;; ## Middleware
 
 (defn handle-stacktrace
-  [_ {:keys [session transport pprint-fn print-options] :as msg}]
+  [_ {:keys [session transport ::print/print-fn] :as msg}]
   (if-let [e (@session #'*e)]
-    (doseq [cause (analyze-causes e pprint-fn print-options)]
+    (doseq [cause (analyze-causes e print-fn)]
       (t/send transport (response-for msg cause)))
     (t/send transport (response-for msg :status :no-error)))
   (t/send transport (response-for msg :status :done)))

@@ -5,6 +5,7 @@
   (:require
    [clojure.set :as set]
    [clojure.walk :as walk]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport])
   (:import
@@ -37,10 +38,10 @@
 
 (defn pp-stacktrace
   "Takes a `java.lang.Exception` as `ex` and a pretty-print function
-  as `pprint-fn`, then returns a pretty-printed version of the
+  as `print-fn`, then returns a pretty-printed version of the
   exception that can be rendered by CIDER's stacktrace viewer."
-  [ex pprint-fn print-options]
-  {:pp-stacktrace (@analyze-causes ex pprint-fn print-options)})
+  [ex print-fn]
+  {:pp-stacktrace (@analyze-causes ex print-fn)})
 
 (defn base-error-response
   "Takes a CIDER-nREPL message as `msg`, an Exception `ex`, and a
@@ -50,7 +51,7 @@
   `:<op-name>-error` are NOT automatically added"
   [msg ex & statuses]
   (response-for msg (merge (apply error-summary ex statuses)
-                           (pp-stacktrace ex (:pprint-fn msg) (:print-options msg)))))
+                           (pp-stacktrace ex (::print/print-fn msg)))))
 
 (defn- normalize-status
   "Accepts various representations of an nREPL reply message's status

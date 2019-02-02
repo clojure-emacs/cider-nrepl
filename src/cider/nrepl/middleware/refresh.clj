@@ -12,6 +12,7 @@
    [clojure.tools.namespace.reload :as reload]
    [clojure.tools.namespace.track :as track]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.misc :as u]))
@@ -74,8 +75,8 @@
               (format "%s is not a function of no arguments" sym))))
 
     (binding [*msg* msg
-              *out* (get @session #'*out*)
-              *err* (get @session #'*err*)]
+              *out* (print/replying-PrintWriter :out msg {})
+              *err* (print/replying-PrintWriter :err msg {})]
       (do
         (when (var? the-var)
           (@the-var))
@@ -90,16 +91,16 @@
 
 (defn- error-reply
   [{:keys [error error-ns]}
-   {:keys [pprint-fn print-options session transport] :as msg}]
+   {:keys [::print/print-fn session transport] :as msg}]
 
   (transport/send
    transport
    (response-for msg (cond-> {:status :error}
-                       error (assoc :error (analyze-causes error pprint-fn print-options))
+                       error (assoc :error (analyze-causes error print-fn))
                        error-ns (assoc :error-ns error-ns))))
 
   (binding [*msg* msg
-            *err* (get @session #'*err*)]
+            *err* (print/replying-PrintWriter :err msg {})]
     (repl-caught error)))
 
 (defn- result-reply

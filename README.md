@@ -268,8 +268,6 @@ Middleware        | Op(s)      | Description
 `wrap-macroexpand`| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step` | Macroexpand a Clojure form.
 `wrap-ns`         | `ns-list/ns-vars/ns-path/ns-load-all/ns-aliases` | Namespace browsing & loading.
 `wrap-spec`       | `spec-list/spec-form/spec-example` | Spec browsing.
-`wrap-pprint`     | - | **(DEPRECATED)** Adds pretty-printing support to code evaluation. It also installs a dummy `pprint-middleware` op. Thus `wrap-pprint` is discoverable through the `describe` op.
-`wrap-pprint-fn`  | - | **(DEPRECATED)** Provides a common pretty-printing interface for other middlewares that need to perform customisable pretty-printing.
 `wrap-profile`    | `toggle-profile/toggle-profile-ns/is-var-profiled/profile-summary/profile-var-summary/clear-profile/get-max-samples/set-max-samples` | Provides profiling support based on the [profile](https://github.com/thunknyc/profile) library.
 `wrap-refresh`    | `refresh/refresh-all/refresh-clear` | Code reloading.
 `wrap-resource`   | `resource` | Return resource path.

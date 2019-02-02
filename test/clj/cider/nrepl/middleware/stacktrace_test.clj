@@ -12,8 +12,7 @@
    (try (eval form)
         (catch Exception e
           e))
-   pprint
-   {}))
+   pprint))
 
 (defn stack-frames
   [form]
@@ -113,10 +112,14 @@
 (deftest cause-data-pretty-printing-test
   (testing "print-length"
     (is (= "{:a (0 1 2 ...)}"
-           (:data (analyze-cause (ex-info "" {:a (range)}) pprint {:length 3})))))
+           (:data (analyze-cause (ex-info "" {:a (range)})
+                                 (fn [value writer]
+                                   (pprint value writer {:length 3})))))))
   (testing "print-level"
     (is (= "{:a {#}}"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) pprint {:level 3}))))))
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}})
+                                 (fn [value writer]
+                                   (pprint value writer {:level 3}))))))))
 
 (deftest compilation-errors-test
   (let [clojure-version ((juxt :major :minor) *clojure-version*)]
@@ -172,7 +175,7 @@
                              :clojure.error/source "/foo/bar/baz.clj"
                              :clojure.error/phase :macroexpand
                              :clojure.error/symbol 'clojure.core/let})
-          cause (analyze-cause e identity {})]
+          cause (analyze-cause e (fn [v _] v))]
       (is (= {:clojure.error/line 1
               :clojure.error/column 42
               :clojure.error/source "/foo/bar/baz.clj"

@@ -9,7 +9,7 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
-   [nrepl.middleware.pr-values :refer [pr-values]]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.misc :as u]
@@ -328,14 +328,14 @@
             (t/send transport (response-for msg :status :done))))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index transport session id pprint-fn print-options] :as msg}]
+  [{:keys [ns var index transport session id ::print/print-fn] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
             (with-bindings (assoc @session #'ie/*msg* msg)
               (let [[ns var] (map u/as-sym [ns var])]
                 (if-let [e (get-in @results [ns var index :error])]
-                  (doseq [cause (st/analyze-causes e pprint-fn print-options)]
+                  (doseq [cause (st/analyze-causes e print-fn)]
                     (t/send transport (response-for msg cause)))
                   (t/send transport (response-for msg :status :no-error))))))
           (fn []

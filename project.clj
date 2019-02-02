@@ -95,7 +95,6 @@
                                                               cider.nrepl/wrap-macroexpand
                                                               cider.nrepl/wrap-ns
                                                               cider.nrepl/wrap-out
-                                                              cider.nrepl/wrap-pprint-fn
                                                               cider.nrepl/wrap-profile
                                                               cider.nrepl/wrap-refresh
                                                               cider.nrepl/wrap-resource

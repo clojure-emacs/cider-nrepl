@@ -7,7 +7,10 @@
    [clojure.string :as str]
    [clojure.tools.reader.edn :as edn]
    [clojure.tools.reader.reader-types :as readers]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [nrepl.middleware.print :as print])
+  (:import
+   (java.io StringWriter)))
 
 ;;; Code formatting
 (defn- keyword->symbol [kw]
@@ -43,15 +46,18 @@
           (recur (conj forms form)))))))
 
 (defn- format-edn
-  [edn pprint-fn print-options]
+  [edn print-fn]
   (->> (read-edn edn)
-       (map #(pprint-fn % print-options))
+       (map (fn [value]
+              (let [writer (StringWriter.)]
+                (print-fn value writer)
+                (str writer))))
        (str/join "\n")
-       str/trim))
+       (str/trim)))
 
 (defn format-edn-reply
-  [{:keys [edn pprint-fn print-options] :as msg}]
-  {:formatted-edn (format-edn edn pprint-fn print-options)})
+  [{:keys [edn ::print/print-fn] :as msg}]
+  {:formatted-edn (format-edn edn print-fn)})
 
 ;;; Middleware op handling
 (defn handle-format [handler msg]
