@@ -5,6 +5,7 @@
    [cider.nrepl.middleware.pprint :as pprint]
    [cider.nrepl.print-method]
    [nrepl.middleware :refer [set-descriptor!]]
+   [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.session :refer [session]]
    [nrepl.middleware.pr-values :refer [pr-values]]
    [nrepl.server :as nrepl-server]))
@@ -228,7 +229,7 @@
            in the `:inspect` slot will cause the last value returned by eval to
            be inspected. Returns a string representation of the resulting
            inspector's state in the `:value` slot."
-    :requires #{"clone" #'pr-values}
+    :requires #{"clone" #'pr-values #'wrap-caught}
     :expects #{"eval"}
     :handles {"inspect-pop"
               {:doc "Moves one level up in the inspector stack."

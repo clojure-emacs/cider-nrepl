@@ -3,6 +3,7 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [base-error-response
                                                        with-safe-transport]]
+   [nrepl.middleware.caught :as caught]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.inspect :as inspect])
@@ -40,9 +41,9 @@
             ;; If the eval errored, propagate the exception as error in the
             ;; inspector middleware, so that the client CIDER code properly
             ;; renders it instead of silently ignoring it.
-            (contains? (:status response) :eval-error)
-            (let [e (or (@session #'*e)
-                        (Exception. (or (:ex response) "")))
+            (and (contains? (:status response) :eval-error)
+                 (contains? response ::caught/throwable))
+            (let [e (::caught/throwable response)
                   resp (base-error-response msg e :inspect-eval-error :done)]
               (.send transport resp))
 
