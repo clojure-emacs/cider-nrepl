@@ -74,7 +74,7 @@
                     :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]
-                                     [org.clojure/clojurescript "1.10.439" :scope "provided"]]}
+                                     [org.clojure/clojurescript "1.10.516" :scope "provided"]]}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]

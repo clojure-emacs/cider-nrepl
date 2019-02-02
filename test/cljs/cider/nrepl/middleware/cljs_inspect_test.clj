@@ -89,7 +89,7 @@
 
       ;;TODO: The :err slot is missing when running this through the Cider test-runner
       (testing "exprs that throw exceptions return an `err` slot"
-        (is (re-find #"Error: 1 is not ISeqable"  (:err exception-response))))))
+        (is (re-find #"1 is not ISeqable"  (:err exception-response))))))
 
   (testing "inspect-pop error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "pop exception")))]
