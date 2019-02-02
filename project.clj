@@ -12,7 +12,7 @@
                  ^:source-dep [fipp "0.6.14"]
                  ^:source-dep [compliment "0.3.8"]
                  ^:source-dep [cljs-tooling "0.3.1"]
-                 ^:source-dep [cljfmt "0.6.1" :exclusions [org.clojure/clojurescript]]
+                 ^:source-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
                  ;; Not used directly in cider-nrepl, but needed because of tools.namespace
                  ;; and the way MrAnderson processes dependencies
                  ;; See https://github.com/clojure-emacs/cider/issues/2176 for details
@@ -120,7 +120,7 @@
                                       :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.6.1"]]
+                      {:plugins [[lein-cljfmt "0.6.4"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
