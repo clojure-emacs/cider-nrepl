@@ -199,7 +199,7 @@
   Include relative path for simpler reporting."
   [{:keys [class message location] :as cause}]
   (if (= class "clojure.lang.Compiler$CompilerException")
-    (if-not (empty? location)
+    (if (seq location)
       (assoc cause
              :file (:clojure.error/source location)
              :file-url (some-> (:clojure.error/source location)
@@ -260,18 +260,18 @@
                              pred reason
                              via path]
                       :as prob} problems]
-                 (->> {:in (when-not (empty? in) (pr-str in))
+                 (->> {:in (when (seq in) (pr-str in))
                        :val (pp-str val)
                        :predicate (pr-str (@spec-abbrev pred))
-                       :reason reason ; <- always nil or string
-                       :spec (when-not (empty? via) (pr-str (last via)))
-                       :at (when-not (empty? path) (pr-str path))
+                       :reason reason
+                       :spec (when (seq via) (pr-str (last via)))
+                       :at (when (seq path) (pr-str path))
                        :extra (let [extras (->> #{:in :val :pred :reason :via :path
                                                   :clojure.spec/failure
                                                   :clojure.spec.alpha/failure}
                                                 (set/difference (set (keys prob)))
                                                 (select-keys prob))]
-                                (when-not (empty? extras)
+                                (when (seq extras)
                                   (pp-str extras)))}
                       (filter clojure.core/val)
                       (into {})))}))

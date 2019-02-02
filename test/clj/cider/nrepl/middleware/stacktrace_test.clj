@@ -83,7 +83,7 @@
       (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
                 (filter (comp :tooling :flags) frames2))))
     (testing "for project"
-      (is (not-empty (filter (comp :project :flags) frames4))))
+      (is (seq (filter (comp :project :flags) frames4))))
     (testing "for duplicate frames"
       ;; Index frames. For all frames flagged as :dup, the frame above it in
       ;; the stack (index i - 1) should be substantially the same source info.

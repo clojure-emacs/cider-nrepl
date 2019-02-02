@@ -14,11 +14,11 @@
   (testing "Basic checks"
     (let [response (session/message {:op "resources-list"})]
       (is (= #{"done"} (:status response)))
-      (is (not (empty? (:resources-list response))))
-      (is (not (empty? (filter #(re-matches #"test\.txt" (:relpath %))
-                               (:resources-list response)))))
-      (is (not (empty? (filter #(re-matches #".*test/resources/test\.txt" (:file %))
-                               (:resources-list response))))))))
+      (is (seq (:resources-list response)))
+      (is (seq (filter #(re-matches #"test\.txt" (:relpath %))
+                       (:resources-list response))))
+      (is (seq (filter #(re-matches #".*test/resources/test\.txt" (:file %))
+                       (:resources-list response)))))))
 
 (deftest resource-op-error-handling-test
   (with-redefs [r/resource-path (fn [& _] (throw (Exception. "resource")))]
