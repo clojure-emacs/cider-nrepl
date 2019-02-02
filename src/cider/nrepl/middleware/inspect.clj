@@ -9,13 +9,11 @@
   (:import
    nrepl.transport.Transport))
 
-(def ^:dynamic *inspector* (inspect/fresh))
-
 (defn swap-inspector!
   [{:keys [session] :as msg} f & args]
   (-> session
-      (swap! update-in [#'*inspector*] #(apply f % args))
-      (get #'*inspector*)))
+      (alter-meta! update ::inspector #(apply f % args))
+      (get ::inspector)))
 
 (defn inspect-reply
   [{:keys [page-size transport] :as msg} eval-response]
@@ -74,7 +72,7 @@
   (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
 
 (defn get-path-reply [{:keys [session] :as msg}]
-  (:path (get session #'*inspector*)))
+  (get-in (meta session) [::inspector :path]))
 
 (defn next-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/next-page)))
