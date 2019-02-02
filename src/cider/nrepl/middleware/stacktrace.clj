@@ -162,15 +162,14 @@
   "Where a parent and child frame represent substantially the same source
   location, flag the parent as a duplicate."
   [frames]
-  (cons (first frames)
-        (map (fn [frame child]
+  (into [(first frames)]
+        (map (fn [[frame child]]
                (if (or (= (:name frame) (:name child))
                        (and (= (:file frame) (:file child))
                             (= (:line frame) (:line child))))
                  (flag-frame frame :dup)
-                 frame))
-             (rest frames)
-             frames)))
+                 frame)))
+        (mapv vector (rest frames) frames)))
 
 (defn analyze-frame
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
@@ -308,8 +307,9 @@
   [e pprint-fn print-options]
   (->> e
        (iterate #(.getCause ^Exception %))
-       (take-while identity)
-       (map (comp extract-location #(analyze-cause % pprint-fn print-options)))))
+       (into [] (comp (take-while identity)
+                      (map #(analyze-cause % pprint-fn print-options))
+                      (map extract-location)))))
 
 ;;; ## Middleware
 
