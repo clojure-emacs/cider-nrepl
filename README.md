@@ -386,7 +386,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
 * [orchard][] - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
 * [compliment][] - for Clojure code completion
-* [cljs-tooling][] - for ClojureScript code completion and var info
+* [cljs-tooling][] - for ClojureScript code completion
 * [tools.trace][] - for tracing
 * [tools.namespace][] - for namespace reloading
 * [cljfmt][] - for code formatting
