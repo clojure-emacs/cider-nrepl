@@ -74,7 +74,7 @@
              :fn  (str/join "/" (cons fn anons))
              :var (str ns "/" fn)
              ;; Full file path
-             :file-url (or (some-> (info/info 'user (symbol (str ns "/" fn)))
+             :file-url (or (some-> (info/info* {:ns 'user :sym (symbol ns fn)})
                                    :file
                                    path->url
                                    u/transform-value)

@@ -5,8 +5,8 @@
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cider.nrepl.middleware.util.meta :as um]
-   [cljs-tooling.info :as cljs-info]
-   [cljs-tooling.util.analysis :as cljs-analysis]
+   [orchard.info :as info]
+   [orchard.cljs.analysis :as cljs-analysis]
    [orchard.misc :as u]
    [orchard.namespace :as ns]
    [orchard.query :as query]))
@@ -62,11 +62,6 @@
          (u/update-keys name)
          (into (sorted-map)))))
 
-(defn ns-path-cljs [env ns]
-  (->> (symbol ns)
-       (cljs-info/info env)
-       (:file)))
-
 (defn ns-list [{:keys [filter-regexps] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-list-cljs cljs-env)
@@ -84,7 +79,9 @@
 
 (defn ns-path [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (ns-path-cljs cljs-env ns)
+    (:file (info/info* {:dialect :cljs
+                        :env cljs-env
+                        :sym (symbol ns)}))
     (.getPath (ns/canonical-source ns))))
 
 (defn ns-list-reply [msg]

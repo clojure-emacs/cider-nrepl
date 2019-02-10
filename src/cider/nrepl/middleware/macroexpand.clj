@@ -4,7 +4,7 @@
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [cljs-tooling.util.analysis :as cljs-ana]
+   [orchard.cljs.analysis :as cljs-ana]
    [clojure.pprint :as pp]
    [clojure.tools.reader :as reader]
    [clojure.walk :as walk]

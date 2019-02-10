@@ -2,11 +2,10 @@
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [cljs-tooling.info :as cljs-info]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [orchard.eldoc :as eldoc]
-   [orchard.info :as clj-info]
+   [orchard.info :as info]
    [orchard.misc :as u]))
 
 (declare format-response)
@@ -40,53 +39,28 @@
                  (when-let [forms (:forms info)]
                    {:forms-str (forms-join forms)})
                  (when-let [file (:file info)]
-                   (clj-info/file-info file))
+                   (info/file-info file))
                  (when-let [path (:javadoc info)]
-                   (clj-info/javadoc-info path)))
+                   (info/javadoc-info path)))
           format-nested
           blacklist
           u/transform-value))))
 
-(defn info-cljs
-  [env symbol ns]
-  (some-> (cljs-info/info env symbol ns)
-          (select-keys [:file :line :ns :doc :column :name :arglists])
-          (update
-           :file
-           (fn [f]
-             (if (System/getProperty "fake.class.path")
-               ;; Boot stores files in a temporary directory & ClojureScript
-               ;; stores the :file metadata location absolutely instead of
-               ;; relatively to the classpath. This means when doing jump to
-               ;; source in Boot & ClojureScript, you end up at the temp file.
-               ;; This code attempts to find the classpath-relative location
-               ;; of the file, so that it can be opened correctly.
-               (let [path (java.nio.file.Paths/get f (into-array String []))
-                     path-count (.getNameCount path)]
-                 (or
-                  (first
-                   (sequence
-                    (comp (map #(.subpath path % path-count))
-                          (map str)
-                          (filter io/resource))
-                    (range path-count)))
-                  f))
-               f)))))
-
 (defn info
   [{:keys [ns symbol class member] :as msg}]
-  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])]
-    (if-let [cljs-env (cljs/grab-cljs-env msg)]
-      (info-cljs cljs-env symbol ns)
-      (let [var-info (cond (and ns symbol) (clj-info/info ns symbol)
-                           (and class member) (clj-info/info-java class member)
-                           :else (throw (Exception.
-                                         "Either \"symbol\", or (\"class\", \"member\") must be supplied")))
-            ;; we have to use the resolved (real) namespace and name here
-            see-also (clj-info/see-also (:ns var-info) (:name var-info))]
-        (if (seq see-also)
-          (merge {:see-also see-also} var-info)
-          var-info)))))
+  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])
+        env (cljs/grab-cljs-env msg)
+        info-params (merge {:dialect :clj
+                            :ns ns
+                            :sym symbol}
+                           (when env
+                             {:env env
+                              :dialect :cljs}))]
+    (cond
+      (and ns symbol) (info/info* info-params)
+      (and class member) (info/info-java class member)
+      :else (throw (Exception.
+                    "Either \"symbol\", or (\"class\", \"member\") must be supplied")))))
 
 (defn info-reply
   [msg]
