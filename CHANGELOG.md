@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.21.0 (2019-02-11)
+
 ### New features
 
 * The `refresh` op is now interruptible.
