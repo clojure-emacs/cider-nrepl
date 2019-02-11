@@ -3,19 +3,26 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [base-error-response
                                                        with-safe-transport]]
+   [nrepl.middleware.caught :as caught]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.inspect :as inspect])
   (:import
    nrepl.transport.Transport))
 
-(def ^:dynamic *inspector* (inspect/fresh))
-
 (defn swap-inspector!
   [{:keys [session] :as msg} f & args]
   (-> session
-      (swap! update-in [#'*inspector*] #(apply f % args))
-      (get #'*inspector*)))
+      (alter-meta! update ::inspector #(apply f % args))
+      (get ::inspector)))
+
+(defn- inspector-response
+  ([msg inspector]
+   (inspector-response msg inspector {:status :done}))
+  ([msg {:keys [rendered] :as inspector} resp]
+   (let [value (binding [*print-length* nil]
+                 (pr-str rendered))]
+     (response-for msg resp {:value value}))))
 
 (defn inspect-reply
   [{:keys [page-size transport] :as msg} eval-response]
@@ -23,12 +30,7 @@
         page-size (or page-size 32)
         inspector (swap-inspector! msg #(-> (assoc % :page-size page-size)
                                             (inspect/start value)))]
-    (binding [*print-length* nil]
-      ;; Remove print-length limit because it breaks the output in the middle of
-      ;; the page when inspecting long sequences.
-      (transport/send
-       transport
-       (response-for msg :value (:rendered inspector))))))
+    (transport/send transport (inspector-response msg inspector {}))))
 
 (defn inspector-transport
   [{:keys [^Transport transport, session] :as msg}]
@@ -42,9 +44,9 @@
             ;; If the eval errored, propagate the exception as error in the
             ;; inspector middleware, so that the client CIDER code properly
             ;; renders it instead of silently ignoring it.
-            (contains? (:status response) :eval-error)
-            (let [e (or (@session #'*e)
-                        (Exception. (or (:ex response) "")))
+            (and (contains? (:status response) :eval-error)
+                 (contains? response ::caught/throwable))
+            (let [e (::caught/throwable response)
                   resp (base-error-response msg e :inspect-eval-error :done)]
               (.send transport resp))
 
@@ -61,9 +63,6 @@
   [handler msg]
   (handler (eval-msg msg)))
 
-(defn- inspector-response [msg inspector]
-  (response-for msg :value (:rendered inspector) :status :done))
-
 (defn pop-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/up)))
 
@@ -74,7 +73,7 @@
   (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
 
 (defn get-path-reply [{:keys [session] :as msg}]
-  (:path (get session #'*inspector*)))
+  (get-in (meta session) [::inspector :path]))
 
 (defn next-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/next-page)))

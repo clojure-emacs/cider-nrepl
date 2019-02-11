@@ -5,18 +5,27 @@
   * has one and two params signatures - object to print and a map of print options
   * functions return the printed object as a string"
   {:added "0.20.0"}
+  (:refer-clojure :exclude [pr])
   (:require
    [clojure.pprint :as pp]))
 
+(defn pr
+  ([value writer]
+   (pr value writer nil))
+  ([value writer _]
+   (if *print-dup*
+     (print-dup value writer)
+     (print-method value writer))))
+
 (defn pprint
   "A simple wrapper around `clojure.pprint/write`.
-  It provides an API compatible with what nREPL's
-  pr-values middleware expects for printer functions."
-  ([object]
-   (pprint object {}))
-  ([object opts]
-   (let [opts (assoc opts :stream nil)]
-     (apply pp/write object (vec (flatten (vec opts)))))))
+
+  Its signature is compatible with the expectations of nREPL's wrap-print
+  middleware."
+  ([value writer]
+   (pprint value writer {}))
+  ([value writer options]
+   (apply pp/write value (mapcat identity (assoc options :stream writer)))))
 
 (def ^:private fipp-printer
   (delay
@@ -25,20 +34,21 @@
      (resolve 'fipp.edn/pprint))))
 
 (defn fipp-pprint
-  ([object]
-   (fipp-pprint object {}))
-  ([object opts]
-   (with-out-str
-     (@fipp-printer object opts))))
+  ([value writer]
+   (fipp-pprint value writer {}))
+  ([value writer options]
+   (binding [*out* writer]
+     (@fipp-printer value options))))
 
 (def ^:private puget-printer
   (delay
    (do
      (require 'puget.printer)
-     (resolve 'puget.printer/pprint-str))))
+     (resolve 'puget.printer/pprint))))
 
 (defn puget-pprint
-  ([object]
-   (puget-pprint object {}))
-  ([object opts]
-   (@puget-printer object opts)))
+  ([value writer]
+   (puget-pprint value writer {}))
+  ([value writer options]
+   (binding [*out* writer]
+     (@puget-printer value options))))

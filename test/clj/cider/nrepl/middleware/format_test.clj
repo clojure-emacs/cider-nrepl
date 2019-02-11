@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.format-test
   (:require
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [nrepl.middleware.print :as print]))
 
 (def ugly-code-sample
   "( let [x 3
@@ -130,22 +131,26 @@
           normal-reply        (session/message {:op  "format-edn" :edn wide-edn-sample})
           narrow-margin-reply (session/message {:op "format-edn"
                                                 :edn wide-edn-sample
-                                                :print-options {:right-margin 10}})]
+                                                ::print/print "cider.nrepl.pprint/pprint"
+                                                ::print/options {:right-margin 10}})]
       (is (= #{"done"} (:status normal-reply)))
       (is (= "[1 2 3 4 5 6 7 8 9 0]" (:formatted-edn normal-reply)))
       (is (= #{"done"} (:status narrow-margin-reply)))
       (is (= "[1\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 0]" (:formatted-edn narrow-margin-reply)))))
 
-  (testing "format-edn respects the :pprint-fn slot"
+  (testing "format-edn respects the ::print/print slot"
     (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
                                                            :edn "{:b 2 :c 3 :a 1}"
-                                                           :pprint-fn "cider.nrepl.pprint/puget-pprint"})]
+                                                           ::print/print "cider.nrepl.pprint/puget-pprint"})]
       (is (= "{:a 1, :b 2, :c 3}" formatted-edn))
       (is (= #{"done"} status))))
 
-  (testing "format-edn returns fallbacks to a default printer if :pprint-fn is unresolvable"
-    (let [{:keys [formatted-edn status] :as response} (session/message {:op "format-edn"
-                                                                        :edn "{:b 2 :c 3 :a 1}"
-                                                                        :pprint-fn "fake.nrepl.pprint/puget-pprint"})]
-      (is (= "{:b 2, :c 3, :a 1}" formatted-edn))
-      (is (= #{"done"} status)))))
+  (testing "format-edn uses a default printer if ::print/print is unresolvable"
+    (let [response (-> (session/message {:op "format-edn"
+                                         :edn "{:b 2 :c 3 :a 1}"
+                                         ::print/print "fake.nrepl.pprint/puget-pprint"})
+                       (dissoc :id :session))]
+      (is (= {:formatted-edn "{:b 2, :c 3, :a 1}",
+              :status #{"done" "nrepl.middleware.print/error"},
+              :nrepl.middleware.print/error "Couldn't resolve var fake.nrepl.pprint/puget-pprint"}
+             response)))))

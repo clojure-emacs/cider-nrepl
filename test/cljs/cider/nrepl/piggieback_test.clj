@@ -52,5 +52,4 @@
       (is (= "class clojure.lang.ExceptionInfo"
              (:ex response)
              (:root-ex response)))
-      (is (string? (:err response)))
       (is (= #{"eval-error" "done"} (:status response))))))

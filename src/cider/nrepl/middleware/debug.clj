@@ -8,6 +8,7 @@
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.print :as print]
    [nrepl.middleware.session :as session]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
@@ -216,7 +217,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
                        {:status :eval-error
-                        :causes [(let [causes# (stacktrace/analyze-causes e# (:pprint-fn *msg*) (:print-options *msg*))]
+                        :causes [(let [causes# (stacktrace/analyze-causes e# (::print/print-fn *msg*))]
                                    (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)
@@ -290,7 +291,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     :causes [{:class "StackTrace"
               :message "Harmless user-requested stacktrace"
               :stacktrace (-> (Exception. "Dummy")
-                              (stacktrace/analyze-causes (:pprint-fn *msg*) (:print-options *msg*))
+                              (stacktrace/analyze-causes (::print/print-fn *msg*))
                               last :stacktrace)}]}))
 
 (def debug-commands

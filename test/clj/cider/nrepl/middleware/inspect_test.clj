@@ -79,7 +79,6 @@
         (is (= "class java.lang.IllegalArgumentException"
                (:ex exception-response))))
 
-      ;;TODO: The :err slot is missing when running this through the Cider test-runner
       (testing "exprs that throw exceptions return an `err` slot"
         (is (.contains (:err exception-response)
                        "IllegalArgumentException")))))

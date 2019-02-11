@@ -2,6 +2,16 @@
 
 ## master (unreleased)
 
+### New features
+
+* The `refresh` op is now interruptible.
+
+### Changes
+
+* **(Breaking)** Upgrade to nREPL 0.6.0. This is now the minimum required version.
+* **(Breaking)** Upgrade to piggieback 0.4.0. This is now the minimum required version.
+* **(Breaking)** Remove `cider.nrepl.middleware.pprint`. All functionality has been replaced by the built-in printing support in nREPL 0.6.0.
+
 ## 0.20.0 (2019-01-14)
 
 ### New features

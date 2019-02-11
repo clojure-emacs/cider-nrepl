@@ -85,11 +85,7 @@
 
       (testing "exprs that throw exceptions return an `ex` slot"
         (is (= "class clojure.lang.ExceptionInfo"
-               (:ex exception-response))))
-
-      ;;TODO: The :err slot is missing when running this through the Cider test-runner
-      (testing "exprs that throw exceptions return an `err` slot"
-        (is (re-find #"1 is not ISeqable"  (:err exception-response))))))
+               (:ex exception-response))))))
 
   (testing "inspect-pop error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "pop exception")))]

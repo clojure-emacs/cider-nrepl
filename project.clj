@@ -1,11 +1,11 @@
-(defproject cider/cider-nrepl "0.20.1-SNAPSHOT"
+(defproject cider/cider-nrepl "0.21.0-SNAPSHOT"
   :description "nREPL middlewares for CIDER"
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
 
-  :dependencies [[nrepl "0.5.3"]
+  :dependencies [[nrepl "0.6.0"]
                  ^:source-dep [cider/orchard "0.4.0"]
                  ^:source-dep [thunknyc/profile "0.5.2"]
                  ^:source-dep [mvxcvi/puget "1.1.0"]
@@ -79,7 +79,7 @@
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[cider/piggieback "0.3.10"]]}
+                    :dependencies [[cider/piggieback "0.4.0"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
@@ -95,7 +95,6 @@
                                                               cider.nrepl/wrap-macroexpand
                                                               cider.nrepl/wrap-ns
                                                               cider.nrepl/wrap-out
-                                                              cider.nrepl/wrap-pprint-fn
                                                               cider.nrepl/wrap-profile
                                                               cider.nrepl/wrap-refresh
                                                               cider.nrepl/wrap-resource

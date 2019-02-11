@@ -12,8 +12,7 @@
    (try (eval form)
         (catch Exception e
           e))
-   pprint
-   {}))
+   pprint))
 
 (defn stack-frames
   [form]
@@ -83,7 +82,7 @@
       (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
                 (filter (comp :tooling :flags) frames2))))
     (testing "for project"
-      (is (not-empty (filter (comp :project :flags) frames4))))
+      (is (seq (filter (comp :project :flags) frames4))))
     (testing "for duplicate frames"
       ;; Index frames. For all frames flagged as :dup, the frame above it in
       ;; the stack (index i - 1) should be substantially the same source info.
@@ -113,22 +112,26 @@
 (deftest cause-data-pretty-printing-test
   (testing "print-length"
     (is (= "{:a (0 1 2 ...)}"
-           (:data (analyze-cause (ex-info "" {:a (range)}) pprint {:length 3})))))
+           (:data (analyze-cause (ex-info "" {:a (range)})
+                                 (fn [value writer]
+                                   (pprint value writer {:length 3})))))))
   (testing "print-level"
     (is (= "{:a {#}}"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}}) pprint {:level 3})))))
-  (testing "compilation errors"
-    (let [clojure-version ((juxt :major :minor) *clojure-version*)]
-      (if (< (compare clojure-version [1 10]) 0)
-        ;; 1.8 / 1.9
-        (is (re-find #"Unable to resolve symbol: not-defined in this context"
-                     (:message (first causes3))))
-
-        ;; 1.10+
-        (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
-                     (:message (first causes3))))))))
+           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}})
+                                 (fn [value writer]
+                                   (pprint value writer {:level 3}))))))))
 
 (deftest compilation-errors-test
+  (let [clojure-version ((juxt :major :minor) *clojure-version*)]
+    (if (< (compare clojure-version [1 10]) 0)
+      ;; 1.8 / 1.9
+      (is (re-find #"Unable to resolve symbol: not-defined in this context"
+                   (:message (first causes3))))
+
+      ;; 1.10+
+      (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
+                   (:message (first causes3))))))
+
   (testing "extract-location"
     (is (= {:class "clojure.lang.Compiler$CompilerException"
             :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"
@@ -172,7 +175,7 @@
                              :clojure.error/source "/foo/bar/baz.clj"
                              :clojure.error/phase :macroexpand
                              :clojure.error/symbol 'clojure.core/let})
-          cause (analyze-cause e identity {})]
+          cause (analyze-cause e (fn [v _] v))]
       (is (= {:clojure.error/line 1
               :clojure.error/column 42
               :clojure.error/source "/foo/bar/baz.clj"

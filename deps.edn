@@ -1,5 +1,5 @@
 {:paths ["src" "resources"]
- :deps {nrepl {:mvn/version "0.4.5"}
+ :deps {nrepl {:mvn/version "0.6.0"}
         cider/orchard {:mvn/version "0.3.1"}
         thunknyc/profile {:mvn/version "0.5.2"}
         mvxcvi/puget {:mvn/version "1.0.2"}

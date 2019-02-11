@@ -49,5 +49,33 @@
                      [['cider/cider-nrepl version-string]])
           (update-in [:repl-options :nrepl-middleware]
                      (fnil into [])
-                     (do (require 'cider.nrepl)
-                         @(resolve 'cider.nrepl/cider-middleware)))))))
+                     ;; TODO: it would be better to avoid this duplication, but
+                     ;; we can't require the `cider.nrepl` namespace because it
+                     ;; requires `nrepl.*` namespaces which might conflict with
+                     ;; Leiningen. Consider adding another namespace that
+                     ;; contains the below definition (as data only, not
+                     ;; requiring `cider.nrepl`).
+                     '[cider.nrepl/wrap-apropos
+                       cider.nrepl/wrap-classpath
+                       cider.nrepl/wrap-complete
+                       cider.nrepl/wrap-debug
+                       cider.nrepl/wrap-enlighten
+                       cider.nrepl/wrap-format
+                       cider.nrepl/wrap-info
+                       cider.nrepl/wrap-inspect
+                       cider.nrepl/wrap-macroexpand
+                       cider.nrepl/wrap-slurp
+                       cider.nrepl/wrap-ns
+                       cider.nrepl/wrap-out
+                       cider.nrepl/wrap-content-type
+                       cider.nrepl/wrap-slurp
+                       cider.nrepl/wrap-profile
+                       cider.nrepl/wrap-refresh
+                       cider.nrepl/wrap-resource
+                       cider.nrepl/wrap-spec
+                       cider.nrepl/wrap-stacktrace
+                       cider.nrepl/wrap-test
+                       cider.nrepl/wrap-trace
+                       cider.nrepl/wrap-tracker
+                       cider.nrepl/wrap-undef
+                       cider.nrepl/wrap-version])))))

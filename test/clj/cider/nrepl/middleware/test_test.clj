@@ -11,10 +11,7 @@
 (deftest basic-sanity-test
   ;; Just make sure that the namespace loads properly and the macro
   ;; expands without errors. (See #264)
-  (is (seq (macroexpand '(test/with-interruptible-eval {}
-                           10))))
-  (is (= (class @test/default-executor)
-         java.util.concurrent.ThreadPoolExecutor)))
+  (is (seq (meta #'test/handle-test))))
 
 (deftest only-selected-tests
   (testing "only single test is run with test"

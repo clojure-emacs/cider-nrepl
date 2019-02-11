@@ -13,8 +13,7 @@
    (try (eval form)
         (catch Exception e
           e))
-   pprint
-   {}))
+   pprint))
 
 (defn stack-frames
   [form]

@@ -12,11 +12,12 @@
    [clojure.tools.namespace.reload :as reload]
    [clojure.tools.namespace.track :as track]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.misc :as u]))
 
-(defonce ^:private refresh-tracker (agent (track/tracker)))
+(defonce ^:private refresh-tracker (volatile! (track/tracker)))
 
 (defn- user-refresh-dirs
   "Directories to watch and reload, as configured by the user.
@@ -74,8 +75,8 @@
               (format "%s is not a function of no arguments" sym))))
 
     (binding [*msg* msg
-              *out* (get @session #'*out*)
-              *err* (get @session #'*err*)]
+              *out* (print/replying-PrintWriter :out msg {})
+              *err* (print/replying-PrintWriter :err msg {})]
       (do
         (when (var? the-var)
           (@the-var))
@@ -90,16 +91,16 @@
 
 (defn- error-reply
   [{:keys [error error-ns]}
-   {:keys [pprint-fn print-options session transport] :as msg}]
+   {:keys [::print/print-fn session transport] :as msg}]
 
   (transport/send
    transport
    (response-for msg (cond-> {:status :error}
-                       error (assoc :error (analyze-causes error pprint-fn print-options))
+                       error (assoc :error (analyze-causes error print-fn))
                        error-ns (assoc :error-ns error-ns))))
 
   (binding [*msg* msg
-            *err* (get @session #'*err*)]
+            *err* (print/replying-PrintWriter :err msg {})]
     (repl-caught error)))
 
 (defn- result-reply
@@ -122,7 +123,6 @@
                         :before before}))
 
     (let [resolved? (resolve-and-invoke before msg)]
-
       (transport/send
        transport
        (response-for msg
@@ -143,7 +143,6 @@
                           :after after}))
 
       (let [resolved? (resolve-and-invoke after msg)]
-
         (transport/send
          transport
          (response-for msg {:status (if resolved?
@@ -155,36 +154,40 @@
         (error-reply {:error e} msg)))))
 
 (defn- refresh-reply
-  [{:keys [dirs transport] :as msg}]
-  (send-off refresh-tracker
-            (fn [tracker]
-              (try
-                (before-reply msg)
+  [{:keys [dirs transport session id] :as msg}]
+  (let [{:keys [exec]} (meta session)]
+    (exec id
+          (fn []
+            (locking refresh-tracker
+              (vswap! refresh-tracker
+                      (fn [tracker]
+                        (try
+                          (before-reply msg)
 
-                (-> tracker
-                    (dir/scan-dirs (or (seq dirs) (user-refresh-dirs))
-                                   (select-keys msg [:platform :add-all?]))
-                    (remove-disabled)
-                    (doto (reloading-reply msg))
-                    (reload/track-reload)
-                    (doto (result-reply msg))
-                    (doto (after-reply msg)))
+                          (-> tracker
+                              (dir/scan-dirs (or (seq dirs) (user-refresh-dirs))
+                                             (select-keys msg [:platform :add-all?]))
+                              (remove-disabled)
+                              (doto (reloading-reply msg))
+                              (reload/track-reload)
+                              (doto (result-reply msg))
+                              (doto (after-reply msg)))
 
-                (catch Throwable e
-                  (error-reply {:error e} msg)
-                  tracker)
-
-                (finally
-                  (transport/send
-                   transport
-                   (response-for msg {:status :done})))))))
+                          (catch Throwable e
+                            (error-reply {:error e} msg)
+                            tracker))))))
+          (fn []
+            (transport/send transport (response-for msg {:status :done}))))))
 
 (defn- clear-reply
-  [{:keys [transport] :as msg}]
-  (send-off refresh-tracker (constantly (track/tracker)))
-  (transport/send
-   transport
-   (response-for msg {:status :done})))
+  [{:keys [transport session id] :as msg}]
+  (let [{:keys [exec]} (meta session)]
+    (exec id
+          (fn []
+            (locking refresh-tracker
+              (vreset! refresh-tracker (track/tracker))))
+          (fn []
+            (transport/send transport (response-for msg {:status :done}))))))
 
 (defn handle-refresh [handler msg]
   (case (:op msg)
