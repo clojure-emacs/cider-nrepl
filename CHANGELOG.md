@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.21.1 (2019-02-15)
+
 ### New features
 
 * Add a wrapper function for `zprint`, suitable for using with `nrepl.middleware.print`.
