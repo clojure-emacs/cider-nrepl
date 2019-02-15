@@ -52,3 +52,16 @@
   ([value writer options]
    (binding [*out* writer]
      (@puget-printer value options))))
+
+(def ^:private zprint-printer
+  (delay
+   (do
+     (require 'zprint.core)
+     (resolve 'zprint.core/zprint))))
+
+(defn zprint-pprint
+  ([value writer]
+   (zprint-pprint value writer {}))
+  ([value writer options]
+   (binding [*out* writer]
+     (@zprint-printer value options))))
