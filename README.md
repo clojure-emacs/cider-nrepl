@@ -356,16 +356,13 @@ Release to [clojars](https://clojars.org/):
 lein with-profile plugin.mranderson/config deploy clojars
 ```
 
-Or you can use the "very sophisticated" `build.sh` script to clean,
-inline, and run a lein target like `install` or `deploy`:
+Or you can use the `Makefile` as:
 
 ```
-./build.sh install
-./build.sh deploy clojars
+make clean
+make install
+make deploy
 ```
-
-[build.sh](build.sh) cleans, runs source-deps with the right
-parameters, and then runs the provided lein target.
 
 ## Hall of Fame
 
