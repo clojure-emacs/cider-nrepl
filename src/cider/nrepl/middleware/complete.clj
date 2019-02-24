@@ -11,13 +11,15 @@
   [{:keys [ns symbol context extra-metadata] :as msg}]
   (let [ns (u/as-sym ns)
         prefix (str symbol)
-        extra-metadata (set (map keyword extra-metadata))]
-    (if-let [cljs-env (cljs/grab-cljs-env msg)]
-      (cljs-complete/completions cljs-env prefix {:context-ns ns
-                                                  :extra-metadata extra-metadata})
-      (jvm-complete/completions prefix {:ns ns
-                                        :context context
-                                        :extra-metadata extra-metadata}))))
+        extra-metadata (set (map keyword extra-metadata))
+        candidates (if-let [cljs-env (cljs/grab-cljs-env msg)]
+                     (cljs-complete/completions cljs-env prefix {:context-ns ns
+                                                                 :extra-metadata extra-metadata})
+                     (jvm-complete/completions prefix {:ns ns
+                                                       :context context
+                                                       :extra-metadata extra-metadata}))]
+    ;; Limit the maximum number of candidates to a reasonable number.
+    (take 100 candidates)))
 
 (defn completion-doc
   [{:keys [ns symbol] :as msg}]
