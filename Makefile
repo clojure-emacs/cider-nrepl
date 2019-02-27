@@ -13,7 +13,7 @@ JAVA_VERSION = $(shell lein with-profile +sysutils \
 inline-deps: .inline-deps
 
 test: .inline-deps
-	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config test
+	lein with-profile +$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 eastwood:
 	lein with-profile +$(CLOJURE_VERSION),+eastwood eastwood
