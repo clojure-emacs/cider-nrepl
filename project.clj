@@ -59,7 +59,8 @@
 
              :dev {:dependencies [[boot/base "2.8.3"]
                                   [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.0"]]}
+                                  [leiningen-core "2.9.0"]]
+                   :global-vars {*assert* true}}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
@@ -80,7 +81,8 @@
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[cider/piggieback "0.4.0"]]}
+                    :dependencies [[pjstadig/humane-test-output "0.9.0"]
+                                   [cider/piggieback "0.4.0"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
