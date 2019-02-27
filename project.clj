@@ -54,9 +54,7 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided [:1.8]
-
-             :dev {:dependencies [[boot/base "2.8.2"]
+  :profiles {:dev {:dependencies [[boot/base "2.8.2"]
                                   [boot/core "2.8.2"]
                                   [leiningen-core "2.8.3"]]}
 
