@@ -62,20 +62,20 @@
                                   [leiningen-core "2.9.0"]]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
-                                  [org.clojure/clojurescript "1.8.51" :scope "provided"]
+                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]
                                   [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
+                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]
                                   [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]
                    ;; TODO: Merge the tests in this dir in to test/clj once we
                    ;; drop support for Clojure 1.8
                    :test-paths ["test/spec"]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]
-                                   [org.clojure/clojurescript "1.10.63" :scope "provided"]]
+                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]
-                                     [org.clojure/clojurescript "1.10.516" :scope "provided"]]}
+                                     [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
