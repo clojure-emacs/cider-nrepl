@@ -397,7 +397,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (when-not (::instrumented (meta v))
     (when-let [{:keys [ns file form] :as var-meta} (m/var-code v)]
       (let [full-path (misc/transform-value (:file (info/file-info file)))]
-        (binding [*ns*   ns
+        (binding [*ns*   (find-ns ns)
                   *file* file
                   *msg*  (-> *msg*
                              (merge var-meta)
