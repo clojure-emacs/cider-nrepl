@@ -6,17 +6,22 @@
    [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
-(def min-lein-version "2.8.2")
+(def minimum-versions {:lein    "2.8.2"
+                       :clojure "1.8.0"})
+
+(defn valid-version? [kind version] (lein/version-satisfies? version (minimum-versions kind)))
+(def valid-lein-version? (partial valid-version? :lein))
+(def valid-clojure-version? (partial valid-version? :clojure))
 
 ;; Exists for the sole purpose of modifying the current project's metadata.
 ;; See https://github.com/technomancy/leiningen/blob/master/doc/PLUGINS.md#project-middleware
 (defn middleware
   [{:keys [dependencies exclusions] :as project}]
-  (let [lein-version-ok?    (lein/version-satisfies? (lein/leiningen-version) min-lein-version)
+  (let [lein-version-ok?    (valid-lein-version? (lein/leiningen-version))
         clojure-excluded?   (some #(= % 'org.clojure/clojure) exclusions)
-        clojure-version     (when-not clojure-excluded?
+        clojure-versions    (when-not clojure-excluded?
                               (->> dependencies
-                                   (some (fn [[id version & _]]
+                                   (keep (fn [[id version & _]]
                                            (when (= id 'org.clojure/clojure)
                                              version)))))
         clojure-version-ok? (cond clojure-excluded?
@@ -25,13 +30,13 @@
                                   ;; implementation.
                                   true
 
-                                  (nil? clojure-version)
+                                  (empty? clojure-versions)
                                   ;; Lein 2.8.3+ uses Clojure 1.8 by default, which would be OK.
                                   lein-version-ok?
 
                                   :else
                                   ;; There is a Clojure version depended on, it must check out.
-                                  (lein/version-satisfies? clojure-version "1.8.0"))]
+                                  (some valid-clojure-version? clojure-versions))]
 
     (when-not lein-version-ok?
       (lein/warn "Warning: cider-nrepl requires Leiningen 2.8.3 or greater."))
