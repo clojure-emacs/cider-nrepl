@@ -182,7 +182,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ```
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.21.1"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.21.1"} }}' -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
 ```
 
 There are also two convenient aliases you can employ (see this project's `deps.edn`):
