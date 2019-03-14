@@ -51,7 +51,7 @@ we're all ears!
 ### Deferred Middleware Loading
 
 To improve the startup time of the nREPL server all of cider-nrepl's
-middleware's are loaded for real only when needed.
+middlewares are loaded for real only when needed.
 
 You can read more about this
 [here](https://github.com/clojure-emacs/cider-nrepl/pull/438).
