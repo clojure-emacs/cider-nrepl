@@ -2,12 +2,14 @@
   (:refer-clojure :exclude [ns-aliases])
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.coerce :as util.coerce]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cider.nrepl.middleware.util.meta :as um]
    [cljs-tooling.info :as cljs-info]
    [cljs-tooling.util.analysis :as cljs-analysis]
    [orchard.misc :as u]
-   [orchard.namespace :as ns]))
+   [orchard.namespace :as ns]
+   [orchard.query :as query]))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -17,18 +19,21 @@
        (filter #(= (first %) name))
        (map second)))
 
-(defn ns-vars-clj [ns]
-  (->> (symbol ns)
-       ns-publics
-       keys
-       (map name)
+(defn ns-vars-clj [ns & [var-query]]
+  (->> {:ns-query {:exactly [ns]}}
+       (merge var-query)
+       util.coerce/var-query
+       query/vars
+       (map (comp str :name meta))
        sort))
 
-(defn ns-vars-with-meta-clj [ns]
-  (->> (symbol ns)
-       ns-interns
-       (u/update-vals (comp um/relevant-meta meta))
-       (u/update-keys name)
+(defn ns-vars-with-meta-clj [ns & [var-query]]
+  (->> {:ns-query {:exactly [ns]}}
+       (merge var-query)
+       util.coerce/var-query
+       query/vars
+       (map meta)
+       (map (juxt (comp str :name) um/relevant-meta))
        (into (sorted-map))))
 
 (defn ns-list-cljs [env]
@@ -37,19 +42,25 @@
        (map name)
        sort))
 
-(defn ns-vars-cljs [env ns]
-  (->> (symbol ns)
-       (cljs-analysis/public-vars env)
-       keys
-       (map name)
-       sort))
+(defn ns-vars-cljs [env ns & [var-query]]
+  (let [fetch-vars (if (:private? var-query)
+                     (partial cljs-analysis/ns-interns-from-env env)
+                     (partial cljs-analysis/public-vars env))]
+    (->> (symbol ns)
+         fetch-vars
+         keys
+         (map name)
+         sort)))
 
-(defn ns-vars-with-meta-cljs [env ns]
-  (->> (symbol ns)
-       (cljs-analysis/public-vars env)
-       (u/update-vals (comp um/relevant-meta :meta))
-       (u/update-keys name)
-       (into (sorted-map))))
+(defn ns-vars-with-meta-cljs [env ns & [var-query]]
+  (let [fetch-vars (if (:private? var-query)
+                     (partial cljs-analysis/ns-interns-from-env env)
+                     (partial cljs-analysis/public-vars env))]
+    (->> (symbol ns)
+         fetch-vars
+         (u/update-vals (comp um/relevant-meta :meta))
+         (u/update-keys name)
+         (into (sorted-map)))))
 
 (defn ns-path-cljs [env ns]
   (->> (symbol ns)
@@ -61,15 +72,15 @@
     (ns-list-cljs cljs-env)
     (ns/loaded-namespaces filter-regexps)))
 
-(defn ns-vars [{:keys [ns] :as msg}]
+(defn ns-vars [{:keys [ns var-query] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (ns-vars-cljs cljs-env ns)
-    (ns-vars-clj ns)))
+    (ns-vars-cljs cljs-env ns var-query)
+    (ns-vars-clj ns var-query)))
 
-(defn ns-vars-with-meta [{:keys [ns] :as msg}]
+(defn ns-vars-with-meta [{:keys [ns var-query] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (ns-vars-with-meta-cljs cljs-env ns)
-    (ns-vars-with-meta-clj ns)))
+    (ns-vars-with-meta-cljs cljs-env ns var-query)
+    (ns-vars-with-meta-clj ns var-query)))
 
 (defn ns-path [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]

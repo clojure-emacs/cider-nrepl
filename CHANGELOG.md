@@ -2,6 +2,14 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Added a option for filtering vars to the ns-vars middleware.
+
+### Bugs fixed
+
+* [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Fix `ns-vars-with-meta` to return public vars.
+
 ## 0.21.1 (2019-02-15)
 
 ### New features

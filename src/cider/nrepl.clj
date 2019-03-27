@@ -266,13 +266,15 @@
                :requires {"name" "The name to use."}
                :returns {"status" "done" "var-list" "The list obtained."}}
               "ns-vars"
-              {:doc "Returns a sorted list of all vars in a namespace."
+              {:doc "Returns a sorted list of public vars in a namespace."
                :requires {"ns" "The namespace to browse."}
-               :returns {"status" "done" "ns-vars" "The sorted list of all vars in a namespace."}}
+               :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+               :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
               "ns-vars-with-meta"
-              {:doc "Returns a map of [var-name] to [var-metadata] for all vars in a namespace."
+              {:doc "Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
                :requires {"ns" "The namespace to use."}
-               :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for all vars in a namespace."}}
+               :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+               :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
               "ns-path"
               {:doc "Returns the path to the file containing ns."
                :requires {"ns" "The namespace to find."}

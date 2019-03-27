@@ -47,6 +47,22 @@
     (is (sequential? ns-vars))
     (is (every? string? ns-vars))))
 
+(deftest ns-vars-including-privates-test
+  (testing "Without private vars"
+    (let [ns-vars (:ns-vars (session/message {:op "ns-vars"
+                                              :ns "clojure.core"}))]
+      (is (sequential? ns-vars))
+      (is (every? string? ns-vars))
+      (is (nil? (some #(= "is-annotation?" %) ns-vars)))))
+
+  (testing "Including private vars"
+    (let [ns-vars (:ns-vars (session/message {:op "ns-vars"
+                                              :ns "clojure.core"
+                                              :var-query {:private? 1}}))]
+      (is (sequential? ns-vars))
+      (is (every? string? ns-vars))
+      (is (some #(= "is-annotation?" %) ns-vars)))))
+
 (deftest ns-vars-with-meta-integration-test
   (let [ns-vars-with-meta (:ns-vars-with-meta
                            (session/message {:op "ns-vars-with-meta"
@@ -61,6 +77,23 @@
             :doc "\"Repeatedly executes body (presumably for side-effects) with\\n  bindings and filtering as provided by \\\"for\\\".  Does not retain\\n  the head of the sequence. Returns nil.\""}))
     (is (= (:*ns* ns-vars-with-meta)
            {:doc "\"A clojure.lang.Namespace object representing the current namespace.\""}))))
+
+(deftest ns-vars-with-meta-including-privates-test
+  (testing "Without private vars"
+    (let [ns-vars-with-meta (:ns-vars-with-meta
+                             (session/message {:op "ns-vars-with-meta"
+                                               :ns "clojure.core"}))]
+      (is (every? (comp map? second) ns-vars-with-meta))
+      (is (nil? (:is-annotation? ns-vars-with-meta)))))
+
+  (testing "Including private vars"
+    (let [ns-vars-with-meta (:ns-vars-with-meta
+                             (session/message {:op "ns-vars-with-meta"
+                                               :ns "clojure.core"
+                                               :var-query {:private? 1}}))]
+      (is (every? (comp map? second) ns-vars-with-meta))
+      (is (= (:is-annotation? ns-vars-with-meta)
+             {:arglists "([c])"})))))
 
 (deftest ns-path-integration-test
   (let [ns-path (:path (session/message {:op "ns-path"
