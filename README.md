@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/clojure-emacs/cider-nrepl.png?branch=master)](https://travis-ci.org/clojure-emacs/cider-nrepl)
 [![Dependencies Status](https://versions.deps.co/clojure-emacs/cider-nrepl/status.svg)](https://versions.deps.co/clojure-emacs/cider-nrepl)
 [![Coverage](https://codecov.io/gh/clojure-emacs/cider-nrepl/branch/master/graph/badge.svg)](https://codecov.io/gh/clojure-emacs/cider-nrepl/)
-[![cljdoc badge](https://cljdoc.xyz/badge/cider/cider-nrepl)](https://cljdoc.xyz/d/cider/cider-nrepl/CURRENT)
+[![cljdoc badge](https://cljdoc.org/badge/cider/cider-nrepl)](https://cljdoc.org/d/cider/cider-nrepl/CURRENT)
 
 # CIDER nREPL
 
@@ -51,7 +51,7 @@ we're all ears!
 ### Deferred Middleware Loading
 
 To improve the startup time of the nREPL server all of cider-nrepl's
-middleware's are loaded for real only when needed.
+middlewares are loaded for real only when needed.
 
 You can read more about this
 [here](https://github.com/clojure-emacs/cider-nrepl/pull/438).
@@ -182,7 +182,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ```
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.21.1"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.21.1"} }}' -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
 ```
 
 There are also two convenient aliases you can employ (see this project's `deps.edn`):
@@ -328,7 +328,7 @@ avoid classpath collisions.
 To work with `mranderson` the first thing to do is:
 
 ```
-lein do clean, source-deps :project-prefix cider.inlined-deps
+lein do clean, inline-deps
 ```
 
 This creates the munged local dependencies in `target/srcdeps` directory.

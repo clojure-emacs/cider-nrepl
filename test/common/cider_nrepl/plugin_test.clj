@@ -15,7 +15,7 @@
 (deftest plugin-test
   ;; Suppress output of leiningen.core.main/warn
   (binding [lein/*info* false]
-    (with-redefs [lein/leiningen-version (constantly plugin/min-lein-version)]
+    (with-redefs [lein/leiningen-version (constantly (plugin/minimum-versions :lein))]
       (testing "Valid Lein version; valid Clojure version"
         (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.8.0"]]})]
           (is (contains-cider-nrepl-dep? project))
@@ -23,6 +23,12 @@
 
       (testing "Valid Lein version; no Clojure version specified"
         (let [project (plugin/middleware '{})]
+          (is (contains-cider-nrepl-dep? project))
+          (is (contains-cider-nrepl-middleware? project))))
+
+      (testing "Valid Lein version; multiple Clojure versions specified"
+        (let [project (plugin/middleware `{:dependencies [[org.clojure/clojure "1.5.1"]
+                                                          [org.clojure/clojure ~(plugin/minimum-versions :clojure)]]})]
           (is (contains-cider-nrepl-dep? project))
           (is (contains-cider-nrepl-middleware? project))))
 

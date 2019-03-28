@@ -6,13 +6,13 @@ export CLOVERAGE_VERSION = 1.0.13
 JAVA_VERSION = $(shell lein with-profile +sysutils \
                        sysutils :java-version-simple | cut -d " " -f 2)
 
-.source-deps:
-	lein source-deps
-	touch .source-deps
+.inline-deps:
+	lein inline-deps
+	touch .inline-deps
 
-source-deps: .source-deps
+inline-deps: .inline-deps
 
-test: .source-deps
+test: .inline-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config test
 
 eastwood:
@@ -24,7 +24,7 @@ cljfmt:
 cloverage:
 	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage
 
-install: .source-deps
+install: .inline-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config install
 
 smoketest: install
@@ -52,10 +52,10 @@ release:
 # specified in project.clj to provide a login and password to the
 # artifact repository.
 
-deploy: .source-deps
+deploy: .inline-deps
 	lein with-profile +$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 clean:
 	lein clean
 	cd test/smoketest && lein clean
-	rm -f .source-deps
+	rm -f .inline-deps
