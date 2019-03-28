@@ -16,7 +16,16 @@
     (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
                                               :ns "cljs.core"})]
       (is (sequential? ns-vars))
-      (is (every? string? ns-vars))))
+      (is (every? string? ns-vars))
+      (is (not (contains? (set ns-vars) "maybe-warn")))))
+
+  (testing "ns-vars op with private? var-query"
+    (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
+                                              :ns "cljs.core"
+                                              :var-query {:private? 1}})]
+      (is (sequential? ns-vars))
+      (is (every? string? ns-vars))
+      (is (contains? (set ns-vars) "maybe-warn"))))
 
   (testing "ns-vars-with-meta op"
     (let [ns-vars-with-meta (:ns-vars-with-meta
@@ -25,7 +34,17 @@
       (is (every? (comp map? second) ns-vars-with-meta))
       (is (= (:+ ns-vars-with-meta)
              {:arglists "(quote ([] [x] [x y] [x y & more]))"
-              :doc "\"Returns the sum of nums. (+) returns 0.\""}))))
+              :doc "\"Returns the sum of nums. (+) returns 0.\""}))
+      (is (not (contains? ns-vars-with-meta :maybe-warn)))))
+
+  (testing "ns-vars-with-meta op with private? var-query"
+    (let [ns-vars-with-meta (:ns-vars-with-meta
+                             (session/message {:op "ns-vars-with-meta"
+                                               :ns "cljs.core"
+                                               :var-query {:private? 1}}))]
+      (is (every? (comp map? second) ns-vars-with-meta))
+      (is (= (:maybe-warn ns-vars-with-meta)
+             {:arglists "(quote ([e]))"}))))
 
   (testing "ns-path op"
     (let [{:keys [path]} (session/message {:op "ns-path"
