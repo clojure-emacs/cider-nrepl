@@ -592,7 +592,7 @@
   ;; and instrument the source, which is in a jar file. Note that this function
   ;; is used because it is not marked as a :source-dep, so we can rely on the
   ;; namespace remaining unmunged, which is important when these tests run on
-  ;; travis CI.
+  ;; CI.
   (--> :eval "(ns user.test.step-in
                 (:require [nrepl.server :as server]))")
   (<-- {:ns "user.test.step-in"})
