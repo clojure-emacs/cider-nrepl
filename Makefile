@@ -1,6 +1,6 @@
 .PHONY: test eastwood cljfmt cloverage install smoketest release deploy clean detect_timeout
 
-CLOJURE_VERSION ?= 1.9
+CLOJURE_VERSION ?= 1.10
 export CLOVERAGE_VERSION = 1.0.13
 
 JAVA_VERSION = $(shell lein with-profile +sysutils \
