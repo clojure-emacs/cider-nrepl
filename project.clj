@@ -4,18 +4,17 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-
   :dependencies [[nrepl "0.6.0"]
-                 ^:source-dep [cider/orchard "0.5.0-SNAPSHOT"]
-                 ^:source-dep [thunknyc/profile "0.5.2"]
-                 ^:source-dep [mvxcvi/puget "1.1.0"]
-                 ^:source-dep [fipp "0.6.15"]; can be removed in unresolved-tree mode
-                 ^:source-dep [compliment "0.3.8"]
-                 ^:source-dep [cljs-tooling "0.3.1"]
-                 ^:source-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
-                 ^:source-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
-                 ^:source-dep [org.clojure/tools.trace "0.7.10"]
-                 ^:source-dep [org.clojure/tools.reader "1.2.2"]]
+                 ^:inline-dep [cider/orchard  "0.5.0-SNAPSHOT"]
+                 ^:inline-dep [thunknyc/profile "0.5.2"]
+                 ^:inline-dep [mvxcvi/puget "1.1.0"]
+                 ^:inline-dep [fipp "0.6.15"]; can be removed in unresolved-tree mode
+                 ^:inline-dep [compliment "0.3.8"]
+                 ^:inline-dep [cljs-tooling "0.3.1"]
+                 ^:inline-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
+                 ^:inline-dep [org.clojure/tools.trace "0.7.10"]
+                 ^:inline-dep [org.clojure/tools.reader "1.2.2"]]
   :plugins [[thomasa/mranderson "0.5.1"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
                :overrides       {[mvxcvi/puget fipp] [fipp "0.6.15"]}; only takes effect in unresolved-tree mode
@@ -41,7 +40,8 @@
                                        true))))
                    :debugger :debugger}
 
-  :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]}
+  :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]
+            "mranderson"   ["with-profile" "+plugin.mranderson/config"]}
 
   :release-tasks [["vcs" "assert-committed"]
                   ["bump-version" "release"]
