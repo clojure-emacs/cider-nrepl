@@ -2,7 +2,6 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.java.io :as io]
-   [orchard.classloader :refer [class-loader]]
    [orchard.classpath :as cp]
    [orchard.misc :as u]))
 
@@ -32,11 +31,10 @@
                     :url (io/resource relpath)})))
           (remove #(.startsWith (:relpath %) "META-INF/"))
           (remove #(re-matches #".*\.(clj[cs]?|java|class)" (:relpath %)))))
-   (filter (memfn isDirectory)
-           (cp/classpath (class-loader)))))
+   (filter (memfn isDirectory) (map io/as-file (cp/classpath)))))
 
 (defn resource-path [name]
-  (when-let [resource (io/resource name (class-loader))]
+  (when-let [resource (io/resource name)]
     (.getPath resource)))
 
 (defn resources-list

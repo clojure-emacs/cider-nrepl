@@ -5,13 +5,16 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [cljs-tooling.util.analysis :as cljs-ana]
+   [clojure.java.io :as io]
+   [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.misc :as u]
-   [orchard.namespace :as namespace])
+   [orchard.classpath :as cp]
+   [orchard.misc :as u])
   (:import
    (clojure.lang Namespace MultiFn)
    java.net.SocketException
+   java.util.jar.JarFile
    nrepl.transport.Transport))
 
 (def clojure-core (try (find-ns 'clojure.core)
@@ -142,6 +145,13 @@
     :else
     (assoc project-ns-map clojure-core clojure-core-map)))
 
+(def jar-namespaces
+  (->> (cp/classpath)
+       (filter u/jar-file?)
+       (map #(JarFile. (io/as-file %)))
+       (mapcat ns-find/find-namespaces-in-jarfile)
+       (into #{})))
+
 (defn update-and-send-cache
   "Send a reply to msg with state information assoc'ed.
   old-data is the ns-cache that needs to be updated (the one
@@ -165,7 +175,7 @@
   change also."
   ([old-data msg]
    (update-and-send-cache old-data msg
-                          #'namespace/jar-namespaces
+                          #'jar-namespaces
                           #'transport/send))
   ([old-data msg jar-ns-fn transport-send-fn]
    (let [cljs           (cljs/grab-cljs-env msg)

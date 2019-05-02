@@ -85,7 +85,7 @@
 (defn ns-path [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
     (ns-path-cljs cljs-env ns)
-    (ns/ns-path ns)))
+    (.getPath (ns/canonical-source ns))))
 
 (defn ns-list-reply [msg]
   {:ns-list (ns-list msg)})

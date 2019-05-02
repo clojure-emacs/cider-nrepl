@@ -54,7 +54,7 @@
           (update
            :file
            (fn [f]
-             (if (u/boot-project?)
+             (if (System/getProperty "fake.class.path")
                ;; Boot stores files in a temporary directory & ClojureScript
                ;; stores the :file metadata location absolutely instead of
                ;; relatively to the classpath. This means when doing jump to

@@ -11,7 +11,7 @@
    [org.apache.commons.lang3 SystemUtils]))
 
 (deftest format-response-test
-  (is (re-find #"^(http|file|jar|zip):" ; resolved either locally or online
+  (is (re-find #"^(https?|file|jar|zip):" ; resolved either locally or online
                (-> (info/info {:class "java.lang.Object" :member "toString"})
                    (info/format-response)
                    (get "javadoc"))))
@@ -172,28 +172,21 @@
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
-        (is (.startsWith (:javadoc response) "http://docs.oracle.com/javase")))
-
-      (if (SystemUtils/IS_JAVA_1_7)
-        (testing "JDK 1.7 Javadoc URL style"
-          (let [response (session/message {:op     "info"
-                                           :class  "java.lang.StringBuilder"
-                                           :member "capacity"})]
-            (is (= (:javadoc response) "http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html#capacity()")))))
+        (is (.startsWith (:javadoc response) "https://docs.oracle.com/javase")))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
           (let [response (session/message {:op     "info"
                                            :class  "java.lang.StringBuilder"
                                            :member "capacity"})]
-            (is (= (:javadoc response) "http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--")))))
+            (is (= (:javadoc response) "https://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--")))))
 
       (if (SystemUtils/IS_JAVA_9)
         (testing "JDK 9 Javadoc URL style"
           (let [response (session/message {:op     "info"
                                            :class  "java.lang.StringBuilder"
                                            :member "capacity"})]
-            (is (= (:javadoc response) "http://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#capacity--"))))))
+            (is (= (:javadoc response) "https://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#capacity--"))))))
 
     (testing "get info on the dot-operator"
       (let [response (session/message {:op "info" :symbol "." :ns "user"})]
