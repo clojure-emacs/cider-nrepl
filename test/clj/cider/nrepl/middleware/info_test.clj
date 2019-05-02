@@ -106,13 +106,6 @@
         (is (= (:modifiers response) "#{:public}"))
         (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#getInt")))
 
-      (if (SystemUtils/IS_JAVA_1_7)
-        (testing "JDK 1.7 Javadoc URL style"
-          (let [response (session/message {:op     "info"
-                                           :class  "cider.nrepl.test.TestClass"
-                                           :member "getInt"})]
-            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#getInt()")))))
-
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
           (let [response (session/message {:op     "info"
@@ -139,13 +132,6 @@
         (is (= (:returns response) "void"))
         (is (= (:modifiers response) "#{:private :static}"))
         (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething")))
-
-      (if (SystemUtils/IS_JAVA_1_7)
-        (testing "JDK 1.7 Javadoc URL style"
-          (let [response (session/message {:op     "info"
-                                           :class  "cider.nrepl.test.TestClass"
-                                           :member "doSomething"})]
-            (is (= (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething(int,%20int,%20java.lang.String)")))))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
