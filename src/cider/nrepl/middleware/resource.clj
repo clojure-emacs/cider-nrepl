@@ -2,8 +2,31 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.java.io :as io]
+   [clojure.string :as str]
    [orchard.classpath :as cp]
    [orchard.misc :as u]))
+
+(defn- boot-classloader
+  "Creates a class-loader that knows original source files paths in Boot project."
+  []
+  (let [class-path (System/getProperty "fake.class.path")
+        dir-separator (System/getProperty "file.separator")
+        paths (str/split class-path (re-pattern (System/getProperty "path.separator")))
+        urls (map
+              (fn [path]
+                (let [url (if (re-find #".jar$" path)
+                            (str "file:" path)
+                            (str "file:" path dir-separator))]
+                  (new java.net.URL url)))
+              paths)]
+    ;; TODO: Figure out how to add the JDK sources here
+    (new java.net.URLClassLoader (into-array java.net.URL urls))))
+
+(defn- classloader
+  []
+  (if (System/getProperty "fake.class.path")
+    (boot-classloader)
+    (.getContextClassLoader (Thread/currentThread))))
 
 (defn- trim-leading-separator
   [s]
@@ -31,10 +54,10 @@
                     :url (io/resource relpath)})))
           (remove #(.startsWith (:relpath %) "META-INF/"))
           (remove #(re-matches #".*\.(clj[cs]?|java|class)" (:relpath %)))))
-   (filter (memfn isDirectory) (map io/as-file (cp/classpath)))))
+   (filter (memfn isDirectory) (map io/as-file (cp/classpath (classloader))))))
 
 (defn resource-path [name]
-  (when-let [resource (io/resource name)]
+  (when-let [resource (io/resource name (classloader))]
     (.getPath resource)))
 
 (defn resources-list
