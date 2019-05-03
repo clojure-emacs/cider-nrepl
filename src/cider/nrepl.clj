@@ -462,6 +462,22 @@
      :requires {}
      :returns {"cider-version" "CIDER-nREPL's version map."
                "status" "done"}}}})
+
+(def-wrapper wrap-xref cider.nrepl.middleware.xref/handle-xref
+  {:doc "Middleware that provides find references functionality."
+   :handles {"fn-refs"
+             {:doc "Look up functions that reference a particular function."
+              :requires {"symbol" "The symbol to lookup"
+                         "ns" "The current namespace"}
+              :returns {"fn-refs" "A list of function references."
+                        "status" "done"}}
+             "fn-deps"
+             {:doc "Look up the function dependencies of particular function."
+              :requires {"symbol" "The symbol to lookup"
+                         "ns" "The current namespace"}
+              :returns {"fn-deps" "A list of function deps."
+                        "status" "done"}}}})
+
 ;;; Cider's Handler
 
 (def cider-middleware
@@ -489,7 +505,8 @@
     wrap-trace
     wrap-tracker
     wrap-undef
-    wrap-version])
+    wrap-version
+    wrap-xref])
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."

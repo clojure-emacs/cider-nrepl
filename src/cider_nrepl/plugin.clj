@@ -83,4 +83,5 @@
                        cider.nrepl/wrap-trace
                        cider.nrepl/wrap-tracker
                        cider.nrepl/wrap-undef
-                       cider.nrepl/wrap-version])))))
+                       cider.nrepl/wrap-version
+                       cider.nrepl/wrap-xref])))))

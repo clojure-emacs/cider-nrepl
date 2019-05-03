@@ -106,7 +106,8 @@
                                                               cider.nrepl/wrap-trace
                                                               cider.nrepl/wrap-tracker
                                                               cider.nrepl/wrap-undef
-                                                              cider.nrepl/wrap-version]}}]
+                                                              cider.nrepl/wrap-version
+                                                              cider.nrepl/wrap-xref]}}]
 
              :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
 

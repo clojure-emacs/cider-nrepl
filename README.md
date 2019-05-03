@@ -138,7 +138,8 @@ under `:repl-options`.
                   cider.nrepl/wrap-trace
                   cider.nrepl/wrap-out
                   cider.nrepl/wrap-undef
-                  cider.nrepl/wrap-version]}
+                  cider.nrepl/wrap-version
+                  cider.nrepl/wrap-xref]}
 
 ```
 
@@ -277,6 +278,7 @@ Middleware        | Op(s)      | Description
 `wrap-out`        | `out-subscribe`/`out-unsubscribe` | Echo the server's output stream to client sessions.
 `wrap-undef`      | `undef`    | Undefine a var.
 `wrap-version`    | `cider-version` | The CIDER-nREPL version map.
+`wrap-xref`       | `fn-refs`/`fn-deps` | Function references and dependencies (other functions).
 
 ## Release policy
 
