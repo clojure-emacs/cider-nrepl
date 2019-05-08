@@ -59,7 +59,7 @@
 
              :dev {:dependencies [[boot/base "2.8.2"]
                                   [boot/core "2.8.2"]
-                                  [leiningen-core "2.8.3"]]}
+                                  [leiningen-core "2.9.1"]]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.8.51" :scope "provided"]
