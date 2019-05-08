@@ -17,7 +17,7 @@
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
   :plugins [[thomasa/mranderson "0.5.1"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
-               :overrides       {[mvxcvi/puget fipp] [fipp "0.6.15"]}; only takes effect in unresolved-tree mode
+               :overrides       {[mvxcvi/puget fipp] [fipp "0.6.18"]}; only takes effect in unresolved-tree mode
                :expositions     [[mvxcvi/puget fipp]]; only takes effect unresolved-tree mode
                :unresolved-tree false}
 
