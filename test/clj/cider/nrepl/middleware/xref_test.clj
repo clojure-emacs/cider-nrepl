@@ -13,11 +13,11 @@
         fn-refs (:fn-refs response)]
     (is (= (:status response) #{"done"}))
     (is (> (count fn-refs) 0))
-    (is (every? string? fn-refs))))
+    (is (every? map? fn-refs))))
 
 (deftest fn-deps-integration-test
   (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :symbol "foo"})
         fn-deps (:fn-deps response)]
     (is (= (:status response) #{"done"}))
     (is (= (count fn-deps) 3))
-    (is (every? string? fn-deps))))
+    (is (every? map? fn-deps))))
