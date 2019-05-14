@@ -10,6 +10,10 @@
 
 * [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Fix `ns-vars-with-meta` to return public vars.
 
+### Changes
+
+* **(Breaking)** Removed the `cider.nrepl.main` namespace. The functionality in it has been superseded by `nrepl.cmdline`.
+
 ## 0.21.1 (2019-02-15)
 
 ### New features
