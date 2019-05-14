@@ -5,6 +5,7 @@
 ### New features
 
 * [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Added a option for filtering vars to the ns-vars middleware.
+* Added `xref` middleware providing `fn-deps` and `fn-refs` ops.
 
 ### Bugs fixed
 
