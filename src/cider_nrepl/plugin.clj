@@ -22,7 +22,8 @@
         clojure-versions    (when-not clojure-excluded?
                               (->> dependencies
                                    (keep (fn [[id version & _]]
-                                           (when (= id 'org.clojure/clojure)
+                                           (when (and (= id 'org.clojure/clojure)
+                                                      (string? version))
                                              version)))))
         clojure-version-ok? (cond clojure-excluded?
                                   ;; In this case the onus is on the user. A warning will be emitted
