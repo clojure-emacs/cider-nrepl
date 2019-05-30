@@ -23,6 +23,10 @@
                               (->> dependencies
                                    (keep (fn [[id version & _]]
                                            (when (and (= id 'org.clojure/clojure)
+                                                      ;; We do an additional check here to ensure
+                                                      ;; a version is present. Some lein extensions
+                                                      ;; such as lein modules or managed dependencies
+                                                      ;; do not require versions in the dependency list
                                                       (string? version))
                                              version)))))
         clojure-version-ok? (cond clojure-excluded?

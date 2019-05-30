@@ -40,3 +40,8 @@
   (testing "undefined versions work"
     (is (= expected-output
            (middleware {:dependencies [['org.clojure/clojure]]})))))
+
+(deftest version-checks
+  (testing "defined versions also work"
+    (is (= (update-in expected-output [:dependencies 0 0] conj "1.10.0")
+           (middleware {:dependencies [['org.clojure/clojure "1.10.0"]]})))))
