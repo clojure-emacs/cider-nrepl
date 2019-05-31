@@ -305,6 +305,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
    "n" :next
    "o" :out
    "p" :inspect
+   "P" :insPect
    "q" :quit
    "s" :stacktrace
    "t" :trace})
@@ -365,11 +366,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         :locals     (->> (debug-inspect page-size (:locals dbg-state))
                          (assoc dbg-state :inspect)
                          (recur value))
-        :inspect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
-                      (->> (debug-inspect page-size val)
-                           (assoc dbg-state :inspect)
-                           (recur value))
-                      (recur value dbg-state))
+        :inspect    (->> (debug-inspect page-size value)
+                         (assoc dbg-state :inspect)
+                         (recur value))
+        :insPect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
+                                (->> (debug-inspect page-size val)
+                                     (assoc dbg-state :inspect)
+                                     (recur value))
+                                (recur value dbg-state))
         :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
                       val
                       (recur value dbg-state))

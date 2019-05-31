@@ -6,6 +6,7 @@
 
 * [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Added a option for filtering vars to the ns-vars middleware.
 * Added `xref` middleware providing `fn-deps` and `fn-refs` ops.
+* [#613](https://github.com/clojure-emacs/cider-nrepl/pull/613): Inspect the current value by pressing `p` in the debugger. To inspect arbitrary value, press `P`.
 
 ### Bugs fixed
 
