@@ -3,6 +3,8 @@
 ## master (unreleased)
 
 ### New Features
+
+* [#613](https://github.com/clojure-emacs/cider-nrepl/pull/613): Change the `:inspect` command to work on the current expression. Add a new command `:inspect-prompt` to inspect an arbitrary value. 
 * [#654](https://github.com/clojure-emacs/cider-nrepl/pull/654): 
   Change the format of debugger command messages to a set of command names, leaving key mappings up to client implementations.
   * [#653](https://github.com/clojure-emacs/cider-nrepl/pull/653): Add `inspect-def-current-value` to inspect middleware.
