@@ -308,6 +308,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     :next
     :out
     :inspect
+    :inspect-prompt
     :quit
     :stacktrace
     :trace})
@@ -322,7 +323,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     in: Step into a function
     out: Skip breakpoints in the current sexp.
     here: Skip all breakpoints up till specified coordinate `coord`
-    inspect: Prompt for an expression to evaluate and inspect it.
+    inspect: Inspect the current expression
+    inspect-prompt: Prompt for an expression to evaluate and inspect it.
     locals: Inspect local variables.
     inject: Evaluate an expression and return it.
     eval: Evaluate an expression, display result, and prompt again.
@@ -372,11 +374,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         :locals     (->> (debug-inspect page-size (:locals dbg-state))
                          (assoc dbg-state :inspect)
                          (recur value))
-        :inspect    (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
-                      (->> (debug-inspect page-size val)
-                           (assoc dbg-state :inspect)
-                           (recur value))
-                      (recur value dbg-state))
+        :inspect    (->> (debug-inspect page-size value)
+                         (assoc dbg-state :inspect)
+                         (recur value))
+        :inspect-prompt (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
+                          (->> (debug-inspect page-size val)
+                               (assoc dbg-state :inspect)
+                               (recur value))
+                          (recur value dbg-state))
         :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
                       val
                       (recur value dbg-state))
