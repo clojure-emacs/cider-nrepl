@@ -22,7 +22,12 @@
         clojure-versions    (when-not clojure-excluded?
                               (->> dependencies
                                    (keep (fn [[id version & _]]
-                                           (when (= id 'org.clojure/clojure)
+                                           (when (and (= id 'org.clojure/clojure)
+                                                      ;; We do an additional check here to ensure
+                                                      ;; a version is present. Some lein extensions
+                                                      ;; such as lein modules or managed dependencies
+                                                      ;; do not require versions in the dependency list
+                                                      (string? version))
                                              version)))))
         clojure-version-ok? (cond clojure-excluded?
                                   ;; In this case the onus is on the user. A warning will be emitted
