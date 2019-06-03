@@ -156,7 +156,7 @@ it on the command line through the `cider.tasks/add-middleware` task
 functionality):
 
 ```
-boot -d nrepl:0.6.0 -d cider/cider-nrepl:0.21.1 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version cider.tasks/nrepl-server wait
+boot -d nrepl:0.6.0 -d cider/cider-nrepl:0.21.1 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl --server wait
 ```
 
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
@@ -165,13 +165,13 @@ Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 (set-env! :dependencies '[[nrepl "0.6.0"]
                           [cider/cider-nrepl "0.21.1"]])
 
-(require '[cider.tasks :refer [add-middleware nrepl-server]])
+(require '[cider.tasks :refer [add-middleware]])
 
 (task-options! add-middleware {:middleware '[cider.nrepl.middleware.apropos/wrap-apropos
                                              cider.nrepl.middleware.version/wrap-version]})
 ```
 
-And then launching `boot add-middleware nrepl-server wait`.
+And then launching `boot add-middleware repl --server wait`.
 
 Note that this is not necessary when using the standard `cider-jack-in`.
 
