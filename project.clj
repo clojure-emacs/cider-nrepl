@@ -8,7 +8,7 @@
                  ^:inline-dep [cider/orchard  "0.5.0-beta4"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.1.2"]
-                 ^:inline-dep [fipp "0.6.18"]; can be removed in unresolved-tree mode
+                 ^:inline-dep [fipp "0.6.18"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.8"]
                  ^:inline-dep [cljs-tooling "0.3.1"]
                  ^:inline-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
@@ -17,8 +17,8 @@
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
   :plugins [[thomasa/mranderson "0.5.1"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
-               :overrides       {[mvxcvi/puget fipp] [fipp "0.6.18"]}; only takes effect in unresolved-tree mode
-               :expositions     [[mvxcvi/puget fipp]]; only takes effect unresolved-tree mode
+               :overrides       {[mvxcvi/puget fipp] [fipp "0.6.18"]} ; only takes effect in unresolved-tree mode
+               :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode
                :unresolved-tree false}
 
   :exclusions [org.clojure/clojure]
