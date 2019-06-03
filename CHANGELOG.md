@@ -14,6 +14,7 @@
 ### Changes
 
 * **(Breaking)** Removed the `cider.nrepl.main` namespace. The functionality in it has been superseded by `nrepl.cmdline`.
+* [#615](https://github.com/clojure-emacs/cider-nrepl/pull/615): **(Breaking)** Removed the `cider.tasks/nrepl-server` custom task.
 
 ## 0.21.1 (2019-02-15)
 
