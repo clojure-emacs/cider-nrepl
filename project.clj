@@ -59,7 +59,7 @@
 
              :dev {:dependencies [[boot/base "2.8.3"]
                                   [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.0"]]
+                                  [leiningen-core "2.9.1"]]
                    :global-vars {*assert* true}}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
