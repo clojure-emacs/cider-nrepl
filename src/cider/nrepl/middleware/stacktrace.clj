@@ -10,10 +10,10 @@
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.info :as info]
-   [orchard.resource :as resource]
    [orchard.java :as java]
    [orchard.misc :as u]
-   [orchard.namespace :as namespace])
+   [orchard.namespace :as namespace]
+   [orchard.resource :as resource])
   (:import
    (clojure.lang Compiler$CompilerException)
    (java.io StringWriter)))
