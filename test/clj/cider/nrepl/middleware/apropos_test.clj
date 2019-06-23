@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.apropos-test
   (:require
-   [cider.nrepl.middleware.apropos :refer [apropos]]
+   [cider.nrepl.middleware.apropos :refer [apropos] :as apropos]
    [cider.nrepl.test-session :as session]
    [clojure.string :as str]
    [clojure.test :refer :all]))
@@ -9,6 +9,14 @@
 
 (use-fixtures :each session/session-fixture)
 
+(deftest msg->var-query-map-test
+  (testing "Constructs the ns-query map correctly"
+    (let [msg {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]
+               :query "spelling"}
+          query-map (#'apropos/msg->var-query-map msg)]
+      (is (contains? (:var-query query-map) :ns-query))
+      (is (= 3 (count (-> query-map :var-query :ns-query :exclude-regexps)))))))
+
 (deftest integration-test
   (testing "Apropos op, typical case"
     (let [response (session/message {:op "apropos" :query "handle-apropos"})
@@ -16,6 +24,13 @@
       (is (= (:status response) #{"done"}))
       (is (= (:type match) "function"))
       (is (= (:name match) "cider.nrepl.middleware.apropos/handle-apropos"))))
+
+  (testing "Exclude namespaces typical case"
+    (let [response (session/message {:op "apropos" :query "handle-apropos"
+                                     :exclude-regexps ["cider.nrepl.middleware.apropos"]})
+          match    (get-in response [:apropos-matches 0])]
+      (is (empty? match))
+      (is (= (:status response) #{"done"}))))
 
   (testing "Apropos op, but specialized cases (invoked with prefix argument)"
     (testing "Fails to get a private var because private? unset"

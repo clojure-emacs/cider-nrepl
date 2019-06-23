@@ -8,9 +8,9 @@
 
 ;;; ## Middleware
 
-(defn apropos [msg]
-  {:apropos-matches
-   (apropos/find-symbols
+(defn- msg->var-query-map [msg]
+  (let [ns-query (select-keys msg [:exactly :project? :load-project-ns? :has-tests?
+                                   :include-regexps :exclude-regexps])]
     (cond-> msg
       ;; Compatibility for the pre-var-query API
       (:privates? msg)
@@ -29,10 +29,16 @@
       (assoc :full-doc? true)
 
       true
+      (assoc-in [:var-query :ns-query] ns-query)
+
+      true
       (update :var-query util.coerce/var-query)
 
       (:ns msg)
-      (update :ns (comp find-ns symbol))))})
+      (update :ns (comp find-ns symbol)))))
+
+(defn apropos [msg]
+  {:apropos-matches (-> msg msg->var-query-map apropos/find-symbols)})
 
 (defn handle-apropos [handler msg]
   (with-safe-transport handler msg
