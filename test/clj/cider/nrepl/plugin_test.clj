@@ -3,7 +3,6 @@
             [cider.nrepl.version :refer [version-string]]
             [clojure.test :refer :all]))
 
-
 (def expected-output
   {:dependencies
    [['org.clojure/clojure]

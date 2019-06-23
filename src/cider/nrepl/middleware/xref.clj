@@ -19,7 +19,7 @@
 
 (defn fn-refs-reply [{:keys [ns symbol]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym symbol))]
-   {:fn-refs (map xref-data (xref/fn-refs var))}))
+    {:fn-refs (map xref-data (xref/fn-refs var))}))
 
 (defn fn-deps-reply [{:keys [ns symbol]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym symbol))]
