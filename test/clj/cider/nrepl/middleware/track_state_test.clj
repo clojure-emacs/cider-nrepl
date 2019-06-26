@@ -121,18 +121,20 @@
 (deftest ns-as-map-cljs-test
   (let [cljs-ns {:use-macros {'sym-0 #'test-fn}
                  :uses {'sym-1 #'ns-as-map-cljs-test}
-                 :defs {'sym-2 #'ns-as-map-cljs-test
-                        'a-fn {:fn-var true}
-                        'a-var {}}
-                 :require-macros {'sym-3 'some-namespace}
-                 :requires {'sym-4 'some-namespace}}
+                 :defs {'a-fn {:fn-var true}
+                        'b-fn {:tag 'function}
+                        'c-fn {}
+                        'a-var {:tag 'something}}
+                 :require-macros {'sym-2 'some-namespace}
+                 :requires {'sym-3 'some-namespace}}
         {:keys [aliases interns]} (st/ns-as-map cljs-ns)]
-    (is (= '{sym-3 some-namespace sym-4 some-namespace} aliases))
+    (is (= '{sym-2 some-namespace sym-3 some-namespace} aliases))
     (is (= '{sym-0 {:arglists ([]) :macro true}
              sym-1 {:arglists ([])}
-             sym-2 {}
              a-var {}
-             a-fn {:fn "true"}}
+             a-fn {:fn "true"}
+             b-fn {:fn "true"}
+             c-fn {:fn "true"}}
            interns))))
 
 (deftest calculate-used-aliases-test
