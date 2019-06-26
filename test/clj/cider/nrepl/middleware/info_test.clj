@@ -158,7 +158,7 @@
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
-        (is (.startsWith (:javadoc response) "https://docs.oracle.com/javase")))
+        (is (.startsWith (:javadoc response) "https://docs.oracle.com/")))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
