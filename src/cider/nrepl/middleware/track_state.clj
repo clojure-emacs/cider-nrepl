@@ -40,10 +40,14 @@
                               [sym (um/relevant-meta the-meta)]))))))))
 
 (defn- cljs-meta-with-fn
-  "Like (:meta m) but adds {:fn true} if (:fn-var m) is true."
+  "Like (:meta m) but adds {:fn true} if (:fn-var m) is true, (:tag m) is
+  'function, or if m does not have a :tag key."
   [m]
   (cond-> (:meta m)
-    (:fn-var m) (assoc :fn true)))
+    (or (:fn-var m)
+        (= (:tag m) 'function)
+        (not (contains? m :tag)))
+    (assoc :fn true)))
 
 ;;; Namespaces
 

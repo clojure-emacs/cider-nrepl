@@ -9,6 +9,7 @@
 
 ### Bugs fixed
 
+* Fix some functions defined with `def` not being properly font locked when using dynamic font locking for ClojureScript.
 * [#618](https://github.com/clojure-emacs/cider-nrepl/pull/618): Fix apropos to honor exclude-regexps to filter out namespaces by regex
 * [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Fix `ns-vars-with-meta` to return public vars.
 
