@@ -44,7 +44,7 @@
 (defn- path->url
   "Return a url for the path, either relative to classpath, or absolute."
   [path]
-  (or (info/file-path path) (second (resource/resource-path path))))
+  (or (info/file-path path) (second (resource/resource-path-tuple path))))
 
 (defn- frame->url
   "Return a java.net.URL to the file referenced in the frame, if possible.
