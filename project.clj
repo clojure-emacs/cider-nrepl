@@ -71,7 +71,7 @@
                    ;; TODO: Merge the tests in this dir in to test/clj once we
                    ;; drop support for Clojure 1.8
                    :test-paths ["test/spec"]}
-             :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]
+             :1.10 {:dependencies [[org.clojure/clojure "1.10.1"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
