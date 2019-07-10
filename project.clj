@@ -9,7 +9,7 @@
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.1.2"]
                  ^:inline-dep [fipp "0.6.18"] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.3.8"]
+                 ^:inline-dep [compliment "0.3.9"]
                  ^:inline-dep [cljs-tooling "0.3.1"]
                  ^:inline-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "0.3.0-alpha4"]
