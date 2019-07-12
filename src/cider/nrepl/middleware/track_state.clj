@@ -45,7 +45,7 @@
   [m]
   (cond-> (:meta m)
     (or (:fn-var m)
-        (= (:tag m) 'function)
+        ('#{function cljs.core/MultiFn} (:tag m))
         (not (contains? m :tag)))
     (assoc :fn true)))
 
