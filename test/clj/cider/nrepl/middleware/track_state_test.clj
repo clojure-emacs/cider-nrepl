@@ -123,7 +123,8 @@
                  :uses {'sym-1 #'ns-as-map-cljs-test}
                  :defs {'a-fn {:fn-var true}
                         'b-fn {:tag 'function}
-                        'c-fn {}
+                        'c-fn {:tag 'cljs.core/MultiFn}
+                        'd-fn {}
                         'a-var {:tag 'something}}
                  :require-macros {'sym-2 'some-namespace}
                  :requires {'sym-3 'some-namespace}}
@@ -134,7 +135,8 @@
              a-var {}
              a-fn {:fn "true"}
              b-fn {:fn "true"}
-             c-fn {:fn "true"}}
+             c-fn {:fn "true"}
+             d-fn {:fn "true"}}
            interns))))
 
 (deftest calculate-used-aliases-test
