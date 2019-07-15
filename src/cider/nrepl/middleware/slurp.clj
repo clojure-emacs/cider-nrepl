@@ -19,7 +19,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def known-content-types
-  (->> (io/resource "content-types.edn")
+  (->> (io/resource "cider/nrepl/content-types.edn")
        (io/reader)
        (java.io.PushbackReader.)
        (edn/read)
