@@ -67,6 +67,7 @@
                      ;; requiring `cider.nrepl`).
                      '[cider.nrepl/wrap-apropos
                        cider.nrepl/wrap-classpath
+                       cider.nrepl/wrap-clojuredocs
                        cider.nrepl/wrap-complete
                        cider.nrepl/wrap-debug
                        cider.nrepl/wrap-enlighten
