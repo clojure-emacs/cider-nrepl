@@ -6,13 +6,16 @@ export CLOVERAGE_VERSION = 1.0.13
 JAVA_VERSION = $(shell lein with-profile +sysutils \
                        sysutils :java-version-simple | cut -d " " -f 2)
 
+test/resources/cider/nrepl/clojuredocs/export.edn:
+	curl -o $@ https://clojuredocs-edn.netlify.com/export.edn
+
 .inline-deps:
 	lein inline-deps
 	touch .inline-deps
 
 inline-deps: .inline-deps
 
-test: .inline-deps
+test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 	lein with-profile +$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 eastwood:

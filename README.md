@@ -122,6 +122,7 @@ under `:repl-options`.
 :repl-options {:nrepl-middleware
                  [cider.nrepl/wrap-apropos
                   cider.nrepl/wrap-classpath
+                  cider.nrepl/wrap-clojuredocs
                   cider.nrepl/wrap-complete
                   cider.nrepl/wrap-debug
                   cider.nrepl/wrap-format
@@ -261,6 +262,7 @@ Middleware        | Op(s)      | Description
 ------------------|------------|---------------------------------------------------------
 `wrap-apropos`    | `apropos`  | Pattern search for symbols and documentation.
 `wrap-classpath`  | `classpath` | Java classpath.
+`wrap-clojuredocs`| `clojuredocs-lookup/clojuredocs-refresh-cache` | Look up ClojureDocs.
 `wrap-complete`   | `complete` | Simple completion. Supports both Clojure & ClojureScript.
 `wrap-debug`      | `init-debugger/debug-input` | Establish a channel for `cider-debug` commands, use it to get debug input, and also wrap the eval op.
 `wrap-format`     | `format-(code/edn)` | Code and data formatting.

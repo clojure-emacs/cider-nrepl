@@ -478,12 +478,28 @@
               :returns {"fn-deps" "A list of function deps."
                         "status" "done"}}}})
 
+(def-wrapper wrap-clojuredocs cider.nrepl.middleware.clojuredocs/handle-clojuredocs
+  {:doc "Middleware to find a documents from ClojureDocs."
+   :handles {"clojuredocs-refresh-cache"
+             {:doc "Reload exported documents file from ClojureDocs, and store it as a cache."
+              :requires {}
+              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.edn\"."}
+              :returns {"status" "\"ok\" if reloading was successful"}}
+             "clojuredocs-lookup"
+             {:doc "Return a map of information in ClojureDocs."
+              :requires {"ns" "The namespace where `symbol` is define."
+                         "symbol" "The symbol to lookup."}
+              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.edn\"."}
+              :returns {"clojuredocs" "A map of information in ClojureDocs."
+                        "status" "\"no-document\" if there is no document matching to `ns` and `symbol`."}}}})
+
 ;;; Cider's Handler
 
 (def cider-middleware
   "A vector of all CIDER middleware."
   `[wrap-apropos
     wrap-classpath
+    wrap-clojuredocs
     wrap-complete
     wrap-debug
     wrap-enlighten
