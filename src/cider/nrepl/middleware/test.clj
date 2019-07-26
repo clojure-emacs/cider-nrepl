@@ -4,6 +4,7 @@
   (:require
    [cider.nrepl.middleware.stacktrace :as st]
    [cider.nrepl.middleware.test.extensions :as extensions]
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [clojure.pprint :as pp]
    [clojure.test :as test]
@@ -283,7 +284,7 @@
                                  test-var-query
                                  stringify-msg)]
                   (reset! results (:results report))
-                  (t/send transport (response-for msg (u/transform-value report))))
+                  (t/send transport (response-for msg (util/transform-value report))))
                 (catch clojure.lang.ExceptionInfo e
                   (let [d (ex-data e)]
                     (if (::util.coerce/id d)
@@ -323,7 +324,7 @@
                                 {} @results)
                     report (test-nss nss)]
                 (reset! results (:results report))
-                (t/send transport (response-for msg (u/transform-value report))))))
+                (t/send transport (response-for msg (util/transform-value report))))))
           (fn []
             (t/send transport (response-for msg :status :done))))))
 

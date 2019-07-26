@@ -2,6 +2,7 @@
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
   (:require
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [cljs-tooling.util.analysis :as cljs-ana]
@@ -209,7 +210,7 @@
      (try (->> (response-for
                 msg :status :state
                 :repl-type (if cljs :cljs :clj)
-                :changed-namespaces (u/transform-value changed-ns-map))
+                :changed-namespaces (util/transform-value changed-ns-map))
                (transport-send-fn (:transport msg)))
           ;; We run async, so the connection might have been closed in
           ;; the mean time.

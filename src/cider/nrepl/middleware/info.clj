@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.info
   (:require
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.java.io :as io]
@@ -44,7 +45,7 @@
                    (info/javadoc-info path)))
           format-nested
           blacklist
-          u/transform-value))))
+          util/transform-value))))
 
 (defn info
   [{:keys [ns symbol class member] :as msg}]
