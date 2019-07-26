@@ -4,6 +4,7 @@
   (:require
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
    [cider.nrepl.middleware.stacktrace :as stacktrace]
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
@@ -14,8 +15,7 @@
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
-   [orchard.meta :as m]
-   [orchard.misc :as misc])
+   [orchard.meta :as m])
   (:import
    [clojure.lang Compiler$LocalBinding]))
 
@@ -396,7 +396,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [v]
   (when-not (::instrumented (meta v))
     (when-let [{:keys [ns file form] :as var-meta} (m/var-code v)]
-      (let [full-path (misc/transform-value (:file (info/file-info file)))]
+      (let [full-path (util/transform-value (:file (info/file-info file)))]
         (binding [*ns*   (find-ns ns)
                   *file* file
                   *msg*  (-> *msg*
@@ -634,7 +634,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (->> (all-ns)
        (map #(cons (ns-name %) (ins/list-instrumented-defs %)))
        (filter second)
-       misc/transform-value
+       (util/transform-value)
        (response-for msg :status :done :list)
        (transport/send (:transport msg))))
 

@@ -2,6 +2,7 @@
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
   (:require
+   [cider.nrepl.middleware.util :as util]
    [clojure.repl :as repl]
    [clojure.set :as set]
    [clojure.string :as str]
@@ -58,7 +59,7 @@
           (str "." (last (.split ^String (:file frame)
                                  "\\.")))
           path->url
-          u/transform-value))
+          util/transform-value))
 
 (defn analyze-fn
   "Add namespace, fn, and var to the frame map when the source is a Clojure
@@ -78,14 +79,14 @@
              :file-url (or (some-> (info/info* {:ns 'user :sym (symbol ns fn)})
                                    :file
                                    path->url
-                                   u/transform-value)
-                           (u/transform-value (frame->url frame)))))
+                                   util/transform-value)
+                           (util/transform-value (frame->url frame)))))
     (assoc frame :file-url (some->
                             (java/resolve-symbol 'user
                                                  (symbol (:name frame)))
                             :file
                             path->url
-                            u/transform-value))))
+                            util/transform-value))))
 
 (defn analyze-file
   "Associate the file type (extension) of the source file to the frame map, and
@@ -207,7 +208,7 @@
              :file (:clojure.error/source location)
              :file-url (some-> (:clojure.error/source location)
                                path->url
-                               u/transform-value)
+                               util/transform-value)
              :path (relative-path (:clojure.error/source location))
              :line (:clojure.error/line location)
              :column (:clojure.error/column location))
@@ -218,7 +219,7 @@
                :file file
                :file-url (some-> file
                                  path->url
-                                 u/transform-value)
+                                 util/transform-value)
                :path (relative-path file)
                :line (Integer/parseInt line)
                :column (Integer/parseInt column))))

@@ -1,12 +1,13 @@
 (ns cider.nrepl.middleware.ns
   (:refer-clojure :exclude [ns-aliases])
   (:require
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cider.nrepl.middleware.util.meta :as um]
-   [orchard.info :as info]
    [orchard.cljs.analysis :as cljs-analysis]
+   [orchard.info :as info]
    [orchard.misc :as u]
    [orchard.namespace :as ns]
    [orchard.query :as query]))
@@ -107,15 +108,15 @@
 
 (defn- ns-aliases-clj [ns]
   (->> (symbol ns)
-       clojure.core/ns-aliases
+       (clojure.core/ns-aliases)
        (u/update-vals ns-name)
-       u/transform-value))
+       (util/transform-value)))
 
 (defn- ns-aliases-cljs [env ns]
   (->> (cljs-analysis/ns-aliases env ns)
        (remove (fn [[k v]] (= k v)))
        (into {})
-       u/transform-value))
+       (util/transform-value)))
 
 (defn ns-aliases [{:keys [ns] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]
