@@ -101,7 +101,8 @@
         core-path (:path (session/message {:op "ns-path"
                                            :ns "clojure.core"}))]
     (is (.endsWith ns-path "cider/nrepl/middleware/ns.clj"))
-    (is (.endsWith core-path "clojure/core.clj"))))
+    (is (.endsWith core-path "clojure/core.clj"))
+    (is (.startsWith core-path "jar:"))))
 
 (deftest ns-load-all-integration-test
   (let [loaded-ns (:loaded-ns (session/message {:op "ns-load-all"}))]

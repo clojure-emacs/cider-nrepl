@@ -83,7 +83,7 @@
     (:file (info/info* {:dialect :cljs
                         :env cljs-env
                         :sym (symbol ns)}))
-    (.getPath (ns/canonical-source ns))))
+    (str (ns/canonical-source ns))))
 
 (defn ns-list-reply [msg]
   {:ns-list (ns-list msg)})
