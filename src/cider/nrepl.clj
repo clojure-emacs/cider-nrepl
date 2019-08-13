@@ -483,13 +483,13 @@
    :handles {"clojuredocs-refresh-cache"
              {:doc "Reload exported documents file from ClojureDocs, and store it as a cache."
               :requires {}
-              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.edn\"."}
+              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.compact.edn\"."}
               :returns {"status" "\"ok\" if reloading was successful"}}
              "clojuredocs-lookup"
              {:doc "Return a map of information in ClojureDocs."
               :requires {"ns" "The namespace where `symbol` is define."
                          "symbol" "The symbol to lookup."}
-              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.edn\"."}
+              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.compact.edn\"."}
               :returns {"clojuredocs" "A map of information in ClojureDocs."
                         "status" "\"no-document\" if there is no document matching to `ns` and `symbol`."}}}})
 
