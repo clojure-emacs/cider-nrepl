@@ -6,11 +6,8 @@ Before submitting a PR make sure the following things have been done:
 - [ ] The new code is not generating reflection warnings
 - [ ] You've updated the README (if adding/changing middleware)
 
-Keep in mind that new cider-nrepl builds are automatically deployed to Clojars
-once a PR is merged, but **only** if the CI build is green.
-
-*If you're just starting out to hack on cider-nrepl you might find
-this [article](https://juxt.pro/blog/posts/nrepl.html) and the
+**Note:** If you're just starting out to hack on `cider-nrepl` you might find
+[nREPL's documentation](https://nrepl.org) and the
 "Design" section of the README extremely useful.*
 
 Thanks!

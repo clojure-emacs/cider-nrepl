@@ -1,7 +1,7 @@
-Use the template below when reporting bugs. Please, make sure that
-you're running the latest stable release or the latest snapshot of
-`cider-nrepl` and that the problem you're reporting hasn't been
-reported (and potentially fixed) already.
+*Use the template below when reporting bugs. Please, make sure that you're
+running the latest stable release or the latest snapshot/pre-release of
+`cider-nrepl` and that the problem you're reporting hasn't been reported (and
+potentially fixed) already.*
 
 ## Expected behavior
 
@@ -9,8 +9,8 @@ reported (and potentially fixed) already.
 
 ## Steps to reproduce the problem
 
-This is extremely important! Providing us with a reliable way to reproduce
-a problem will expedite its solution.
+*This is extremely important! Providing us with a reliable way to reproduce
+a problem will expedite its solution.*
 
 ## Environment & Version information
 
