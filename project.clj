@@ -12,7 +12,7 @@
                  ^:inline-dep [compliment "0.3.9"]
                  ^:inline-dep [cljs-tooling "0.3.1"]
                  ^:inline-dep [cljfmt "0.6.4" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [org.clojure/tools.namespace "0.3.0"]
+                 ^:inline-dep [org.clojure/tools.namespace "0.3.1"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
   :plugins [[thomasa/mranderson "0.5.1"]]
