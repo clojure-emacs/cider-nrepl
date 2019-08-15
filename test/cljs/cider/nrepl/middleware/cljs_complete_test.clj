@@ -40,6 +40,26 @@
       (is (= '("[psym & doc+methods]") (:arglists candidate)))
       (is (string? (:doc candidate))))))
 
+(deftest cljs-complete-with-suitable-test
+  (testing "js global completion"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :symbol "js/Ob"})
+          candidates (:completions response)]
+      (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
+
+  (testing "manages context state"
+    (session/message {:op "complete"
+                      :ns "cljs.user"
+                      :symbol ".xxxx"
+                      :context "(__prefix__ js/Object)"})
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :symbol ".key"
+                                     :context ":same"})
+          candidates (:completions response)]
+      (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates)))))
+
 (deftest cljs-complete-doc-test
   (let [response (session/message {:op "complete-doc" :symbol "tru"})]
     (is (= (:status response) #{"done"}))

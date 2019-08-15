@@ -5,7 +5,14 @@
    [cljs-tooling.complete :as cljs-complete]
    [compliment.core :as jvm-complete]
    [compliment.utils :as jvm-complete-utils]
-   [orchard.misc :as u]))
+   [orchard.misc :as u]
+   [suitable.complete-for-nrepl :as suitable]))
+
+(defn- cljs-complete
+  [msg cljs-env ns prefix extra-metadata]
+  (concat (cljs-complete/completions cljs-env prefix {:context-ns ns
+                                                      :extra-metadata extra-metadata})
+          (suitable/complete-for-nrepl msg)))
 
 (defn complete
   [{:keys [ns symbol context extra-metadata] :as msg}]
@@ -13,8 +20,7 @@
         prefix (str symbol)
         extra-metadata (set (map keyword extra-metadata))]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
-      (cljs-complete/completions cljs-env prefix {:context-ns ns
-                                                  :extra-metadata extra-metadata})
+      (cljs-complete msg cljs-env ns prefix extra-metadata)
       (jvm-complete/completions prefix {:ns ns
                                         :context context
                                         :extra-metadata extra-metadata}))))

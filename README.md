@@ -389,6 +389,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 * [orchard][] - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
 * [compliment][] - for Clojure code completion
 * [cljs-tooling][] - for ClojureScript code completion
+* [suitable][] - for ClojureScript code completion using runtime inspection
 * [tools.trace][] - for tracing
 * [tools.namespace][] - for namespace reloading
 * [cljfmt][] - for code formatting
@@ -402,6 +403,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [orchard]: https://github.com/clojure-emacs/orchard
 [compliment]: https://github.com/alexander-yakushev/compliment
 [cljs-tooling]: https://github.com/clojure-emacs/cljs-tooling
+[suitable]: https://github.com/rksm/clj-suitable
 [tools.trace]: https://github.com/clojure/tools.trace
 [tools.namespace]: https://github.com/clojure/tools.namespace
 [cljfmt]: https://github.com/weavejester/cljfmt
