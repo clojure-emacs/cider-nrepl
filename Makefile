@@ -3,9 +3,6 @@
 CLOJURE_VERSION ?= 1.10
 export CLOVERAGE_VERSION = 1.0.13
 
-JAVA_VERSION = $(shell lein with-profile +sysutils \
-                       sysutils :java-version-simple | cut -d " " -f 2)
-
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://clojuredocs-edn.netlify.com/export.compact.edn
 

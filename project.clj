@@ -111,8 +111,6 @@
                                                               cider.nrepl/wrap-version
                                                               cider.nrepl/wrap-xref]}}]
 
-             :sysutils {:plugins [[lein-sysutils "0.2.0"]]}
-
              :cloverage [:test
                          {:plugins [[lein-cloverage "1.0.12-SNAPSHOT"]]
                           :dependencies [[cloverage "1.0.12-SNAPSHOT"]]
