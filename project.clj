@@ -4,15 +4,13 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-
   :dependencies [[nrepl "0.6.0"]
                  ^:inline-dep [cider/orchard "0.5.5"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.2.0"]
                  ^:inline-dep [fipp "0.6.22"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.10"]
-                 ^:inline-dep [cljs-tooling "0.3.1"]
-                 ^:inline-dep [org.rksm/suitable "0.2.14" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [org.rksm/suitable "0.3.5" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.6.6" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "0.3.1"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]

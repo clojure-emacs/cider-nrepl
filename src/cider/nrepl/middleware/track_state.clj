@@ -5,7 +5,7 @@
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
-   [cljs-tooling.util.analysis :as cljs-ana]
+   [orchard.cljs.analysis :as cljs-ana]
    [clojure.java.io :as io]
    [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]

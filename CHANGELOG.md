@@ -10,6 +10,10 @@
 * [#664](https://github.com/clojure-emacs/cider-nrepl/pull/664): Fix continue-all in conditional break.
 * [#665](https://github.com/clojure-emacs/cider-nrepl/pull/665): Fix form location in map literals.
 
+### Changes
+
+* [#641](https://github.com/clojure-emacs/cider-nrepl/pull/641): Integrate the new suitable ClojureScript completion.
+
 ## 0.23.0 (2019-01-18)
 
 ### New Features
