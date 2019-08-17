@@ -8,7 +8,7 @@
    [clojure.pprint :as pp]
    [clojure.tools.reader :as reader]
    [clojure.walk :as walk]
-   [orchard.misc :as u])
+   [orchard.misc :as misc])
   (:import
    [clojure.lang Var]))
 
@@ -212,8 +212,8 @@
 (defn macroexpansion [{:keys [print-meta ns] :as msg}]
   (let [msg (merge {:expander "macroexpand" :display-namespaces "qualified"} msg)
         expansion (if (cljs/grab-cljs-env msg)
-                    (expand-cljs (assoc msg :ns (or (u/as-sym ns) 'cljs.user)))
-                    (expand-clj (assoc msg :ns (or (u/as-sym ns) 'user))))]
+                    (expand-cljs (assoc msg :ns (or (misc/as-sym ns) 'cljs.user)))
+                    (expand-clj (assoc msg :ns (or (misc/as-sym ns) 'user))))]
     (with-out-str
       (binding [*print-meta* (boolean print-meta)]
         (pp/write expansion :dispatch pp/code-dispatch)))))

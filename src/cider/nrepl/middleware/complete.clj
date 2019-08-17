@@ -5,7 +5,7 @@
    [cljs-tooling.complete :as cljs-complete]
    [compliment.core :as jvm-complete]
    [compliment.utils :as jvm-complete-utils]
-   [orchard.misc :as u]
+   [orchard.misc :as misc]
    [suitable.complete-for-nrepl :as suitable]))
 
 (defn- cljs-complete
@@ -16,7 +16,7 @@
 
 (defn complete
   [{:keys [ns symbol context extra-metadata] :as msg}]
-  (let [ns (u/as-sym ns)
+  (let [ns (misc/as-sym ns)
         prefix (str symbol)
         extra-metadata (set (map keyword extra-metadata))]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
@@ -28,7 +28,7 @@
 (defn completion-doc
   [{:keys [ns symbol] :as msg}]
   (when-not (cljs/grab-cljs-env msg)
-    (jvm-complete/documentation (str symbol) (u/as-sym ns))))
+    (jvm-complete/documentation (str symbol) (misc/as-sym ns))))
 
 (defn complete-reply [msg]
   {:completions (complete msg)})

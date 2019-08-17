@@ -12,7 +12,6 @@
    [nrepl.transport :as t]
    [orchard.info :as info]
    [orchard.java :as java]
-   [orchard.misc :as u]
    [orchard.namespace :as namespace]
    [orchard.resource :as resource])
   (:import

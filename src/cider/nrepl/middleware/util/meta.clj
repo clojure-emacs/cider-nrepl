@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.util.meta
   "Utility functions for extracting and manipulating metadata."
   (:require
-   [orchard.misc :as u]))
+   [orchard.misc :as misc]))
 
 (def relevant-meta-keys
   "Metadata keys that are useful to us.
@@ -15,4 +15,4 @@
   [m]
   (->> (select-keys m relevant-meta-keys)
        (filter second)
-       (u/update-vals pr-str)))
+       (misc/update-vals pr-str)))

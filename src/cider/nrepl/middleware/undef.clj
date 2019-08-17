@@ -2,11 +2,11 @@
   "Undefine a symbol"
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [orchard.misc :as u]))
+   [orchard.misc :as misc]))
 
 (defn undef
   [{:keys [ns symbol]}]
-  (let [[ns symbol] (map u/as-sym [ns symbol])]
+  (let [[ns symbol] (map misc/as-sym [ns symbol])]
     (ns-unalias ns symbol)
     (ns-unmap ns symbol)
     symbol))

@@ -13,7 +13,7 @@
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
-   [orchard.misc :as u]
+   [orchard.misc :as misc]
    [orchard.query :as query]))
 
 ;;; ## Overview
@@ -334,7 +334,7 @@
     (exec id
           (fn []
             (with-bindings (assoc @session #'ie/*msg* msg)
-              (let [[ns var] (map u/as-sym [ns var])]
+              (let [[ns var] (map misc/as-sym [ns var])]
                 (if-let [e (get-in @results [ns var index :error])]
                   (doseq [cause (st/analyze-causes e print-fn)]
                     (t/send transport (response-for msg cause)))

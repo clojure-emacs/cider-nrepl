@@ -11,7 +11,7 @@
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.classpath :as cp]
-   [orchard.misc :as u])
+   [orchard.misc :as misc])
   (:import
    (clojure.lang Namespace MultiFn)
    java.net.SocketException
@@ -56,7 +56,7 @@
   (cond
     ;; Clojure Namespaces
     (instance? Namespace object)
-    {:aliases (u/update-vals ns-name (ns-aliases object))
+    {:aliases (misc/update-vals ns-name (ns-aliases object))
      :interns (filter-core-and-get-meta (ns-map object))}
 
     ;; ClojureScript Namespaces
@@ -65,15 +65,15 @@
       {:aliases (merge require-macros requires)
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
-       :interns (merge (u/update-vals #(dissoc (um/relevant-meta (cljs-meta-with-fn %)) :test)
+       :interns (merge (misc/update-vals #(dissoc (um/relevant-meta (cljs-meta-with-fn %)) :test)
                                       defs)
                        ;; FIXME: `uses` and `use-macros` are maps from
                        ;; symbols to namespace names:
                        ;;     {log reagent.debug, dbg reagent.debug}
                        ;; Since we don’t know the metadata for these
                        ;; vars, we resign to "guessing" them.
-                       (u/update-vals (constantly {:arglists '([])}) uses)
-                       (u/update-vals (constantly {:arglists '([]) :macro true}) use-macros))})
+                       (misc/update-vals (constantly {:arglists '([])}) uses)
+                       (misc/update-vals (constantly {:arglists '([]) :macro true}) use-macros))})
 
     :else {}))
 
@@ -82,7 +82,7 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (u/update-vals #(um/relevant-meta (var-meta-with-fn %))))}))
+                   (misc/update-vals #(um/relevant-meta (var-meta-with-fn %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.
@@ -152,7 +152,7 @@
 
 (def jar-namespaces
   (->> (cp/classpath)
-       (filter u/jar-file?)
+       (filter misc/jar-file?)
        (map #(JarFile. (io/as-file %)))
        (mapcat ns-find/find-namespaces-in-jarfile)
        (into #{})))

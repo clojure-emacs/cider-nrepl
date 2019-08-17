@@ -8,7 +8,7 @@
    [cider.nrepl.middleware.util.meta :as um]
    [orchard.cljs.analysis :as cljs-analysis]
    [orchard.info :as info]
-   [orchard.misc :as u]
+   [orchard.misc :as misc]
    [orchard.namespace :as ns]
    [orchard.query :as query]))
 
@@ -59,8 +59,8 @@
                      (partial cljs-analysis/public-vars env))]
     (->> (symbol ns)
          fetch-vars
-         (u/update-vals (comp um/relevant-meta :meta))
-         (u/update-keys name)
+         (misc/update-vals (comp um/relevant-meta :meta))
+         (misc/update-keys name)
          (into (sorted-map)))))
 
 (defn ns-list [{:keys [filter-regexps] :as msg}]
@@ -109,7 +109,7 @@
 (defn- ns-aliases-clj [ns]
   (->> (symbol ns)
        (clojure.core/ns-aliases)
-       (u/update-vals ns-name)
+       (misc/update-vals ns-name)
        (util/transform-value)))
 
 (defn- ns-aliases-cljs [env ns]

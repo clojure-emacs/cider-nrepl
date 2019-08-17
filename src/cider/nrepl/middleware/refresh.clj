@@ -15,7 +15,7 @@
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.misc :as u]))
+   [orchard.misc :as misc]))
 
 (defonce ^:private refresh-tracker (volatile! (track/tracker)))
 
@@ -67,7 +67,7 @@
   has optional parameters and can be called with zero args, it is
   called. Returns whether the function was resolved."
   [sym {:keys [session] :as msg}]
-  (let [the-var (some-> sym u/as-sym resolve)]
+  (let [the-var (some-> sym misc/as-sym resolve)]
 
     (when (and (var? the-var)
                (not (zero-arity-callable? the-var)))

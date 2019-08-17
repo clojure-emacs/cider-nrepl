@@ -7,7 +7,7 @@
    [clojure.string :as str]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
-   [orchard.misc :as u]))
+   [orchard.misc :as misc]))
 
 (declare format-response)
 
@@ -49,7 +49,7 @@
 
 (defn info
   [{:keys [ns symbol class member] :as msg}]
-  (let [[ns symbol class member] (map u/as-sym [ns symbol class member])
+  (let [[ns symbol class member] (map misc/as-sym [ns symbol class member])
         env (cljs/grab-cljs-env msg)
         info-params (merge {:dialect :clj
                             :ns ns
