@@ -2,7 +2,7 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.java.io :as io]
-   [orchard.classpath :as cp]))
+   [orchard.java.classpath :as cp]))
 
 (defn classpath-reply [msg]
   {:classpath (->> (cp/classpath)

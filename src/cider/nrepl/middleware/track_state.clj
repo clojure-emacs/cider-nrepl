@@ -10,7 +10,7 @@
    [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.classpath :as cp]
+   [orchard.java.classpath :as cp]
    [orchard.misc :as misc])
   (:import
    (clojure.lang Namespace MultiFn)

@@ -2,7 +2,7 @@
   (:require
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [orchard.resource :as resource]))
+   [orchard.java.resource :as resource]))
 
 (defn handle-resource [handler msg]
   (with-safe-transport handler msg
