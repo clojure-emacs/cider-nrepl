@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
+
   :dependencies [[nrepl "0.6.0"]
                  ^:inline-dep [cider/orchard "0.5.0-beta11"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
@@ -16,13 +17,13 @@
                  ^:inline-dep [org.clojure/tools.namespace "0.3.1"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
+  :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
+
   :plugins [[thomasa/mranderson "0.5.1"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
                :overrides       {[mvxcvi/puget fipp] [fipp "0.6.18"]} ; only takes effect in unresolved-tree mode
                :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode
                :unresolved-tree false}
-
-  :exclusions [org.clojure/clojure]
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
