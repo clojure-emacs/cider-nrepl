@@ -9,14 +9,14 @@
 (defn- foo [] (map inc (range 10)))
 
 (deftest fn-refs-integration-test
-  (let [response (session/message {:op "fn-refs" :ns "clojure.core" :symbol "map"})
+  (let [response (session/message {:op "fn-refs" :ns "clojure.core" :sym "map"})
         fn-refs (:fn-refs response)]
     (is (= (:status response) #{"done"}))
     (is (> (count fn-refs) 0))
     (is (every? map? fn-refs))))
 
 (deftest fn-deps-integration-test
-  (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :symbol "foo"})
+  (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :sym "foo"})
         fn-deps (:fn-deps response)]
     (is (= (:status response) #{"done"}))
     (is (= (count fn-deps) 3))

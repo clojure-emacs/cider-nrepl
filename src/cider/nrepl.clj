@@ -467,13 +467,13 @@
   {:doc "Middleware that provides find references functionality."
    :handles {"fn-refs"
              {:doc "Look up functions that reference a particular function."
-              :requires {"symbol" "The symbol to lookup"
+              :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
               :returns {"fn-refs" "A list of function references."
                         "status" "done"}}
              "fn-deps"
              {:doc "Look up the function dependencies of particular function."
-              :requires {"symbol" "The symbol to lookup"
+              :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
               :returns {"fn-deps" "A list of function deps."
                         "status" "done"}}}})

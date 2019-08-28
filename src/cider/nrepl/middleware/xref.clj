@@ -17,12 +17,12 @@
      :line (:line var-meta)
      :column (:column var-meta)}))
 
-(defn fn-refs-reply [{:keys [ns symbol]}]
-  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym symbol))]
+(defn fn-refs-reply [{:keys [ns sym]}]
+  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
     {:fn-refs (map xref-data (xref/fn-refs var))}))
 
-(defn fn-deps-reply [{:keys [ns symbol]}]
-  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym symbol))]
+(defn fn-deps-reply [{:keys [ns sym]}]
+  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
     {:fn-deps (map xref-data (xref/fn-deps var))}))
 
 (defn handle-xref [handler msg]
