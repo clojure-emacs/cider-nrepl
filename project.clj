@@ -6,7 +6,7 @@
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
 
   :dependencies [[nrepl "0.6.0"]
-                 ^:inline-dep [cider/orchard "0.5.0-beta12"]
+                 ^:inline-dep [cider/orchard "0.5.0-beta13"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.1.2"]
                  ^:inline-dep [fipp "0.6.18"] ; can be removed in unresolved-tree mode
