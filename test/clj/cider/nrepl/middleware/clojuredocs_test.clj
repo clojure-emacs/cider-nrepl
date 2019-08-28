@@ -21,20 +21,31 @@
       (is (contains? (:status response) "ok")))))
 
 (deftest clojuredocs-lookup-integration-test
-  (testing "Find not existing document"
+  (testing "Searching for non-existing documentation"
     (let [response (session/message {:op "clojuredocs-lookup"
                                      :ns "non-existing"
-                                     :symbol "non-existing"
+                                     :sym "non-existing"
                                      :export-edn-url test-url})]
-      (is (contains? (:status response) "no-document"))))
+      (is (contains? (:status response) "no-doc"))))
 
-  (testing "Find existing document"
+  (testing "Searching for existing documentation"
     (let [response (session/message {:op "clojuredocs-lookup"
                                      :ns "clojure.core"
-                                     :symbol "first"
+                                     :sym "first"
                                      :export-edn-url test-url})
           doc (get response :clojuredocs {})]
       (is (contains? (:status response) "done"))
       (is (= "clojure.core" (:ns doc)))
       (is (= "first" (:name doc)))
+      (is (every? #(contains? doc %) [:examples :see-alsos]))))
+
+  (testing "Resolves syms in the supplied ns"
+    (let [response (session/message {:op "clojuredocs-lookup"
+                                     :ns "cider.nrepl.middleware.clojuredocs-test"
+                                     :sym "map"
+                                     :export-edn-url test-url})
+          doc (get response :clojuredocs {})]
+      (is (contains? (:status response) "done"))
+      (is (= "clojure.core" (:ns doc)))
+      (is (= "map" (:name doc)))
       (is (every? #(contains? doc %) [:examples :see-alsos])))))
