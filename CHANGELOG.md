@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.22.0 (2019-08-29)
+
 ### New features
 
 * [#605](https://github.com/clojure-emacs/cider-nrepl/pull/605): Added a option for filtering vars to the ns-vars middleware.
