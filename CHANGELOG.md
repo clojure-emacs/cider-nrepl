@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.22.1 (2019-09-01)
+
+### Bugs fixed
+
+* [#642](https://github.com/clojure-emacs/cider-nrepl/pull/642): This fixes calls to suitable when the completion context contains no `__prefix__`.
+
 ## 0.22.0 (2019-08-29)
 
 ### New features
