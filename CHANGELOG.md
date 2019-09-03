@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.22.2 (2019-09-03)
+
+### Bugs fixed
+
+* [#643](https://github.com/clojure-emacs/cider-nrepl/issues/643): Fix ClojureScript completion when using a `node` REPL.
+
 ## 0.22.1 (2019-09-01)
 
 ### Bugs fixed
