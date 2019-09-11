@@ -2,6 +2,13 @@
 
 ## master (unreleased)
 
+## 0.22.3 (2019-09-11)
+
+### Bugs fixed
+
+* Bump the `orchard` dep to 0.5.1 to address missing specs for var metadata.
+* Bump the `suitable` dep to address a NPE.
+
 ## 0.22.2 (2019-09-03)
 
 ### Bugs fixed
