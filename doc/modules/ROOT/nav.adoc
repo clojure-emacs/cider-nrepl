@@ -1,0 +1,7 @@
+* xref:index.adoc[Home]
+* xref:usage.adoc[Usage]
+* xref:internals.adoc[Understanding the Internals]
+* nREPL API
+** xref:nrepl-api/supplied_ops.adoc[Supplied Ops]
+* Hacking on CIDER nREPL
+* About

@@ -1,0 +1,89 @@
+= Supplied nREPL middleware
+
+|===
+| Middleware | Op(s) | Description
+
+| `wrap-apropos`
+| `apropos`
+| Pattern search for symbols and documentation.
+
+| `wrap-classpath`
+| `classpath`
+| Java classpath.
+
+| `wrap-clojuredocs`
+| `clojuredocs-lookup/clojuredocs-refresh-cache`
+| Look up ClojureDocs.
+
+| `wrap-complete`
+| `complete`
+| Simple completion. Supports both Clojure & ClojureScript.
+
+| `wrap-debug`
+| `init-debugger/debug-input`
+| Establish a channel for `cider-debug` commands, use it to get debug input, and also wrap the eval op.
+
+| `wrap-format`
+| `format-(code/edn)`
+| Code and data formatting.
+
+| `wrap-info`
+| `info/eldoc`
+| File/line, arglists, docstrings and other metadata for vars.
+
+| `wrap-inspect`
+| `inspect-(start/refresh/pop/push/reset/get-path)`
+| Inspect a Clojure expression.
+
+| `wrap-macroexpand`
+| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step`
+| Macroexpand a Clojure form.
+
+| `wrap-ns`
+| `ns-list/ns-vars/ns-path/ns-load-all/ns-aliases`
+| Namespace browsing & loading.
+
+| `wrap-spec`
+| `spec-list/spec-form/spec-example`
+| Spec browsing.
+
+| `wrap-profile`
+| `toggle-profile/toggle-profile-ns/is-var-profiled/profile-summary/profile-var-summary/clear-profile/get-max-samples/set-max-samples`
+| Provides profiling support based on the https://github.com/thunknyc/profile[profile] library.
+
+| `wrap-refresh`
+| `refresh/refresh-all/refresh-clear`
+| Code reloading.
+
+| `wrap-resource`
+| `resource`
+| Return resource path.
+
+| `wrap-stacktrace`
+| `stacktrace`
+| Cause and stacktrace analysis for exceptions.
+
+| `wrap-test`
+| `test-var-query/retest/test-stacktrace`
+| Test execution, reporting, and inspection.
+
+| `wrap-trace`
+| `toggle-trace-var`/`toggle-trace-ns`
+| Toggle tracing of a given var or ns.
+
+| `wrap-out`
+| `out-subscribe`/`out-unsubscribe`
+| Echo the server's output stream to client sessions.
+
+| `wrap-undef`
+| `undef`
+| Undefine a var.
+
+| `wrap-version`
+| `cider-version`
+| The CIDER-nREPL version map.
+
+| `wrap-xref`
+| `fn-refs`/`fn-deps`
+| Function references and dependencies (other functions).
+|===

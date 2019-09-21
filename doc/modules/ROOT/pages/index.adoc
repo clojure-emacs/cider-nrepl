@@ -1,0 +1,70 @@
+= CIDER nREPL
+
+== Design
+
+This section documents some of the major design decisions in cider-nrepl.
+
+While in essence it's just a collection of nREPL middleware we had to
+make a few important design decision here and there that influenced
+the code base and the usability of cider-nrepl in various ways.
+
+=== Editor Agnostic
+
+Although those middlewares were created for use with CIDER almost all
+of them are extremely generic and can be leveraged from other editors.
+
+Projects like https://github.com/tpope/vim-fireplace[vim-fireplace] and https://github.com/SevereOverfl0w/vim-replant[vim-replant] are making use of
+cider-nrepl already.
+
+=== Isolated Runtime Dependencies
+
+All of cider-nrepl's dependencies are processed with
+https://github.com/benedekfazekas/mranderson[mranderson], so that
+they won't collide with the dependencies of your own projects. This
+basically means that cider-nrepl doesn't have any runtime dependencies in
+the production artifact - just copies of the deps inlined with changed
+namespaces/packages. It's a bit ugly and painful, but it gets the job
+done.
+
+If someone has better ideas how to isolate our runtime dependencies -
+we're all ears!
+
+=== Deferred Middleware Loading
+
+To improve the startup time of the nREPL server all of cider-nrepl's
+middlewares are loaded for real only when needed.
+
+You can read more about this
+https://github.com/clojure-emacs/cider-nrepl/pull/438[here].
+
+We'd love to bring the support for deferred middleware loading
+straight to nREPL down the road.
+
+=== Middleware Errors Never Hang Requests
+
+See https://github.com/clojure-emacs/cider-nrepl/pull/327[here].
+
+=== Reusable Core Logic
+
+cider-nrepl tries to have as little logic as possible and mostly
+provides thin wrappers over existing libraries (e.g. https://github.com/alexander-yakushev/compliment[compliment],
+https://github.com/weavejester/cljfmt[cljfmt], etc). Much of its core functionality lives in
+https://github.com/clojure-emacs/orchard[orchard], so that
+eventually it can be used by non-nREPL clients (e.g. Socket REPL
+clients).
+
+Very simply put - there's very little code in cider-nrepl that's not
+simply wrapping code from other libraries in nREPL operations.
+
+The primary reason for this is our desire to eventually provide
+support for non-nREPL REPLs in CIDER, but this also means that other
+editors can directly leverage the work we've done so far.
+
+=== ClojureScript Support
+
+We want cider-nrepl to offer feature parity between Clojure and
+ClojureScript, but we're not quite there yet and many features right
+now are Clojure-only.
+
+We'd really appreciate all the help we can get from ClojureScript
+hackers to make this a reality.

@@ -1,0 +1,172 @@
+= Usage
+
+== Prerequisites
+
+`cider-nrepl` supports only Clojure(Script) 1.8+ and Java 8+.
+
+Leiningen users will need to have version 2.8.3 or newer installed.
+Boot users will need to have version 2.8.2 or newer installed.
+
+== Via Leiningen
+
+Use the convenient plugin for defaults, either in your project's
+`project.clj` file or in the `:user` profile in
+`~/.lein/profiles.clj`.
+
+[source,clojure]
+----
+:plugins [[cider/cider-nrepl "0.22.3"]]
+----
+
+A minimal `profiles.clj` for CIDER would be:
+
+[source,clojure]
+----
+{:user {:plugins [[cider/cider-nrepl "0.22.3"]]}}
+----
+
+Or (if you know what you're doing) add `cider-nrepl` to your `:dev
+:dependencies` vector plus specific middleware to `:nrepl-middleware`
+under `:repl-options`.
+
+[source,clojure]
+----
+:dependencies [[cider/cider-nrepl "0.22.3"]]
+:repl-options {:nrepl-middleware
+                 [cider.nrepl/wrap-apropos
+                  cider.nrepl/wrap-classpath
+                  cider.nrepl/wrap-clojuredocs
+                  cider.nrepl/wrap-complete
+                  cider.nrepl/wrap-debug
+                  cider.nrepl/wrap-format
+                  cider.nrepl/wrap-info
+                  cider.nrepl/wrap-inspect
+                  cider.nrepl/wrap-macroexpand
+                  cider.nrepl/wrap-ns
+                  cider.nrepl/wrap-spec
+                  cider.nrepl/wrap-profile
+                  cider.nrepl/wrap-refresh
+                  cider.nrepl/wrap-resource
+                  cider.nrepl/wrap-stacktrace
+                  cider.nrepl/wrap-test
+                  cider.nrepl/wrap-trace
+                  cider.nrepl/wrap-out
+                  cider.nrepl/wrap-undef
+                  cider.nrepl/wrap-version
+                  cider.nrepl/wrap-xref]}
+----
+
+Note that you should use a `cider-nrepl` version compatible with your
+CIDER. Generally, if you're using CIDER 0.x.y you should be using
+`cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should
+be using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
+
+=== Via Boot
+
+Boot users can configure the injected middleware by either specifying
+it on the command line through the `cider.tasks/add-middleware` task
+(the lenghty command below will include the `apropos` and `version`
+functionality):
+
+----
+boot -d nrepl:0.6.0 -d cider/cider-nrepl:0.22.3 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl --server wait
+----
+
+Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
+
+[source,clojure]
+----
+(set-env! :dependencies '[[nrepl "0.6.0"]
+                          [cider/cider-nrepl "0.22.3"]])
+
+(require '[cider.tasks :refer [add-middleware]])
+
+(task-options! add-middleware {:middleware '[cider.nrepl.middleware.apropos/wrap-apropos
+                                             cider.nrepl.middleware.version/wrap-version]})
+----
+
+And then launching `boot add-middleware repl --server wait`.
+
+Note that this is not necessary when using the standard `cider-jack-in`.
+
+For more information visit https://github.com/boot-clj/boot/wiki/Cider-REPL[boot-clj wiki].
+
+== Via clj
+
+You can easily boot an nREPL server with the CIDER middleware loaded
+with the following "magic" incantation:
+
+----
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.22.3"} }}' -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
+----
+
+There are also two convenient aliases you can employ (see this project's `deps.edn`):
+
+[source,clojure]
+----
+{...
+ :aliases
+ {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
+                           cider/cider-nrepl {:mvn/version "0.22.3"}}
+              :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
+
+  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
+                            org.clojure/clojurescript {:mvn/version "1.10.339"}
+                            cider/cider-nrepl {:mvn/version "0.22.3"}
+                            cider/piggieback {:mvn/version "0.4.1"}}
+               :main-opts ["-m" "nrepl.cmdline" "--middleware"
+                           "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
+----
+
+Which then allow you to simply run:
+
+----
+clj -A:cider-clj
+----
+
+Note that `clj` was introduced in Clojure 1.9.
+
+== Via embedding nREPL in your app
+
+If you're embedding nREPL in your application you'll have to start the
+server with CIDER's own nREPL handler.
+
+[source,clojure]
+----
+(ns my-app
+  (:require [nrepl.server :as nrepl-server]))
+
+(defn nrepl-handler []
+  (require 'cider.nrepl)
+  (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
+
+(defn -main []
+  (nrepl-server/start-server :port 7888 :handler (nrepl-handler)))
+----
+
+(See https://github.com/clojure-emacs/cider-nrepl/issues/447[issue #447] for why the manual namespace resolution of `cider-nrepl-handler` is currently necessary.)
+
+== With JBoss AS/JBoss EAP/WildFly
+
+Using the advanced features of the `info` middleware with one of the
+JBoss application servers requires a tweak, since JBoss modules
+prevent modifications to `AppClassLoader` (usually the highest
+modifiable classloader) from being seen by application code. To work
+around this, run the following code from within your application
+to mark that classloader as unmodifiable, and cause the lower level
+`clojure.lang.DynamicClassLoader` to be used instead. This code must
+execute prior to loading the `cider-nrepl` middleware. Note that this
+is only if you are deploying a standard WAR file to the application
+server directly. If you are using http://immutant.org/[Immutant]
+(1.x or 2.x), you won't need to do this.
+
+[source,clj]
+----
+(require '[dynapath.dynamic-classpath :as cp])
+
+(extend sun.misc.Launcher$AppClassLoader
+  cp/DynamicClasspath
+  (assoc cp/base-readable-addable-classpath
+    :classpath-urls #(seq (.getURLs %))
+    :can-add? (constantly false)))
+----
