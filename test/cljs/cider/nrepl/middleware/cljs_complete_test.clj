@@ -44,7 +44,8 @@
   (testing "js global completion"
     (let [response (session/message {:op "complete"
                                      :ns "cljs.user"
-                                     :symbol "js/Ob"})
+                                     :symbol "js/Ob"
+                                     :enhanced-cljs-completion? "t"})
           candidates (:completions response)]
       (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
 
@@ -52,13 +53,22 @@
     (session/message {:op "complete"
                       :ns "cljs.user"
                       :symbol ".xxxx"
-                      :context "(__prefix__ js/Object)"})
+                      :context "(__prefix__ js/Object)"
+                      :enhanced-cljs-completion? "t"})
     (let [response (session/message {:op "complete"
                                      :ns "cljs.user"
                                      :symbol ".key"
-                                     :context ":same"})
+                                     :context ":same"
+                                     :enhanced-cljs-completion? "t"})
           candidates (:completions response)]
-      (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates)))))
+      (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates))))
+
+  (testing "no suitable completions without enhanced-cljs-completion? flag"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :symbol "js/Ob"})
+          candidates (:completions response)]
+      (is (empty? candidates)))))
 
 (deftest cljs-complete-doc-test
   (let [response (session/message {:op "complete-doc" :symbol "tru"})]

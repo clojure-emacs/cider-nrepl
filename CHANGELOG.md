@@ -2,6 +2,16 @@
 
 ## master (unreleased)
 
+### New features
+
+* Dynamic cljs completions (via suitable) are only enabled when adding `enhanced-cljs-completion` to cljs message like
+```clojure
+{:op "complete"
+ :ns "..."
+ :symbol "..."
+ :enhanced-cljs-completion? t}
+```
+
 ## 0.22.3 (2019-09-11)
 
 ### Bugs fixed
