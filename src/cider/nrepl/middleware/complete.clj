@@ -9,10 +9,10 @@
    [suitable.complete-for-nrepl :as suitable]))
 
 (defn- cljs-complete
-  [msg cljs-env ns prefix extra-metadata]
+  [{:keys [enhanced-cljs-completion?] :as msg} cljs-env ns prefix extra-metadata]
   (concat (cljs-complete/completions cljs-env prefix {:context-ns ns
                                                       :extra-metadata extra-metadata})
-          (suitable/complete-for-nrepl msg)))
+          (when enhanced-cljs-completion? (suitable/complete-for-nrepl msg))))
 
 (defn complete
   [{:keys [ns symbol context extra-metadata] :as msg}]
