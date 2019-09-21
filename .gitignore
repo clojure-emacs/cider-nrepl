@@ -9,6 +9,7 @@ out
 *.jar
 *.class
 .cljs_nashorn_repl
+.inline-deps
 .lein-deps-sum
 .lein-failures
 .lein-plugins
