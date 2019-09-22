@@ -73,6 +73,7 @@
        (set-descriptor! #'~name ~descriptor))))
 
 ;;; Deferred Middleware Wrappers
+;;
 ;; Each middleware is defined in its own namespace, but here we're defining
 ;; deferred versions of the middleware handlers, that load the actual middleware
 ;; handlers on demand (the first time some middleware op gets invoked). This
