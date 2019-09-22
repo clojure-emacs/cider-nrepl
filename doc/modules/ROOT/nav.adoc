@@ -3,5 +3,5 @@
 * xref:internals.adoc[Understanding the Internals]
 * nREPL API
 ** xref:nrepl-api/supplied_ops.adoc[Supplied Ops]
-* Hacking on CIDER nREPL
-* About
+* xref:hacking.adoc[Hacking on CIDER nREPL]
+* xref:faq.adoc[FAQ]

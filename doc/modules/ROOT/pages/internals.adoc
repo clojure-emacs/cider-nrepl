@@ -1,0 +1,57 @@
+= CIDER nREPL Internals
+
+== Lazy middleware loading
+
+Eager loading of all of `cider-nrepl`'s middleware resulted in a significant impact to the
+startup time of the nREPL server. To mitigate this we've devised a strategy to postpone
+the actual initialization of some middleware until the first time it's actually used
+by a client.
+
+That's the reason why middleware description in `cider-nrepl` are not following the common
+nREPL convention to be supplied in the same file where the middleware is defined.
+
+== Dealing with unhandled exception
+
+Even though nREPL requests are asychronous in their nature, some editors might be forced
+to wait for the response of a request. This is obviously going to result in lock-up in
+case of an unhandled exception, that's why `cider-nrepl` introduced the concept of
+a "safe transport" that does some reasonable handling of such errors.
+
+== Operating on unresolved symbols
+
+All middleware ops operating on some symbol that needs to be resolved would normally do the
+resolution themselves. They typically take as parameters `ns` and `sym`, which are current
+namespace and a symbol in it, and would resolve `sym` in the context of `ns`.
+
+This spares users from having to invoke `info` on every symbol before passing the resolved result
+to another op. It also maps well to the typical editor workflow - normally you'd be asking
+for some operation to be performed for some unresolved symbol in the current namespace.
+
+== ClojureScript Support
+
+Currently the ClojureScript support relies on inspecting the ClojureScript compiler
+state. `cider-nrepl` would fetch the compiler state from Piggieback and pass it
+to the underlying libraries (e.g. `orchard` and `cljs-tooling`) that do something useful with it.
+
+Unfortunately the majority of the middlewares don't support ClojureScript
+currently, as they are implemented in terms of Clojure-only libraries. Another
+roadblock is that `cider-nrepl` runs in a Clojure context and you have to jump
+through some hoops to evaluate ClojureScript code from it (e.g. pipe it to
+Piggieback's `eval` or evaluate it against the ClojureScript runtime directly as
+a string). Hopefully this will change down the road.
+
+== Dependency obfuscation
+
+`cider-nrepl`'s dependency would conflict with the dependencies of the application using it,
+so we have to take some care to avoid such situation.
+
+All of cider-nrepl's dependencies are processed with
+https://github.com/benedekfazekas/mranderson[mranderson], so that
+they won't collide with the dependencies of your own projects. This
+basically means that cider-nrepl doesn't have any runtime dependencies in
+the production artifact - just copies of the deps inlined with changed
+namespaces/packages.
+
+This means that `cider-nrepl` has to also take some steps to hide the inlined namespaces,
+so they won't pollute the results users would be interested in. Pretty much all of `cider-nrepl`'s
+ops would filter out the inlined namespaces.

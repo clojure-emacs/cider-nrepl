@@ -1,0 +1,23 @@
+= Frequently Asked Questions
+
+== Is `cider-nrepl` specific to CIDER?
+
+No, the name is a bit of a misnomer. All of the functionality in
+`cider-nrepl` can be leveraged by any nREPL client. Many Clojure editors
+are built on top of `cider-nrepl`.
+
+If we were naming the project today we would have gone with `orchard-nrepl`. Naming is hard!
+
+== Does `cider-nrepl` support ClojureScript?
+
+Yes, it does. The support, however, is partial and not all of the functionality if available
+for ClojureScript.
+
+== Does `cider-nrepl` support ClojureCLR?
+
+No, it does not.
+
+== Are there any other nREPL middlewares similar to `cider-nrepl`?
+
+Yeah, there are. Most notably there's `refactor-nrepl` which provides a lot of
+refactoring functionality for Clojure editors.

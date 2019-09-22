@@ -1,0 +1,49 @@
+= Hacking on cider-nrepl
+
+Hacking on cider-nrepl requires nothing bit a bit of knowledge of Clojure and nREPL.
+In this section we'll take a look at some practical tips to make you more productive
+while working on the project.
+
+== Makefile
+
+cider-nrepl has some pretty complicated Lein profiles, as it has to deal with multiple version of
+Clojure and ClojureScript, plus dependency inlining with Mr. Anderson. That's why we've
+added a good old `Makefile` to save you the trouble of having to think about the profiles
+and just focus on the tasks at hand.
+
+Obviously you can still work with Lein directly, but you won't have to do this most of the time.
+
+== Testing your changes
+
+You've got several options for doing this:
+
+* Installing a snapshot of your work recently and doing tests against it (e.g. with `make install`).
+* Relying solely on the unit tests. You better write good unit tests, though!
+* Spinning new versions of nREPL from the REPL, and connecting some client to them to test your changes.
+* If you're already using a client that depends on cider-nrepl (e.g. CIDER) making changes to the cider-nrepl
+code will normally result in those changes becoming immediately available to your client.
+
+== Running the tests
+
+Just do:
+
+  $ make test
+
+That's going to handle the dependency inlining behind the scenes.
+By default the tests are going to be run against the most recent
+Clojure version that's supported.
+
+== Linting
+
+cider-nrepl uses eastwood and cljfmt. Make sure your changes conform to the project's baseline by doing:
+
+  $ make eastwood
+  $ make cljfmt
+
+== Deploying
+
+Just do:
+
+  $ make deploy
+
+This is going to handle the dependency inlining behind the scenes.
