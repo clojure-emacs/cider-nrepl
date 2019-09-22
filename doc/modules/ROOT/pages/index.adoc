@@ -1,5 +1,28 @@
 = CIDER nREPL
 
+== Overview
+
+`cider-nrepl` aims to extent the base functionality of an nREPL server to cater
+to the needs of Clojure(Script) programming environments. It provides nREPL ops for common
+operations like:
+
+* code completion
+* source and documentation lookup
+* profiling
+* debugging
+* code reloading
+* find references
+* running tests
+* filtering stacktraces
+
+The ultimate goal of `cider-nrepl` is to provide a solid foundation for nREPL clients,
+so they don't have to reinvent the wheel all the time.
+
+Despite its name, `cider-nrepl` is editor-agnostic and is leveraged by several other
+Clojure editors, besides CIDER (e.g. `vim-fireplace`, `iced-vim`, Calva, CCW).
+While the project is officially a part of CIDER, its development is a joint
+venture between all interested tool authors.
+
 == Design
 
 This section documents some of the major design decisions in cider-nrepl.
@@ -8,6 +31,13 @@ While in essence it's just a collection of nREPL middleware we had to
 make a few important design decision here and there that influenced
 the code base and the usability of cider-nrepl in various ways.
 
+=== REPL-powered
+
+All of the middleware that are currently part of `cider-nrepl` are relying on
+REPL state introspection to perform their work. While we might leverage
+static code analysis down the road for some tasks, `cider-nrepl` will always
+be a REPL-first tool.
+
 === Editor Agnostic
 
 Although those middlewares were created for use with CIDER almost all
@@ -15,6 +45,31 @@ of them are extremely generic and can be leveraged from other editors.
 
 Projects like https://github.com/tpope/vim-fireplace[vim-fireplace] and https://github.com/SevereOverfl0w/vim-replant[vim-replant] are making use of
 cider-nrepl already.
+
+=== Reusable Core Logic
+
+cider-nrepl tries to have as little logic as possible and mostly
+provides thin wrappers over existing libraries (e.g. https://github.com/alexander-yakushev/compliment[compliment],
+https://github.com/weavejester/cljfmt[cljfmt], etc). Much of its core functionality lives in
+https://github.com/clojure-emacs/orchard[orchard], so that
+eventually it can be used by non-nREPL clients (e.g. Socket REPL
+clients).
+
+Very simply put - there's very little code in cider-nrepl that's not
+simply wrapping code from other libraries in nREPL operations.
+
+The primary reason for this is our desire to eventually provide
+support for non-nREPL REPLs in CIDER, but this also means that other
+editors can directly leverage the work we've done so far.
+
+=== ClojureScript Support
+
+We want cider-nrepl to offer feature parity between Clojure and
+ClojureScript, but we're not quite there yet and many features right
+now are Clojure-only.
+
+We'd really appreciate all the help we can get from ClojureScript
+hackers to make this a reality.
 
 === Isolated Runtime Dependencies
 
@@ -43,28 +98,3 @@ straight to nREPL down the road.
 === Middleware Errors Never Hang Requests
 
 See https://github.com/clojure-emacs/cider-nrepl/pull/327[here].
-
-=== Reusable Core Logic
-
-cider-nrepl tries to have as little logic as possible and mostly
-provides thin wrappers over existing libraries (e.g. https://github.com/alexander-yakushev/compliment[compliment],
-https://github.com/weavejester/cljfmt[cljfmt], etc). Much of its core functionality lives in
-https://github.com/clojure-emacs/orchard[orchard], so that
-eventually it can be used by non-nREPL clients (e.g. Socket REPL
-clients).
-
-Very simply put - there's very little code in cider-nrepl that's not
-simply wrapping code from other libraries in nREPL operations.
-
-The primary reason for this is our desire to eventually provide
-support for non-nREPL REPLs in CIDER, but this also means that other
-editors can directly leverage the work we've done so far.
-
-=== ClojureScript Support
-
-We want cider-nrepl to offer feature parity between Clojure and
-ClojureScript, but we're not quite there yet and many features right
-now are Clojure-only.
-
-We'd really appreciate all the help we can get from ClojureScript
-hackers to make this a reality.
