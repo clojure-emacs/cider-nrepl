@@ -56,11 +56,6 @@ under `:repl-options`.
                   cider.nrepl/wrap-xref]}
 ----
 
-Note that you should use a `cider-nrepl` version compatible with your
-CIDER. Generally, if you're using CIDER 0.x.y you should be using
-`cider-nrepl` 0.x.y, if you're using CIDER 0.x.y-SNAPSHOT, you should
-be using `cider-nrepl` 0.x.y-SNAPSHOT, etc.
-
 === Via Boot
 
 Boot users can configure the injected middleware by either specifying
