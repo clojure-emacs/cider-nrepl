@@ -13,8 +13,8 @@
 (defn =-body
   [msg expected more]
   (if (seq more)
-    `(let [more# (list ~@more)
-           expected# ~expected
+    `(let [expected# ~expected
+           more# (list ~@more)
            result# (apply = expected# more#)]
        (->> (if result#
               {:type :pass}
