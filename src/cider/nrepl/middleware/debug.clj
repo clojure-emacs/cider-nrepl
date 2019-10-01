@@ -182,8 +182,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn pr-short
   "Like `pr-str` but limited in length and depth."
   [x]
-  (binding [*print-length* (:length @print-options)
-            *print-level*  (:level @print-options)]
+  (binding [*print-length* (or (:length @print-options)
+                               *print-length*)
+            *print-level*  (or (:level @print-options)
+                               *print-level*)]
     ;; TODO: Make it possible to use a random print function here
     (pr-str x)))
 
