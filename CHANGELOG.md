@@ -2,15 +2,22 @@
 
 ## master (unreleased)
 
-### New features
+### Changes
 
-* Dynamic cljs completions (via suitable) are only enabled when adding `enhanced-cljs-completion` to cljs message like
+* Dynamic cljs completions (via suitable) are only enabled when adding `enhanced-cljs-completion` to cljs message like:
+
 ```clojure
 {:op "complete"
  :ns "..."
  :symbol "..."
  :enhanced-cljs-completion? t}
 ```
+
+### Bugs fixed
+
+* [#652](https://github.com/clojure-emacs/cider-nrepl/pull/652): Respect `*print-length*` and `*print-level*` in the debugger.
+* Respect nREPL print options in the debugger.
+* Fix lockups and exceptions caused by clojuredocs cache download/corruption (fixed in Orchard 0.5.2).
 
 ## 0.22.3 (2019-09-11)
 
