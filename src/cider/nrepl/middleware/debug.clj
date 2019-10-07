@@ -623,11 +623,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn- initialize
   "Initialize the channel used for debug-input requests."
-  [{:keys [print-options] :as msg}]
+  [{:keys [:nrepl.middleware.print/options] :as msg}]
   (when (map? @debugger-message)
     (debugger-send :status :done))
   ;; The above is just bureaucracy. The below is important.
-  (reset! @#'print-options print-options)
+  (reset! @#'print-options options)
   (reset! debugger-message msg))
 
 (defn- instrumented-defs-reply
