@@ -83,7 +83,7 @@
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[pjstadig/humane-test-output "0.9.0"]
+                    :dependencies [[pjstadig/humane-test-output "0.10.0"]
                                    [cider/piggieback "0.4.1"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
