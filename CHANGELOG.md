@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.22.4 (2019-10-08)
+
 ### Changes
 
 * Dynamic cljs completions (via suitable) are only enabled when adding `enhanced-cljs-completion` to cljs message like:
