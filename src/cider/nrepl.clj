@@ -239,6 +239,12 @@
               "inspect-clear"
               {:doc "Clears the state state of the inspector."
                :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-def-current-value"
+              {:doc "Define the currently inspected value as a var with the given var-name in the provided namespace."
+               :requires {"session" "The current session"
+                          "ns" "Namespace to define var on"
+                          "var-name" "The var name"}
                :returns {"status" "\"done\""}}}}))
 
 (def-wrapper wrap-macroexpand cider.nrepl.middleware.macroexpand/handle-macroexpand

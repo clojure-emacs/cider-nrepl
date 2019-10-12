@@ -87,6 +87,9 @@
 (defn clear-reply [msg]
   (inspector-response msg (swap-inspector! msg (constantly (inspect/fresh)))))
 
+(defn def-current-value [msg]
+  (inspector-response msg (swap-inspector! msg inspect/def-current-value (symbol (:ns msg)) (:var-name msg))))
+
 (defn handle-inspect [handler msg]
   (if (= (:op msg) "eval")
     (eval-reply handler msg)
@@ -99,4 +102,5 @@
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-set-page-size" set-page-size-reply
-      "inspect-clear" clear-reply)))
+      "inspect-clear" clear-reply
+      "inspect-def-current-value" def-current-value)))
