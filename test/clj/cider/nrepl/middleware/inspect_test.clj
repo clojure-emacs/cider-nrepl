@@ -280,3 +280,20 @@
                    (first (:value (session/message {:op "eval"
                                                     :inspect "true"
                                                     :code "(range 100)"}))))))))
+
+(deftest inspect-def-current-value-test
+  (testing "inspect-def-current-value defines a var with the current inspector value"
+    (is (= "{3 4}"
+           (first (:value (do
+                            (session/message {:op "eval"
+                                              :code "(def test-val [{1 2} {3 4}])"})
+                            (session/message {:op "eval"
+                                              :inspect "true"
+                                              :code "test-val"})
+                            (session/message {:op "inspect-push"
+                                              :idx 2})
+                            (session/message {:op "inspect-def-current-value"
+                                              :ns "user"
+                                              :var-name "sub-map"})
+                            (session/message {:op "eval"
+                                              :code "sub-map"}))))))))
