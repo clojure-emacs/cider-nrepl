@@ -297,19 +297,20 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                               last :stacktrace)}]}))
 
 (def debug-commands
-  {"c" :continue
-   "C" :Continue
-   "e" :eval
-   "h" :here
-   "i" :in
-   "j" :inject
-   "l" :locals
-   "n" :next
-   "o" :out
-   "p" :inspect
-   "q" :quit
-   "s" :stacktrace
-   "t" :trace})
+  "An unsorted set of commands supported by the debugger."
+  #{:continue
+    :Continue
+    :eval
+    :here
+    :in
+    :inject
+    :locals
+    :next
+    :out
+    :inspect
+    :quit
+    :stacktrace
+    :trace})
 
 (defn read-debug-command
   "Read and take action on a debugging command.
@@ -337,8 +338,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                           :coor coor
                           :locals locals)]
     (let [commands     (cond-> debug-commands
-                         (not (map? *msg*))         (dissoc "q")
-                         (nil? (:locals dbg-state)) (dissoc "e" "j" "l" "p")
+                         (not (map? *msg*))         (disj :quit)
+                         (nil? (:locals dbg-state)) (disj :eval :inject :locals :inspect)
                          (cljs/grab-cljs-env *msg*) identity)
           response-raw (read-debug-input dbg-state commands nil)
           dbg-state    (dissoc dbg-state :inspect)
