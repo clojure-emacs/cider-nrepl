@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New Features
+
+* [#653](https://github.com/clojure-emacs/cider-nrepl/pull/653): Add `inspect-def-current-value` to inspect middleware.
+
 ## 0.22.4 (2019-10-08)
 
 ### Changes
