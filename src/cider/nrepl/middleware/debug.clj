@@ -299,7 +299,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (def debug-commands
   "An unsorted set of commands supported by the debugger."
   #{:continue
-    :Continue
+    :continue-all
     :eval
     :here
     :in
@@ -317,13 +317,17 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   Ask for one of the following debug commands using `read-debug-input`:
 
     next: Return value.
-    continue: Skip breakpoints for the remainder of this eval session.
+    continue: Skip the current breakpoint.
+    continue-all: Skip breakpoints for the remainder of this eval session.
+    in: Step into a function
     out: Skip breakpoints in the current sexp.
-    inspect: Evaluate an expression and inspect it.
+    here: Skip all breakpoints up till specified coordinate `coord`
+    inspect: Prompt for an expression to evaluate and inspect it.
     locals: Inspect local variables.
     inject: Evaluate an expression and return it.
     eval: Evaluate an expression, display result, and prompt again.
     stacktrace: Print the current stacktrace, and prompt again.
+    trace: Continue, printing intermediate expressions and their values.
     quit: Abort current eval session.
 
   Response received can be any one of these values. It can also be a map
@@ -355,8 +359,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                         value)
         :continue   (do (reset! (:skip STATE__) true)
                         value)
-        :Continue   (do (skip-breaks! :all)
-                        value)
+        :continue-all (do (skip-breaks! :all)
+                          value)
         :out        (do (skip-breaks! :deeper (butlast (:coor dbg-state)) (:code dbg-state) force?)
                         value)
         :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
