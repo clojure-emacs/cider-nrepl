@@ -96,7 +96,7 @@
 
 (def-debug-op :next)
 (def-debug-op :continue)
-(def-debug-op :Continue)
+(def-debug-op :continue-all)
 (def-debug-op :in)
 
 (defmethod debugger-send :out [_ & [force?]]
@@ -261,7 +261,7 @@
     (<-- {:debug-value "1" :coor [1 3 1]}) ; a in foo
     (--> :continue)
     (<-- {:debug-value "2" :coor [1 3 1]}) ; a in foo
-    (--> :Continue)
+    (--> :continue-all)
     (<-- {:value ":fin"})
     (<-- {:status ["done"]})))
 
@@ -615,6 +615,6 @@
     (.startsWith file "jar:file:")
     (.endsWith file "/nrepl/server.clj"))
 
-  (--> :Continue)
+  (--> :continue-all)
   (<-- {:value "{:transport 23}"})
   (<-- {:status ["done"]}))
