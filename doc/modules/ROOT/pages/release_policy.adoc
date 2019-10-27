@@ -1,0 +1,26 @@
+= Release Policy
+
+We're following http://semver.org/[SemVer] (as much as one can be
+following it when the major version is 0). At this point bumps of the
+minor (second) version number are considered major releases and always
+include new features or significant changes to existing features. Clojure API
+compatibility between major releases is not a (big) concern (although we try
+to break the API rarely and only for a good reason). nREPL API compatibility, however,
+is a big concern and we're very careful to limit the breaking changes there (especially
+when it comes to middlewares that are widely used).
+
+The development cycle for the next major
+release starts immediately after the previous one has been
+shipped. Bugfix/point releases (if any) address only serious bugs and
+never contain new features.
+
+Here are a few examples:
+
+* 0.5.0 - Feature release
+* 0.5.1 - Bug-fix release
+* 0.5.2 - Bug-fix release
+* 0.6.0 - Feature release
+
+CIDER and `cider-nrepl` are released independently, but follow the same release policy overall.
+`cider-nrepl` is used by many other projects besides CIDER, therefore the need for it to have
+a release schedule that's independent from CIDER's.
