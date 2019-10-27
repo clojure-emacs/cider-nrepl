@@ -1,0 +1,85 @@
+= Compatibility
+
+== Java
+
+`cider-nrepl` officially targets Java 8, Java 11 and the most recent rapid
+release version (e.g. Java 13).  More generally speaking - we aim
+to support all Java releases that are currently officially supported
+by Oracle.
+
+== Clojure
+
+`cider-nrepl` targets Clojure 1.8+. As Clojure doesn't have the concept of supported releases
+we have to get a bit creative to determine the minimum version to target.
+
+The minimum required Clojure version is currently derived using data
+from the
+https://clojure.org/news/2019/02/04/state-of-clojure-2019[State of
+Clojure] survey. In general we consider a Clojure release eligible for
+dropping once its usage drops bellow 5%, but we'd not drop support for
+any release just for the sake of doing it. We'd do it only if
+this would lessen the maintenance burden or open up the possibility for
+big nREPL improvements.
+
+== ClojureScript
+
+Currently we apply the same policy for Clojure and ClojureScript support.
+
+NOTE: ClojureScript support is contingent on the Piggieback middleware.
+Currently `cider-nrepl` requires Piggieback 0.4+ to work properly.
+
+== nREPL
+
+`cider-nrepl` supports nREPL 0.6+.
+
+NOTE: We pay special attention to supporting whatever nREPL is bundled with the current stable Leiningen
+and Boot releases.
+
+== Compatibility Matrix
+
+Below you can find the official compatibility matrix for `cider-nrepl`. For a
+very long time the project targeted nREPL 0.2.x, but the
+requirements were bumped to nREPL 0.6 in recent versions.
+
+.Compatibility Matrix
+|===
+| cider-nrepl | Required JDK | Required Clojure | Required nREPL
+
+| 0.19
+| 8
+| 1.8
+| 0.2.13
+
+| 0.20
+| 8
+| 1.8
+| 0.4.x
+
+| 0.21
+| 8
+| 1.8
+| 0.6
+
+| 0.22
+| 8
+| 1.8
+| 0.6
+
+|===
+
+== Backwards Compatibility
+
+`cider-nrepl` is under active development and breaking changes might happen from
+time to time. That being said, we're well aware that these days many editors and
+other Clojure development tools rely on `cider-nrepl` and we're fully committed
+to avoid introducing painful breakages there.
+
+Most tools authors using `cider-nrepl` are involved with its development in
+some capacity, so we're always considering carefully any proposed breaking change
+and the impact it would have.
+
+It's extremely unlikely that we're going to break compatibility on the
+protocol level ever (with the rare cases of changing/removing things
+that existed, but we knew for a fact weren't used).  Most often
+backwards compatibility would be broken on the implementation level -
+usually extracting something out of `cider-nrepl` to the `orchard` library.
