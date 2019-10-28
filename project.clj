@@ -43,7 +43,10 @@
                    :debugger :debugger}
 
   :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]
-            "mranderson"   ["with-profile" "+plugin.mranderson/config"]}
+            "mranderson"   ["with-profile" "+plugin.mranderson/config"]
+            "docs" ["with-profile" "+maint" "run" "-m" "cider.nrepl.impl.docs" "--file"
+                    ~(clojure.java.io/as-relative-path
+                      (clojure.java.io/file "doc" "modules" "ROOT" "pages" "nrepl-api" "ops.adoc"))]}
 
   :release-tasks [["vcs" "assert-committed"]
                   ["bump-version" "release"]
@@ -79,6 +82,9 @@
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
+
+             :maint {:source-paths ["src/maint"]
+                     :dependencies [[org.clojure/tools.cli "0.4.1"]]}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
