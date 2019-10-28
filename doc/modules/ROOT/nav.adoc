@@ -3,6 +3,7 @@
 * xref:internals.adoc[Understanding the Internals]
 * nREPL API
 ** xref:nrepl-api/supplied_middleware.adoc[Supplied Middleware]
+** xref:nrepl-api/ops.adoc[Supplied Ops]
 * xref:hacking.adoc[Hacking on CIDER nREPL]
 * xref:compatibility.adoc[Compatibility]
 * xref:release_policy.adoc[Release Policy]

@@ -1,0 +1,1147 @@
+////
+This file is _generated_ by #'cider.nrepl.impl.docs/-main
+   *Do not edit!*
+////
+= Supported nREPL operations
+
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.23.0-SNAPSHOT)#
+
+== Operations
+
+=== `apropos`
+
+Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring.
+
+Required parameters::
+* `:query` The search query.
+
+
+Optional parameters::
+* `:filter-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+
+
+Returns::
+* `:apropos-matches` A list of matching symbols.
+
+
+
+=== `cider-version`
+
+Returns the version of the CIDER-nREPL middleware.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:cider-version` CIDER-nREPL's version map.
+* `:status` done
+
+
+
+=== `classpath`
+
+Obtain a list of entries in the Java classpath.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:classpath` A list of the Java classpath entries.
+
+
+
+=== `clear-profile`
+
+Clears profile of samples.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+
+
+
+=== `clojuredocs-lookup`
+
+Return a map of information in ClojureDocs.
+
+Required parameters::
+* `:ns` The namespace where ``sym`` will be resolved.
+* `:sym` The symbol to lookup.
+
+
+Optional parameters::
+* `:export-edn-url` EDN file URL exported from ClojureDocs. Defaults to "https://clojuredocs-edn.netlify.com/export.compact.edn".
+
+
+Returns::
+* `:clojuredocs` A map of information in ClojureDocs.
+* `:status` "no-doc" if there is no document matching to ``ns`` and ``symbol``.
+
+
+
+=== `clojuredocs-refresh-cache`
+
+Reload exported documents file from ClojureDocs, and store it as a cache.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:export-edn-url` EDN file URL exported from ClojureDocs. Defaults to "https://clojuredocs-edn.netlify.com/export.compact.edn".
+
+
+Returns::
+* `:status` "ok" if reloading was successful
+
+
+
+=== `complete`
+
+Return a list of symbols matching the specified (partial) symbol.
+
+Required parameters::
+* `:ns` The symbol's namespace
+* `:session` The current session
+* `:symbol` The symbol to lookup
+
+
+Optional parameters::
+* `:context` Completion context for compliment.
+* `:extra-metadata` List of extra-metadata fields. Possible values: arglists, doc.
+
+
+Returns::
+* `:completions` A list of possible completions
+
+
+
+=== `complete-doc`
+
+Retrieve documentation suitable for display in completion popup
+
+Required parameters::
+* `:ns` The symbol's namespace
+* `:symbol` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:completion-doc` Symbol's documentation
+
+
+
+=== `complete-flush-caches`
+
+Forces the completion backend to repopulate all its caches
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `content-type-middleware`
+
+Enhances the ``eval`` op by adding ``content-type`` and friends to some responses. Not an op in itself.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:content-type` If present and non-nil, try to detect and handle content-types.
+
+
+Returns::
+{blank}
+
+
+=== `debug-input`
+
+Read client input on debug action.
+
+Required parameters::
+* `:input` The user's reply to the input request.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `debug-instrumented-defs`
+
+Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:list` The alist of (NAMESPACE . VARS) that are thought to be instrumented.
+* `:status` done
+
+
+
+=== `debug-middleware`
+
+Debug a code form or fall back on regular eval.
+
+Required parameters::
+* `:code` Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen.
+* `:file` File where the code is located.
+* `:id` A message id that will be responded to when a breakpoint is reached.
+* `:ns` Passed to "eval".
+* `:point` Position in the file where the provided code begins.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done" if the message will no longer be used, or "need-debug-input" during debugging sessions
+
+
+
+=== `eldoc`
+
+Return a map of information about the specified symbol.
+
+Required parameters::
+* `:ns` The current namespace
+* `:symbol` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `eldoc-datomic-query`
+
+Return a map containing the inputs of the datomic query.
+
+Required parameters::
+* `:ns` The current namespace
+* `:symbol` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `fn-deps`
+
+Look up the function dependencies of particular function.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:fn-deps` A list of function deps.
+* `:status` done
+
+
+
+=== `fn-refs`
+
+Look up functions that reference a particular function.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:fn-refs` A list of function references.
+* `:status` done
+
+
+
+=== `format-code`
+
+Reformats the given Clojure code, returning the result as a string.
+
+Required parameters::
+* `:code` The code to format.
+
+
+Optional parameters::
+* `:options` Configuration map for cljfmt.
+
+
+Returns::
+* `:formatted-code` The formatted code.
+
+
+
+=== `format-edn`
+
+Reformats the given EDN data, returning the result as a string.
+
+Required parameters::
+* `:edn` The data to format.
+
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:formatted-edn` The formatted data.
+
+
+
+=== `get-max-samples`
+
+Returns maximum number of samples to be collected for any var.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` String representing number of max-sample-count
+
+
+
+=== `info`
+
+Return a map of information about the specified symbol.
+
+Required parameters::
+* `:ns` The current namespace
+* `:symbol` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `init-debugger`
+
+Initialize the debugger so that ``breakpoint`` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded.
+
+Required parameters::
+* `:id` A message id that will be responded to when a breakpoint is reached.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `inspect-clear`
+
+Clears the state state of the inspector.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-def-current-value`
+
+Define the currently inspected value as a var with the given var-name in the provided namespace.
+
+Required parameters::
+* `:ns` Namespace to define var on
+* `:session` The current session
+* `:var-name` The var name
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-get-path`
+
+Returns the path to the current position in the inspected value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-next-page`
+
+Jumps to the next page in paginated collection view.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-pop`
+
+Moves one level up in the inspector stack.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-prev-page`
+
+Jumps to the previous page in paginated collection view.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-push`
+
+Inspects the inside value specified by index.
+
+Required parameters::
+* `:idx` Index of the internal value currently rendered.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-refresh`
+
+Re-renders the currently inspected value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-set-page-size`
+
+Sets the page size in paginated view to specified value.
+
+Required parameters::
+* `:page-size` New page size.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `is-var-profiled`
+
+Reports wheth symbol is currently profiled.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to check
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
+
+
+
+=== `macroexpand`
+
+Produces macroexpansion of some form using the given expander.
+
+Required parameters::
+* `:code` The form to macroexpand.
+
+
+Optional parameters::
+* `:display-namespaces` How to print namespace-qualified symbols in the result. Possible values are "qualified" to leave all namespaces qualified, "none" to elide all namespaces, or "tidy" to replace namespaces with their aliases in the given namespace. Defaults to "qualified".
+* `:expander` The macroexpansion function to use. Possible values are "macroexpand-1", "macroexpand", or "macroexpand-all". Defaults to "macroexpand".
+* `:ns` The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript.
+* `:print-meta` If truthy, also print metadata of forms.
+
+
+Returns::
+* `:expansion` The macroexpanded form.
+
+
+
+=== `ns-aliases`
+
+Returns a map of [ns-alias] to [ns-name] in a namespace.
+
+Required parameters::
+* `:ns` The namespace to use.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `ns-list`
+
+Return a sorted list of all namespaces.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:filter-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+
+
+Returns::
+* `:ns-list` The sorted list of all namespaces.
+* `:status` done
+
+
+
+=== `ns-list-vars-by-name`
+
+Return a list of vars named ``name`` amongst all namespaces.
+
+Required parameters::
+* `:name` The name to use.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:var-list` The list obtained.
+
+
+
+=== `ns-load-all`
+
+Loads all project namespaces.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `ns-path`
+
+Returns the path to the file containing ns.
+
+Required parameters::
+* `:ns` The namespace to find.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `ns-vars`
+
+Returns a sorted list of public vars in a namespace.
+
+Required parameters::
+* `:ns` The namespace to browse.
+
+
+Optional parameters::
+* `:var-query` The search query for vars. Only "private?" is supported for ClojureScript.
+
+
+Returns::
+* `:ns-vars` The sorted list of public vars in a namespace.
+* `:status` done
+
+
+
+=== `ns-vars-with-meta`
+
+Returns a map of [var-name] to [var-metadata] for public vars in a namespace.
+
+Required parameters::
+* `:ns` The namespace to use.
+
+
+Optional parameters::
+* `:var-query` The search query for vars. Only "private?" is supported for ClojureScript.
+
+
+Returns::
+* `:ns-vars-with-meta` The map of [var-name] to [var-metadata] for public vars in a namespace.
+* `:status` done
+
+
+
+=== `out-subscribe`
+
+Change #'\*out* so that it also prints to active sessions, even outside an eval scope.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `out-unsubscribe`
+
+Change #'\*out* so that it no longer prints to active sessions outside an eval scope.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `profile-summary`
+
+Return profiling data summary.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:err` Content of profile summary report
+* `:status` Done
+
+
+
+=== `profile-var-summary`
+
+Return profiling data summary for a single var.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to profile
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:err` Content of profile summary report
+* `:status` Done
+
+
+
+=== `refresh`
+
+Reloads all changed files in dependency order.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+* `:dirs` List of directories to scan. If no directories given, defaults to all directories on the classpath.
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:reloading` List of namespaces that will be reloaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `refresh-all`
+
+Reloads all files in dependency order.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+* `:dirs` List of directories to scan. If no directories given, defaults to all directories on the classpath.
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:reloading` List of namespaces that will be reloaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `refresh-clear`
+
+Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `resource`
+
+Obtain the path to a resource.
+
+Required parameters::
+* `:name` The name of the resource in question.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:resource-path` The file path to a resource.
+
+
+
+=== `resources-list`
+
+Obtain a list of all resources on the classpath.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:context` Completion context for compliment.
+* `:prefix` Prefix to filter out resources.
+
+
+Returns::
+* `:resources-list` The list of resources.
+
+
+
+=== `retest`
+
+Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `set-max-samples`
+
+Sets maximum sample count. Returns new max-sample-count.
+
+Required parameters::
+* `:max-samples` Maxiumum samples to collect for any single var.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` String representing number of max-sample-count
+
+
+
+=== `slurp`
+
+Slurps a URL from the nREPL server, returning MIME data.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `spec-example`
+
+Return a string with a pretty printed example for a spec
+
+Required parameters::
+* `:spec-name` The spec namespaced keyword we want the example for
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:example` The pretty printed spec example string
+* `:status` done
+
+
+
+=== `spec-form`
+
+Return the form of a given spec
+
+Required parameters::
+* `:spec-name` The spec namespaced keyword we are looking for
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:spec-form` The spec form
+* `:status` done
+
+
+
+=== `spec-list`
+
+Return a sorted list of all specs in the registry
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
+
+
+Returns::
+* `:spec-list` The sorted list of all specs in the registry with their descriptions
+* `:status` done
+
+
+
+=== `stacktrace`
+
+Return messages describing each cause and stack frame of the most recent exception.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:status` "done", or "no-error" if ``*e`` is nil
+
+
+
+=== `test`
+
+[DEPRECATED] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `test-all`
+
+[DEPRECATED] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `test-stacktrace`
+
+Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `test-var-query`
+
+Run tests specified by the ``var-query`` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `toggle-profile`
+
+Toggle profiling of a given var.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to profile
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled, 'unbound' if ns/sym not bound
+
+
+
+=== `toggle-profile-ns`
+
+Toggle profiling of given namespace.
+
+Required parameters::
+* `:ns` The current namespace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
+
+
+
+=== `toggle-trace-ns`
+
+Toggle tracing of a given ns.
+
+Required parameters::
+* `:ns` The namespace to trace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:ns-status` The result of tracing operation
+
+
+
+=== `toggle-trace-var`
+
+Toggle tracing of a given var.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to trace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:var-name` The fully-qualified name of the traced/untraced var
+* `:var-status` The result of tracing operation
+
+
+
+=== `track-state-middleware`
+
+
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `undef`
+
+Undefine a symbol
+
+Required parameters::
+* `:ns` The current namespace
+* `:symbol` The symbol to undefine
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
