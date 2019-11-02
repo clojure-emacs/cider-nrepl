@@ -8,3 +8,7 @@
 * xref:compatibility.adoc[Compatibility]
 * xref:release_policy.adoc[Release Policy]
 * xref:faq.adoc[FAQ]
+* About
+** xref:about/history.adoc[History]
+** xref:about/changelog.adoc[Changelog]
+** xref:about/license.adoc[License]

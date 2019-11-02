@@ -1,0 +1,5 @@
+= Changelog
+
+An extensive changelog is available https://github.com/clojure-emacs/cider-nrepl/blob/master/CHANGELOG.md[here].
+
+NOTE: Only user-visible changes are documented.

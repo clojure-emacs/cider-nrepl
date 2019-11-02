@@ -1,0 +1,21 @@
+= History
+
+`cider-nrepl` was mostly inspired by https://github.com/technomancy/swank-clojure[swank-clojure].
+
+It started life as an attempt to push as much of CIDER's functionality as possible to the nREPL layer,
+with the assumption that this would make it easier to develop CIDER and would open up the possibility
+to build complex features like an interactive debugger. Fortunately, the assumption turned out to be correct.
+Today `cider-nrepl` provides pretty much everything that a Clojure development environment might need (and more).
+
+Eventually `cider-nrepl` served as the inspiration for more similar
+middlewares - e.g. `refactor-nrepl`, `iced-nrepl` and `sayid`.  We quickly
+realized that there was nothing CIDER specific in those middlewares and we've
+started to encourage more tool authors to leverage them. Today `cider-nrepl` is
+developed and released independently from CIDER and is used by most of the
+nREPL-based editors and IDEs out there, which is a great example of team work.
+
+More recently we've been working to extract the core functionality out of `cider-nrepl`
+into a https://github.com/clojure-emacs/orchard[REPL-agnostic library].footnote:[This process started in 2019.]
+
+You can check out https://www.youtube.com/watch?v=4X-1fJm25Ww[this talk], which explores the birth of
+`cider-nrepl`.
