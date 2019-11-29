@@ -83,7 +83,7 @@
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
-             :maint {:source-paths ["src/maint"]
+             :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "0.4.1"]]}
 
              :test {:source-paths ["test/src"]
