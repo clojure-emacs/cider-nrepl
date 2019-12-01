@@ -27,7 +27,7 @@
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
-  :source-paths ["src"]
+  :source-paths ["src/clojure"]
   :resource-paths ["resources"]
   :test-paths ["test/clj" "test/cljs" "test/common"]
 
