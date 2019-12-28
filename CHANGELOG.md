@@ -9,6 +9,10 @@
   Change the format of debugger command messages to a set of command names, leaving key mappings up to client implementations.
   * [#653](https://github.com/clojure-emacs/cider-nrepl/pull/653): Add `inspect-def-current-value` to inspect middleware.
 
+### Changes
+
+* [#661](https://github.com/clojure-emacs/cider-nrepl/pull/661): Fix `info` op not to return nil as a value of key.
+
 ## 0.22.4 (2019-10-08)
 
 ### Changes

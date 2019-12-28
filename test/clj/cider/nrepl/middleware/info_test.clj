@@ -10,6 +10,10 @@
    [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
    [org.apache.commons.lang3 SystemUtils]))
 
+(defprotocol FormatResponseTest
+  (proto-foo [this])
+  (proto-bar [this] "baz"))
+
 (deftest format-response-test
   (is (re-find #"^(https?|file|jar|zip):" ; resolved either locally or online
                (-> (info/info {:class "java.lang.Object" :member "toString"})
@@ -27,7 +31,14 @@
   ;; used to crash, sym is parsed as a class name
   (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "notincanter.core"}))))
   ;; unfound nses should fall through
-  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :symbol "a-var"})))))
+  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :symbol "a-var"}))))
+  ;; protorol docstring
+  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :symbol "proto-foo"}))
+          (contains? "doc")
+          not))
+  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :symbol "proto-bar"}))
+          (get "doc")
+          (= "baz"))))
 
 (deftest response-test
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
