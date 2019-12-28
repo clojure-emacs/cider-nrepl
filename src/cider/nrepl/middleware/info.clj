@@ -11,6 +11,16 @@
 
 (declare format-response)
 
+(defn dissoc-nil-keys
+  "Dissociate keys which has nil as a value to avoid returning empty list as a nil.
+  nrepl/bencode converts nil to empty list."
+  [info]
+  (reduce-kv
+   (fn [res k v]
+     (cond-> res
+       (some? v) (assoc k v)))
+   {} info))
+
 (defn format-nested
   "Apply response formatting to nested `:candidates` info for Java members."
   [info]
@@ -43,6 +53,7 @@
                    (info/file-info file))
                  (when-let [path (:javadoc info)]
                    (info/javadoc-info path)))
+          dissoc-nil-keys
           format-nested
           blacklist
           util/transform-value))))
