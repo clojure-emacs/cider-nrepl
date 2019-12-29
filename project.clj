@@ -8,7 +8,7 @@
   :dependencies [[nrepl "0.6.0"]
                  ^:inline-dep [cider/orchard "0.5.4"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
-                 ^:inline-dep [mvxcvi/puget "1.1.2"]
+                 ^:inline-dep [mvxcvi/puget "1.2.0"]
                  ^:inline-dep [fipp "0.6.21"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.9"]
                  ^:inline-dep [cljs-tooling "0.3.1"]
