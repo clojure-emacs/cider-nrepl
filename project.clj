@@ -84,13 +84,13 @@
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "0.4.1"]]}
+                     :dependencies [[org.clojure/tools.cli "0.4.2"]]}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
                     :dependencies [[pjstadig/humane-test-output "0.10.0"]
-                                   [cider/piggieback "0.4.1"]]}
+                                   [cider/piggieback "0.4.2"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
