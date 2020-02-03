@@ -6,8 +6,9 @@
    [clojure.walk :as walk]))
 
 (deftest dont-break?-test
-  (are [x] (#'t/dont-break? x)
-    '(if 1 (recur (inc 2)) 0))
+  (are [x] (#'t/dont-break? (walk/macroexpand-all x))
+    '(if 1 (recur (inc 2)) 0)
+    '(case i 10 (recur (inc i)) :halt))
   (are [x] (not (#'t/dont-break? (walk/macroexpand-all x)))
     '(loop [] (if 1 (recur (inc 2)) 0))
     '(inc 1)

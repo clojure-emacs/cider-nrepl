@@ -164,12 +164,15 @@
 (defn- contains-recur?
   "Return true if form is not a `loop` or a `fn` and a `recur` is found in it."
   [form]
-  (if (seq? form)
-    (case (first form)
-      recur true
-      loop* false
-      fn*   false
-      (some contains-recur? (rest form)))))
+  (cond (seq? form) (case (first form)
+                      recur true
+                      loop* false
+                      fn*   false
+                      (some contains-recur? (rest form)))
+        ;; case* expands the non-default branches into a map
+        ;; this depends on internal logic
+        (map? form) (some contains-recur? (->> (vals form) (map second)))
+        :else false))
 
 (defn- dont-break?
   "Return true if it's NOT ok to wrap form in a breakpoint.
