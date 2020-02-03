@@ -12,7 +12,8 @@
   (are [x] (not (#'t/dont-break? (walk/macroexpand-all x)))
     '(loop [] (if 1 (recur (inc 2)) 0))
     '(inc 1)
-    '(inc 2)))
+    '(inc 2)
+    '(case i nil {:foo :bar} :default)))
 
 (deftest instrument-defrecord-and-new-test
   (are [exp res] (set/subset? res (t/breakpoint-tester exp))

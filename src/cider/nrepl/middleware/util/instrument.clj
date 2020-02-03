@@ -171,7 +171,8 @@
                       (some contains-recur? (rest form)))
         ;; case* expands the non-default branches into a map
         ;; this depends on internal logic
-        (map? form) (some contains-recur? (->> (vals form) (map second)))
+        (map? form) (some contains-recur? (vals form))
+        (vector? form) (some contains-recur? (seq form))
         :else false))
 
 (defn- dont-break?
