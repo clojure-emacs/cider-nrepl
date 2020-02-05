@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+### New Features
+
+### Changes
+
+* [#664](https://github.com/clojure-emacs/cider-nrepl/pull/664): Fix continue-all in conditional break.
+
 ## 0.23.0 (2019-01-18)
 
 ### New Features

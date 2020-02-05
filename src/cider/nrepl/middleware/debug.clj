@@ -570,7 +570,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
              (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'STATE__)) false))
            (try
              (expand-break ~form ~dbg-state ~original-form)
-             (finally (reset! *skip-breaks* old-breaks#))))
+             ;; in case :continue-all was requested in a deeper level
+             ;; we don't want go back to the old-breaks
+             (finally (when (not= :all (:mode @*skip-breaks*))
+                        (reset! *skip-breaks* old-breaks#)))))
         `(expand-break ~form ~dbg-state ~original-form)))))
 
 ;;; ## Data readers
