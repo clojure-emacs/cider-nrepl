@@ -26,7 +26,7 @@
 
 ;;;; ## Instrumentation
 ;;;
-;;; The top-level instrumenting function is `read-and-instrument`. See
+;;; The top-level instrumenting function is `instrument-tagged-code`. See
 ;;; its doc for more information.
 ;;;
 ;;; Each of the other `instrument-*` functions is responsible for
@@ -208,7 +208,7 @@
   Only forms with a ::breakfunction metadata will be
   instrumented, and even then only if it makes sense (e.g., the
   binding names in a let form are never instrumented).
-  See `read-and-instrument` for more information."
+  See `instrument-tagged-code` for more information."
   [form]
   (condp #(%1 %2) form
     ;; Function call, macro call, or special form.
@@ -225,7 +225,7 @@
 ;;;
 ;;; The following functions are used to populate with metadata and
 ;;; macroexpand code before instrumenting it. This is where we
-;;; calculate all the ::coor vectors. See `read-and-instrument`.
+;;; calculate all the ::coor vectors. See `instrument-tagged-code`.
 (defn- walk-indexed
   "Walk through form calling (f coor element).
   The value of coor is a vector of indices representing element's
@@ -236,20 +236,38 @@
    (let [map-inner (fn [forms]
                      (map-indexed #(walk-indexed (conj coor %1) f %2)
                                   forms))
-         ;; Maps are unordered, but we can try to use the keys (and
-         ;; they're important enough that we're willing to risk
-         ;; getting the position wrong).
-         result (cond (map? form)  (into {} (map (fn [[k v]]
-                                                   [k (walk-indexed (conj coor (pr-str k)) f v)])
-                                                 form))
-                      ;; Order of sets is unpredictable, unfortunately.
-                      (set? form)  form
-                      ;; Borrowed from clojure.walk/walk
-                      (list? form) (apply list (map-inner form))
-                      (instance? clojure.lang.IMapEntry form) (vec (map-inner form))
-                      (seq? form)  (doall (map-inner form))
-                      (coll? form) (into (empty form) (map-inner form))
-                      :else form)]
+         ;; Clojure uses array-maps up to some threshold (8 currently).
+         ;; So for small maps we take advantage of that, otherwise fall
+         ;; back to the heuristic below.
+         ;; Maps are unordered, but we can try to use the keys as order
+         ;; hoping they can be compared one by one and that the user
+         ;; has specified them in that order. If that fails we fall
+         ;; back to simply instrumenting the values in the order they
+         ;; they appear in the map.
+         ;; This depends on Clojure implementation details.
+         result (cond
+                  (map? form) (if (<= (count form) 8)
+                                (into {} (map-indexed (fn [i [k v]]
+                                                        [(walk-indexed (conj coor (* 2 i)) f k)
+                                                         (walk-indexed (conj coor (inc (* 2 i))) f v)])
+                                                      form))
+                                (try
+                                  (into {} (map-indexed (fn [i [k v]]
+                                                          [(walk-indexed (conj coor (* 2 i)) f k)
+                                                           (walk-indexed (conj coor (inc (* 2 i))) f v)])
+                                                        (into (sorted-map) form)))
+                                  (catch Exception e
+                                    (into {} (map-indexed (fn [i [k v]]
+                                                            [k (walk-indexed (conj coor (inc (* 2 i))) f v)])
+                                                          form)))))
+                  ;; Order of sets is unpredictable, unfortunately.
+                  (set? form)  form
+                  ;; Borrowed from clojure.walk/walk
+                  (list? form) (apply list (map-inner form))
+                  (instance? clojure.lang.IMapEntry form) (vec (map-inner form))
+                  (seq? form)  (doall (map-inner form))
+                  (coll? form) (into (empty form) (map-inner form))
+                  :else form)]
      (f coor (m/merge-meta result (meta form))))))
 
 (defn coord<
