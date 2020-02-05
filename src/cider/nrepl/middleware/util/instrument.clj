@@ -164,12 +164,19 @@
 (defn- contains-recur?
   "Return true if form is not a `loop` or a `fn` and a `recur` is found in it."
   [form]
-  (if (seq? form)
-    (case (first form)
-      recur true
-      loop* false
-      fn*   false
-      (some contains-recur? (rest form)))))
+  (cond
+    (seq? form) (case (first form)
+                  recur true
+                  loop* false
+                  fn*   false
+                  (some contains-recur? (rest form)))
+    ;; `case` expands the non-default branches into a map.
+    ;; We therefore expect a `recur` to appear in a map only
+    ;; as the result of a `case` expansion.
+    ;; This depends on Clojure implementation details.
+    (map? form) (some contains-recur? (vals form))
+    (vector? form) (some contains-recur? (seq form))
+    :else false))
 
 (defn- dont-break?
   "Return true if it's NOT ok to wrap form in a breakpoint.
