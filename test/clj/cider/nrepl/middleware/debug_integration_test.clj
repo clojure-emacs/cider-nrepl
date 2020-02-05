@@ -443,6 +443,18 @@
   (<-- {:value "(1 2 3 4 5)"})              ; (for ...)
   (<-- {:status ["done"]}))
 
+(deftest conditional-in-for-continue-all-test
+  (--> :eval
+       "(for [i (range 5)]
+          #dbg ^{:break/when (even? i)}
+          (inc i))")
+  (<-- {:debug-value "0" :coor [2 1]}) ; i
+  (--> :continue)
+  (<-- {:debug-value "2" :coor [2 1]}) ; i
+  (--> :continue-all)
+  (<-- {:value "(1 2 3 4 5)"}) ; (for ...)
+  (<-- {:status ["done"]}))
+
 (deftest conditional-in-defn-test
   (--> :eval "(ns user.test.conditional-break)")
   (<-- {:ns "user.test.conditional-break"})
