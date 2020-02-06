@@ -429,6 +429,37 @@
   (<-- {:value "4"})
   (<-- {:status ["done"]}))
 
+;;; Tests for map literals
+
+(deftest small-literal-map-test
+  (--> :eval
+       "#dbg
+        (seq
+          {1 (+ 2 (+ 3 2))
+           (inc 3)  (+ 12345)})")
+  (<-- {:debug-value "5" :coor [1 1 2]}) ; (+ 3 2)
+  (--> :next)
+  (<-- {:debug-value "7" :coor [1 1]}) ; (+ 2 (+ 3 2))
+  (--> :next)
+  (<-- {:debug-value "4" :coor [1 2]}) ; (inc 3) 
+  (--> :next)
+  (<-- {:debug-value "12345" :coor [1 3]}) ; (+ 12345) 
+  (--> :next)
+  (<-- {:value "([1 7] [4 12345])"}) ; (seq ...) 
+  (<-- {:status ["done"]}))
+
+(deftest larger-literal-map-test
+  (--> :eval
+       "#dbg (count {1 2 3 (inc 4) 5 6 7 8 9 10 11 12 13 14 15 (inc 16) 17 (inc 18)})")
+  (<-- {:debug-value "5" :coor [1 3]}) ; (inc 4)
+  (--> :next)
+  (<-- {:debug-value "17" :coor [1 15]}) ; (inc 15)
+  (--> :next)
+  (<-- {:debug-value "19" :coor [1 17]}) ; (inc 18) 
+  (--> :next)
+  (<-- {:value "9"}) ; (count ...)
+  (<-- {:status ["done"]}))
+
 ;;; Tests for conditional breakpoints
 
 (deftest conditional-in-for-test
