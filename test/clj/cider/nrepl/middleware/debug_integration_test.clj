@@ -474,7 +474,6 @@
   (<-- {:value "(1 2 3 4 5)"})              ; (for ...)
   (<-- {:status ["done"]}))
 
-
 (deftest conditional-in-for-test
   (--> :eval
        "(for [i (range 5)]
