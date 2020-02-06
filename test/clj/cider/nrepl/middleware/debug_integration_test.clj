@@ -474,18 +474,6 @@
   (<-- {:value "(1 2 3 4 5)"})              ; (for ...)
   (<-- {:status ["done"]}))
 
-(deftest conditional-in-for-test
-  (--> :eval
-       "(for [i (range 5)]
-          #dbg ^{:break/when (= 2 i)}
-          (inc i))")
-  (<-- {:debug-value "2" :coor [2 1]}) ; i
-  (--> :next)
-  (<-- {:debug-value "3" :coor [2]}) ; (inc i)
-  (--> :next)
-  (<-- {:value "(1 2 3 4 5)"})              ; (for ...)
-  (<-- {:status ["done"]}))
-
 (deftest conditional-in-for-continue-all-test
   (--> :eval
        "(for [i (range 5)]
