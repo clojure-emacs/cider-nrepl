@@ -31,7 +31,7 @@ for some operation to be performed for some unresolved symbol in the current nam
 
 Currently the ClojureScript support relies on inspecting the ClojureScript compiler
 state. `cider-nrepl` would fetch the compiler state from Piggieback and pass it
-to the underlying libraries (e.g. `orchard` and `cljs-tooling`) that do something useful with it.
+to the underlying libraries (e.g. `orchard` and `clj-suitable`) that do something useful with it.
 
 Unfortunately the majority of the middlewares don't support ClojureScript
 currently, as they are implemented in terms of Clojure-only libraries. Another
