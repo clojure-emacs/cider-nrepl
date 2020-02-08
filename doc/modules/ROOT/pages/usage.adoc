@@ -95,7 +95,7 @@ with the following "magic" incantation:
 clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.23.0"} }}' -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
 ----
 
-There are also two convenient aliases you can employ (see this project's `deps.edn`):
+There are also two convenient aliases you can employ:
 
 [source,clojure]
 ----
