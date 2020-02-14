@@ -70,6 +70,11 @@ requirements were bumped to nREPL 0.6 in recent versions.
 | 1.8
 | 0.6
 
+| 0.24
+| 8
+| 1.8
+| 0.6
+
 |===
 
 == Backwards Compatibility
