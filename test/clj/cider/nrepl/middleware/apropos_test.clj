@@ -15,7 +15,12 @@
                :query "spelling"}
           query-map (#'apropos/msg->var-query-map msg)]
       (is (contains? (:var-query query-map) :ns-query))
-      (is (= 3 (count (-> query-map :var-query :ns-query :exclude-regexps)))))))
+      (is (= 3 (count (-> query-map :var-query :ns-query :exclude-regexps))))))
+
+  (testing "No :search key in the query-map if no :query in message"
+    (let [msg {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]}
+          query-map (#'apropos/msg->var-query-map msg)]
+      (is ((complement contains?) (:var-query query-map) :search)))))
 
 (deftest integration-test
   (testing "Apropos op, typical case"

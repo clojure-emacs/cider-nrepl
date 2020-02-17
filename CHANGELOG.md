@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Bugs fixed
+
+* [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
+
 ### New Features
 
 ## 0.24.0 (2020-02-14)
