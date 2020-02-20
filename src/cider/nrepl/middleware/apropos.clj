@@ -19,7 +19,8 @@
       (:query msg)
       (assoc-in [:var-query :search] (:query msg))
 
-      (not (:case-sensitive? msg))
+      (and (:query msg)
+           (not (:case-sensitive? msg)))
       (update-in [:var-query :search] #(format "(?i:%s)" %))
 
       (:docs? msg)
@@ -38,7 +39,9 @@
       (update :ns (comp find-ns symbol)))))
 
 (defn apropos [msg]
-  {:apropos-matches (-> msg msg->var-query-map apropos/find-symbols)})
+  {:apropos-matches (-> msg
+                        msg->var-query-map
+                        apropos/find-symbols)})
 
 (defn handle-apropos [handler msg]
   (with-safe-transport handler msg
