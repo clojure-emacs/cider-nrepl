@@ -6,6 +6,8 @@
 
 * [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
 * [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp
+* [#667](https://github.com/clojure-emacs/cider-nrepl/pull/667): Filter non file urls from classpath response.
+
 
 ### New Features
 

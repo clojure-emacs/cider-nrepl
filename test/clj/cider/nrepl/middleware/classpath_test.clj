@@ -21,3 +21,7 @@
       (is (.startsWith (:err response) "java.lang.Exception: cp error"))
       (is (= (:ex response) "class java.lang.Exception"))
       (is (:pp-stacktrace response)))))
+
+(deftest file-url?-test
+  (is (file-url? (.toURL (.toURI (java.io.File. "")))))
+  (is (not (file-url? (java.net.URL. "jar:file:/tmp/test.jar!/BOOT-INF/classes")))))
