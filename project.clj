@@ -14,7 +14,8 @@
                  ^:inline-dep [cljfmt "0.7.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
-                 ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
+                 ^:inline-dep [org.clojure/tools.reader "1.3.2"]
+                 [org.clojure/java.classpath "1.0.0"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
   :plugins [[thomasa/mranderson "0.5.3"]]
