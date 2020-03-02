@@ -87,13 +87,14 @@
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))
             content-type (normalize-content-type (get-file-content-type p))
-            buff (Files/readAllBytes p)]
+            buff (when-not (.isDirectory (io/as-file url)) (Files/readAllBytes p))]
         (slurp-reply p content-type buff))
 
       ;; It's not a file, so just try to open it on up
       (let [^URLConnection conn (.openConnection url)
             content-type (normalize-content-type
-                          (.getContentType conn))
+                          (or (.getContentType conn)
+                              "application/octet-stream"))
             ;; FIXME (arrdem 2018-04-03):
             ;;   There's gotta be a better way here
             ^InputStream is (.getInputStream conn)
