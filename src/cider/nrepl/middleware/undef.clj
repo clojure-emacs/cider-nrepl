@@ -1,10 +1,18 @@
 (ns cider.nrepl.middleware.undef
-  "Undefine a symbol"
+  "Middleware for undefining symbols.
+  Fully qualified symbols are interpreted as a var to be unmapped in its
+  original namespace, whereas unqualified symbols are interpreted as both a var
+  and ns alias to be unmapped from the current namespace."
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [orchard.misc :as misc]))
 
 (defn undef
+  "Undefines a symbol.
+  When `symbol` is unqualified, it is interpreted as both an alias and var to be
+  unmapped from the namespace `ns`.
+  When qualified (eg. `foo/bar`), it is interpreted as a var to be unmapped in
+  the namespace `foo`, which may be an alias in `ns`."
   [{:keys [ns symbol]}]
   (let [ns (misc/as-sym ns)
         [sym-ns sym-name] ((juxt (comp misc/as-sym namespace) misc/name-sym)
