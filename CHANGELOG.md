@@ -8,6 +8,8 @@
 
 ### New Features
 
+* [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend undef op to work on fully qualified symbols.
+
 ## 0.24.0 (2020-02-14)
 
 ### Bugs fixed

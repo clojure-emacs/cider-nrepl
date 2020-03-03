@@ -19,7 +19,43 @@
                                       :symbol "x"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
-                                     :code "(ns-resolve 'user 'x)"}))))))
+                                     :code "(ns-resolve 'user 'x)"})))))
+  (testing "undef undefines vars in other namespaces"
+    (is (= #{"done"}
+           (:status (session/message {:op   "eval"
+                                      :code "(do (ns other.ns) (in-ns 'user) (require '[other.ns :as other]))"}))))
+    (is (= ["#'other.ns/x"]
+           (:value (session/message {:op   "eval"
+                                     :code "(do (in-ns 'other.ns) (def x 1) (in-ns 'user) (ns-resolve 'other.ns 'x))"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op     "undef"
+                                      :ns     "other.ns"
+                                      :symbol "x"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'x)"})))))
+  (testing "undef takes fully qualified symbols"
+    (is (= ["#'other.ns/x"]
+           (:value (session/message {:op   "eval"
+                                     :code "(do (in-ns 'other.ns) (def x 1) (in-ns 'user) (ns-resolve 'other.ns 'x))"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op     "undef"
+                                      :ns     "user"
+                                      :symbol "other.ns/x"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'x)"})))))
+  (testing "undef resolves namespace aliases in fully qualified symbols"
+    (is (= ["#'other.ns/x"]
+           (:value (session/message {:op   "eval"
+                                     :code "(do (in-ns 'other.ns) (def x 1) (in-ns 'user) (ns-resolve 'other.ns 'x))"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op     "undef"
+                                      :ns     "user"
+                                      :symbol "other/x"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'x)"}))))))
 
 (deftest undef-alias-test
   (testing "undef undefines aliases"
