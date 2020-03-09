@@ -73,7 +73,15 @@
             '#{new} (cons (first args) (instrument-coll (rest args)))
             '#{quote & var clojure.core/import*} args
             '#{.} (list* (first args)
-                         (second args)
+                         ;; To handle the case when second argument to dot call
+                         ;; is a list e.g (. class-name (method-name args*))
+                         ;; The values present as args* should be instrumented.
+                         (let [s (second args)]
+                           (if (coll? s)
+                             (->> (rest s)
+                                  instrument-coll
+                                  (concat (cons (first s) '())))
+                             s))
                          (instrument-coll (rest (rest args))))
             '#{def} (let [sym (first args)]
                       (list* (m/merge-meta sym

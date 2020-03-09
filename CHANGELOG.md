@@ -6,6 +6,7 @@
 
 * [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
 * [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp
+* [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix instrument for a dot special form case
 
 ### New Features
 
