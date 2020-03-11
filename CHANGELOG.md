@@ -2,15 +2,15 @@
 
 ## master (unreleased)
 
+### New Features
+
+* [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend `undef` op to work on fully qualified symbols.
+
 ### Bugs fixed
 
 * [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
-* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp
-* [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix instrument for a dot special form case
-
-### New Features
-
-* [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend undef op to work on fully qualified symbols.
+* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp.
+* [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix debug instrumentation for a dot special form case.
 
 ## 0.24.0 (2020-02-14)
 
