@@ -138,6 +138,17 @@
          '#{[(def foo "foo doc" (bp (bar) {:coor [3]} (bar))) []]
             [(bar) [3]]})))
 
+(deftest instrument-dot-test
+  (testing "Instrument dot special form of type"
+    (testing "(. class-name method-name args*)"
+      (is (= (t/breakpoint-tester '(. clojure.lang.Numbers add 1 x))
+             '#{[(. clojure.lang.Numbers add 1 (bp x {:coor [4]} x)) []]
+                [x [4]]})))
+    (testing "(. class-name (method-name args*))"
+      (is (= (t/breakpoint-tester '(. clojure.lang.Numbers (add 1 x)))
+             '#{[x [2 2]]
+                [(. clojure.lang.Numbers (add 1 (bp x {:coor [2 2]} x))) []]})))))
+
 (deftest instrument-set!-test
   (is (= (t/breakpoint-tester '(set! foo (bar)))
          '#{[(set! foo (bp (bar) {:coor [2]} (bar))) []]
