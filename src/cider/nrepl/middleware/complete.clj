@@ -1,4 +1,7 @@
 (ns cider.nrepl.middleware.complete
+  "Code completion middleware.
+  Delegates to the compliment library for the heavy lifting.
+  Uses clj-suitable for ClojureScript completion."
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
