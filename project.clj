@@ -11,7 +11,7 @@
                  ^:inline-dep [fipp "0.6.22"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.10"]
                  ^:inline-dep [org.rksm/suitable "0.3.5" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.6.6" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [cljfmt "0.6.7" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "0.3.1"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
