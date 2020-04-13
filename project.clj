@@ -82,7 +82,7 @@
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "0.4.2"]]}
+                     :dependencies [[org.clojure/tools.cli "1.0.194"]]}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
