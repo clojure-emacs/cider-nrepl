@@ -44,7 +44,7 @@
   "Call version middleware and check response."
   [session]
   ;; This test generates reflection warnings in java9, but passes.
-  (let [response (message session {:op :cider-version})
+  (let [response (message session {:op "cider-version"})
         version-map (:cider-version response)]
     (and (= #{"done"} (:status response))
          (contains? version-map :major)
@@ -55,7 +55,7 @@
 (defn check-classpath
   "Call classpath middleware and check response."
   [session]
-  (let [response (message session {:op :classpath})
+  (let [response (message session {:op "classpath"})
         classpaths (:classpath response)]
     (and (= (:status response) #{"done"})
          (> (count classpaths) 0)
@@ -65,7 +65,7 @@
 (defn check-ns-path
   "Call ns middleware and check response."
   [session]
-  (let [response (message session {:op :ns-path :ns "cider.nrepl"})
+  (let [response (message session {:op "ns-path" :ns "cider.nrepl"})
         ns-path (:path response)]
     (.endsWith ns-path "cider/nrepl.clj")))
 

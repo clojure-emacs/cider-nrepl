@@ -61,7 +61,7 @@
 (deftest sanity-test
   (testing "eval works"
     (is (= ["(true false true false true false)"]
-           (:value (message {:op :eval
+           (:value (message {:op "eval"
                              :code (nrepl/code (map even? (range 6)))})))))
 
   (testing "unsupported op"
@@ -69,8 +69,8 @@
            (:status (message {:op "abcdefg"})))))
 
   (testing "describe works"
-    (let [response (message {:op :describe})
-          verbose-response (message {:op :describe
+    (let [response (message {:op "describe"})
+          verbose-response (message {:op "describe"
                                      :verbose? "true"})]
       (is (contains? response :ops))
       (is (contains? verbose-response :ops)))))

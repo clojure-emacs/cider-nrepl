@@ -88,11 +88,11 @@
 (defmulti debugger-send (fn [op & _] op))
 
 (defmethod debugger-send :eval [_ code]
-  (nrepl-send {:op :eval :code code}))
+  (nrepl-send {:op "eval" :code code}))
 
 (defmacro def-debug-op [op]
   `(defmethod debugger-send ~op [_#]
-     (nrepl-send {:op :debug-input :input ~(str op) :key (current-key)})))
+     (nrepl-send {:op "debug-input" :input ~(str op) :key (current-key)})))
 
 (def-debug-op :next)
 (def-debug-op :continue)
@@ -100,10 +100,10 @@
 (def-debug-op :in)
 
 (defmethod debugger-send :out [_ & [force?]]
-  (nrepl-send {:op :debug-input :input (str {:response :out :force? force?}) :key (current-key)}))
+  (nrepl-send {:op "debug-input" :input (str {:response :out :force? force?}) :key (current-key)}))
 
 (defmethod debugger-send :here [_ coor & [force?]]
-  (nrepl-send {:op :debug-input :input (str {:response :here :coord coor :force? force?}) :key (current-key)}))
+  (nrepl-send {:op "debug-input" :input (str {:response :here :coord coor :force? force?}) :key (current-key)}))
 
 (defmacro debugger-expect [expected]
   ;; This is a macro so that failed assertions will show at the right
@@ -441,11 +441,11 @@
   (--> :next)
   (<-- {:debug-value "7" :coor [1 1]}) ; (+ 2 (+ 3 2))
   (--> :next)
-  (<-- {:debug-value "4" :coor [1 2]}) ; (inc 3) 
+  (<-- {:debug-value "4" :coor [1 2]}) ; (inc 3)
   (--> :next)
-  (<-- {:debug-value "12345" :coor [1 3]}) ; (+ 12345) 
+  (<-- {:debug-value "12345" :coor [1 3]}) ; (+ 12345)
   (--> :next)
-  (<-- {:value "([1 7] [4 12345])"}) ; (seq ...) 
+  (<-- {:value "([1 7] [4 12345])"}) ; (seq ...)
   (<-- {:status ["done"]}))
 
 (deftest larger-literal-map-test
@@ -455,7 +455,7 @@
   (--> :next)
   (<-- {:debug-value "17" :coor [1 15]}) ; (inc 15)
   (--> :next)
-  (<-- {:debug-value "19" :coor [1 17]}) ; (inc 18) 
+  (<-- {:debug-value "19" :coor [1 17]}) ; (inc 18)
   (--> :next)
   (<-- {:value "9"}) ; (count ...)
   (<-- {:status ["done"]}))
