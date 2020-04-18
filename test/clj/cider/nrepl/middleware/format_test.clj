@@ -150,7 +150,7 @@
                                          :edn "{:b 2 :c 3 :a 1}"
                                          ::print/print "fake.nrepl.pprint/puget-pprint"})
                        (dissoc :id :session))]
-      (is (= {:formatted-edn "{:b 2, :c 3, :a 1}",
-              :status #{"done" "nrepl.middleware.print/error"},
+      (is (= {:formatted-edn "{:b 2, :c 3, :a 1}"
+              :status #{"done" "nrepl.middleware.print/error"}
               :nrepl.middleware.print/error "Couldn't resolve var fake.nrepl.pprint/puget-pprint"}
              response)))))

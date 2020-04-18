@@ -8,6 +8,7 @@
   defers the loading of the actual middleware."
   (:require
    [cider.nrepl.version :as version]
+   [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
    [nrepl.middleware :refer [set-descriptor!]]
@@ -524,34 +525,8 @@
 ;; end users might opt to build custom handlers that don't
 ;; include every middleware available.
 
-(def cider-middleware
-  "A vector of all CIDER middleware."
-  `[wrap-apropos
-    wrap-classpath
-    wrap-clojuredocs
-    wrap-complete
-    wrap-content-type
-    wrap-debug
-    wrap-enlighten
-    wrap-format
-    wrap-info
-    wrap-inspect
-    wrap-macroexpand
-    wrap-ns
-    wrap-out
-    wrap-slurp
-    wrap-profile
-    wrap-refresh
-    wrap-resource
-    wrap-spec
-    wrap-stacktrace
-    wrap-test
-    wrap-trace
-    wrap-tracker
-    wrap-undef
-    wrap-version
-    wrap-xref])
+(def cider-middleware mw/cider-middleware) ;; for backwards compatibility
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."
-  (apply nrepl-server/default-handler (map resolve-or-fail cider-middleware)))
+  (apply nrepl-server/default-handler (map resolve-or-fail mw/cider-middleware)))

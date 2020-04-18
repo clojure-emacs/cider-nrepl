@@ -2,7 +2,7 @@
   (:require
    [cider.piggieback :as piggieback]
    [cider.nrepl.test-session :as session]
-   [cider.nrepl :refer [cider-middleware]]
+   [cider.nrepl.middleware :refer [cider-middleware]]
    [cljs.repl.nashorn :as nashorn]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
