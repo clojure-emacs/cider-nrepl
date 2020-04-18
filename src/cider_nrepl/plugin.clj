@@ -69,16 +69,15 @@
                        cider.nrepl/wrap-classpath
                        cider.nrepl/wrap-clojuredocs
                        cider.nrepl/wrap-complete
+                       cider.nrepl/wrap-content-type
                        cider.nrepl/wrap-debug
                        cider.nrepl/wrap-enlighten
                        cider.nrepl/wrap-format
                        cider.nrepl/wrap-info
                        cider.nrepl/wrap-inspect
                        cider.nrepl/wrap-macroexpand
-                       cider.nrepl/wrap-slurp
                        cider.nrepl/wrap-ns
                        cider.nrepl/wrap-out
-                       cider.nrepl/wrap-content-type
                        cider.nrepl/wrap-slurp
                        cider.nrepl/wrap-profile
                        cider.nrepl/wrap-refresh
