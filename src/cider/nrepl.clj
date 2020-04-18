@@ -1,13 +1,28 @@
 (ns cider.nrepl
+  "Middleware descriptors and related utility functions.
+
+  While normally middleware descriptors live alongside middleware
+  definitions, cider-nrepl separates those. The rationale behind this
+  is to avoid loading each middleware definition until its first usage.
+  For this purpose we're defining each middleware as a wrapper that
+  defers the loading of the actual middleware."
   (:require
    [cider.nrepl.version :as version]
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.print-method]
+   [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
    [nrepl.middleware.session :refer [session]]
    [nrepl.server :as nrepl-server]))
+
+
+;;;; Functionality for deferred middleware loading
+;;;
+;;; cider-nrepl depends on many libraries and loading all middleware at
+;;; startup time causes significant delays. That's why we've developed
+;;; a simple approach to delay loading the actual definition of a middleware
+;;; until a request handled by this middleware is made.
 
 (def delayed-handlers
   "Map of `delay`s holding deferred middleware handlers."
@@ -72,7 +87,7 @@
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
 
-;;; Deferred Middleware Wrappers
+;;;; Deferred Middleware Wrappers
 ;;
 ;; Each middleware is defined in its own namespace, but here we're defining
 ;; deferred versions of the middleware handlers, that load the actual middleware
@@ -500,7 +515,7 @@
               :returns {"clojuredocs" "A map of information in ClojureDocs."
                         "status" "\"no-doc\" if there is no document matching to `ns` and `symbol`."}}}})
 
-;;; Cider's Handler
+;;;; CIDER's nREPL Handler
 
 (def cider-middleware
   "A vector of all CIDER middleware."
