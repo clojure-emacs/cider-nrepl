@@ -529,7 +529,6 @@
     wrap-info
     wrap-inspect
     wrap-macroexpand
-    wrap-slurp
     wrap-ns
     wrap-out
     wrap-content-type
