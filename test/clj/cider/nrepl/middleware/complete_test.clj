@@ -61,7 +61,7 @@
   (testing "blank"
     (let [response (session/message {:op "complete-doc" :sym ""})]
       (is (= #{"done"} (:status response)))
-      (is (nil? (:completion-doc response)))))
+      (is (empty? (:completion-doc response)))))
 
   (testing "basic usage"
     (let [response (session/message {:op "complete-doc" :sym "true?"})]
