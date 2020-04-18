@@ -15,6 +15,9 @@ inline-deps: .inline-deps
 test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 	lein with-profile +$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
+quick-test:
+	lein with-profile +$(CLOJURE_VERSION),+test test
+
 eastwood:
 	lein with-profile +$(CLOJURE_VERSION),+eastwood eastwood
 
