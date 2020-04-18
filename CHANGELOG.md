@@ -16,6 +16,7 @@
 
 * Rename the `symbol` param in the `undef` middleware to `sym`. (the old name is retained for backwards compatibility)
 * Rename the `symbol` param in the `complete` middleware to `prefix`. (the old name is retained for backwards compatibility)
+* Rename the `symbol` param in all the `info` middleware ops to `sym`. (the old name is retained for backwards compatibility)
 
 ## 0.24.0 (2020-02-14)
 

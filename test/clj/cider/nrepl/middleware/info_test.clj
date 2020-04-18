@@ -20,30 +20,30 @@
                    (info/format-response)
                    (get "javadoc"))))
 
-  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core"})))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "clojure.core"})))
 
-  (is (-> (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core"})
+  (is (-> (info/info {:ns "cider.nrepl.middleware.info" :sym "clojure.core"})
           (dissoc :file)
           (info/format-response)))
 
-  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core//"})))
-  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "clojure.core/+"})))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "clojure.core//"})))
+  (is (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "clojure.core/+"})))
   ;; used to crash, sym is parsed as a class name
-  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "notincanter.core"}))))
+  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "notincanter.core"}))))
   ;; unfound nses should fall through
-  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :symbol "a-var"}))))
+  (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :sym "a-var"}))))
   ;; protorol docstring
-  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :symbol "proto-foo"}))
+  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :sym "proto-foo"}))
           (contains? "doc")
           not))
-  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :symbol "proto-bar"}))
+  (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :sym "proto-bar"}))
           (get "doc")
           (= "baz"))))
 
 (deftest response-test
   (let [v (ns-resolve 'cider.nrepl.middleware.info 'assoc)
         {:keys [arglists column line added static doc]} (meta v)]
-    (is (= (dissoc (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :symbol "assoc"})) "file" "see-also")
+    (is (= (dissoc (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "assoc"})) "file" "see-also")
            {"ns" "clojure.core"
             "name" "assoc"
             "arglists-str" (->> (map pr-str arglists)
@@ -57,8 +57,8 @@
 
 (deftest info-test
     ;; handle zero-lenth input
-  (is (nil? (info/info {:ns (ns-name *ns*) :symbol ""})))
-  (is (nil? (info/info {:ns "" :symbol ""})))
+  (is (nil? (info/info {:ns (ns-name *ns*) :sym ""})))
+  (is (nil? (info/info {:ns "" :sym ""})))
 
   ;; either symbol or (class method) should be passed
   (is (thrown? Exception
@@ -85,7 +85,7 @@
 (deftest integration-test
   (testing "info op"
     (testing "get info of a clojure function"
-      (let [response (session/message {:op "info" :symbol "testing-function" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "info" :sym "testing-function" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:status response) #{"done"}))
         (is (= (:ns response) "cider.nrepl.middleware.info-test"))
         (is (= (:name response) "testing-function"))
@@ -95,7 +95,7 @@
         (is (nil? (:spec response)))))
 
     (testing "get info of a clojure macro"
-      (let [response (session/message {:op "info" :symbol "testing-macro" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "info" :sym "testing-macro" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:status response) #{"done"}))
         (is (= (:ns response) "cider.nrepl.middleware.info-test"))
         (is (= (:name response) "testing-macro"))
@@ -186,7 +186,7 @@
             (is (= (:javadoc response) "https://docs.oracle.com/javase/9/docs/api/java/lang/StringBuilder.html#capacity--"))))))
 
     (testing "get info on the dot-operator"
-      (let [response (session/message {:op "info" :symbol "." :ns "user"})]
+      (let [response (session/message {:op "info" :sym "." :ns "user"})]
         (is (= (:status response) #{"done"}))
         (is (= (:name response) "."))
         (is (= (:url response) "https://clojure.org/java_interop#dot"))
@@ -195,7 +195,7 @@
         (is (.startsWith (:forms-str response) "(.instanceMember instance args*)\n(.instanceMember"))))
 
     (testing "get info of a clojure non-core file, located in a jar"
-      (let [response (session/message {:op "info" :symbol "resource" :ns "clojure.java.io"})]
+      (let [response (session/message {:op "info" :sym "resource" :ns "clojure.java.io"})]
         (is (= (:status response) #{"done"}))
         (is (= (:name response) "resource"))
         (is (= (:resource response) "clojure/java/io.clj"))
@@ -205,7 +205,7 @@
         (is (.startsWith (:file response) "jar:file:"))))
 
     (testing "nested members"
-      (let [response   (session/message {:op "info" :ns (ns-name *ns*) :symbol "toString"})
+      (let [response   (session/message {:op "info" :ns (ns-name *ns*) :sym "toString"})
             candidates (:candidates response)
             individual (:java.lang.Exception candidates)]
         (is (contains? candidates :java.lang.NoSuchFieldException))
@@ -219,7 +219,7 @@
     (testing "Boot support"
       (try
         (System/setProperty "fake.class.path" (System/getProperty "java.class.path"))
-        (let [response (session/message {:op "info" :symbol "as->" :ns "user"})]
+        (let [response (session/message {:op "info" :sym "as->" :ns "user"})]
           (is (= (:status response) #{"done"}))
           (is (= (:ns response) "clojure.core"))
           (is (= (:name response) "as->"))
@@ -232,7 +232,7 @@
     (testing "get protocol info"
       (let [reply       (session/message {:op "info"
                                           :ns "cider.nrepl.middleware.info-test"
-                                          :symbol "junk-protocol-client"})
+                                          :sym "junk-protocol-client"})
             status      (:status reply)
             client-name (:name reply)
             file        (:file reply)
@@ -245,18 +245,18 @@
         (is (= ns "cider.nrepl.middleware.info-test"))))
 
     (testing "see also"
-      (let [response (session/message {:op "info" :symbol "map" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "info" :sym "map" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:see-also response)
                ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"])))
-      (let [response (session/message {:op "info" :symbol "xyz" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "info" :sym "xyz" :ns "cider.nrepl.middleware.info-test"})]
         (is (nil? (:see-also response))))
 
-      (let [response (session/message {:op "info" :symbol "xyz"})]
+      (let [response (session/message {:op "info" :sym "xyz"})]
         (is (nil? (:see-also response))))))
 
   (testing "eldoc op"
     (testing "clojure function"
-      (let [response (session/message {:op "eldoc" :symbol "+" :ns "user"})]
+      (let [response (session/message {:op "eldoc" :sym "+" :ns "user"})]
         (is (= (:status response) #{"done"}))
         (is (= (:eldoc response) [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]))
         (is (= (:ns response) "clojure.core"))
@@ -265,18 +265,18 @@
         (is (= (:type response) "function"))))
 
     (testing "clojure special form"
-      (let [response (session/message {:op "eldoc" :symbol "try" :ns "user"})]
+      (let [response (session/message {:op "eldoc" :sym "try" :ns "user"})]
         (is (= (:status response) #{"done"}))
         (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]]))
         (is (= (:type response) "function"))))
 
     (testing "clojure dot operator"
-      (let [response (session/message {:op "eldoc" :symbol "." :ns "user"})]
+      (let [response (session/message {:op "eldoc" :sym "." :ns "user"})]
         (is (= (:status response) #{"done"}))
         (is (= (:type response) "function"))))
 
     (testing "clojure variable"
-      (let [response (session/message {:op "eldoc" :symbol "some-test-var" :ns "cider.test-ns.first-test-ns"})]
+      (let [response (session/message {:op "eldoc" :sym "some-test-var" :ns "cider.test-ns.first-test-ns"})]
         (is (= (:status response) #{"done"}))
         (is (= (:docstring response) "This is a test var used to check eldoc returned for a variable."))
         (is (= (:name response) "some-test-var"))
@@ -285,7 +285,7 @@
         (is (= (:type response) "variable"))))
 
     (testing "java interop method with multiple classes"
-      (let [response (session/message {:op "eldoc" :symbol ".length" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response)
                ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"]))
         (is (= (:member response) "length"))
@@ -293,14 +293,14 @@
         (is (= (:type response) "function"))))
 
     (testing "java interop method with single class"
-      (let [response (session/message {:op "eldoc" :symbol ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "eldoc" :sym ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
         (is (= (:class response) ["java.lang.String"]))
         (is (= (:member response) "startsWith"))
         (is (not (contains? response :ns)))
         (is (= (:type response) "function"))))
 
     (testing "java method eldoc lookup, internal testing methods"
-      (let [response (session/message {:op "eldoc" :symbol "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
+      (let [response (session/message {:op "eldoc" :sym "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
         (is (= #{["this"] ;;TestClass
                  ["int" "java.lang.String" "boolean"] ;;AnotherTestClass
                  ["this" "byte[]" "java.lang.Object[]" "java.util.List"]} ;;YetAnotherTest
@@ -309,11 +309,11 @@
 
 (deftest missing-info-test
   (testing "ensure info returns a no-info packet if symbol not found"
-    (let [response (session/message {:op "info" :symbol "awoeijfxcvb" :ns "user"})]
+    (let [response (session/message {:op "info" :sym "awoeijfxcvb" :ns "user"})]
       (is (= (:status response) #{"no-info" "done"}))))
 
   (testing "ensure info returns a no-info packet if ns not found"
-    (let [response (session/message {:op "info" :symbol "+" :ns "fakefakefake"})]
+    (let [response (session/message {:op "info" :sym "+" :ns "fakefakefake"})]
       (is (= (:status response) #{"no-info" "done"}))))
 
   (testing "ensure info returns a no-info packet if class not found"
@@ -326,11 +326,11 @@
 
 (deftest missing-eldoc-test
   (testing "ensure eldoc returns a no-eldoc packet if symbol not found"
-    (let [response (session/message {:op "eldoc" :symbol "awoeijfxcvb" :ns "user"})]
+    (let [response (session/message {:op "eldoc" :sym "awoeijfxcvb" :ns "user"})]
       (is (= (:status response) #{"no-eldoc" "done"}))))
 
   (testing "ensure eldoc returns a no-eldoc packet if ns not found"
-    (let [response (session/message {:op "eldoc" :symbol "+" :ns "fakefakefake"})]
+    (let [response (session/message {:op "eldoc" :sym "+" :ns "fakefakefake"})]
       (is (= (:status response) #{"no-eldoc" "done"}))))
 
   (testing "ensure eldoc returns a no-eldoc packet if class not found"
@@ -372,7 +372,7 @@
 
   (testing "handle the exception thrown if there's a mocked info retrieval error"
     (with-redefs [info/info (fn [& _] (throw (Exception. "info-exception")))]
-      (let [response (session/message {:op "info" :symbol "test" :ns "user"})]
+      (let [response (session/message {:op "info" :sym "test" :ns "user"})]
         (is (= (:status response) #{"info-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (.startsWith (:err response) "java.lang.Exception: info-exception"))
@@ -380,7 +380,7 @@
 
   (testing "handle the exception thrown if there's a mocked eldoc retreival error "
     (with-redefs [info/eldoc-reply (fn [& _] (throw (Exception. "eldoc-exception")))]
-      (let [response (session/message {:op "eldoc" :symbol "test" :ns "user"})]
+      (let [response (session/message {:op "eldoc" :sym "test" :ns "user"})]
         (is (= (:status response) #{"eldoc-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (.startsWith (:err response) "java.lang.Exception: eldoc-exception"))
@@ -395,36 +395,36 @@
 (deftest eldoc-datomic-query-test
   (testing "eldoc of inline datomic query"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol "'[:find ?x :in $ % ?person-id]"
+                                     :sym "'[:find ?x :in $ % ?person-id]"
                                      :ns "user"})]
       (is (= (:inputs response) '(["$" "%" "?person-id"])))))
 
   (testing "eldoc of inline datomic query as map"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol "'{:find [?x] :in [$ % ?person-id]}"
+                                     :sym "'{:find [?x] :in [$ % ?person-id]}"
                                      :ns "user"})]
       (is (= (:inputs response) '(["$" "%" "?person-id"])))))
 
   (testing "eldoc of datomic query defined as symbol"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol "testing-datomic-query"
+                                     :sym "testing-datomic-query"
                                      :ns "cider.nrepl.middleware.info-test"})]
       (is (= (:inputs response) '(["$" "?name"])))))
 
   (testing "eldoc of inline datomic query without :in"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol "'[:find ?x]"
+                                     :sym "'[:find ?x]"
                                      :ns "user"})]
       (is (= (:inputs response) '(["$"])))))
 
   (testing "eldoc of inline datomic query as map without :in"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol "'{:find ?x}"
+                                     :sym "'{:find ?x}"
                                      :ns "user"})]
       (is (= (:inputs response) '(["$"])))))
 
   (testing "eldoc of empty datomic query"
     (let [response (session/message {:op "eldoc-datomic-query"
-                                     :symbol ""
+                                     :sym ""
                                      :ns "user"})]
       (is (= (:status response) #{"no-eldoc" "done"})))))

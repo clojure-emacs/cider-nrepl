@@ -183,17 +183,17 @@
    {:requires #{#'session}
     :handles {"info"
               {:doc "Return a map of information about the specified symbol."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}
               "eldoc"
               {:doc "Return a map of information about the specified symbol."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}
               "eldoc-datomic-query"
               {:doc "Return a map containing the inputs of the datomic query."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}}}))
 
