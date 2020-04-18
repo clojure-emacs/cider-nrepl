@@ -6,7 +6,7 @@
    [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
-(def minimum-versions {:lein    "2.8.2"
+(def minimum-versions {:lein    "2.8.3"
                        :clojure "1.8.0"})
 
 (defn valid-version? [kind version] (lein/version-satisfies? version (minimum-versions kind)))
