@@ -480,7 +480,7 @@
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
   {:doc "Provides CIDER-nREPL version information."
-   :describe-fn #'version/cider-version-reply ;; For the "describe" op. Merged into `:aux`.
+   :describe-fn (fn [_] {:cider-version version/version}) ;; For the "describe" op. Merged into `:aux`.
    :handles
    {"cider-version"
     {:doc "Returns the version of the CIDER-nREPL middleware."

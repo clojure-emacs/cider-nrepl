@@ -7,7 +7,7 @@
 
 (defn handle-version [handler msg]
   (if (= (:op msg) "cider-version")
-    (->> (version/cider-version-reply msg)
+    (->> {:cider-version version/version}
          (merge {:status #{"done"}})
          (response-for msg)
          (transport/send (:transport msg)))
