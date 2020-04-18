@@ -2,7 +2,7 @@
   "Pretty-print related utilities.
   All functions here are simple wrappers compatible with the expectations of
   nrepl.middleware.print/wrap-print."
-  {:added "0.20.0"}
+  {:added "0.20"}
   (:refer-clojure :exclude [pr])
   (:require
    [clojure.pprint :as pp]))
