@@ -129,7 +129,7 @@
               "complete-doc"
               {:doc "Retrieve documentation suitable for display in completion popup"
                :requires {"ns" "The symbol's namespace"
-                          "symbol" "The symbol to lookup"}
+                          "sym" "The symbol to lookup"}
                :returns {"completion-doc" "Symbol's documentation"}}
               "complete-flush-caches"
               {:doc "Forces the completion backend to repopulate all its caches"}}}))

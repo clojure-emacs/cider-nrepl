@@ -68,16 +68,16 @@
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"
-    (let [response (session/message {:op "complete-doc" :prefix "tru"})]
+    (let [response (session/message {:op "complete-doc" :sym "tru"})]
       (is (= (:status response) #{"done"}))
       (is (empty? (:completion-doc response)) "an unknown symbol should have empty doc.")))
 
   (testing "suitable documentation for a symbol"
-    (let [response (session/message {:op "complete-doc" :prefix "map"})]
+    (let [response (session/message {:op "complete-doc" :sym "map"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[f\] \[f coll\] \[f c1 c2\] \[f c1 c2 c3\] \[f c1 c2 c3 & colls\]\)" (:completion-doc response)) "should return the \"map\" docstring")))
 
   (testing "suitable documentation for a macro symbol"
-    (let [response (session/message {:op "complete-doc" :prefix "when"})]
+    (let [response (session/message {:op "complete-doc" :sym "when"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[test & body\]\)" (:completion-doc response)) "should return the \"when\" docstring"))))

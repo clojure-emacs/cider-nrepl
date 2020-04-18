@@ -41,14 +41,14 @@
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc
-  [{:keys [ns prefix symbol] :as msg}]
+  [{:keys [ns sym symbol] :as msg}]
   ;; TODO: Drop legacy symbol param in version 1.0
-  (let [prefix (str (or prefix symbol))
+  (let [sym (str (or sym symbol))
         ns (misc/as-sym ns)]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (binding [suitable-sources/*compiler-env* cljs-env]
-        (complete/documentation prefix ns {:sources cljs-sources}))
-      (complete/documentation prefix ns {:sources clj-sources}))))
+        (complete/documentation sym ns {:sources cljs-sources}))
+      (complete/documentation sym ns {:sources clj-sources}))))
 
 (defn complete-reply [msg]
   {:completions (complete msg)})

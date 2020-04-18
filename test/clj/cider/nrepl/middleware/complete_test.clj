@@ -59,12 +59,12 @@
 
 (deftest complete-doc-test
   (testing "blank"
-    (let [response (session/message {:op "complete-doc" :prefix ""})]
+    (let [response (session/message {:op "complete-doc" :sym ""})]
       (is (= #{"done"} (:status response)))
-      (is (nil? (:completions response)))))
+      (is (nil? (:completion-doc response)))))
 
   (testing "basic usage"
-    (let [response (session/message {:op "complete-doc" :prefix "true?"})]
+    (let [response (session/message {:op "complete-doc" :sym "true?"})]
       (is (= (:status response) #{"done"}))
       (is (.startsWith (:completion-doc response) "clojure.core/true?\n([x")))))
 
@@ -84,7 +84,7 @@
 
   (testing "complete-doc op error handling"
     (with-redefs [c/completion-doc (fn [& _] (throw (Exception. "complete-doc-exc")))]
-      (let [response (session/message {:op "complete-doc" :prefix "doesn't matter"})]
+      (let [response (session/message {:op "complete-doc" :sym "doesn't matter"})]
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"complete-doc-error" "done"}))
         (is (.startsWith (:err response) "java.lang.Exception: complete-doc-exc"))
