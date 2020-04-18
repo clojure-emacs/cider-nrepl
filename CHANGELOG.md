@@ -12,6 +12,10 @@
 * [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp.
 * [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix debug instrumentation for a dot special form case.
 
+### Changes
+
+* Rename the `symbol` param in the `undef` middleware to `sym`. (the old name is retained for backwards compatibility)
+
 ## 0.24.0 (2020-02-14)
 
 ### Bugs fixed

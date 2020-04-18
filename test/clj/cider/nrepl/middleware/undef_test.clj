@@ -16,7 +16,7 @@
     (is (= #{"done"}
            (:status (session/message {:op "undef"
                                       :ns "user"
-                                      :symbol "x"}))))
+                                      :sym "x"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'x)"})))))
@@ -30,7 +30,7 @@
     (is (= #{"done"}
            (:status (session/message {:op     "undef"
                                       :ns     "other.ns"
-                                      :symbol "x"}))))
+                                      :sym "x"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'x)"})))))
@@ -41,7 +41,7 @@
     (is (= #{"done"}
            (:status (session/message {:op     "undef"
                                       :ns     "user"
-                                      :symbol "other.ns/x"}))))
+                                      :sym "other.ns/x"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'x)"})))))
@@ -52,7 +52,7 @@
     (is (= #{"done"}
            (:status (session/message {:op     "undef"
                                       :ns     "user"
-                                      :symbol "other/x"}))))
+                                      :sym "other/x"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'x)"}))))))
@@ -68,7 +68,7 @@
     (is (= #{"done"}
            (:status (session/message {:op "undef"
                                       :ns "user"
-                                      :symbol "postwalk"}))))
+                                      :sym "postwalk"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'postwalk)"}))))))
@@ -81,20 +81,20 @@
     (is (= #{"done"}
            (:status (session/message {:op "undef"
                                       :ns "user"
-                                      :symbol "x"}))))))
+                                      :sym "x"}))))))
 
 (deftest undef-exceptions-test
   (testing "undef throws for non-existent namespaces"
     (is (= #{"done" "undef-error"}
            (:status (session/message {:op "undef"
                                       :ns "abc"
-                                      :symbol "x"})))))
+                                      :sym "x"})))))
 
   (testing "undef throws with missing arguments"
     (is (= #{"done" "undef-error"}
            (:status (session/message {:op "undef"}))
            (:status (session/message {:op "undef" :ns "user"}))
-           (:status (session/message {:op "undef" :symbol "x"})))))
+           (:status (session/message {:op "undef" :sym "x"})))))
 
   (testing "error handling"
     (let [response (session/message {:op "undef"})]

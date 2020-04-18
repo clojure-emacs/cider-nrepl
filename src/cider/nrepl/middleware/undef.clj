@@ -9,14 +9,15 @@
 
 (defn undef
   "Undefines a symbol.
-  When `symbol` is unqualified, it is interpreted as both an alias and var to be
+  When `sym` is unqualified, it is interpreted as both an alias and var to be
   unmapped from the namespace `ns`.
   When qualified (eg. `foo/bar`), it is interpreted as a var to be unmapped in
   the namespace `foo`, which may be an alias in `ns`."
-  [{:keys [ns symbol]}]
+  [{:keys [ns sym symbol]}]
   (let [ns (misc/as-sym ns)
+        sym (or sym symbol) ;; for backwards compatibility
         [sym-ns sym-name] ((juxt (comp misc/as-sym namespace) misc/name-sym)
-                           (misc/as-sym symbol))]
+                           (misc/as-sym sym))]
     (if sym-ns
       ;; fully qualified => var in other namespace
       (let [other-ns (get (ns-aliases ns) sym-ns sym-ns)]
@@ -24,7 +25,7 @@
       ;; unqualified => alias or var in current ns
       (do (ns-unalias ns sym-name)
           (ns-unmap ns sym-name)))
-    symbol))
+    sym))
 
 (defn undef-reply
   [msg]

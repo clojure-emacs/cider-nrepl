@@ -456,8 +456,8 @@
   {:doc "Middleware to undefine a symbol in a namespace."
    :handles
    {"undef" {:doc "Undefine a symbol"
-             :requires {"symbol" "The symbol to undefine"
-                        "ns" "The current namespace"}
+             :requires {"sym" "The symbol to undefine"
+                        "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
              :returns {"status" "done"}}}})
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
