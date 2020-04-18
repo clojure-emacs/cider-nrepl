@@ -523,6 +523,7 @@
     wrap-classpath
     wrap-clojuredocs
     wrap-complete
+    wrap-content-type
     wrap-debug
     wrap-enlighten
     wrap-format
@@ -531,7 +532,6 @@
     wrap-macroexpand
     wrap-ns
     wrap-out
-    wrap-content-type
     wrap-slurp
     wrap-profile
     wrap-refresh
