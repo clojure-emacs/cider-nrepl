@@ -50,7 +50,7 @@
 ```clojure
 {:op "complete"
  :ns "..."
- :symbol "..."
+ :prefix "..."
  :enhanced-cljs-completion? t}
 ```
 
