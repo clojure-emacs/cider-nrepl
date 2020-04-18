@@ -16,7 +16,6 @@
    [nrepl.middleware.session :refer [session]]
    [nrepl.server :as nrepl-server]))
 
-
 ;;; Functionality for deferred middleware loading
 ;;
 ;; cider-nrepl depends on many libraries and loading all middleware at
