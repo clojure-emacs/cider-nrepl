@@ -424,7 +424,10 @@
    :requires #{#'session #'wrap-print}
    :handles {"test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments}
+              :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
+              :optional wrap-print-optional-arguments
+              :returns {"results" "A map of test run data."
+                        "status" "Either done or indication of an error"}}
              "test"
              {:doc "[DEPRECATED] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments}
