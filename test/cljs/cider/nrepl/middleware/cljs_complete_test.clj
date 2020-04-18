@@ -8,13 +8,13 @@
 
 (deftest cljs-complete-test
   (let [response (session/message {:op "complete"
-                                   :symbol ""})]
+                                   :prefix ""})]
     (is (= #{"done"} (:status response)))
     (is (sequential? (:completions response)))
     (is (every? map? (:completions response))))
 
   (let [response (session/message {:op "complete"
-                                   :symbol "defpro"})
+                                   :prefix "defpro"})
         candidate (first (:completions response))]
     (is (= "defprotocol" (:candidate candidate)))
     (is (= "cljs.core" (:ns candidate)))
@@ -22,7 +22,7 @@
 
   (testing "function metadata"
     (let [response (session/message {:op "complete"
-                                     :symbol "assoc"
+                                     :prefix "assoc"
                                      :extra-metadata ["arglists" "doc"]})
           candidate (first (:completions response))]
       (is (= '("[coll k v]" "[coll k v & kvs]") (:arglists candidate)))
@@ -30,7 +30,7 @@
 
   (testing "macro metadata"
     (let [response (session/message {:op "complete"
-                                     :symbol "defprot"
+                                     :prefix "defprot"
                                      :extra-metadata ["arglists" "doc"]})
           candidate (first (:completions response))]
       (is (= '("[psym & doc+methods]") (:arglists candidate)))
@@ -40,7 +40,7 @@
   (testing "js global completion"
     (let [response (session/message {:op "complete"
                                      :ns "cljs.user"
-                                     :symbol "js/Ob"
+                                     :prefix "js/Ob"
                                      :enhanced-cljs-completion? "t"})
           candidates (:completions response)]
       (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
@@ -48,12 +48,12 @@
   (testing "manages context state"
     (session/message {:op "complete"
                       :ns "cljs.user"
-                      :symbol ".xxxx"
+                      :prefix ".xxxx"
                       :context "(__prefix__ js/Object)"
                       :enhanced-cljs-completion? "t"})
     (let [response (session/message {:op "complete"
                                      :ns "cljs.user"
-                                     :symbol ".key"
+                                     :prefix ".key"
                                      :context ":same"
                                      :enhanced-cljs-completion? "t"})
           candidates (:completions response)]
@@ -62,22 +62,22 @@
   (testing "no suitable completions without enhanced-cljs-completion? flag"
     (let [response (session/message {:op "complete"
                                      :ns "cljs.user"
-                                     :symbol "js/Ob"})
+                                     :prefix "js/Ob"})
           candidates (:completions response)]
       (is (empty? candidates)))))
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"
-    (let [response (session/message {:op "complete-doc" :symbol "tru"})]
+    (let [response (session/message {:op "complete-doc" :prefix "tru"})]
       (is (= (:status response) #{"done"}))
       (is (empty? (:completion-doc response)) "an unknown symbol should have empty doc.")))
 
   (testing "suitable documentation for a symbol"
-    (let [response (session/message {:op "complete-doc" :symbol "map"})]
+    (let [response (session/message {:op "complete-doc" :prefix "map"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[f\] \[f coll\] \[f c1 c2\] \[f c1 c2 c3\] \[f c1 c2 c3 & colls\]\)" (:completion-doc response)) "should return the \"map\" docstring")))
 
   (testing "suitable documentation for a macro symbol"
-    (let [response (session/message {:op "complete-doc" :symbol "when"})]
+    (let [response (session/message {:op "complete-doc" :prefix "when"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[test & body\]\)" (:completion-doc response)) "should return the \"when\" docstring"))))

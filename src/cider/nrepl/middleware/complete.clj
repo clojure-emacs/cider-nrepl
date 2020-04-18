@@ -28,23 +28,27 @@
   [::suitable-sources/cljs-source])
 
 (defn complete
-  [{:keys [ns symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
-  (let [prefix (str symbol)
+  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
+  ;; TODO: Drop legacy symbol param in version 1.0
+  (let [prefix (str (or prefix symbol))
         completion-opts {:ns (misc/as-sym ns)
                          :context context
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (binding [suitable-sources/*compiler-env* cljs-env]
         (concat (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
-                (when enhanced-cljs-completion? (suitable/complete-for-nrepl msg))))
+                (when enhanced-cljs-completion? (suitable/complete-for-nrepl (assoc msg :symbol prefix)))))
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc
-  [{:keys [ns symbol] :as msg}]
-  (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (binding [suitable-sources/*compiler-env* cljs-env]
-      (complete/documentation (str symbol) (misc/as-sym ns) {:sources cljs-sources}))
-    (complete/documentation (str symbol) (misc/as-sym ns) {:sources clj-sources})))
+  [{:keys [ns prefix symbol] :as msg}]
+  ;; TODO: Drop legacy symbol param in version 1.0
+  (let [prefix (str (or prefix symbol))
+        ns (misc/as-sym ns)]
+    (if-let [cljs-env (cljs/grab-cljs-env msg)]
+      (binding [suitable-sources/*compiler-env* cljs-env]
+        (complete/documentation prefix ns {:sources cljs-sources}))
+      (complete/documentation prefix ns {:sources clj-sources}))))
 
 (defn complete-reply [msg]
   {:completions (complete msg)})

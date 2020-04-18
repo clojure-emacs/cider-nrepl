@@ -120,8 +120,8 @@
     :requires #{#'session}
     :handles {"complete"
               {:doc "Return a list of symbols matching the specified (partial) symbol."
-               :requires {"ns" "The symbol's namespace"
-                          "symbol" "The symbol to lookup"
+               :requires {"ns" "The namespace is which to look for completions (falls back to *ns* if not specified)"
+                          "prefix" "The prefix for completion candidates"
                           "session" "The current session"}
                :optional {"context" "Completion context for compliment."
                           "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
