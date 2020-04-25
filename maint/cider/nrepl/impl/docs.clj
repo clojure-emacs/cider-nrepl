@@ -40,7 +40,8 @@
 
 (def built-in-ops
   "A list of nREPL built-in ops."
-  #{:clone :close :describe :eval :interrupt :load-file :ls-sessions :stdin})
+  #{:clone :close :completions :describe :eval :interrupt :load-file
+    :ls-sessions :stdin :sideloader-start :sideloader-provide})
 
 (defn relevant-ops
   "Filter out the nREPL built-in ops."
