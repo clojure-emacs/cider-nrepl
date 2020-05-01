@@ -389,9 +389,7 @@
               :returns {"resource-path" "The file path to a resource."}}
              "resources-list"
              {:doc "Obtain a list of all resources on the classpath."
-              :returns {"resources-list" "The list of resources."}
-              :optional {"context" "Completion context for compliment."
-                         "prefix" "Prefix to filter out resources."}}}})
+              :returns {"resources-list" "The list of resources."}}}})
 
 (def-wrapper wrap-spec cider.nrepl.middleware.spec/handle-spec
   (cljs/requires-piggieback
