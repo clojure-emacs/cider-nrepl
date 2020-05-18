@@ -8,8 +8,8 @@
 
 ### Bugs fixed
 
-* [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
-* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp.
+* [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a `nil` `:query` check in apropos's `var-query-map`.
+* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add `isDirectory` check in slurp middleware.
 * [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix debug instrumentation for a dot special form case.
 
 ### Changes
