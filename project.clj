@@ -8,7 +8,7 @@
                  ^:inline-dep [cider/orchard "0.5.9"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.2.0"]
-                 ^:inline-dep [fipp "0.6.22"] ; can be removed in unresolved-tree mode
+                 ^:inline-dep [fipp "0.6.23"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.10"]
                  ^:inline-dep [org.rksm/suitable "0.3.5" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.6.7" :exclusions [org.clojure/clojurescript]]
