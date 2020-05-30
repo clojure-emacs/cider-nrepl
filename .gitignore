@@ -5,6 +5,7 @@
 pom.xml
 pom.xml.asc
 nashorn_code_cache
+.cljs_node_repl
 out
 *.jar
 *.class
