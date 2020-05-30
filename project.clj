@@ -62,7 +62,7 @@
 
              :dev {:dependencies [[boot/base "2.8.3"]
                                   [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.1"]]
+                                  [leiningen-core "2.9.3"]]
                    :global-vars {*assert* true}}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
@@ -88,7 +88,7 @@
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
                     :dependencies [[pjstadig/humane-test-output "0.10.0"]
-                                   [cider/piggieback "0.4.2"]]}
+                                   [cider/piggieback "0.5.0"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
@@ -118,8 +118,8 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cloverage [:test
-                         {:plugins [[lein-cloverage "1.0.12-SNAPSHOT"]]
-                          :dependencies [[cloverage "1.0.12-SNAPSHOT"]]
+                         {:plugins [[lein-cloverage "1.1.2"]]
+                          :dependencies [[cloverage "1.1.2"]]
                           :cloverage {:codecov? true
                                       ;; Cloverage can't handle some of the code
                                       ;; in this project; see issue #457
