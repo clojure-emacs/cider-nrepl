@@ -3,13 +3,13 @@
    [cider.piggieback :as piggieback]
    [cider.nrepl.test-session :as session]
    [cider.nrepl.middleware :refer [cider-middleware]]
-   [cljs.repl.nashorn :as nashorn]
+   [cljs.repl.node :as node]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
    [nrepl.server :as server]))
 
 (def repl-env
-  (delay (nashorn/repl-env)))
+  (delay (node/repl-env)))
 
 (def piggieback-fixture
   (compose-fixtures
@@ -36,7 +36,7 @@
     (let [response (session/message {:op "eval"
                                      :code (nrepl/code (js/Object.))})]
       (is (= "cljs.user" (:ns response)))
-      (is (= ["#js {}"] (:value response)))
+      (is (= ["#js{}"] (:value response)))
       (is (= #{"done"} (:status response)))))
 
   (testing "eval works"
