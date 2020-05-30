@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.25.0 (2020-05-30)
+
 ### New Features
 
 * [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend `undef` op to work on fully qualified symbols.

@@ -1,5 +1,5 @@
 name: cider-nrepl
 title: CIDER nREPL
-version: master
+version: 0.25
 nav:
 - modules/ROOT/nav.adoc
