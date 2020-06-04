@@ -4,7 +4,7 @@ This file is _generated_ by #'cider.nrepl.impl.docs/-main
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.0-SNAPSHOT)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.1)#
 
 == Operations
 
@@ -937,7 +937,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned
 
 
 Returns::
@@ -1147,4 +1147,3 @@ Optional parameters::
 
 Returns::
 * `:status` done
-

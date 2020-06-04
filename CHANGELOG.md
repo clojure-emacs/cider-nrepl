@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.25.1 (2020-06-04)
+
+### Bugs fixed
+
+* Bump Orchard to 0.5.10, as the 0.5.9 was a bad build. (https://github.com/clojure-emacs/orchard/issues/91[Orchard issue])
+
 ## 0.25.0 (2020-05-30)
 
 ### New Features
