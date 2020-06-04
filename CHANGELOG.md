@@ -6,7 +6,7 @@
 
 ### Bugs fixed
 
-* Bump Orchard to 0.5.10, as the 0.5.9 was a bad build. (https://github.com/clojure-emacs/orchard/issues/91[Orchard issue])
+* Bump Orchard to 0.5.10, as the 0.5.9 was a bad build. ([Orchard issue](https://github.com/clojure-emacs/orchard/issues/91))
 
 ## 0.25.0 (2020-05-30)
 
