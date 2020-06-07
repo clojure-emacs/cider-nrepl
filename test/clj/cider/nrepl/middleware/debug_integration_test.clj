@@ -580,7 +580,7 @@
 
     ;; Note - if changing test/src/cider/nrepl/middleware/debug_integration_test/fn.clj, also change this:
     (let [msg (<-- {:line        7
-                    :column      0
+                    :column      1
                     :debug-value "\"bar\""
                     :coor        [3 1 1]
                     :locals      [["x" "\"bar\""]]})
