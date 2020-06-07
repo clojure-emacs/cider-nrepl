@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.25.2 (2020-06-07)
+
 ### Bugs fixed
 
 * Remove workaround for converting column numbers to 0-based indexing. ([Cider issue](https://github.com/clojure-emacs/cider/issues/2852))
