@@ -473,17 +473,16 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
   `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
-                            (-> {:code code
-                                 ;; Passing clojure.lang.Namespace object
-                                 ;; as :original-ns breaks nREPL in bewildering
-                                 ;; ways.
-                                 :original-id id, :original-ns (str (or ns *ns*))
-                                 :file file, :line line, :column column}
-                                ;; There's an nrepl bug where the column starts counting
-                                ;; at 1 if it's after the first line. Since this is a
-                                ;; top-level sexp, a (= col 1) is much more likely to be
-                                ;; wrong than right.
-                                (update :column #(if (= % 1) 0 %))))
+                            {:code code
+                             ;; Passing clojure.lang.Namespace object
+                             ;; as :original-ns breaks nREPL in bewildering
+                             ;; ways.
+                             ;; NOTE: column numbers in the response map
+                             ;; start from 1 according to Clojure.
+                             ;; This is not a bug and should be converted to
+                             ;; 0-based indexing by the client if necessary.
+                             :original-id id, :original-ns (str (or ns *ns*))
+                             :file file, :line line, :column column})
                     ;; the coor of first form is used as the debugger session id
                     :session-id (atom nil)
                     :skip (atom false)
