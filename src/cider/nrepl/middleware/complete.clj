@@ -8,7 +8,6 @@
    [compliment.core :as complete]
    [compliment.utils :as complete-utils]
    [orchard.misc :as misc]
-   [suitable.complete-for-nrepl :as suitable]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
 (def clj-sources
@@ -36,8 +35,7 @@
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (binding [suitable-sources/*compiler-env* cljs-env]
-        (concat (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
-                (when enhanced-cljs-completion? (suitable/complete-for-nrepl (assoc msg :symbol prefix)))))
+        (complete/completions prefix (merge completion-opts {:sources cljs-sources})))
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc
