@@ -58,7 +58,9 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided [:1.8]
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.1"]
+                                       [org.clojure/clojurescript "1.10.520" :scope "provided"]]
+                        :test-paths ["test/spec"]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
