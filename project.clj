@@ -60,11 +60,6 @@
 
   :profiles {:provided [:1.8]
 
-             :dev {:dependencies [[boot/base "2.8.3"]
-                                  [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.3"]]
-                   :global-vars {*assert* true}}
-
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
                                   [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]}
@@ -83,6 +78,11 @@
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.0.194"]]}
+
+             :dev {:dependencies [[boot/base "2.8.3"]
+                                  [boot/core "2.8.3"]
+                                  [leiningen-core "2.9.3"]]
+                   :global-vars {*assert* true}}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
