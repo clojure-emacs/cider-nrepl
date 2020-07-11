@@ -11,7 +11,7 @@
                  ^:inline-dep [fipp "0.6.23"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.10"]
                  ^:inline-dep [org.rksm/suitable "0.3.5" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.6.7" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [cljfmt "0.6.8" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
@@ -129,7 +129,7 @@
                                       :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.6.4"]]
+                      {:plugins [[lein-cljfmt "0.6.8"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
