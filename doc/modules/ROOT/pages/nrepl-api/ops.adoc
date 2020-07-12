@@ -4,7 +4,7 @@ This file is _generated_ by #'cider.nrepl.impl.docs/-main
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.24.0)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.2)#
 
 == Operations
 
@@ -111,9 +111,9 @@ Returns::
 Return a list of symbols matching the specified (partial) symbol.
 
 Required parameters::
-* `:ns` The symbol's namespace
+* `:ns` The namespace is which to look for completions (falls back to \*ns* if not specified)
+* `:prefix` The prefix for completion candidates
 * `:session` The current session
-* `:symbol` The symbol to lookup
 
 
 Optional parameters::
@@ -132,7 +132,7 @@ Retrieve documentation suitable for display in completion popup
 
 Required parameters::
 * `:ns` The symbol's namespace
-* `:symbol` The symbol to lookup
+* `:sym` The symbol to lookup
 
 
 Optional parameters::
@@ -230,7 +230,7 @@ Return a map of information about the specified symbol.
 
 Required parameters::
 * `:ns` The current namespace
-* `:symbol` The symbol to lookup
+* `:sym` The symbol to lookup
 
 
 Optional parameters::
@@ -247,7 +247,7 @@ Return a map containing the inputs of the datomic query.
 
 Required parameters::
 * `:ns` The current namespace
-* `:symbol` The symbol to lookup
+* `:sym` The symbol to lookup
 
 
 Optional parameters::
@@ -355,7 +355,7 @@ Return a map of information about the specified symbol.
 
 Required parameters::
 * `:ns` The current namespace
-* `:symbol` The symbol to lookup
+* `:sym` The symbol to lookup
 
 
 Optional parameters::
@@ -937,7 +937,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned
 
 
 Returns::
@@ -1032,7 +1032,8 @@ Returns::
 Run tests specified by the ``var-query`` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
-{blank}
+* `:var-query` A search query specifying the test vars to execute. See Orchard's var query documentation for more details.
+
 
 Optional parameters::
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
@@ -1044,7 +1045,9 @@ Optional parameters::
 
 
 Returns::
-{blank}
+* `:results` A map of test run data.
+* `:status` Either done or indication of an error
+
 
 
 === `toggle-profile`
@@ -1135,8 +1138,8 @@ Returns::
 Undefine a symbol
 
 Required parameters::
-* `:ns` The current namespace
-* `:symbol` The symbol to undefine
+* `:ns` The namespace is which to resolve sym (falls back to \*ns* if not specified)
+* `:sym` The symbol to undefine
 
 
 Optional parameters::
@@ -1144,4 +1147,3 @@ Optional parameters::
 
 Returns::
 * `:status` done
-

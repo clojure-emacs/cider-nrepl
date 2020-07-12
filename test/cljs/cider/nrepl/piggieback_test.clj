@@ -2,14 +2,14 @@
   (:require
    [cider.piggieback :as piggieback]
    [cider.nrepl.test-session :as session]
-   [cider.nrepl :refer [cider-middleware]]
-   [cljs.repl.nashorn :as nashorn]
+   [cider.nrepl.middleware :refer [cider-middleware]]
+   [cljs.repl.node :as node]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
    [nrepl.server :as server]))
 
 (def repl-env
-  (delay (nashorn/repl-env)))
+  (delay (node/repl-env)))
 
 (def piggieback-fixture
   (compose-fixtures
@@ -20,34 +20,34 @@
                                               #'piggieback/wrap-cljs-repl))]
        ;; TODO check the result of this; we shouldn't run any tests if it fails
        (dorun (session/message
-               {:op :eval
+               {:op "eval"
                 :code (nrepl/code (require '[cider.piggieback :as piggieback])
                                   (piggieback/cljs-repl @cider.nrepl.piggieback-test/repl-env))}))
-       (dorun (session/message {:op :eval
+       (dorun (session/message {:op "eval"
                                 :code (nrepl/code (require 'clojure.data))}))
        (f)
-       (session/message {:op :eval
+       (session/message {:op "eval"
                          :code (nrepl/code :cljs/quit)})))))
 
 (use-fixtures :each piggieback-fixture)
 
 (deftest sanity-test
   (testing "cljs repl is active"
-    (let [response (session/message {:op :eval
+    (let [response (session/message {:op "eval"
                                      :code (nrepl/code (js/Object.))})]
       (is (= "cljs.user" (:ns response)))
-      (is (= ["#js {}"] (:value response)))
+      (is (= ["#js{}"] (:value response)))
       (is (= #{"done"} (:status response)))))
 
   (testing "eval works"
-    (let [response (session/message {:op :eval
+    (let [response (session/message {:op "eval"
                                      :code (nrepl/code (map even? (range 6)))})]
       (is (= "cljs.user" (:ns response)))
       (is (= ["(true false true false true false)"] (:value response)))
       (is (= #{"done"} (:status response)))))
 
   (testing "errors handled properly"
-    (let [response (session/message {:op :eval
+    (let [response (session/message {:op "eval"
                                      :code (nrepl/code (ffirst 1))})]
       (is (= "class clojure.lang.ExceptionInfo"
              (:ex response)

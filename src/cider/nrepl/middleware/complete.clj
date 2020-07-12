@@ -1,11 +1,13 @@
 (ns cider.nrepl.middleware.complete
+  "Code completion middleware.
+  Delegates to the compliment library for the heavy lifting.
+  Uses clj-suitable for ClojureScript completion."
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [compliment.core :as complete]
    [compliment.utils :as complete-utils]
    [orchard.misc :as misc]
-   [suitable.complete-for-nrepl :as suitable]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
 (def clj-sources
@@ -25,23 +27,26 @@
   [::suitable-sources/cljs-source])
 
 (defn complete
-  [{:keys [ns symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
-  (let [prefix (str symbol)
+  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
+  ;; TODO: Drop legacy symbol param in version 1.0
+  (let [prefix (str (or prefix symbol))
         completion-opts {:ns (misc/as-sym ns)
                          :context context
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (binding [suitable-sources/*compiler-env* cljs-env]
-        (concat (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
-                (when enhanced-cljs-completion? (suitable/complete-for-nrepl msg))))
+        (complete/completions prefix (merge completion-opts {:sources cljs-sources})))
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc
-  [{:keys [ns symbol] :as msg}]
-  (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (binding [suitable-sources/*compiler-env* cljs-env]
-      (complete/documentation (str symbol) (misc/as-sym ns) {:sources cljs-sources}))
-    (complete/documentation (str symbol) (misc/as-sym ns) {:sources clj-sources})))
+  [{:keys [ns sym symbol] :as msg}]
+  ;; TODO: Drop legacy symbol param in version 1.0
+  (let [sym (str (or sym symbol))
+        ns (misc/as-sym ns)]
+    (if-let [cljs-env (cljs/grab-cljs-env msg)]
+      (binding [suitable-sources/*compiler-env* cljs-env]
+        (complete/documentation sym ns {:sources cljs-sources}))
+      (complete/documentation sym ns {:sources clj-sources}))))
 
 (defn complete-reply [msg]
   {:completions (complete msg)})

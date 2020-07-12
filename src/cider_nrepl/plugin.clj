@@ -2,11 +2,12 @@
   "Provides a simple way to setup the CIDER nREPL middleware in
   Leiningen projects."
   (:require
+   [cider.nrepl.middleware :as mw]
    [cider.nrepl.version :refer [version-string]]
    [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
-(def minimum-versions {:lein    "2.8.2"
+(def minimum-versions {:lein    "2.8.3"
                        :clojure "1.8.0"})
 
 (defn valid-version? [kind version] (lein/version-satisfies? version (minimum-versions kind)))
@@ -59,35 +60,4 @@
                      [['cider/cider-nrepl version-string]])
           (update-in [:repl-options :nrepl-middleware]
                      (fnil into [])
-                     ;; TODO: it would be better to avoid this duplication, but
-                     ;; we can't require the `cider.nrepl` namespace because it
-                     ;; requires `nrepl.*` namespaces which might conflict with
-                     ;; Leiningen. Consider adding another namespace that
-                     ;; contains the below definition (as data only, not
-                     ;; requiring `cider.nrepl`).
-                     '[cider.nrepl/wrap-apropos
-                       cider.nrepl/wrap-classpath
-                       cider.nrepl/wrap-clojuredocs
-                       cider.nrepl/wrap-complete
-                       cider.nrepl/wrap-debug
-                       cider.nrepl/wrap-enlighten
-                       cider.nrepl/wrap-format
-                       cider.nrepl/wrap-info
-                       cider.nrepl/wrap-inspect
-                       cider.nrepl/wrap-macroexpand
-                       cider.nrepl/wrap-slurp
-                       cider.nrepl/wrap-ns
-                       cider.nrepl/wrap-out
-                       cider.nrepl/wrap-content-type
-                       cider.nrepl/wrap-slurp
-                       cider.nrepl/wrap-profile
-                       cider.nrepl/wrap-refresh
-                       cider.nrepl/wrap-resource
-                       cider.nrepl/wrap-spec
-                       cider.nrepl/wrap-stacktrace
-                       cider.nrepl/wrap-test
-                       cider.nrepl/wrap-trace
-                       cider.nrepl/wrap-tracker
-                       cider.nrepl/wrap-undef
-                       cider.nrepl/wrap-version
-                       cider.nrepl/wrap-xref])))))
+                     mw/cider-middleware)))))

@@ -1,4 +1,5 @@
 (ns cider.nrepl.middleware.util
+  "Utility functions that might be useful in middleware."
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]))

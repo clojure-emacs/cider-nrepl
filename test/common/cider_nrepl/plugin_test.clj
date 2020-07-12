@@ -1,6 +1,6 @@
 (ns cider-nrepl.plugin-test
   (:require [cider-nrepl.plugin :as plugin]
-            [cider.nrepl :refer [cider-middleware]]
+            [cider.nrepl.middleware :refer [cider-middleware]]
             [clojure.test :refer :all]
             [leiningen.core.main :as lein]))
 

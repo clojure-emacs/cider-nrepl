@@ -13,7 +13,7 @@
 
 (defn dissoc-nil-keys
   "Dissociate keys which has nil as a value to avoid returning empty list as a nil.
-  nrepl/bencode converts nil to empty list."
+  nrepl.bencode converts nil to empty list."
   [info]
   (reduce-kv
    (fn [res k v]
@@ -31,7 +31,7 @@
     info))
 
 (defn blacklist
-  "Remove anything that might contain arbitrary EDN, metadata can hold anything"
+  "Remove anything that might contain arbitrary EDN, metadata can hold anything."
   [info]
   (let [blacklisted #{:arglists :forms}]
     (apply dissoc info blacklisted)))
@@ -59,17 +59,17 @@
           util/transform-value))))
 
 (defn info
-  [{:keys [ns symbol class member] :as msg}]
-  (let [[ns symbol class member] (map misc/as-sym [ns symbol class member])
+  [{:keys [ns sym symbol class member] :as msg}]
+  (let [[ns sym class member] (map misc/as-sym [ns (or sym symbol) class member])
         env (cljs/grab-cljs-env msg)
         info-params (merge {:dialect :clj
                             :ns ns
-                            :sym symbol}
+                            :sym sym}
                            (when env
                              {:env env
                               :dialect :cljs}))]
     (cond
-      (and ns symbol) (info/info* info-params)
+      (and ns sym) (info/info* info-params)
       (and class member) (info/info-java class member)
       :else (throw (Exception.
                     "Either \"symbol\", or (\"class\", \"member\") must be supplied")))))
@@ -87,9 +87,9 @@
     {:status :no-eldoc}))
 
 (defn eldoc-datomic-query-reply
-  [{:keys [ns symbol] :as msg}]
+  [{:keys [ns sym symbol] :as msg}]
   (try
-    (eldoc/datomic-query ns symbol)
+    (eldoc/datomic-query ns (or sym symbol))
     (catch Throwable _ {:status :no-eldoc})))
 
 (defn handle-info [handler msg]

@@ -1,13 +1,28 @@
 (ns cider.nrepl
+  "Middleware descriptors and related utility functions.
+
+  While normally middleware descriptors live alongside middleware
+  definitions, cider-nrepl separates those. The rationale behind this
+  is to avoid loading each middleware definition until its first usage.
+  For this purpose we're defining each middleware as a wrapper that
+  defers the loading of the actual middleware."
   (:require
    [cider.nrepl.version :as version]
+   [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.print-method]
+   [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
    [nrepl.middleware.session :refer [session]]
    [nrepl.server :as nrepl-server]))
+
+;;; Functionality for deferred middleware loading
+;;
+;; cider-nrepl depends on many libraries and loading all middleware at
+;; startup time causes significant delays. That's why we've developed
+;; a simple approach to delay loading the actual definition of a middleware
+;; until a request handled by this middleware is made.
 
 (def delayed-handlers
   "Map of `delay`s holding deferred middleware handlers."
@@ -120,8 +135,8 @@
     :requires #{#'session}
     :handles {"complete"
               {:doc "Return a list of symbols matching the specified (partial) symbol."
-               :requires {"ns" "The symbol's namespace"
-                          "symbol" "The symbol to lookup"
+               :requires {"ns" "The namespace is which to look for completions (falls back to *ns* if not specified)"
+                          "prefix" "The prefix for completion candidates"
                           "session" "The current session"}
                :optional {"context" "Completion context for compliment."
                           "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
@@ -129,7 +144,7 @@
               "complete-doc"
               {:doc "Retrieve documentation suitable for display in completion popup"
                :requires {"ns" "The symbol's namespace"
-                          "symbol" "The symbol to lookup"}
+                          "sym" "The symbol to lookup"}
                :returns {"completion-doc" "Symbol's documentation"}}
               "complete-flush-caches"
               {:doc "Forces the completion backend to repopulate all its caches"}}}))
@@ -183,17 +198,17 @@
    {:requires #{#'session}
     :handles {"info"
               {:doc "Return a map of information about the specified symbol."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}
               "eldoc"
               {:doc "Return a map of information about the specified symbol."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}
               "eldoc-datomic-query"
               {:doc "Return a map containing the inputs of the datomic query."
-               :requires {"symbol" "The symbol to lookup"
+               :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
                :returns {"status" "done"}}}}))
 
@@ -374,9 +389,7 @@
               :returns {"resource-path" "The file path to a resource."}}
              "resources-list"
              {:doc "Obtain a list of all resources on the classpath."
-              :returns {"resources-list" "The list of resources."}
-              :optional {"context" "Completion context for compliment."
-                         "prefix" "Prefix to filter out resources."}}}})
+              :returns {"resources-list" "The list of resources."}}}})
 
 (def-wrapper wrap-spec cider.nrepl.middleware.spec/handle-spec
   (cljs/requires-piggieback
@@ -409,7 +422,10 @@
    :requires #{#'session #'wrap-print}
    :handles {"test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments}
+              :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
+              :optional wrap-print-optional-arguments
+              :returns {"results" "A map of test run data."
+                        "status" "Either done or indication of an error"}}
              "test"
              {:doc "[DEPRECATED] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments}
@@ -456,13 +472,13 @@
   {:doc "Middleware to undefine a symbol in a namespace."
    :handles
    {"undef" {:doc "Undefine a symbol"
-             :requires {"symbol" "The symbol to undefine"
-                        "ns" "The current namespace"}
+             :requires {"sym" "The symbol to undefine"
+                        "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
              :returns {"status" "done"}}}})
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
   {:doc "Provides CIDER-nREPL version information."
-   :describe-fn #'version/cider-version-reply ;; For the "describe" op. Merged into `:aux`.
+   :describe-fn (fn [_] {:cider-version version/version}) ;; For the "describe" op. Merged into `:aux`.
    :handles
    {"cider-version"
     {:doc "Returns the version of the CIDER-nREPL middleware."
@@ -500,37 +516,15 @@
               :returns {"clojuredocs" "A map of information in ClojureDocs."
                         "status" "\"no-doc\" if there is no document matching to `ns` and `symbol`."}}}})
 
-;;; Cider's Handler
+;;; CIDER's nREPL Handler
+;;
+;; Here everything comes together. We define an nREPL handler
+;; that includes all of CIDER's middleware. Note that
+;; end users might opt to build custom handlers that don't
+;; include every middleware available.
 
-(def cider-middleware
-  "A vector of all CIDER middleware."
-  `[wrap-apropos
-    wrap-classpath
-    wrap-clojuredocs
-    wrap-complete
-    wrap-debug
-    wrap-enlighten
-    wrap-format
-    wrap-info
-    wrap-inspect
-    wrap-macroexpand
-    wrap-slurp
-    wrap-ns
-    wrap-out
-    wrap-content-type
-    wrap-slurp
-    wrap-profile
-    wrap-refresh
-    wrap-resource
-    wrap-spec
-    wrap-stacktrace
-    wrap-test
-    wrap-trace
-    wrap-tracker
-    wrap-undef
-    wrap-version
-    wrap-xref])
+(def cider-middleware mw/cider-middleware) ;; for backwards compatibility
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."
-  (apply nrepl-server/default-handler (map resolve-or-fail cider-middleware)))
+  (apply nrepl-server/default-handler (map resolve-or-fail mw/cider-middleware)))

@@ -9,7 +9,7 @@
 (deftest cljs-info-test
   (let [response (session/message {:op "info"
                                    :ns "cljs.core"
-                                   :symbol "map"})]
+                                   :sym "map"})]
     (is (= "cljs.core" (:ns response)))
     (is (= "map" (:name response)))
     (is (string? (:arglists-str response)))
@@ -21,12 +21,12 @@
 
   (let [{:keys [status]} (session/message {:op "info"
                                            :ns "cljs.core"
-                                           :symbol "non-existent-var"})]
+                                           :sym "non-existent-var"})]
     (is (= #{"no-info" "done"} status))))
 
 (deftest cljs-eldoc-test
   (let [response (session/message {:op "eldoc"
                                    :ns "cljs.core"
-                                   :symbol "println"})]
+                                   :sym "println"})]
     (is (= [["&" "objs"]] (:eldoc response)))
     (is (= #{"done"} (:status response)))))

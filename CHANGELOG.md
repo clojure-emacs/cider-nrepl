@@ -4,14 +4,37 @@
 
 ### Bugs fixed
 
-* [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a check in apropos var-query-map.
-* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add isDirectory check in slurp
 * [#667](https://github.com/clojure-emacs/cider-nrepl/pull/667): Filter non file urls from classpath response.
 
+## 0.25.2 (2020-06-07)
+
+### Bugs fixed
+
+* Remove workaround for converting column numbers to 0-based indexing. ([Cider issue](https://github.com/clojure-emacs/cider/issues/2852))
+
+## 0.25.1 (2020-06-04)
+
+### Bugs fixed
+
+* Bump Orchard to 0.5.10, as the 0.5.9 was a bad build. ([Orchard issue](https://github.com/clojure-emacs/orchard/issues/91))
+
+## 0.25.0 (2020-05-30)
 
 ### New Features
 
-* [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend undef op to work on fully qualified symbols.
+* [#670](https://github.com/clojure-emacs/cider-nrepl/pull/670): Extend `undef` op to work on fully qualified symbols.
+
+### Bugs fixed
+
+* [#666](https://github.com/clojure-emacs/cider-nrepl/pull/666): Add a `nil` `:query` check in apropos's `var-query-map`.
+* [#669](https://github.com/clojure-emacs/cider-nrepl/pull/669): Fix NPE and add `isDirectory` check in slurp middleware.
+* [#672](https://github.com/clojure-emacs/cider-nrepl/pull/672): Fix debug instrumentation for a dot special form case.
+
+### Changes
+
+* Rename the `symbol` param in the `undef` middleware to `sym`. (the old name is retained for backwards compatibility)
+* Rename the `symbol` param in the `complete` middleware to `prefix`. (the old name is retained for backwards compatibility)
+* Rename the `symbol` param in all the `info` middleware ops to `sym`. (the old name is retained for backwards compatibility)
 
 ## 0.24.0 (2020-02-14)
 
@@ -46,7 +69,7 @@
 ```clojure
 {:op "complete"
  :ns "..."
- :symbol "..."
+ :prefix "..."
  :enhanced-cljs-completion? t}
 ```
 

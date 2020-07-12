@@ -1,16 +1,7 @@
 (ns cider.nrepl.middleware.version-test
   (:require
-   [cider.nrepl.version :as v]
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]))
-
-(deftest cider-version-test
-  (let [outer-map (#'v/cider-version-reply {})
-        version-map (:cider-version outer-map)]
-    (is (contains? version-map :major))
-    (is (contains? version-map :minor))
-    (is (contains? version-map :incremental))
-    (is (contains? version-map :version-string))))
 
 (use-fixtures :once session/session-fixture)
 

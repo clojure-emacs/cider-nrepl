@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.clojuredocs
   "This middleware allows you to query for data ClojureDocs.
   It's a very simple wrapper around `orchard.clojuredocs`."
-  {:added "0.22.0"}
+  {:added "0.22"}
   (:require
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]

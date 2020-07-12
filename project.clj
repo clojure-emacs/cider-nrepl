@@ -1,18 +1,18 @@
-(defproject cider/cider-nrepl "0.25.0-SNAPSHOT"
+(defproject cider/cider-nrepl "0.25.3-SNAPSHOT"
   :description "A collection of nREPL middlewares designed to enhance Clojure editors."
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl "0.6.0"]
-                 ^:inline-dep [cider/orchard "0.5.7"]
+  :dependencies [[nrepl "0.7.0"]
+                 ^:inline-dep [cider/orchard "0.5.11"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
-                 ^:inline-dep [mvxcvi/puget "1.2.0"]
-                 ^:inline-dep [fipp "0.6.22"] ; can be removed in unresolved-tree mode
+                 ^:inline-dep [mvxcvi/puget "1.3.1"]
+                 ^:inline-dep [fipp "0.6.23"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.10"]
                  ^:inline-dep [org.rksm/suitable "0.3.5" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.6.6" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [org.clojure/tools.namespace "0.3.1"]
+                 ^:inline-dep [cljfmt "0.6.8" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
@@ -58,12 +58,9 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided [:1.8]
-
-             :dev {:dependencies [[boot/base "2.8.3"]
-                                  [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.1"]]
-                   :global-vars {*assert* true}}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.1"]
+                                       [org.clojure/clojurescript "1.10.520" :scope "provided"]]
+                        :test-paths ["test/spec"]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
@@ -82,13 +79,18 @@
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "0.4.2"]]}
+                     :dependencies [[org.clojure/tools.cli "1.0.194"]]}
+
+             :dev {:dependencies [[boot/base "2.8.3"]
+                                  [boot/core "2.8.3"]
+                                  [leiningen-core "2.9.3"]]
+                   :global-vars {*assert* true}}
 
              :test {:source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
                     :dependencies [[pjstadig/humane-test-output "0.10.0"]
-                                   [cider/piggieback "0.4.2"]]}
+                                   [cider/piggieback "0.5.0"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
@@ -118,8 +120,8 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cloverage [:test
-                         {:plugins [[lein-cloverage "1.0.12-SNAPSHOT"]]
-                          :dependencies [[cloverage "1.0.12-SNAPSHOT"]]
+                         {:plugins [[lein-cloverage "1.1.2"]]
+                          :dependencies [[cloverage "1.1.2"]]
                           :cloverage {:codecov? true
                                       ;; Cloverage can't handle some of the code
                                       ;; in this project; see issue #457
@@ -127,7 +129,7 @@
                                       :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.6.4"]]
+                      {:plugins [[lein-cljfmt "0.6.8"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]

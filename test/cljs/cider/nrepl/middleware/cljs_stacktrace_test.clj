@@ -8,13 +8,13 @@
 
 (deftest cljs-stacktrace-test
   (testing "no last error"
-    (let [response (session/message {:op :stacktrace})]
+    (let [response (session/message {:op "stacktrace"})]
       (is (= #{"no-error" "done"}
              (:status response)))))
   (testing "last error stacktrace"
-    (let [response (do (session/message {:op :eval
+    (let [response (do (session/message {:op "eval"
                                          :code "(ffirst 1)"})
-                       (session/message {:op :stacktrace}))]
+                       (session/message {:op "stacktrace"}))]
       (is (= #{"done"}
              (:status response)))
       (is (= "clojure.lang.ExceptionInfo"
