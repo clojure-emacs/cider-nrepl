@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Bugs fixed
+
+* [#667](https://github.com/clojure-emacs/cider-nrepl/pull/667): Filter non file urls from classpath response.
+
 ## 0.25.2 (2020-06-07)
 
 ### Bugs fixed

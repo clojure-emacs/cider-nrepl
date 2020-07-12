@@ -2,10 +2,17 @@
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.java.io :as io]
-   [orchard.java.classpath :as cp]))
+   [orchard.java.classpath :as cp]
+   [orchard.misc :as misc]))
+
+(defn file-url?
+  [u]
+  (and (misc/url? u)
+       (= (.getProtocol ^java.net.URL u) "file")))
 
 (defn classpath-reply [msg]
   {:classpath (->> (cp/classpath)
+                   (filter file-url?)
                    (map io/as-file)
                    (map str))})
 
