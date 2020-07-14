@@ -6,6 +6,10 @@
 
 * [#667](https://github.com/clojure-emacs/cider-nrepl/pull/667): Filter non file urls from classpath response.
 
+### Changes
+
+* [#679](https://github.com/clojure-emacs/cider-nrepl/pull/679): Update to use bundled ClojureDocs documents.
+
 ## 0.25.2 (2020-06-07)
 
 ### Bugs fixed
