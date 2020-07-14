@@ -24,15 +24,13 @@
   (testing "Searching for non-existing documentation"
     (let [response (session/message {:op "clojuredocs-lookup"
                                      :ns "non-existing"
-                                     :sym "non-existing"
-                                     :export-edn-url test-url})]
+                                     :sym "non-existing"})]
       (is (contains? (:status response) "no-doc"))))
 
   (testing "Searching for existing documentation"
     (let [response (session/message {:op "clojuredocs-lookup"
                                      :ns "clojure.core"
-                                     :sym "first"
-                                     :export-edn-url test-url})
+                                     :sym "first"})
           doc (get response :clojuredocs {})]
       (is (contains? (:status response) "done"))
       (is (= "clojure.core" (:ns doc)))
@@ -42,8 +40,7 @@
   (testing "Resolves syms in the supplied ns"
     (let [response (session/message {:op "clojuredocs-lookup"
                                      :ns "cider.nrepl.middleware.clojuredocs-test"
-                                     :sym "map"
-                                     :export-edn-url test-url})
+                                     :sym "map"})
           doc (get response :clojuredocs {})]
       (is (contains? (:status response) "done"))
       (is (= "clojure.core" (:ns doc)))
