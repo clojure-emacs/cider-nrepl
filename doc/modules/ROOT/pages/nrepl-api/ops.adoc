@@ -4,7 +4,7 @@ This file is _generated_ by #'cider.nrepl.impl.docs/-main
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.2)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.3)#
 
 == Operations
 
