@@ -157,7 +157,7 @@
   [env]
   (into {} (for [[sym bind] (filter-env env)
                  :when (instance? Compiler$LocalBinding bind)]
-             [`(quote ~sym) (.sym bind)])))
+             [`(quote ~sym) (.sym ^Compiler$LocalBinding bind)])))
 
 ;;;; ## Getting user input
 ;;;
