@@ -2,6 +2,7 @@
 [![Dependencies Status](https://versions.deps.co/clojure-emacs/cider-nrepl/status.svg)](https://versions.deps.co/clojure-emacs/cider-nrepl)
 [![Coverage](https://codecov.io/gh/clojure-emacs/cider-nrepl/branch/master/graph/badge.svg)](https://codecov.io/gh/clojure-emacs/cider-nrepl/)
 [![cljdoc badge](https://cljdoc.org/badge/cider/cider-nrepl)](https://cljdoc.org/d/cider/cider-nrepl/CURRENT)
+[![downloads badge](https://versions.deps.co/cider/cider-nrepl/downloads.svg)](https://clojars.org/cider/cider-nrepl)
 
 # CIDER nREPL
 
