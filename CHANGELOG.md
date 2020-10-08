@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.25.4 (2020-10-08)
+
+### Changes
+
+* Address reflection warnings in `compliment` and `orchard`.
+
 ## 0.25.3 (2020-07-31)
 
 ### Bugs fixed
