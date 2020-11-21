@@ -63,6 +63,10 @@
        (filter #(= (:class %) (.getName (class f))))
        (first)))
 
+(defn- custom-print-method? [o]
+  (= (get-method print-method (:type (meta o)))
+     (get-method print-method :default)))
+
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
   and 'testing' context. Retain any exception. Pretty-print expected/actual."
@@ -72,7 +76,7 @@
         c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get-in (@current-report :results) [ns (:name (meta v))]))
         gen-input (:gen-input @current-report)
-        pprint-str #(with-out-str (pp/pprint %))]
+        pprint-str #(with-out-str (if (custom-print-method? %) (pp/pprint %) (println %)))]
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
