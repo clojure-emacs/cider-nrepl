@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Bugs Fixed
+
+* [#684](https://github.com/clojure-emacs/cider-nrepl/pull/684): Fix delayed middleware loading issue.
+
 ## 0.25.4 (2020-10-08)
 
 ### Changes
