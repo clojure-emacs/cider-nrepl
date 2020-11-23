@@ -63,7 +63,9 @@
        (filter #(= (:class %) (.getName (class f))))
        (first)))
 
-(defn- print-object [object]
+(defn- print-object
+  "Print `object` using pprint or a custom print-method, if available."
+  [object]
   (let [print-fn (if (= (get-method print-method (:type (meta object)))
                         (get-method print-method :default))
                    pp/pprint
