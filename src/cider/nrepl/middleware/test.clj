@@ -63,26 +63,36 @@
        (filter #(= (:class %) (.getName (class f))))
        (first)))
 
+(defn- print-object
+  "Print `object` using pprint or a custom print-method, if available."
+  [object]
+  (let [print-fn (if (= (get-method print-method (:type (meta object)))
+                        (get-method print-method :default))
+                   pp/pprint
+                   println)]
+    (with-out-str (print-fn object))))
+
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
-  and 'testing' context. Retain any exception. Pretty-print expected/actual."
+  and 'testing' context. Retain any exception. Pretty-print expected/actual or
+  use its `print-method`, if applicable."
   [ns v m]
   (let [{:keys [actual diffs expected fault]
          t :type} m
         c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
         i (count (get-in (@current-report :results) [ns (:name (meta v))]))
-        gen-input (:gen-input @current-report)
-        pprint-str #(with-out-str (pp/pprint %))]
+        gen-input (:gen-input @current-report)]
+
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
            {:ns ns, :var (:name (meta v)), :index i, :context c}
            (when (and (#{:fail :error} t) (not fault))
-             {:expected (pprint-str expected)})
+             {:expected (print-object expected)})
            (when (and (#{:fail} t) gen-input)
-             {:gen-input (pprint-str gen-input)})
+             {:gen-input (print-object gen-input)})
            (when (#{:fail} t)
-             {:actual (pprint-str actual)})
+             {:actual (print-object actual)})
            (when diffs
              {:diffs (extensions/diffs-result diffs)})
            (when (#{:error} t)

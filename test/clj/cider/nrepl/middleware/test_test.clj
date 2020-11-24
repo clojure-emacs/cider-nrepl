@@ -140,3 +140,14 @@
                                     :test-with-map-as-message
                                     first
                                     :message))))))
+
+(defmethod clojure.core/print-method ::custom [_ out]
+  (binding [*out* out]
+    (print "custom-output")))
+
+(deftest print-object-test
+  (testing "use an object's print-method when applicable, otherwise invoke pprint"
+    (is (= "custom-output\n"
+           (#'test/print-object (with-meta {:not :printed} {:type ::custom}))))
+    (is (= "{:a :b, :c :d}\n"
+           (#'test/print-object {:a :b :c :d})))))

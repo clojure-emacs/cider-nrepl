@@ -5,6 +5,7 @@
 ### Bugs Fixed
 
 * [#684](https://github.com/clojure-emacs/cider-nrepl/pull/684): Fix delayed middleware loading issue.
+* [#683](https://github.com/clojure-emacs/cider-nrepl/pull/683): Support custom `print-method`s in test reports.
 
 ## 0.25.4 (2020-10-08)
 
