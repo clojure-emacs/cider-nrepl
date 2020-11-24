@@ -40,19 +40,27 @@
   (or (resolve sym)
       (throw (IllegalArgumentException. (format "Cannot resolve %s" sym)))))
 
+(defn- handler-future
+  "Check whether a delay exists in the `delayed-handlers`. Otherwise make a delay
+  out of `fn-name` and place it in the atom. "
+  [sym ns fn-name]
+  (or (get @delayed-handlers sym)
+      (get (swap! delayed-handlers assoc sym
+                  (delay
+                    (locking require-lock
+                      (require ns)
+                      (resolve-or-fail fn-name))))
+           sym)))
+
 (defmacro run-deferred-handler
-  "Make a delay out of `fn-name` and place it in `delayed-handlers` atom at compile time.
-  Require and invoke the delay at run-time with arguments `handler` and
-  `msg`. `fn-name` must be a namespaced symbol (unquoted)."
+  "Require and invoke the handler delay at run-time with arguments `handler` and `msg`.
+  `fn-name` must be a namespaced symbol (unquoted)."
   [fn-name handler msg]
   (let [ns  (symbol (namespace `~fn-name))
         sym (symbol (name `~fn-name))]
-    (swap! delayed-handlers assoc sym
-           (delay
-            (locking require-lock
-              (require `~ns)
-              (resolve-or-fail `~fn-name))))
-    `(@(get @delayed-handlers '~sym) ~handler ~msg)))
+    `(@(handler-future '~sym '~ns '~fn-name)
+      ~handler ~msg)))
+
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
                         [name handler-fn trigger-it descriptor])}
