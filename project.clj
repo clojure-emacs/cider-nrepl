@@ -120,8 +120,8 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cloverage [:test
-                         {:plugins [[lein-cloverage "1.1.2"]]
-                          :dependencies [[cloverage "1.1.2"]]
+                         {:plugins [[lein-cloverage "1.2.1"]]
+                          :dependencies [[cloverage "1.2.1"]]
                           :cloverage {:codecov? true
                                       ;; Cloverage can't handle some of the code
                                       ;; in this project; see issue #457
