@@ -129,17 +129,12 @@ server with CIDER's own nREPL handler.
 [source,clojure]
 ----
 (ns my-app
-  (:require [nrepl.server :as nrepl-server]))
-
-(defn nrepl-handler []
-  (require 'cider.nrepl)
-  (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
+  (:require [nrepl.server :as nrepl-server]
+            [cider.nrepl :refer (cider-nrepl-handler)]))
 
 (defn -main []
-  (nrepl-server/start-server :port 7888 :handler (nrepl-handler)))
+  (nrepl-server/start-server :port 7888 :handler cider-nrepl-handler))
 ----
-
-(See https://github.com/clojure-emacs/cider-nrepl/issues/447[issue #447] for why the manual namespace resolution of `cider-nrepl-handler` is currently necessary.)
 
 == With JBoss AS/JBoss EAP/WildFly
 
