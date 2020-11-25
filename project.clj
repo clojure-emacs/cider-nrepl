@@ -136,7 +136,7 @@
                                           try-if-let [[:block 1]]}}}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "0.3.4"]]
+                        {:plugins [[jonase/eastwood "0.3.11"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     ;; TODO: Add :test-paths once
                                     ;; https://github.com/jonase/eastwood/issues/298
