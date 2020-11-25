@@ -136,6 +136,47 @@ server with CIDER's own nREPL handler.
   (nrepl-server/start-server :port 7888 :handler cider-nrepl-handler))
 ----
 
+There's nothing magical about the `cider-nrepl-handler` - all it does is
+to add all middleware defined in `cider-nrepl` to nREPL's default handler.
+That's how CIDER's nREPL handler is created:
+
+[source,clojure]
+----
+(def cider-middleware
+  '[cider.nrepl/wrap-apropos
+    cider.nrepl/wrap-classpath
+    cider.nrepl/wrap-clojuredocs
+    cider.nrepl/wrap-complete
+    cider.nrepl/wrap-content-type
+    cider.nrepl/wrap-debug
+    cider.nrepl/wrap-enlighten
+    cider.nrepl/wrap-format
+    cider.nrepl/wrap-info
+    cider.nrepl/wrap-inspect
+    cider.nrepl/wrap-macroexpand
+    cider.nrepl/wrap-ns
+    cider.nrepl/wrap-out
+    cider.nrepl/wrap-slurp
+    cider.nrepl/wrap-profile
+    cider.nrepl/wrap-refresh
+    cider.nrepl/wrap-resource
+    cider.nrepl/wrap-spec
+    cider.nrepl/wrap-stacktrace
+    cider.nrepl/wrap-test
+    cider.nrepl/wrap-trace
+    cider.nrepl/wrap-tracker
+    cider.nrepl/wrap-undef
+    cider.nrepl/wrap-version
+    cider.nrepl/wrap-xref])
+
+(def cider-nrepl-handler
+  "CIDER's nREPL handler."
+  (apply nrepl-server/default-handler (map resolve-or-fail cider-middleware)))
+----
+
+TIP: You can build your own custom nREPL handler with the middleware you need by
+adjusting the code above.
+
 == With JBoss AS/JBoss EAP/WildFly
 
 Using the advanced features of the `info` middleware with one of the
