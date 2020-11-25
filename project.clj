@@ -129,7 +129,7 @@
                                       :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.6.8"]]
+                      {:plugins [[lein-cljfmt "0.7.0"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
