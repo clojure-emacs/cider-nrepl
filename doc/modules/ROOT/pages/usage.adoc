@@ -110,7 +110,7 @@ There are also two convenient aliases you can employ:
   :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
                             org.clojure/clojurescript {:mvn/version "1.10.339"}
                             cider/cider-nrepl {:mvn/version "0.25.5"}
-                            cider/piggieback {:mvn/version "0.4.1"}}
+                            cider/piggieback {:mvn/version "0.5.2"}}
                :main-opts ["-m" "nrepl.cmdline" "--middleware"
                            "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
 ----
