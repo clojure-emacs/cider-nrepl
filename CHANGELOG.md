@@ -2,6 +2,13 @@
 
 ## master (unreleased)
 
+## 0.25.6 (2021-01-04)
+
+### Bugs Fixed
+
+* Fetch ClojureDocs data from updated location (fixed in Orchard 0.6.2).
+* Fix compatibility with Java 15 (fixed in Orchard 0.6.2).
+
 ## 0.25.5 (2020-11-24)
 
 ### Bugs Fixed
