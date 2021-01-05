@@ -94,7 +94,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:export-edn-url` EDN file URL exported from ClojureDocs. Defaults to "https://clojuredocs-edn.netlify.com/export.compact.edn".
+* `:export-edn-url` EDN file URL exported from ClojureDocs. Defaults to "https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn".
 
 
 Returns::

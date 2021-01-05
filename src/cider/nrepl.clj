@@ -514,7 +514,7 @@
    :handles {"clojuredocs-refresh-cache"
              {:doc "Reload exported documents file from ClojureDocs, and store it as a cache."
               :requires {}
-              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://clojuredocs-edn.netlify.com/export.compact.edn\"."}
+              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn\"."}
               :returns {"status" "\"ok\" if reloading was successful"}}
              "clojuredocs-lookup"
              {:doc "Return a map of information in ClojureDocs."

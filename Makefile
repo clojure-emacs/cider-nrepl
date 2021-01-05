@@ -4,7 +4,7 @@ CLOJURE_VERSION ?= 1.10
 export CLOVERAGE_VERSION = 1.0.13
 
 test/resources/cider/nrepl/clojuredocs/export.edn:
-	curl -o $@ https://clojuredocs-edn.netlify.com/export.compact.edn
+	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
 
 .inline-deps:
 	lein inline-deps
