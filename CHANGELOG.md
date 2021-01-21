@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.25.7 (2021-01-21)
+
 ### Bugs Fixed
 
 * [#687](https://github.com/clojure-emacs/cider-nrepl/issues/687): Make sure that the Orchard JDK sources cache is visible in nREPL (the actual fix is in Orchard 0.6.3).
