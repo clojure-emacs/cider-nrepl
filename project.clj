@@ -131,6 +131,7 @@
              :cljfmt [:test
                       {:plugins [[lein-cljfmt "0.7.0"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
+                                          delay [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
                                           try-if-let [[:block 1]]}}}]
