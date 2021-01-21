@@ -61,7 +61,6 @@
     `(@(handler-future '~sym '~ns '~fn-name)
       ~handler ~msg)))
 
-
 (defmacro ^{:arglists '([name handler-fn descriptor]
                         [name handler-fn trigger-it descriptor])}
   def-wrapper
