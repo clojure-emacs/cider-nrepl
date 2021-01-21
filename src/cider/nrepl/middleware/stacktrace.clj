@@ -237,13 +237,13 @@
 
 (def spec-abbrev
   (delay
-   (if (try (require 'clojure.spec) true
-            (catch Throwable _ false))
-     (resolve 'clojure.spec/abbrev)
-     (if (try (require 'clojure.spec.alpha) true
-              (catch Throwable _ false))
-       (resolve 'clojure.spec.alpha/abbrev)
-       #'identity))))
+    (if (try (require 'clojure.spec) true
+             (catch Throwable _ false))
+      (resolve 'clojure.spec/abbrev)
+      (if (try (require 'clojure.spec.alpha) true
+               (catch Throwable _ false))
+        (resolve 'clojure.spec.alpha/abbrev)
+        #'identity))))
 
 (defn prepare-spec-data
   "Prepare spec problems for display in user stacktraces.

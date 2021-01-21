@@ -48,9 +48,9 @@
 
 (def ^:private fipp-printer
   (delay
-   (do
-     (require 'fipp.edn)
-     (resolve 'fipp.edn/pprint))))
+    (do
+      (require 'fipp.edn)
+      (resolve 'fipp.edn/pprint))))
 
 (defn fipp-pprint
   ([value writer]
@@ -61,9 +61,9 @@
 
 (def ^:private puget-printer
   (delay
-   (do
-     (require 'puget.printer)
-     (resolve 'puget.printer/pprint))))
+    (do
+      (require 'puget.printer)
+      (resolve 'puget.printer/pprint))))
 
 (defn puget-pprint
   ([value writer]
@@ -74,9 +74,9 @@
 
 (def ^:private zprint-printer
   (delay
-   (do
-     (require 'zprint.core)
-     (resolve 'zprint.core/zprint))))
+    (do
+      (require 'zprint.core)
+      (resolve 'zprint.core/zprint))))
 
 (defn zprint-pprint
   ([value writer]

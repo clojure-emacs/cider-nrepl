@@ -14,15 +14,15 @@
 
 (def ^:private print-cause-trace
   (delay
-   (do
-     (require 'clojure.stacktrace)
-     (resolve 'clojure.stacktrace/print-cause-trace))))
+    (do
+      (require 'clojure.stacktrace)
+      (resolve 'clojure.stacktrace/print-cause-trace))))
 
 (def ^:private analyze-causes
   (delay
-   (do
-     (require 'cider.nrepl.middleware.stacktrace)
-     (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
+    (do
+      (require 'cider.nrepl.middleware.stacktrace)
+      (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
 
 ;;; UTILITY FUNCTIONS
 
