@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.25.8 (2021-01-25)
+
+### Bugs Fixed
+
+* Make dynamic classpath modification robust to compiler loader binding (fixed in Orchard 0.6.4).
+
 ## 0.25.7 (2021-01-21)
 
 ### Bugs Fixed
