@@ -2,9 +2,12 @@
 
 ## master (unreleased)
 
+## 0.25.9 (2021-02-13)
+
 ### Bugs Fixed
 
 * [cider#2979](https://github.com/clojure-emacs/cider/issues/2979): Convert non-integer numbers to strings.
+* Another fix for the dynamic classpath modification (in Orchard 0.6.5).
 
 ## 0.25.8 (2021-01-25)
 
