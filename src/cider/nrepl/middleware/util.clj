@@ -8,7 +8,13 @@
 
 (defmethod transform-value :default [v] (str v))
 
-(defmethod transform-value Number [v] v)
+(defmethod transform-value Number
+  [v]
+  ;; bencode supports only integers, so we convert
+  ;; other numbers (e.g. floats) to string
+  (if (integer? v)
+    v
+    (str v)))
 
 (defmethod transform-value nil [v] nil)
 
