@@ -3,7 +3,6 @@
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [clojure.java.io :as io]
    [clojure.string :as str]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
@@ -87,7 +86,7 @@
     {:status :no-eldoc}))
 
 (defn eldoc-datomic-query-reply
-  [{:keys [ns sym symbol] :as msg}]
+  [{:keys [ns sym symbol]}]
   (try
     (eldoc/datomic-query ns (or sym symbol))
     (catch Throwable _ {:status :no-eldoc})))

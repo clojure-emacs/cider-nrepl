@@ -4,7 +4,6 @@
   (:require
    [cider.nrepl.middleware :as mw]
    [cider.nrepl.version :refer [version-string]]
-   [clojure.java.io :as io]
    [leiningen.core.main :as lein]))
 
 (def minimum-versions {:lein    "2.8.3"

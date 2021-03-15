@@ -74,7 +74,7 @@
       {:content-type content-type
        :body (String. buff "utf-8")}
 
-      :default
+      :else
       {:content-type content-type
        :content-transfer-encoding "base64"
        :body (base64-bytes buff)})))
@@ -82,8 +82,8 @@
 (defn slurp-url-to-content+body
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
   [url-str]
-  (if-let [^URL url (try (URL. url-str)
-                         (catch MalformedURLException e nil))]
+  (when-let [^URL url (try (URL. url-str)
+                         (catch MalformedURLException _e nil))]
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))
             content-type (normalize-content-type (get-file-content-type p))

@@ -45,7 +45,6 @@
   (:require
    [cider.nrepl.middleware.slurp :refer [slurp-reply]])
   (:import
-   java.awt.Image
    [java.awt.image RenderedImage]
    [java.io ByteArrayOutputStream File OutputStream]
    [java.net URI URL]
@@ -80,7 +79,7 @@
   recognized as an AWT Image, a File, or a File URI, rewrite the
   response to have a `:content-type` being a MIME type of the content,
   and a `:body` to re-use the RFC term for the message payload."
-  [{:keys [session value] :as response}]
+  [{:keys [value] :as response}]
   (cond
     ;; FIXME (arrdem 2018-04-03):
     ;;

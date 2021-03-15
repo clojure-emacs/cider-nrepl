@@ -17,6 +17,6 @@
   (assoc (->> version-string
               (re-find #"(\d+)\.(\d+)\.(\d+)-?(.*)")
               rest
-              (map #(try (Integer/parseInt %) (catch Exception e nil)))
+              (map #(try (Integer/parseInt %) (catch Exception _e nil)))
               (zipmap [:major :minor :incremental :qualifier]))
          :version-string version-string))

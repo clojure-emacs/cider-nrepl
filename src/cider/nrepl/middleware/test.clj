@@ -119,7 +119,7 @@
   atom to reflect test results and summary statistics."
   :type)
 
-(defmethod report :default [m])
+(defmethod report :default [_m])
 
 (defmethod report :begin-test-ns
   [m]
@@ -130,7 +130,7 @@
                 (update-in [:summary :ns] inc)))))
 
 (defmethod report :begin-test-var
-  [m]
+  [_m]
   (swap! current-report update-in [:summary :var] inc))
 
 (defn- report-final-status
@@ -163,7 +163,7 @@
   (swap! current-report assoc :gen-input (-> m :shrunk :smallest)))
 
 (defn- report-shrinking
-  [{:keys [clojure.test.check.clojure-test/params] :as m}]
+  [{:keys [clojure.test.check.clojure-test/params]}]
   (swap! current-report assoc :gen-input params))
 
 (defmethod report :clojure.test.check.clojure-test/shrinking
@@ -352,7 +352,7 @@
           (fn []
             (t/send transport (response-for msg :status :done))))))
 
-(defn handle-test [handler msg & configuration]
+(defn handle-test [handler msg & _configuration]
   (case (:op msg)
     "test-var-query"  (handle-test-var-query-op msg)
     "test"            (handle-test-op msg)

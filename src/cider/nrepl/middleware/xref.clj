@@ -4,7 +4,6 @@
    :added "0.22"}
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [clojure.java.io :as io]
    [orchard.xref :as xref]
    [orchard.meta :as meta]
    [orchard.misc :as misc]))

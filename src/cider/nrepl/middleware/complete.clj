@@ -27,7 +27,7 @@
   [::suitable-sources/cljs-source])
 
 (defn complete
-  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
+  [{:keys [ns prefix symbol context extra-metadata] :as msg}]
   ;; TODO: Drop legacy symbol param in version 1.0
   (let [prefix (str (or prefix symbol))
         completion-opts {:ns (misc/as-sym ns)
@@ -56,7 +56,7 @@
   {:completion-doc (completion-doc msg)})
 
 (defn flush-caches-reply
-  [msg]
+  [_msg]
   (complete-utils/flush-caches)
   {})
 

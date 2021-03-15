@@ -11,7 +11,7 @@
    nrepl.transport.Transport))
 
 (defn swap-inspector!
-  [{:keys [session] :as msg} f & args]
+  [{:keys [session]} f & args]
   (-> session
       (alter-meta! update ::inspector #(apply f % args))
       (get ::inspector)))
@@ -19,7 +19,7 @@
 (defn- inspector-response
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
-  ([msg {:keys [rendered] :as inspector} resp]
+  ([msg {:keys [rendered]} resp]
    (let [value (binding [*print-length* nil]
                  (pr-str rendered))]
      (response-for msg resp {:value value}))))
@@ -33,7 +33,7 @@
     (transport/send transport (inspector-response msg inspector {}))))
 
 (defn inspector-transport
-  [{:keys [^Transport transport, session] :as msg}]
+  [{:keys [^Transport transport] :as msg}]
   (reify Transport
     (recv [this] (.recv transport))
     (recv [this timeout] (.recv transport timeout))
@@ -72,7 +72,7 @@
 (defn refresh-reply [msg]
   (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
 
-(defn get-path-reply [{:keys [session] :as msg}]
+(defn get-path-reply [{:keys [session]}]
   (get-in (meta session) [::inspector :path]))
 
 (defn next-page-reply [msg]
