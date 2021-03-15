@@ -24,6 +24,9 @@ eastwood:
 cljfmt:
 	lein with-profile +$(CLOJURE_VERSION),+cljfmt cljfmt check
 
+kondo:
+	clj-kondo --lint src
+
 cloverage:
 	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage
 
