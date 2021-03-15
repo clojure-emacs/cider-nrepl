@@ -26,7 +26,7 @@
    indents))
 
 (defn format-code-reply
-  [{:keys [code options] :as msg}]
+  [{:keys [code options]}]
   (let [opts (some-> options
                      (select-keys [:indents :alias-map])
                      (update :indents generate-user-indents)
@@ -56,7 +56,7 @@
        (str/trim)))
 
 (defn format-edn-reply
-  [{:keys [edn ::print/print-fn] :as msg}]
+  [{:keys [edn ::print/print-fn]}]
   {:formatted-edn (format-edn edn print-fn)})
 
 ;;; Middleware op handling

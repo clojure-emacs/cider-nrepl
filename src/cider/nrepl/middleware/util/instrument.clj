@@ -45,7 +45,7 @@
   This is like `defn-`, except the metadata of the return value is
   merged with that of the first input argument."
   [& args]
-  (let [[d name f] (macroexpand `(defn- ~@args))]
+  (let [[_d name f] (macroexpand `(defn- ~@args))]
     `(def ~name
        (fn [x#] (m/merge-meta (~f x#) (meta x#))))))
 
@@ -262,7 +262,7 @@
                                 (into {} (walk-indexed-map form))
                                 (try
                                   (into (sorted-map) (walk-indexed-map (into (sorted-map) form)))
-                                  (catch Exception e
+                                  (catch Exception _e
                                     form)))
                   ;; Order of sets is unpredictable, unfortunately.
                   (set? form)  form

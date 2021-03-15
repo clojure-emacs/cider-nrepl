@@ -7,7 +7,6 @@
    [clojure.set :as set]
    [clojure.string :as str]
    [nrepl.middleware.print :as print]
-   [nrepl.middleware.session :refer [session]]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.info :as info]
@@ -15,7 +14,6 @@
    [orchard.namespace :as namespace]
    [orchard.java.resource :as resource])
   (:import
-   (clojure.lang Compiler$CompilerException)
    (java.io StringWriter)))
 
 ;;; ## Stacktraces
@@ -63,7 +61,7 @@
 (defn analyze-fn
   "Add namespace, fn, and var to the frame map when the source is a Clojure
   function."
-  [{:keys [file type class method] :as frame}]
+  [{:keys [type class method] :as frame}]
   (if (or (= :clj type)
           (= :cljc type))
     (let [[ns fn & anons] (-> (repl/demunge class)
@@ -138,7 +136,7 @@
                   (apply str (map first coincident))))
               (str/lower-case (first directory-namespaces))
               directory-namespaces)
-             (catch Throwable e :error))]
+             (catch Throwable _e :error))]
     (condp = common
       ""
       {:valid false :common :missing}

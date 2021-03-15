@@ -88,7 +88,7 @@
 (defn ns-list-reply [msg]
   {:ns-list (ns-list msg)})
 
-(defn ns-list-vars-by-name-reply [{:keys [name] :as msg}]
+(defn ns-list-vars-by-name-reply [{:keys [name]}]
   {:var-list (pr-str (ns-list-vars-by-name (symbol name)))})
 
 (defn ns-vars-reply
@@ -103,7 +103,7 @@
   {:path (ns-path msg)})
 
 (defn- ns-load-all-reply
-  [msg]
+  [_msg]
   {:loaded-ns (ns/load-project-namespaces)})
 
 (defn- ns-aliases-clj [ns]

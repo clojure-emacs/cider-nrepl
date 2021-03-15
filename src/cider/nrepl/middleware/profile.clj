@@ -20,7 +20,7 @@
    [profile.core :as p]))
 
 (defn send-exception
-  [e msg transport]
+  [_e msg transport]
   (t/send transport (response-for msg :status :done :value "exception")))
 
 (defn toggle-profile

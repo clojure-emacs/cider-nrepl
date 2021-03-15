@@ -19,7 +19,7 @@
    nrepl.transport.Transport))
 
 (def clojure-core (try (find-ns 'clojure.core)
-                       (catch Exception e nil)))
+                       (catch Exception _e nil)))
 
 ;;; Auxiliary
 

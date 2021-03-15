@@ -66,7 +66,7 @@
   function is a function of possible zero arity (ie, truly a thunk or
   has optional parameters and can be called with zero args, it is
   called. Returns whether the function was resolved."
-  [sym {:keys [session] :as msg}]
+  [sym {:keys [_session] :as msg}]
   (let [the-var (some-> sym misc/as-sym resolve)]
 
     (when (and (var? the-var)
@@ -77,10 +77,9 @@
     (binding [*msg* msg
               *out* (print/replying-PrintWriter :out msg {})
               *err* (print/replying-PrintWriter :err msg {})]
-      (do
-        (when (var? the-var)
-          (@the-var))
-        (var? the-var)))))
+      (when (var? the-var)
+        (@the-var))
+      (var? the-var))))
 
 (defn- reloading-reply
   [{reloading ::track/load}
@@ -91,7 +90,7 @@
 
 (defn- error-reply
   [{:keys [error error-ns]}
-   {:keys [::print/print-fn session transport] :as msg}]
+   {:keys [::print/print-fn transport] :as msg}]
 
   (transport/send
    transport

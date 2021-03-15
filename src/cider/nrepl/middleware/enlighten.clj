@@ -32,7 +32,7 @@
   Currently this only instruments forms that could run several times
   in a single evaluation. This is necessary so that the client can
   clean-up overlays from previous evaluations."
-  [[head & args :as form] {:keys [coor] :as extras}]
+  [[head & args :as form] {:keys [coor]}]
   (let [erase `(d/debugger-send (assoc (:msg ~'STATE__)
                                        :coor ~coor
                                        :status :enlighten

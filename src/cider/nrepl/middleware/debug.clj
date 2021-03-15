@@ -10,7 +10,6 @@
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
-   [nrepl.middleware.session :as session]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.info :as info]
@@ -624,7 +623,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         ;; new-line in REPL always throws; skip for debug convenience
         (when (> (count code) 3)
           (read-string {:read-cond :allow} code))
-        (catch Exception e)))
+        (catch Exception _e)))
     (if @has-debug?
       ;; Technically, `instrument-and-eval` acts like a regular eval
       ;; if there are no debugging macros. But we still only use it

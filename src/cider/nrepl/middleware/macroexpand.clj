@@ -98,7 +98,7 @@
   "Returns a fn suitable for passing to clojure.walk/prewalk for processing a
   macroexpanded Clojure form according to the given value of
   the :display-namespaces option."
-  [{:keys [display-namespaces ns] :as msg}]
+  [{:keys [display-namespaces] :as msg}]
   (case display-namespaces
     "qualified" identity
     "none" (fn [x]
@@ -183,7 +183,7 @@
   "Returns a fn suitable for passing to clojure.walk/prewalk for processing a
   macroexpanded ClojureScript form according to the given value of
   the :display-namespaces option."
-  [{:keys [display-namespaces ns] :as msg}]
+  [{:keys [display-namespaces] :as msg}]
   (case display-namespaces
     "qualified" identity
     "none" (fn [x]
@@ -199,7 +199,7 @@
   "Returns the macroexpansion of the given ClojureScript form :code, performed
   in the context of the given :ns, using the provided :expander.
   and :display-namespaces options."
-  [{:keys [code expander ns] :as msg}]
+  [{:keys [code ns] :as msg}]
   (let [expander-fn (resolve-expander-cljs msg)
         code (reader/read-string code)]
     (walk/prewalk (post-expansion-walker-cljs msg)

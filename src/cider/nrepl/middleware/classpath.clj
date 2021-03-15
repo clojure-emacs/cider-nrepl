@@ -10,7 +10,7 @@
   (and (misc/url? u)
        (= (.getProtocol ^java.net.URL u) "file")))
 
-(defn classpath-reply [msg]
+(defn classpath-reply [_msg]
   {:classpath (->> (cp/classpath)
                    (filter file-url?)
                    (map io/as-file)

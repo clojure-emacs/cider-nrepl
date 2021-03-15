@@ -1,8 +1,5 @@
 (ns cider.nrepl.middleware.util
-  "Utility functions that might be useful in middleware."
-  (:require
-   [clojure.java.io :as io]
-   [clojure.string :as str]))
+  "Utility functions that might be useful in middleware.")
 
 (defmulti transform-value "Transform a value for output" type)
 
@@ -16,7 +13,7 @@
     v
     (str v)))
 
-(defmethod transform-value nil [v] nil)
+(defmethod transform-value nil [_v] nil)
 
 (defmethod transform-value java.io.File
   [v]
