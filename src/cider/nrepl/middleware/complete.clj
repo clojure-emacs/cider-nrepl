@@ -10,6 +10,8 @@
    [orchard.misc :as misc]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
+;; TODO: Replace this with a presence check for shadow-cljs
+;; See https://github.com/rksm/clj-suitable/issues/15 for details
 (def suitable-enabled? (System/getProperty "cider.internal.test.cljs-suitable-enabled"))
 
 (when suitable-enabled?
