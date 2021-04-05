@@ -138,9 +138,8 @@
                                           try-if-let [[:block 1]]}}}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "0.3.11"]]
+                        {:plugins [[jonase/eastwood "0.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
-                                    ;; TODO: Add :test-paths once
-                                    ;; https://github.com/jonase/eastwood/issues/298
-                                    ;; is resolved
-                                    :namespaces [:source-paths]}}]})
+                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
+                                    :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
+                                                     :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]})

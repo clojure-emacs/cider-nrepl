@@ -1,4 +1,4 @@
-(ns cider.nrepl.middleware.version-test
+(ns cider.nrepl.version-test
   (:require
    [cider.nrepl.version :as v]
    [clojure.test :refer :all]))

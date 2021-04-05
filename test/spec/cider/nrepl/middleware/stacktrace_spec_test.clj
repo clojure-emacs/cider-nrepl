@@ -30,15 +30,15 @@
 (s/def ::person (s/keys :req [::first-name ::last-name ::email]
                         :opt [::phone]))
 
+(def broken-musk {::first-name "Elon"
+                  ::last-name  "Musk"
+                  ::email      "n/a"})
+
+(def broken-musk-causes
+  (causes
+   `(s/assert ::person broken-musk)))
+
 (deftest spec-assert-stacktrace-test
-
-  (def broken-musk {::first-name "Elon"
-                    ::last-name "Musk"
-                    ::email "n/a"})
-
-  (def broken-musk-causes
-    (causes
-     `(s/assert ::person broken-musk)))
 
   (testing "Spec assert components"
     (is (= 1 (count broken-musk-causes)))

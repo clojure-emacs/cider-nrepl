@@ -178,6 +178,5 @@
   ;; This is because Namespace objects implement IMeta, but not IObj.
   (let [an-ns (create-ns (with-meta 'foo.bar {:doc "ns docstring"}))]
     (binding [*ns* an-ns]
-      (t/breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x))
-      ;; If the above did not throw, then we pass
-      (is true))))
+      (is (some? (t/breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x)))
+          "Does not throw-exceptions"))))
