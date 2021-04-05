@@ -10,6 +10,15 @@
    [orchard.misc :as misc]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
+(def suitable-enabled? (System/getProperty "cider.internal.test.cljs-suitable-enabled"))
+
+(when suitable-enabled?
+  (require 'suitable.complete-for-nrepl))
+
+(def suitable-complete-for-nrepl
+  (when suitable-enabled?
+    @(resolve 'suitable.complete-for-nrepl/complete-for-nrepl)))
+
 (def clj-sources
   "Source keywords for Clojure completions."
   [:compliment.sources.special-forms/literals
@@ -27,15 +36,17 @@
   [::suitable-sources/cljs-source])
 
 (defn complete
-  [{:keys [ns prefix symbol context extra-metadata] :as msg}]
+  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
   ;; TODO: Drop legacy symbol param in version 1.0
   (let [prefix (str (or prefix symbol))
-        completion-opts {:ns (misc/as-sym ns)
-                         :context context
+        completion-opts {:ns             (misc/as-sym ns)
+                         :context        context
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       (binding [suitable-sources/*compiler-env* cljs-env]
-        (complete/completions prefix (merge completion-opts {:sources cljs-sources})))
+        (cond-> (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
+          (and suitable-enabled? enhanced-cljs-completion?)
+          (concat (suitable-complete-for-nrepl (assoc msg :symbol prefix)))))
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc

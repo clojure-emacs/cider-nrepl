@@ -4,6 +4,7 @@
                                          (cider.nrepl.middleware.util.instrument/instrument-special-form)
                                          (cider.nrepl.middleware.util.instrument/instrument-coll)
                                          (cider.nrepl.print-method/def-print-method)]}
+           :unused-import {:level :off}
            :unresolved-namespace {:exclude [clojure.main]}}
  :output {:progress true
           :exclude-files ["data_readers" "tasks"]}}

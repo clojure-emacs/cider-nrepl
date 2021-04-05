@@ -36,35 +36,35 @@
       (is (= '("[psym & doc+methods]") (:arglists candidate)))
       (is (string? (:doc candidate))))))
 
-;; (deftest cljs-complete-with-suitable-test
-;;   (testing "js global completion"
-;;     (let [response (session/message {:op "complete"
-;;                                      :ns "cljs.user"
-;;                                      :prefix "js/Ob"
-;;                                      :enhanced-cljs-completion? "t"})
-;;           candidates (:completions response)]
-;;       (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
+(deftest cljs-complete-with-suitable-test
+  (testing "js global completion"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :prefix "js/Ob"
+                                     :enhanced-cljs-completion? "t"})
+          candidates (:completions response)]
+      (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
 
-;;   (testing "manages context state"
-;;     (session/message {:op "complete"
-;;                       :ns "cljs.user"
-;;                       :prefix ".xxxx"
-;;                       :context "(__prefix__ js/Object)"
-;;                       :enhanced-cljs-completion? "t"})
-;;     (let [response (session/message {:op "complete"
-;;                                      :ns "cljs.user"
-;;                                      :prefix ".key"
-;;                                      :context ":same"
-;;                                      :enhanced-cljs-completion? "t"})
-;;           candidates (:completions response)]
-;;       (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates))))
+  (testing "manages context state"
+    (session/message {:op "complete"
+                      :ns "cljs.user"
+                      :prefix ".xxxx"
+                      :context "(__prefix__ js/Object)"
+                      :enhanced-cljs-completion? "t"})
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :prefix ".key"
+                                     :context ":same"
+                                     :enhanced-cljs-completion? "t"})
+          candidates (:completions response)]
+      (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates))))
 
-;;   (testing "no suitable completions without enhanced-cljs-completion? flag"
-;;     (let [response (session/message {:op "complete"
-;;                                      :ns "cljs.user"
-;;                                      :prefix "js/Ob"})
-;;           candidates (:completions response)]
-;;       (is (empty? candidates)))))
+  (testing "no suitable completions without enhanced-cljs-completion? flag"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :prefix "js/Ob"})
+          candidates (:completions response)]
+      (is (empty? candidates)))))
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"

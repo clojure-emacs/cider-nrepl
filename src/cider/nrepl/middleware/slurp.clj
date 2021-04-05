@@ -11,7 +11,7 @@
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport])
   (:import
-   (java.io ByteArrayOutputStream InputStream)
+   (java.io ByteArrayOutputStream FileNotFoundException InputStream)
    (java.net MalformedURLException URL URLConnection)
    (java.nio.file Files Path Paths)
    (java.util Base64)))
@@ -83,7 +83,7 @@
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
   [url-str]
   (when-let [^URL url (try (URL. url-str)
-                         (catch MalformedURLException _e nil))]
+                           (catch MalformedURLException _e nil))]
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))
             content-type (normalize-content-type (get-file-content-type p))
@@ -93,11 +93,18 @@
       ;; It's not a file, so just try to open it on up
       (let [^URLConnection conn (.openConnection url)
             content-type (normalize-content-type
-                          (or (.getContentType conn)
+                          (or (try
+                                (.getContentType conn)
+                                (catch FileNotFoundException _))
                               "application/octet-stream"))
             ;; FIXME (arrdem 2018-04-03):
             ;;   There's gotta be a better way here
-            ^InputStream is (.getInputStream conn)
+            ^InputStream is (try
+                              (.getInputStream conn)
+                              (catch FileNotFoundException _
+                                (proxy [InputStream] []
+                                  (read []
+                                    -1))))
             os (ByteArrayOutputStream.)]
         (loop []
           (let [b (.read is)]

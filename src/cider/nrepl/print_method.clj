@@ -6,7 +6,8 @@
   (:require
    [clojure.main :as main])
   (:import
-   [clojure.lang AFunction Atom MultiFn Namespace]))
+   [clojure.lang AFunction Atom MultiFn Namespace]
+   [java.io Writer]))
 
 (def ^:dynamic *pretty-objects*
   "If true, cider prettifies some object descriptions.
