@@ -6,10 +6,11 @@
    [clojure.string :as str]))
 
 (t/deftest test-project-clj-is-clj
-  (let [resp (slurp-url-to-content+body
-              (.toString
-               (.toURL
-                (io/file "project.clj"))))]
+  (let [resp (-> "project.clj"
+                 io/file
+                 io/as-url
+                 .toString
+                 slurp-url-to-content+body)]
     (t/is (= ["text/clojure" {}] (:content-type resp)))
     (t/is (not= "base64" (:content-transfer-encoding resp)))))
 
@@ -28,8 +29,11 @@
     (t/is (str/ends-with? (:body resp) ",size=681]"))))
 
 (t/deftest test-directory
-  (let [resp (slurp-url-to-content+body
-              (.toString (.toURL (io/file "test"))))]
+  (let [resp (-> "test"
+                 io/file
+                 io/as-url
+                 .toString
+                 slurp-url-to-content+body)]
     (t/is (= ["application/octet-stream" {}] (:content-type resp)))
     (t/is (str/starts-with? (:body resp) "#binary[location="))
     (t/is (str/ends-with? (:body resp) ",size=0]"))))
