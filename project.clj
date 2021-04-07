@@ -1,11 +1,11 @@
-(defproject cider/cider-nrepl "0.25.11"
+(defproject cider/cider-nrepl "0.26.0-SNAPSHOT"
   :description "A collection of nREPL middlewares designed to enhance Clojure editors."
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "0.8.3"]
-                 ^:inline-dep [cider/orchard "0.6.5"]
+                 ^:inline-dep [cider/orchard "0.7.0"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
                  ^:inline-dep [fipp "0.6.23"] ; can be removed in unresolved-tree mode

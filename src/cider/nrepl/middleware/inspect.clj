@@ -25,10 +25,13 @@
      (response-for msg resp {:value value}))))
 
 (defn inspect-reply
-  [{:keys [page-size transport] :as msg} eval-response]
+  [{:keys [page-size transport max-atom-length max-coll-size] :as msg} eval-response]
   (let [value (cljs/response-value msg eval-response)
         page-size (or page-size 32)
-        inspector (swap-inspector! msg #(-> (assoc % :page-size page-size)
+        inspector (swap-inspector! msg #(-> %
+                                            (assoc :page-size page-size
+                                                   :max-atom-length max-atom-length
+                                                   :max-coll-size max-coll-size)
                                             (inspect/start value)))]
     (transport/send transport (inspector-response msg inspector {}))))
 
@@ -84,6 +87,14 @@
 (defn set-page-size-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/set-page-size (:page-size msg))))
 
+(defn set-max-atom-length-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/set-max-atom-length
+                                           (:max-atom-length msg))))
+
+(defn set-max-coll-size-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/set-max-coll-size
+                                           (:max-coll-size msg))))
+
 (defn clear-reply [msg]
   (inspector-response msg (swap-inspector! msg (constantly (inspect/fresh)))))
 
@@ -102,5 +113,7 @@
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-set-page-size" set-page-size-reply
+      "inspect-set-max-atom-length" set-max-atom-length-reply
+      "inspect-set-max-coll-size" set-max-coll-size-reply
       "inspect-clear" clear-reply
       "inspect-def-current-value" def-current-value)))
