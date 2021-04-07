@@ -258,6 +258,16 @@
                :requires {"page-size" "New page size."
                           "session" "The current session"}
                :returns {"status" "\"done\""}}
+              "inspect-set-max-atom-length"
+              {:doc "Set the max length of nested atoms to specified value."
+               :requires {"max-atom-length" "New max length."
+                          "session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-set-max-coll-size"
+              {:doc "Set the number of nested collection members to display before truncating."
+               :requires {"max-coll-size" "New collection size."
+                          "session" "The current session"}
+               :returns {"status" "\"done\""}}
               "inspect-clear"
               {:doc "Clears the state state of the inspector."
                :requires {"session" "The current session"}

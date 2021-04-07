@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#694](https://github.com/clojure-emacs/cider-nrepl/pull/694): [Inspector] Configure truncation limits
+
 ## 0.25.11 (2021-04-12)
 
 ### Bugs Fixed
