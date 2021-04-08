@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.25.10 (2021-04-08)
+
 ### Bugs Fixed
 
 * Enable `suitable`'s enhanced completions for anything but `shadow-cljs`.
