@@ -10,19 +10,21 @@
    [orchard.misc :as misc]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
-;; TODO: Replace this with a presence check for shadow-cljs
-;; See https://github.com/rksm/clj-suitable/issues/15 for details
-(def suitable-enabled? (System/getProperty "cider.internal.test.cljs-suitable-enabled"))
+(def shadow-cljs-present?
+  (try (require 'shadow.cljs.devtools.api) true
+       (catch Throwable _ false)))
 
-(when suitable-enabled?
-  (require 'suitable.complete-for-nrepl))
+;; TODO: Suitable is currently broken for shadow-cljs
+;; See https://github.com/rksm/clj-suitable/issues/15 for details
+(def suitable-enabled? (not shadow-cljs-present?))
 
 (def suitable-complete-for-nrepl
   (when suitable-enabled?
+    (require 'suitable.complete-for-nrepl)
     @(resolve 'suitable.complete-for-nrepl/complete-for-nrepl)))
 
 (def clj-sources
-  "Source keywords for Clojure completions."
+  "A list of Clojure completion sources for compliment."
   [:compliment.sources.special-forms/literals
    :compliment.sources.class-members/static-members
    :compliment.sources.ns-mappings/ns-mappings
@@ -34,7 +36,7 @@
    :compliment.sources.special-forms/special-forms])
 
 (def cljs-sources
-  "Source keywords for ClojureScript completions."
+  "A list of ClojureScript completion sources for compliment."
   [::suitable-sources/cljs-source])
 
 (defn complete
@@ -45,10 +47,15 @@
                          :context        context
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
+      ;; ClojureScript completion
       (binding [suitable-sources/*compiler-env* cljs-env]
+        ;; First we get whatever candidates we can from the ClojureScript compiler source
         (cond-> (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
+          ;; and we optionally append to them dynamically obtained candidates
+          ;; See https://github.com/rksm/clj-suitable#how-does-it-work for details
           (and suitable-enabled? enhanced-cljs-completion?)
           (concat (suitable-complete-for-nrepl (assoc msg :symbol prefix)))))
+      ;; Clojure completion
       (complete/completions prefix (merge completion-opts {:sources clj-sources})))))
 
 (defn completion-doc

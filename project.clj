@@ -87,7 +87,6 @@
                    :global-vars {*assert* true}}
 
              :test {:source-paths ["test/src"]
-                    :jvm-opts ["-Dcider.internal.test.cljs-suitable-enabled=true"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
                     :dependencies [[pjstadig/humane-test-output "0.10.0"]
