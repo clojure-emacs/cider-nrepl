@@ -136,6 +136,9 @@
                                           merge-meta [[:inner 0]]
                                           try-if-let [[:block 1]]}}}]
 
+             :clj-kondo [:test
+                         {:dependencies [[clj-kondo "2021.03.31"]]}]
+
              :eastwood [:test
                         {:plugins [[jonase/eastwood "0.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]

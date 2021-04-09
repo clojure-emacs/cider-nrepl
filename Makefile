@@ -25,7 +25,7 @@ cljfmt:
 	lein with-profile +$(CLOJURE_VERSION),+cljfmt cljfmt check
 
 kondo:
-	clj-kondo --lint src
+	lein with-profile -dev,+clj-kondo run -m clj-kondo.main --lint src
 
 cloverage:
 	lein with-profile +$(CLOJURE_VERSION),+cloverage cloverage
