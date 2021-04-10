@@ -501,8 +501,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   response with `read-debug-command`'."
   [coor val locals STATE__]
   (if-let [first-coor @(:session-id STATE__)]
+    ;; Check if the instrumented function is being evaluated
+    ;; from the root again.
     (when (= first-coor coor)
-      (reset! (:skip STATE__) false))
+      ;; Clear any previously set skip state.
+      (reset! (:skip STATE__) false)
+      (skip-breaks! false))
     (reset! (:session-id STATE__) coor))
   (cond
     (skip-breaks? coor STATE__) val
