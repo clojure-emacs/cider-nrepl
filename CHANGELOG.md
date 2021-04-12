@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.25.11 (2021-04-12)
+
 ### Bugs Fixed
 
 * [#695](https://github.com/clojure-emacs/cider-nrepl/pull/695): Fix debugger quit for http handler functions.
