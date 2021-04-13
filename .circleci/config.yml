@@ -12,7 +12,12 @@ defaults: &defaults
   working_directory: ~/repo
   environment:
     LEIN_ROOT: "true"   # we intended to run lein as root
-    JVM_OPTS: -Xmx3200m # limit the maximum heap size to prevent out of memory errors
+    # JVM_OPTS:
+    # - limit the maximum heap size to prevent out of memory errors
+    # - print stacktraces to console
+    JVM_OPTS: >
+      -Xmx3200m
+      -Dclojure.main.report=stderr
 
 # Runners for OpenJDK 8 and 11
 
