@@ -4,9 +4,27 @@ This file is _generated_ by #'cider.nrepl.impl.docs/-main
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.3)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.9)#
 
 == Operations
+
+=== `add-middleware`
+
+Adding some middleware
+
+Required parameters::
+* `:middleware` a list of middleware
+
+
+Optional parameters::
+* `:extra-namespaces` a list of extra namespaces to load. This is useful when the new middleware feature deferred loading
+
+
+Returns::
+* `:status` ``done``, once done, and ``error``, if there's any problems in loading a middleware
+* `:unresolved-middleware` List of middleware that could not be resolved
+
+
 
 === `apropos`
 
@@ -79,6 +97,9 @@ Required parameters::
 * `:ns` The namespace where ``sym`` will be resolved.
 * `:sym` The symbol to lookup.
 
+
+Optional parameters::
+{blank}
 
 Returns::
 * `:clojuredocs` A map of information in ClojureDocs.
@@ -174,6 +195,7 @@ Read client input on debug action.
 
 Required parameters::
 * `:input` The user's reply to the input request.
+* `:key` The corresponding input request key.
 
 
 Optional parameters::
@@ -543,6 +565,39 @@ Returns::
 
 
 
+=== `lookup`
+
+Lookup symbol info.
+
+Required parameters::
+* `:sym` The symbol to lookup.
+
+
+Optional parameters::
+* `:lookup-fn` The fully qualified name of a lookup function to use instead of the default one (e.g. ``my.ns/lookup``).
+* `:ns` The namespace in which we want to do lookup. Defaults to ``\*ns*``.
+
+
+Returns::
+* `:info` A map of the symbol's info.
+
+
+
+=== `ls-middleware`
+
+List of current middleware
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:middleware` list of vars representing loaded middleware, from inside out
+
+
+
 === `macroexpand`
 
 Produces macroexpansion of some form using the given expander.
@@ -831,9 +886,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:context` Completion context for compliment.
-* `:prefix` Prefix to filter out resources.
-
+{blank}
 
 Returns::
 * `:resources-list` The list of resources.
@@ -933,7 +986,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
 
 
 Returns::
@@ -960,6 +1013,24 @@ Optional parameters::
 
 Returns::
 * `:status` "done", or "no-error" if ``*e`` is nil
+
+
+
+=== `swap-middleware`
+
+Replace the whole middleware stack
+
+Required parameters::
+* `:middleware` a list of middleware
+
+
+Optional parameters::
+* `:extra-namespaces` a list of extra namespaces to load. This is useful when the new middleware feature deferred loading
+
+
+Returns::
+* `:status` ``done``, once done, and ``error``, if there's any problems in loading a middleware
+* `:unresolved-middleware` List of middleware that could not be resolved
 
 
 
@@ -1143,3 +1214,4 @@ Optional parameters::
 
 Returns::
 * `:status` done
+
