@@ -141,7 +141,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 [orchard]: https://github.com/clojure-emacs/orchard
 [compliment]: https://github.com/alexander-yakushev/compliment
-[clj-suitable]: https://github.com/rksm/clj-suitable
+[clj-suitable]: https://github.com/clojure-emacs/clj-suitable
 [tools.trace]: https://github.com/clojure/tools.trace
 [tools.namespace]: https://github.com/clojure/tools.namespace
 [cljfmt]: https://github.com/weavejester/cljfmt

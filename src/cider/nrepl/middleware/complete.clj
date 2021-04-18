@@ -14,9 +14,8 @@
   (try (require 'shadow.cljs.devtools.api) true
        (catch Throwable _ false)))
 
-;; TODO: Suitable is currently broken for shadow-cljs
-;; See https://github.com/rksm/clj-suitable/issues/15 for details
-(def suitable-enabled? (not shadow-cljs-present?))
+;; controls if dynamic cljs code completions are active
+(def suitable-enabled? true)
 
 (def suitable-complete-for-nrepl
   (when suitable-enabled?
@@ -52,7 +51,7 @@
         ;; First we get whatever candidates we can from the ClojureScript compiler source
         (cond-> (complete/completions prefix (merge completion-opts {:sources cljs-sources}))
           ;; and we optionally append to them dynamically obtained candidates
-          ;; See https://github.com/rksm/clj-suitable#how-does-it-work for details
+          ;; See https://github.com/clojure-emacs/clj-suitable#how-does-it-work for details
           (and suitable-enabled? enhanced-cljs-completion?)
           (concat (suitable-complete-for-nrepl (assoc msg :symbol prefix)))))
       ;; Clojure completion
