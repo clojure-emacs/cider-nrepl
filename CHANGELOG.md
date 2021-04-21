@@ -4,7 +4,11 @@
 
 ### New features
 
-* [#694](https://github.com/clojure-emacs/cider-nrepl/pull/694): [Inspector] Configure truncation limits
+* [#694](https://github.com/clojure-emacs/cider-nrepl/pull/694): [Inspector] Configure truncation limits.
+
+### Bugs fixed
+
+* Update `clj-suitable` to version 0.4 and re-enable enhanced completions for `shadow-cljs`.
 
 ## 0.25.11 (2021-04-12)
 
