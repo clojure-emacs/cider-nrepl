@@ -101,3 +101,27 @@
       (is (:pp-stacktrace response))
       (is (:err response))
       (is (:ex response)))))
+
+(deftest undef-all-test
+  (testing "undef-all undefines all vars in namespace"
+    (is (= #{"done"}
+           (:status (session/message {:op "eval"
+                                      :code "(do (ns other.ns (:require [clojure.walk :as walk :refer [postwalk]])))"}))))
+    (is (= ["#'clojure.core/assoc"]
+           (:value (session/message {:op "eval"
+                                     :code "(do (in-ns 'user) (ns-resolve 'other.ns 'assoc))"}))))
+    (is (= ["#'clojure.walk/postwalk"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'postwalk)"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op "undef-all"
+                                      :ns "other.ns"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'assoc)"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'postwalk)"}))))
+    (is (= ["{}"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-aliases 'other.ns)"}))))))
