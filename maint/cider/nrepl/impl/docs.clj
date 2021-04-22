@@ -39,9 +39,11 @@
        (string/join \newline errors)))
 
 (def built-in-ops
-  "A list of nREPL built-in ops."
-  #{:clone :close :completions :describe :eval :interrupt :load-file
-    :ls-sessions :stdin :sideloader-start :sideloader-provide})
+  "A list of nREPL built-in ops.
+  We use it to filter those out in the docs generation process."
+  #{:add-middleware :clone :close :completions :describe
+    :eval :interrupt :load-file :lookup :ls-middleware :ls-sessions
+    :sideloader-start :sideloader-provide :stdin :swap-middleware})
 
 (defn relevant-ops
   "Filter out the nREPL built-in ops."
