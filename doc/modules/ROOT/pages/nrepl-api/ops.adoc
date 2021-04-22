@@ -4,7 +4,7 @@ This file is _generated_ by #'cider.nrepl.impl.docs/-main
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.25.3)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v0.26.0)#
 
 == Operations
 
@@ -79,6 +79,9 @@ Required parameters::
 * `:ns` The namespace where ``sym`` will be resolved.
 * `:sym` The symbol to lookup.
 
+
+Optional parameters::
+{blank}
 
 Returns::
 * `:clojuredocs` A map of information in ClojureDocs.
@@ -174,6 +177,7 @@ Read client input on debug action.
 
 Required parameters::
 * `:input` The user's reply to the input request.
+* `:key` The corresponding input request key.
 
 
 Optional parameters::
@@ -508,6 +512,40 @@ Returns::
 
 
 
+=== `inspect-set-max-atom-length`
+
+Set the max length of nested atoms to specified value.
+
+Required parameters::
+* `:max-atom-length` New max length.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-set-max-coll-size`
+
+Set the number of nested collection members to display before truncating.
+
+Required parameters::
+* `:max-coll-size` New collection size.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
 === `inspect-set-page-size`
 
 Sets the page size in paginated view to specified value.
@@ -831,9 +869,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:context` Completion context for compliment.
-* `:prefix` Prefix to filter out resources.
-
+{blank}
 
 Returns::
 * `:resources-list` The list of resources.

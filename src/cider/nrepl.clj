@@ -164,7 +164,8 @@
     :requires #{#'wrap-print #'session}
     :handles {"debug-input"
               {:doc "Read client input on debug action."
-               :requires {"input" "The user's reply to the input request."}
+               :requires {"input" "The user's reply to the input request."
+                          "key" "The corresponding input request key."}
                :returns  {"status" "done"}}
               "init-debugger"
               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
