@@ -473,7 +473,7 @@
 (def ops-that-can-eval
   "Set of nREPL ops that can lead to code being evaluated."
   #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
-    "toggle-trace-var" "toggle-trace-ns" "undef"})
+    "toggle-trace-var" "toggle-trace-ns" "undef" "undef-all"})
 
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   ops-that-can-eval
@@ -492,7 +492,10 @@
    {"undef" {:doc "Undefine a symbol"
              :requires {"sym" "The symbol to undefine"
                         "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
-             :returns {"status" "done"}}}})
+             :returns {"status" "done"}}
+    "undef-all" {:doc "Undefine all aliases and symbols in a namespace"
+                 :requires {"ns" "The namespace to operate on"}
+                 :returns {"status" "done"}}}})
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
   {:doc "Provides CIDER-nREPL version information."

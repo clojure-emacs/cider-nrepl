@@ -27,10 +27,25 @@
           (ns-unmap ns sym-name)))
     sym))
 
+(defn undef-all
+  "Undefines all symbol mappings and aliases in the namespace."
+  [{:keys [ns]}]
+  (let [ns (misc/as-sym ns)]
+    (doseq [[sym _] (ns-map ns)]
+      (ns-unmap ns sym))
+    (doseq [[sym _] (ns-aliases ns)]
+      (ns-unalias ns sym))
+    ns))
+
 (defn undef-reply
   [msg]
   {:undef (undef msg)})
 
+(defn undef-all-reply
+  [msg]
+  {:undef-all (undef-all msg)})
+
 (defn handle-undef [handler msg]
   (with-safe-transport handler msg
-    "undef" undef-reply))
+    "undef" undef-reply
+    "undef-all" undef-all-reply))
