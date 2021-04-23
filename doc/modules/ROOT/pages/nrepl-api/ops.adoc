@@ -969,7 +969,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
 
 
 Returns::
@@ -1179,3 +1179,20 @@ Optional parameters::
 
 Returns::
 * `:status` done
+
+
+
+=== `undef-all`
+
+Undefine all aliases and symbols in a namespace
+
+Required parameters::
+* `:ns` The namespace to operate on
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
