@@ -7,8 +7,10 @@
 # CIDER nREPL
 
 A collection of [nREPL](https://github.com/nrepl/nrepl)
-middleware originally designed to enhance
+middleware, originally designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
+`cider-nrepl` is also used by `vim-fireplace`, `iced-vim`,
+Calva and other Clojure development tools based on nREPL.
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
