@@ -40,7 +40,7 @@ be a REPL-first tool.
 
 === Editor Agnostic
 
-Although those middlewares were created for use with CIDER almost all
+Although those middleware were created for use with CIDER almost all
 of them are extremely generic and can be leveraged from other editors.
 
 Projects like https://github.com/tpope/vim-fireplace[vim-fireplace] and https://github.com/SevereOverfl0w/vim-replant[vim-replant] are making use of
@@ -87,7 +87,7 @@ we're all ears!
 === Deferred Middleware Loading
 
 To improve the startup time of the nREPL server all of cider-nrepl's
-middlewares are loaded for real only when needed.
+middleware are loaded for real only when needed.
 
 You can read more about this
 https://github.com/clojure-emacs/cider-nrepl/pull/438[here].

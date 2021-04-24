@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware
   "This namespace mostly exists, so that
-  it's easy to share the list of provided middlewares.
+  it's easy to share the list of provided middleware.
 
   Eventually the deferred middleware loading code will be probably moved here as well."
   {:added "0.25"})

@@ -33,7 +33,7 @@ Currently the ClojureScript support relies on inspecting the ClojureScript compi
 state. `cider-nrepl` would fetch the compiler state from Piggieback and pass it
 to the underlying libraries (e.g. `orchard` and `clj-suitable`) that do something useful with it.
 
-Unfortunately the majority of the middlewares don't support ClojureScript
+Unfortunately the majority of the middleware don't support ClojureScript
 currently, as they are implemented in terms of Clojure-only libraries. Another
 roadblock is that `cider-nrepl` runs in a Clojure context and you have to jump
 through some hoops to evaluate ClojureScript code from it (e.g. pipe it to

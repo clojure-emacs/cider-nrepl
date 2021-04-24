@@ -7,12 +7,13 @@ with the assumption that this would make it easier to develop CIDER and would op
 to build complex features like an interactive debugger. Fortunately, the assumption turned out to be correct.
 Today `cider-nrepl` provides pretty much everything that a Clojure development environment might need (and more).
 
-Eventually `cider-nrepl` served as the inspiration for more similar
-middlewares - e.g. `refactor-nrepl`, `iced-nrepl` and `sayid`.  We quickly
-realized that there was nothing CIDER specific in those middlewares and we've
+ We quickly
+realized that there was nothing CIDER specific in those middleware and we've
 started to encourage more tool authors to leverage them. Today `cider-nrepl` is
 developed and released independently from CIDER and is used by most of the
 nREPL-based editors and IDEs out there, which is a great example of team work.
+Eventually `cider-nrepl` served as the inspiration for more similar
+middleware libraries - e.g. `refactor-nrepl`, `iced-nrepl` and `sayid`.
 
 More recently we've been working to extract the core functionality out of `cider-nrepl`
 into a https://github.com/clojure-emacs/orchard[REPL-agnostic library].footnote:[This process started in 2019.]

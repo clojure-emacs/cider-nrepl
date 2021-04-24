@@ -17,7 +17,7 @@ for ClojureScript.
 
 No, it does not.
 
-== Are there any other nREPL middlewares similar to `cider-nrepl`?
+== Are there any other nREPL middleware libraries similar to `cider-nrepl`?
 
 Yeah, there are. Most notably there's `refactor-nrepl` which provides a lot of
 refactoring functionality for Clojure editors.

@@ -7,7 +7,7 @@ include new features or significant changes to existing features. Clojure API
 compatibility between major releases is not a (big) concern (although we try
 to break the API rarely and only for a good reason). nREPL API compatibility, however,
 is a big concern and we're very careful to limit the breaking changes there (especially
-when it comes to middlewares that are widely used).
+when it comes to middleware that are widely used).
 
 The development cycle for the next major
 release starts immediately after the previous one has been
