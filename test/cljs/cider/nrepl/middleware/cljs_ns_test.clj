@@ -47,10 +47,10 @@
              {:arglists "(quote ([e]))"}))))
 
   (testing "ns-path op"
-    (let [{:keys [path]} (session/message {:op "ns-path"
-                                           :ns "cljs.core"})]
+    (let [{:keys [^String path]} (session/message {:op "ns-path"
+                                                   :ns "cljs.core"})]
       (is (.endsWith path "cljs/core.cljs")))
 
-    (let [{:keys [path]} (session/message {:op "ns-path"
-                                           :ns "cljs.repl"})]
+    (let [{:keys [^String path]} (session/message {:op "ns-path"
+                                                   :ns "cljs.repl"})]
       (is (.endsWith path "cljs/repl.cljs")))))

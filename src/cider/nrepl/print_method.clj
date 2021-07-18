@@ -23,10 +23,13 @@
 (defmacro def-print-method [dispatch-val arg & strings]
   `(defmethod print-method ~dispatch-val [~arg ~'^Writer w]
      (if *pretty-objects*
-       (do ~@(map #(list '.write 'w %) strings))
+       (do ~@(map #(list '.write
+                         (with-meta 'w {:tag `Writer})
+                         %)
+                  strings))
        (#'clojure.core/print-object ~arg ~'w))))
 
-(defn- translate-class-name [c]
+(defn- translate-class-name ^String [c]
   (main/demunge (.getName (class c))))
 
 ;;; Atoms
@@ -55,11 +58,14 @@
         (.setAccessible field false))
       name)))
 
-(def-print-method MultiFn c
-  "#multifn["
+(defn multifn-name-or-translated-name ^String [c]
   (try (multifn-name c)
        (catch SecurityException _
-         (translate-class-name c)))
+         (translate-class-name c))))
+
+(def-print-method MultiFn c
+  "#multifn["
+  (multifn-name-or-translated-name c)
   ;; MultiFn names are not unique so we keep the identity HashCode to
   ;; make sure it's unique.
   (format " 0x%x]" (System/identityHashCode c)))
@@ -72,7 +78,7 @@
   "]")
 
 ;;; Agents, futures, delays, promises, etc
-(defn- deref-name [c]
+(defn- deref-name ^String [c]
   (let [class-name (translate-class-name c)]
     (if-let [[_ ^String short-name] (re-find #"^clojure\.lang\.([^.]+)" class-name)]
       (.toLowerCase short-name)

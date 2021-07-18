@@ -27,9 +27,9 @@
 (deftest nil-integration-test
   (testing "nil renders correctly"
     (is (= nil-result
-           (:value (session/message {:op "eval"
+           (:value (session/message {:op      "eval"
                                      :inspect "true"
-                                     :code "nil"}))))))
+                                     :code    "nil"}))))))
 
 (deftest pop-empty-integration-test
   (testing "popping an empty inspector renders nil"
@@ -46,16 +46,16 @@
 (deftest push-empty-integration-test
   (testing "pushing an empty inspector index renders nil"
     (is (= nil-result
-           (:value (session/message {:op "inspect-push"
+           (:value (session/message {:op  "inspect-push"
                                      :idx 1}))))))
 
 (deftest push-empty-idempotent-integration-test
   (testing "pushing an empty inspector index is idempotent"
     (is (= nil-result
            (:value (do
-                     (session/message {:op "inspect-push"
+                     (session/message {:op  "inspect-push"
                                        :idx 1})
-                     (session/message {:op "inspect-push"
+                     (session/message {:op  "inspect-push"
                                        :idx 1})))))))
 
 (deftest refresh-empty-integration-test
@@ -72,24 +72,23 @@
 
 (deftest exception-integration-test
   (testing "eval op error handling"
-    (let [exception-response (session/message {:op "eval"
+    (let [exception-response (session/message {:op      "eval"
                                                :inspect "true"
-                                               :code "(first 1)"})]
+                                               :code    "(first 1)"})]
 
       (testing "exprs that throw exceptions return an `ex` slot"
         (is (= "class java.lang.IllegalArgumentException"
                (:ex exception-response))))
 
       (testing "exprs that throw exceptions return an `err` slot"
-        (is (.contains (:err exception-response)
-                       "IllegalArgumentException")))))
+        (is (-> exception-response ^String (:err) (.contains "IllegalArgumentException"))))))
 
   (testing "inspect-pop error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "pop exception")))]
       (let [response (session/message {:op "inspect-pop"})]
         (is (= (:status response) #{"inspect-pop-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: pop exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: pop exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-push error handling"
@@ -97,7 +96,7 @@
       (let [response (session/message {:op "inspect-push" :idx 1})]
         (is (= (:status response) #{"inspect-push-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: push exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: push exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-refresh error handling"
@@ -105,7 +104,7 @@
       (let [response (session/message {:op "inspect-refresh"})]
         (is (= (:status response) #{"inspect-refresh-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: refresh exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: refresh exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-next-page error handling"
@@ -113,7 +112,7 @@
       (let [response (session/message {:op "inspect-next-page"})]
         (is (= (:status response) #{"inspect-next-page-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: next-page exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: next-page exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-prev-page error handling"
@@ -121,7 +120,7 @@
       (let [response (session/message {:op "inspect-prev-page"})]
         (is (= (:status response) #{"inspect-prev-page-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: prev-page exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: prev-page exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-set-page-size error handling"
@@ -129,7 +128,7 @@
       (let [response (session/message {:op "inspect-set-page-size" :page-size 10})]
         (is (= (:status response) #{"inspect-set-page-size-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: page-size exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: page-size exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-set-max-atom-length error handling"
@@ -137,7 +136,7 @@
       (let [response (session/message {:op "inspect-set-max-atom-length" :max-atom-length 10})]
         (is (= (:status response) #{"inspect-set-max-atom-length-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: max-atom-length exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: max-atom-length exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-set-max-coll-size error handling"
@@ -145,50 +144,50 @@
       (let [response (session/message {:op "inspect-set-max-coll-size" :max-coll-size 10})]
         (is (= (:status response) #{"inspect-set-max-coll-size-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: max-coll-size exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: max-coll-size exception")))
         (is (:pp-stacktrace response))))))
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"
     (is (= var-result
-           (:value (session/message {:op "eval"
+           (:value (session/message {:op      "eval"
                                      :inspect "true"
-                                     :code "#'*assert*"}))))))
+                                     :code    "#'*assert*"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
     (is (= inspect-result
-           (:value (session/message {:op "eval"
+           (:value (session/message {:op      "eval"
                                      :inspect "true"
-                                     :code code}))))))
+                                     :code    code}))))))
 
 (deftest push-integration-test
   (testing "pushing a rendered expr inspector idx"
     (is (= push-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
-                     (session/message {:op "inspect-push"
+                                       :code    code})
+                     (session/message {:op  "inspect-push"
                                        :idx 2})))))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
     (is (= next-page-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code "(map identity (range 35))"})
+                                       :code    "(map identity (range 35))"})
                      (session/message {:op "inspect-next-page"})))))))
 
 (deftest prev-page-integration-test
   (testing "jumping to previous page in a rendered expr inspector"
     (is (= first-page-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code "(map identity (range 35))"})
-                     (session/message {:op "inspect-set-page-size"
+                                       :code    "(map identity (range 35))"})
+                     (session/message {:op        "inspect-set-page-size"
                                        :page-size 5})
                      (session/message {:op "inspect-next-page"})
                      (session/message {:op "inspect-prev-page"})))))))
@@ -197,10 +196,10 @@
   (testing "popping a rendered expr inspector"
     (is (= inspect-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
-                     (session/message {:op "inspect-push"
+                                       :code    code})
+                     (session/message {:op  "inspect-push"
                                        :idx 1})
                      (session/message {:op "inspect-pop"})))))))
 
@@ -208,18 +207,18 @@
   (testing "refreshing a rendered expr inspector"
     (is (= inspect-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
+                                       :code    code})
                      (session/message {:op "inspect-refresh"})))))))
 
 (deftest refresh-idempotent-integration-test
   (testing "refreshing a rendered expr inspector is idempotent"
     (is (= inspect-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
+                                       :code    code})
                      (session/message {:op "inspect-refresh"})
                      (session/message {:op "inspect-refresh"})))))))
 
@@ -227,10 +226,10 @@
   (testing "refreshing a rendered expr inspector after an idx is pushed"
     (is (= push-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
-                     (session/message {:op "inspect-push"
+                                       :code    code})
+                     (session/message {:op  "inspect-push"
                                        :idx 2})
                      (session/message {:op "inspect-refresh"})))))))
 
@@ -238,23 +237,23 @@
   (testing "session bindings can be inspected"
     (is (= inspect-result
            (:value (do
-                     (session/message {:op "eval"
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code code})
-                     (session/message {:op "eval"
+                                       :code    code})
+                     (session/message {:op      "eval"
                                        :inspect "true"
-                                       :code "*1"})))))))
+                                       :code    "*1"})))))))
 
 (deftest page-size-integration-test
   (testing "page size can be changed in the eval op itself"
-    (let [normal-page-size (session/message {:op "eval"
+    (let [normal-page-size (session/message {:op      "eval"
                                              :inspect "true"
-                                             :code "(range 100)"})
+                                             :code    "(range 100)"})
           normal-page-2    (session/message {:op "inspect-next-page"})
 
-          small-page-size  (session/message {:op "eval"
-                                             :inspect "true"
-                                             :code "(range 100)"
+          small-page-size  (session/message {:op        "eval"
+                                             :inspect   "true"
+                                             :code      "(range 100)"
                                              :page-size 5})
           small-page-2     (session/message {:op "inspect-next-page"})
 
@@ -270,12 +269,12 @@
                    (extract-text small-page-2)))))
 
   (testing "page size can be changed via the inspect-set-page-size op"
-    (let [normal-page-size (session/message {:op "eval"
+    (let [normal-page-size (session/message {:op      "eval"
                                              :inspect "true"
-                                             :code "(range 100)"})
+                                             :code    "(range 100)"})
           normal-page-2    (session/message {:op "inspect-next-page"})
 
-          small-page-size  (session/message {:op "inspect-set-page-size"
+          small-page-size  (session/message {:op        "inspect-set-page-size"
                                              :page-size 5})
           small-page-2     (session/message {:op "inspect-next-page"})
 
@@ -306,16 +305,16 @@
         extract-text #(-> % :value first)]
 
     (testing "max atom length can be set for the eval op"
-      (let [default-atom-length (session/message {:op "eval"
+      (let [default-atom-length (session/message {:op      "eval"
                                                   :inspect "true"
-                                                  :code too-long})
-            short-atom-length (session/message {:op "eval"
-                                                :inspect "true"
-                                                :code too-long
+                                                  :code    too-long})
+            short-atom-length (session/message {:op              "eval"
+                                                :inspect         "true"
+                                                :code            too-long
                                                 :max-atom-length 10})
-            unchanged-default-atom-length (session/message {:op "eval"
+            unchanged-default-atom-length (session/message {:op      "eval"
                                                             :inspect "true"
-                                                            :code too-long})]
+                                                            :code    too-long})]
         (is (re-find (x-pattern trunc-len)
                      (extract-text default-atom-length)))
         (is (re-find (x-pattern 6)
@@ -324,16 +323,16 @@
                      (extract-text unchanged-default-atom-length)))))
 
     (testing "max atom length can be changed without re-eval'ing last form"
-      (let [default-atom-length (session/message {:op "eval"
+      (let [default-atom-length (session/message {:op      "eval"
                                                   :inspect "true"
-                                                  :code too-long})
-            shorten-atom-length (session/message {:op "inspect-set-max-atom-length"
+                                                  :code    too-long})
+            shorten-atom-length (session/message {:op              "inspect-set-max-atom-length"
                                                   :max-atom-length 10})
-            longer-atom-length (session/message {:op "inspect-set-max-atom-length"
+            longer-atom-length (session/message {:op              "inspect-set-max-atom-length"
                                                  :max-atom-length 20})
-            unchanged-default-atom-length (session/message {:op "eval"
+            unchanged-default-atom-length (session/message {:op      "eval"
                                                             :inspect "true"
-                                                            :code too-long})]
+                                                            :code    too-long})]
         (is (re-find (x-pattern trunc-len)
                      (extract-text default-atom-length)))
         (is (re-find (x-pattern 6)
@@ -356,16 +355,16 @@
         extract-text #(-> % :value first)]
 
     (testing "max coll size can be set for the eval op"
-      (let [default-coll-size (session/message {:op "eval"
+      (let [default-coll-size (session/message {:op      "eval"
                                                 :inspect "true"
-                                                :code big-coll})
-            large-coll-size (session/message {:op "eval"
-                                              :inspect "true"
-                                              :code big-coll
+                                                :code    big-coll})
+            large-coll-size (session/message {:op            "eval"
+                                              :inspect       "true"
+                                              :code          big-coll
                                               :max-coll-size big-size})
-            unchanged-default-coll-size (session/message {:op "eval"
+            unchanged-default-coll-size (session/message {:op      "eval"
                                                           :inspect "true"
-                                                          :code big-coll})]
+                                                          :code    big-coll})]
         (is (re-find (coll-pattern size-limit :truncate) ;; #"\( 0 1 2 3 4 ... \)"
                      (extract-text default-coll-size)))
         (is (re-find (coll-pattern big-size)             ;; #"\( 0 1 2 3 4 5 6 7 8 9 \)"
@@ -374,16 +373,16 @@
                      (extract-text unchanged-default-coll-size)))))
 
     (testing "max coll size can be changed without re-eval'ing last form"
-      (let [default-coll-size (session/message {:op "eval"
+      (let [default-coll-size (session/message {:op      "eval"
                                                 :inspect "true"
-                                                :code big-coll})
-            large-coll-size (session/message {:op "inspect-set-max-coll-size"
+                                                :code    big-coll})
+            large-coll-size (session/message {:op            "inspect-set-max-coll-size"
                                               :max-coll-size big-size})
-            smaller-coll-size (session/message {:op "inspect-set-max-coll-size"
+            smaller-coll-size (session/message {:op            "inspect-set-max-coll-size"
                                                 :max-coll-size (dec big-size)})
-            unchanged-default-coll-size (session/message {:op "eval"
+            unchanged-default-coll-size (session/message {:op      "eval"
                                                           :inspect "true"
-                                                          :code big-coll})]
+                                                          :code    big-coll})]
         (is (re-find (coll-pattern size-limit :truncate)
                      (extract-text default-coll-size)))
         (is (re-find (coll-pattern big-size)
@@ -397,23 +396,23 @@
   (testing "*print-length* doesn't break rendering of long collections"
     (is (re-find #"showing page: \d+ of \d+"
                  (binding [*print-length* 10]
-                   (first (:value (session/message {:op "eval"
+                   (first (:value (session/message {:op      "eval"
                                                     :inspect "true"
-                                                    :code "(range 100)"}))))))))
+                                                    :code    "(range 100)"}))))))))
 
 (deftest inspect-def-current-value-test
   (testing "inspect-def-current-value defines a var with the current inspector value"
     (is (= "{3 4}"
            (first (:value (do
-                            (session/message {:op "eval"
+                            (session/message {:op   "eval"
                                               :code "(def test-val [{1 2} {3 4}])"})
-                            (session/message {:op "eval"
+                            (session/message {:op      "eval"
                                               :inspect "true"
-                                              :code "test-val"})
-                            (session/message {:op "inspect-push"
+                                              :code    "test-val"})
+                            (session/message {:op  "inspect-push"
                                               :idx 2})
-                            (session/message {:op "inspect-def-current-value"
-                                              :ns "user"
+                            (session/message {:op       "inspect-def-current-value"
+                                              :ns       "user"
                                               :var-name "sub-map"})
-                            (session/message {:op "eval"
+                            (session/message {:op   "eval"
                                               :code "sub-map"}))))))))

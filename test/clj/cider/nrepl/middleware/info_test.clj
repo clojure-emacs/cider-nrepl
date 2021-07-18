@@ -115,7 +115,7 @@
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public}"))
-        (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#getInt")))
+        (is (-> response ^String (:javadoc) (.startsWith "cider/nrepl/test/TestClass.html#getInt"))))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
@@ -142,7 +142,7 @@
         (is (= (:argtypes response) ["int" "int" "java.lang.String"]))
         (is (= (:returns response) "void"))
         (is (= (:modifiers response) "#{:private :static}"))
-        (is (.startsWith (:javadoc response) "cider/nrepl/test/TestClass.html#doSomething")))
+        (is (-> response ^String (:javadoc) (.startsWith "cider/nrepl/test/TestClass.html#doSomething"))))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
@@ -169,7 +169,7 @@
         (is (= (:argtypes response) []))
         (is (= (:returns response) "int"))
         (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
-        (is (.startsWith (:javadoc response) "https://docs.oracle.com/")))
+        (is (-> response ^String (:javadoc) (.startsWith "https://docs.oracle.com/"))))
 
       (if (SystemUtils/IS_JAVA_1_8)
         (testing "JDK 1.8 Javadoc URL style"
@@ -191,8 +191,8 @@
         (is (= (:name response) "."))
         (is (= (:url response) "https://clojure.org/java_interop#dot"))
         (is (= (:special-form response) "true"))
-        (is (.startsWith (:doc response) "The instance member form works"))
-        (is (.startsWith (:forms-str response) "(.instanceMember instance args*)\n(.instanceMember"))))
+        (is (-> response ^String (:doc) (.startsWith "The instance member form works")))
+        (is (-> response ^String (:forms-str) (.startsWith "(.instanceMember instance args*)\n(.instanceMember")))))
 
     (testing "get info of a clojure non-core file, located in a jar"
       (let [response (session/message {:op "info" :sym "resource" :ns "clojure.java.io"})]
@@ -201,8 +201,8 @@
         (is (= (:resource response) "clojure/java/io.clj"))
         (is (= (:ns response) "clojure.java.io"))
         (is (= (:arglists-str response) "[n]\n[n loader]"))
-        (is (.startsWith (:doc response) "Returns the URL for a named"))
-        (is (.startsWith (:file response) "jar:file:"))))
+        (is (-> response ^String (:doc) (.startsWith "Returns the URL for a named")))
+        (is (-> response ^String (:file) (.startsWith "jar:file:")))))
 
     (testing "nested members"
       (let [response   (session/message {:op "info" :ns (ns-name *ns*) :sym "toString"})
@@ -225,7 +225,7 @@
           (is (= (:name response) "as->"))
           (is (= (:arglists-str response) "[expr name & forms]"))
           (is (= (:macro response) "true"))
-          (is (.startsWith (:doc response) "Binds name to expr, evaluates")))
+          (is (-> response ^String (:doc) (.startsWith "Binds name to expr, evaluates"))))
         (finally
           (System/clearProperty "fake.class.path"))))
 
@@ -235,6 +235,7 @@
                                           :sym "junk-protocol-client"})
             status      (:status reply)
             client-name (:name reply)
+            ^String
             file        (:file reply)
             protocol    (:protocol reply)
             ns          (:ns reply)]
@@ -346,28 +347,28 @@
     (let [response (session/message {:op "info" :class "test"})]
       (is (= (:status response) #{"info-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
       (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no member provided to a java class eldoc query"
     (let [response (session/message {:op "eldoc" :class "test"})]
       (is (= (:status response) #{"eldoc-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
       (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no class provided to a java member info query"
     (let [response (session/message {:op "info" :member "test"})]
       (is (= (:status response) #{"info-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
       (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if no class provided to a java member eldoc query"
     (let [response (session/message {:op "eldoc" :member "test"})]
       (is (= (:status response) #{"eldoc-error" "done"}))
       (is (= (:ex response) "class java.lang.Exception"))
-      (is (.startsWith (:err response) "java.lang.Exception: Either"))
+      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
       (is (:pp-stacktrace response))))
 
   (testing "handle the exception thrown if there's a mocked info retrieval error"
@@ -375,7 +376,7 @@
       (let [response (session/message {:op "info" :sym "test" :ns "user"})]
         (is (= (:status response) #{"info-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: info-exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: info-exception")))
         (is (:pp-stacktrace response)))))
 
   (testing "handle the exception thrown if there's a mocked eldoc retreival error "
@@ -383,7 +384,7 @@
       (let [response (session/message {:op "eldoc" :sym "test" :ns "user"})]
         (is (= (:status response) #{"eldoc-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: eldoc-exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: eldoc-exception")))
         (is (:pp-stacktrace response))))))
 
 ;;;; eldoc datomic query

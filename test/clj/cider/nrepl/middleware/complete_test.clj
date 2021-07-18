@@ -66,7 +66,7 @@
   (testing "basic usage"
     (let [response (session/message {:op "complete-doc" :sym "true?"})]
       (is (= (:status response) #{"done"}))
-      (is (.startsWith (:completion-doc response) "clojure.core/true?\n([x")))))
+      (is (-> response ^String (:completion-doc) (.startsWith "clojure.core/true?\n([x"))))))
 
 (deftest complete-flush-caches-test
   (testing "basic usage"
@@ -79,7 +79,7 @@
       (let [response (session/message {:op "complete" :ns "doesn't matter" :prefix "fake"})]
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"complete-error" "done"}))
-        (is (.startsWith (:err response) "java.lang.Exception: complete-exc"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: complete-exc")))
         (is (:pp-stacktrace response)))))
 
   (testing "complete-doc op error handling"
@@ -87,5 +87,5 @@
       (let [response (session/message {:op "complete-doc" :sym "doesn't matter"})]
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"complete-doc-error" "done"}))
-        (is (.startsWith (:err response) "java.lang.Exception: complete-doc-exc"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: complete-doc-exc")))
         (is (:pp-stacktrace response))))))

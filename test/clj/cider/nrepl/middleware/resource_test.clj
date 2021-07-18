@@ -7,7 +7,7 @@
 (deftest resource-op-test
   (let [response (session/message {:op "resource" :name "test.txt"})]
     (is (= #{"done"} (:status response)))
-    (is (.endsWith (:resource-path response) "test/resources/test.txt"))))
+    (is (-> response ^String (:resource-path) (.endsWith "test/resources/test.txt")))))
 
 (deftest resources-list-test
   (testing "Basic checks"

@@ -48,7 +48,9 @@
 (defn with-nrepl-session*
   "Run the given function with *transport* and *session-id* bound."
   [f]
-  (with-open [server    (nrepl.server/start-server :handler (debug-handler))
+  (with-open [^nrepl.server.Server
+              server    (nrepl.server/start-server :handler (debug-handler))
+              ^nrepl.transport.FnTransport
               transport (nrepl/connect :port (:port server))]
     ;; Create a session by sending the "clone" op
     (transport/send transport {:op "clone" :id (next-id)})
@@ -61,7 +63,7 @@
 
 ;;; Helpers for initiating a new debugger session.
 
-(def ^:dynamic *debugger-key*
+(def ^:dynamic ^LinkedBlockingQueue *debugger-key*
   "Queue of :key values received in :debug-value messages."
   nil)
 
@@ -584,6 +586,7 @@
                     :debug-value "\"bar\""
                     :coor        [3 1 1]
                     :locals      [["x" "\"bar\""]]})
+          ^String
           file (:file msg)]
       (is (.endsWith file "/cider/nrepl/middleware/debug_integration_test/fn.clj"))
       (is (.startsWith file "file:/"))
@@ -653,7 +656,8 @@
   (--> :in)
 
   (let [msg  (<-- {:debug-value "{}"
-                   :coor [3 1 1 1]})
+                   :coor        [3 1 1 1]})
+        ^String
         file (:file msg)]
     (.startsWith file "jar:file:")
     (.endsWith file "/nrepl/server.clj"))

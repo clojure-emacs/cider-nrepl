@@ -84,24 +84,24 @@
       (is (= "(foo/bar 1\n  2)" (:formatted-code alias-map-reply)))))
 
   (testing "format-code op error handling"
-    (let [{:keys [status err ex]} (session/message {:op "format-code"
-                                                    :code "*/*/*!~v"})]
+    (let [{:keys [status ^String err ex]} (session/message {:op "format-code"
+                                                            :code "*/*/*!~v"})]
       (is (= #{"format-code-error" "done"} status))
       (is (.startsWith err "clojure.lang.ExceptionInfo: Invalid"))
       (is (= ex "class clojure.lang.ExceptionInfo"))))
 
   (testing "format-code returns an error if indents option is invalid"
-    (let [{:keys [status err ex] :as reply} (session/message {:op "format-code"
-                                                              :code "(+ 1 2 3)"
-                                                              :options {"indents" "INVALID"}})]
+    (let [{:keys [status ^String err ex] :as reply} (session/message {:op "format-code"
+                                                                      :code "(+ 1 2 3)"
+                                                                      :options {"indents" "INVALID"}})]
       (is (= #{"format-code-error" "done"} status))
       (is (.startsWith err "java.lang.IllegalArgumentException:"))
       (is (= ex "class java.lang.IllegalArgumentException"))))
 
   (testing "format-code returns an error if alias-map option is invalid"
-    (let [{:keys [status err ex] :as reply} (session/message {:op "format-code"
-                                                              :code "(+ 1 2 3)"
-                                                              :options {"alias-map" "INVALID"}})]
+    (let [{:keys [status ^String err ex] :as reply} (session/message {:op "format-code"
+                                                                      :code "(+ 1 2 3)"
+                                                                      :options {"alias-map" "INVALID"}})]
       (is (= #{"format-code-error" "done"} status))
       (is (.startsWith err "java.lang.IllegalArgumentException:"))
       (is (= ex "class java.lang.IllegalArgumentException")))))
@@ -120,8 +120,8 @@
       (is (= #{"done"} status))))
 
   (testing "format-edn returns an error if the given EDN is malformed"
-    (let [{:keys [err status] :as response} (session/message {:op "format-edn"
-                                                              :edn unmatched-delimiter-edn-sample})]
+    (let [{:keys [^String err status] :as response} (session/message {:op "format-edn"
+                                                                      :edn unmatched-delimiter-edn-sample})]
       (is (= #{"format-edn-error" "done"} status))
       (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))
       (is (:pp-stacktrace response))))

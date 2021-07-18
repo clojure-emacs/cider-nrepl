@@ -8,8 +8,8 @@
 (def ^:dynamic *handler* cider-nrepl-handler)
 (def ^:dynamic *session* nil)
 
-(def ^:dynamic *server* nil)
-(def ^:dynamic *transport* nil)
+(def ^:dynamic ^nrepl.server.Server *server* nil)
+(def ^:dynamic ^nrepl.transport.FnTransport *transport* nil)
 
 (defn repl-session!
   "Start an nREPL session and set *session* accordingly.
@@ -39,7 +39,9 @@
 
 (defn session-fixture
   [f]
-  (with-open [server    (start-server :handler *handler*)
+  (with-open [^nrepl.server.Server
+              server    (start-server :handler *handler*)
+              ^nrepl.transport.FnTransport
               transport (nrepl/connect :port (:port server))]
     (let [client  (nrepl/client transport Long/MAX_VALUE)
           session (nrepl/client-session client)]
@@ -61,7 +63,7 @@
 (deftest sanity-test
   (testing "eval works"
     (is (= ["(true false true false true false)"]
-           (:value (message {:op "eval"
+           (:value (message {:op   "eval"
                              :code (nrepl/code (map even? (range 6)))})))))
 
   (testing "unsupported op"
@@ -70,7 +72,7 @@
 
   (testing "describe works"
     (let [response (message {:op "describe"})
-          verbose-response (message {:op "describe"
+          verbose-response (message {:op       "describe"
                                      :verbose? "true"})]
       (is (contains? response :ops))
       (is (contains? verbose-response :ops)))))
