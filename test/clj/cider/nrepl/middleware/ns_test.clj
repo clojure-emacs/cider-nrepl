@@ -22,9 +22,9 @@
 
   (testing "Removal of namespaces created by source rewriting"
     (let [ns-list (:ns-list (session/message {:op "ns-list"}))]
-      (is (not-any? #(or (.startsWith % "deps.")
-                         (.startsWith % "mranderson")
-                         (.startsWith % "eastwood.copieddeps"))
+      (is (not-any? #(or (.startsWith ^String % "deps.")
+                         (.startsWith ^String % "mranderson")
+                         (.startsWith ^String % "eastwood.copieddeps"))
                     ns-list))))
 
   (testing "Removal of namespaces with `filter-regexps`"
@@ -100,9 +100,9 @@
                                          :ns "cider.nrepl.middleware.ns"}))
         core-path (:path (session/message {:op "ns-path"
                                            :ns "clojure.core"}))]
-    (is (.endsWith ns-path "cider/nrepl/middleware/ns.clj"))
-    (is (.endsWith core-path "clojure/core.clj"))
-    (is (.startsWith core-path "jar:"))))
+    (is (.endsWith ^String ns-path "cider/nrepl/middleware/ns.clj"))
+    (is (.endsWith ^String core-path "clojure/core.clj"))
+    (is (.startsWith ^String core-path "jar:"))))
 
 (deftest ns-load-all-integration-test
   (let [loaded-ns (:loaded-ns (session/message {:op "ns-load-all"}))]
@@ -125,7 +125,7 @@
   (testing "ns-list op error handling"
     (with-redefs [cider-ns/ns-list (fn [& _] (throw (Exception. "ns-list error")))]
       (let [response (session/message {:op "ns-list"})]
-        (is (.startsWith (:err response) "java.lang.Exception: ns-list error"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: ns-list error")))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-list-error" "done"}))
         (is (:pp-stacktrace response)))))
@@ -134,7 +134,7 @@
     (with-redefs [cider-ns/ns-list-vars-by-name (fn [& _] (throw (Exception. "ns-list-vars-by-name error")))]
       (let [response (session/message {:op "ns-list-vars-by-name"
                                        :name "testing-function"})]
-        (is (.startsWith (:err response) "java.lang.Exception: ns-list-vars-by-name error"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: ns-list-vars-by-name error")))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-list-vars-by-name-error" "done"}))
         (is (:pp-stacktrace response)))))
@@ -143,7 +143,7 @@
     (with-redefs [cider-ns/ns-vars (fn [& _] (throw (Exception. "ns-vars error")))]
       (let [response (session/message {:op "ns-vars"
                                        :name "testing-function"})]
-        (is (.startsWith (:err response) "java.lang.Exception: ns-vars error"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: ns-vars error")))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-vars-error" "done"}))
         (is (:pp-stacktrace response)))))
@@ -152,7 +152,7 @@
     (with-redefs [cider-ns/ns-path (fn [& _] (throw (Exception. "ns-path error")))]
       (let [response (session/message {:op "ns-path"
                                        :name "testing-function"})]
-        (is (.startsWith (:err response) "java.lang.Exception: ns-path error"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: ns-path error")))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-path-error" "done"}))
         (is (:pp-stacktrace response)))))
@@ -160,7 +160,7 @@
   (testing "ns-aliases op error handling"
     (with-redefs [cider-ns/ns-aliases (fn [& _] (throw (Exception. "ns-aliases error")))]
       (let [response (session/message {:op "ns-aliases" :name "testing-function"})]
-        (is (.startsWith (:err response) "java.lang.Exception: ns-aliases error"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: ns-aliases error")))
         (is (= (:ex response) "class java.lang.Exception"))
         (is (= (:status response) #{"ns-aliases-error" "done"}))
         (is (:pp-stacktrace response))))))

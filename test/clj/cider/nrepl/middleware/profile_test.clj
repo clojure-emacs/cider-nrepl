@@ -23,9 +23,9 @@
   (testing "Var profile sumary"
     (toggle-profile {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})
     (zipmap [:a :b :c] [1 2 3])
-    (let [[{:keys [err status]}] (profile-var-summary {:ns        "clojure.core"
-                                                       :sym       "zipmap"
-                                                       :transport (test-transport)})]
+    (let [[{:keys [^String err status]}] (profile-var-summary {:ns        "clojure.core"
+                                                               :sym       "zipmap"
+                                                               :transport (test-transport)})]
       (is (.startsWith err "#'clojure.core/zipmap"))
       (is (= #{:done} status)))
     (toggle-profile {:ns "clojure.core" :sym "zipmap" :transport (test-transport)})

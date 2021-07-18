@@ -68,7 +68,7 @@
         (is (= (:status response) #{"done"}))
         (is (= (:type match) "macro"))
         (is (= (:name match) "clojure.core/->"))
-        (is (.startsWith (:doc match) (str/capitalize doc-query)))))))
+        (is (-> match ^String (:doc) (.startsWith (str/capitalize doc-query))))))))
 
 (deftest error-handling-test
   (testing "Handles a fake error done via mocked function"
@@ -77,11 +77,11 @@
       (let [response (session/message {:op "apropos" :query "doesn't matter"})]
         (is (= (:status response) #{"apropos-error" "done"}))
         (is (= (:ex response) "class java.lang.Exception"))
-        (is (.startsWith (:err response) "java.lang.Exception: boom"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: boom")))
         (is (:pp-stacktrace response)))))
 
   (testing "Handles a real error caused by an improper regular expression"
     (let [response (session/message {:op "apropos" :query "*illegal"})]
       (is (= (:status response) #{"apropos-error" "done"}))
-      (is (.startsWith (:err response) "java.util.regex.PatternSyntaxException: Dangling"))
+      (is (-> response ^String (:err) (.startsWith "java.util.regex.PatternSyntaxException: Dangling")))
       (is (:pp-stacktrace response)))))
