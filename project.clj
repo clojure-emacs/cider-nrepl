@@ -11,7 +11,7 @@
                  ^:inline-dep [fipp "0.6.23"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.11"]
                  ^:inline-dep [org.rksm/suitable "0.4.0" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.7.0" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [cljfmt "0.8.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
@@ -149,5 +149,5 @@
                                                                                               {:line 57}
                                                                                               {:line 59}
                                                                                               {:line 61}
-                                                                                              {:line 65}]} 
+                                                                                              {:line 65}]}
                                                      :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]})
