@@ -83,7 +83,7 @@
 
              :dev {:dependencies [[boot/base "2.8.3"]
                                   [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.4"]]
+                                  [leiningen-core "2.9.6"]]
                    :global-vars {*assert* true}}
 
              :test {:source-paths ["test/src"]
