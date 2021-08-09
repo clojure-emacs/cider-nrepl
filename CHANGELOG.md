@@ -6,6 +6,10 @@
 
 * [#698](https://github.com/clojure-emacs/cider-nrepl/pull/698): Add `undef-all` op to undefine all symbols and aliases in namespace
 
+### Bugs fixed
+
+* Make `middleware.stacktrace` detect a given project's common ns prefix even in face of single-segment namespaces such as `user`.
+
 ## 0.26.0 (2021-04-22)
 
 ### New features
