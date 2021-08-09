@@ -119,43 +119,75 @@
                  %)]
     (map flag frames)))
 
-(def directory-namespaces
-  "This looks for all namespaces inside of directories on the class
-  path, ignoring jars."
+(defn directory-namespaces
+  "Looks for all namespaces inside of directories on the class
+  path, ignoring jars.
+
+  It's a defn because this set is always subject to change.
+
+  NOTE: depending on the use case, you might want to filter out
+  namespaces such as `user` which while belong to the project,
+  don't share a common naming scheme with the other namespaces."
+  []
   (into #{} (namespace/project-namespaces)))
 
-(def ns-common-prefix
-  "In order to match more namespaces, we look for a common namespace
-  prefix across the ones we have identified."
+(defn ns-common-prefix* [namespaces]
   (let [common
-        (try (reduce
-              (fn [common ns]
-                (let [ns (str/lower-case ns)
-                      matched (map vector common ns)
-                      coincident (take-while (fn [[a b]] (= a b)) matched)]
-                  (apply str (map first coincident))))
-              (str/lower-case (first directory-namespaces))
-              directory-namespaces)
-             (catch Throwable _e :error))]
+        (try
+          (->> namespaces
+               (pmap (fn [ns-sym]
+                       (let [segments (-> ns-sym
+                                          str
+                                          (str/split #"\."))]
+                         ;; remove single-segment namespaces
+                         ;; (such as `dev`, `test`, `test-runner`)
+                         ;; that would break the commonality:
+                         (when (-> segments count (> 1))
+                           segments))))
+               (filter identity)
+               (reduce (fn [prev curr]
+                         (if (= ::placeholder prev)
+                           curr
+                           (let [found-commonality
+                                 (reduce-kv (fn [result k v]
+                                              (if (= (get prev k)
+                                                     (get curr k))
+                                                (conj result v)
+                                                (reduced result)))
+                                            []
+                                            prev)]
+                             (if (seq found-commonality)
+                               found-commonality
+                               (reduced :missing)))))
+                       ::placeholder))
+          (catch Throwable _e :error))]
     (condp = common
-      ""
+      ::placeholder
+      {:valid false :common :missing}
+
+      :missing
       {:valid false :common :missing}
 
       :error
       {:valid false :common :error}
 
-      ;;default
-      {:valid true :common common})))
+      {:valid true :common (str/join "." common)})))
+
+(def ns-common-prefix
+  "In order to match more namespaces, we look for a common namespace
+  prefix across the ones we have identified."
+  (delay
+    (ns-common-prefix* (directory-namespaces))))
 
 (defn flag-project
   "Flag the frame if it is from the users project. From a users
   project means that the namespace is one we have identified or it
   begins with the identified common prefix."
   [{:keys [ns] :as frame}]
-  (if (and directory-namespaces ns
-           (or (contains? directory-namespaces (symbol ns))
-               (when (:valid ns-common-prefix)
-                 (.startsWith ^String ns (:common ns-common-prefix)))))
+  (if (and ns
+           (or (contains? (directory-namespaces) (symbol ns))
+               (when (:valid @ns-common-prefix)
+                 (.startsWith ^String ns (:common @ns-common-prefix)))))
     (flag-frame frame :project)
     frame))
 

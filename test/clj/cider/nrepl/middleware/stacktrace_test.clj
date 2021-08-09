@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.stacktrace-test
   (:require
-   [cider.nrepl.middleware.stacktrace :refer :all]
+   [cider.nrepl.middleware.stacktrace :as sut :refer :all]
    [cider.nrepl.pprint :refer [pprint]]
    [clojure.test :refer :all]))
 
@@ -183,3 +183,25 @@
               :clojure.error/phase :macroexpand
               :clojure.error/symbol 'clojure.core/let}
              (:location cause))))))
+
+(deftest ns-common-prefix*-test
+  (are [input expected] (= expected
+                           (sut/ns-common-prefix* input))
+    []             {:valid false :common :missing}
+    '[a b]         {:valid false :common :missing}
+    '[a.c b.c]     {:valid false :common :missing}
+    ::not-a-coll   {:valid false :common :error}
+
+    ;; single-segment namespaces are considered to never have a common part:
+    '[user]        {:valid false :common :missing}
+    '[dev]         {:valid false :common :missing}
+    '[test-runner] {:valid false :common :missing}
+
+    '[a.a]         {:valid true :common "a.a"}
+    '[a.a a.b]     {:valid true :common "a"}
+    '[a.a.b a.a.c] {:valid true :common "a.a"}
+
+    ;; single-segment namespaces cannot foil the rest of the calculation:
+    '[dev user test-runner a.a]         {:valid true :common "a.a"}
+    '[dev user test-runner a.a a.b]     {:valid true :common "a"}
+    '[dev user test-runner a.a.b a.a.c] {:valid true :common "a.a"}))
