@@ -31,7 +31,6 @@
 ;; Whenever a var's tests are run, their previous results are overwritten, so
 ;; the session always holds the most recent test result for each var.
 
-
 ;;; ## Test Results
 ;;
 ;; `clojure.test` allows extensible test reporting by rebinding the `report`

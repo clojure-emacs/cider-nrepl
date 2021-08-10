@@ -50,7 +50,6 @@
 ;;;   - the keyword :expression, in which case a single sexp must be
 ;;;     returned (as a string).
 
-
 ;;;; ## Internal breakpoint logic
 ;;;
 ;;; Variables and functions used for navigating between breakpoints.

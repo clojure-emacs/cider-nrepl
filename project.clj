@@ -129,7 +129,7 @@
                                       :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.7.0"]]
+                      {:plugins [[lein-cljfmt "0.8.0"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           delay [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
@@ -137,10 +137,10 @@
                                           try-if-let [[:block 1]]}}}]
 
              :clj-kondo [:test
-                         {:dependencies [[clj-kondo "2021.03.31"]]}]
+                         {:dependencies [[clj-kondo "2021.08.06"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "0.9.2"]]
+                        {:plugins [[jonase/eastwood "0.9.6"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
