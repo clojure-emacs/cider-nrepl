@@ -57,10 +57,12 @@
 (defn stack-frame
   "Search the stacktrace of exception `e` for the function `f` and return info
   describing the stack frame, including var, class, and line."
-  [^Exception e f]
-  (->> (map st/analyze-frame (.getStackTrace e))
-       (filter #(= (:class %) (.getName (class f))))
-       (first)))
+  ([^Exception e f]
+   (stack-frame (st/directory-namespaces) e f))
+  ([namespaces ^Exception e f]
+   (->> (map (partial st/analyze-frame namespaces) (.getStackTrace e))
+        (filter #(= (:class %) (.getName (class f))))
+        (first))))
 
 (defn- print-object
   "Print `object` using pprint or a custom print-method, if available."
@@ -184,9 +186,10 @@
   finds the erring test fixture in the stacktrace and binds it as the current
   test var. Test count is decremented to indicate that no tests were run."
   [ns e]
-  (let [frame (->> (concat (:clojure.test/once-fixtures (meta ns))
+  (let [namespaces (st/directory-namespaces)
+        frame (->> (concat (:clojure.test/once-fixtures (meta ns))
                            (:clojure.test/each-fixtures (meta ns)))
-                   (map (partial stack-frame e))
+                   (map (partial stack-frame namespaces e))
                    (filter identity)
                    (first))
         fixture (resolve (symbol (:var frame)))]
