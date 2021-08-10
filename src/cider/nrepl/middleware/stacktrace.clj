@@ -183,9 +183,9 @@
   "Flag the frame if it is from the users project. From a users
   project means that the namespace is one we have identified or it
   begins with the identified common prefix."
-  [{:keys [ns] :as frame}]
+  [namespaces {:keys [ns] :as frame}]
   (if (and ns
-           (or (contains? (directory-namespaces) (symbol ns))
+           (or (contains? namespaces (symbol ns))
                (when (:valid @ns-common-prefix)
                  (.startsWith ^String ns (:common @ns-common-prefix)))))
     (flag-frame frame :project)
@@ -206,15 +206,18 @@
 
 (defn analyze-frame
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
-  [frame]
-  ((comp flag-repl flag-project analyze-fn analyze-file stack-frame) frame))
+  [namespaces frame]
+  (let [f (comp flag-repl (partial flag-project namespaces) analyze-fn analyze-file stack-frame)]
+    (f frame)))
 
 (defn analyze-stacktrace
   "Return the stacktrace as a sequence of maps, each describing a stack frame."
   [^Exception e]
-  (-> (map analyze-frame (.getStackTrace e))
-      (flag-duplicates)
-      (flag-tooling)))
+  (let [namespaces (directory-namespaces)]
+    (-> (pmap (partial analyze-frame namespaces)
+              (.getStackTrace e))
+        (flag-duplicates)
+        (flag-tooling))))
 
 ;;; ## Causes
 

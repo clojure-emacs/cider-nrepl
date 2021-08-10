@@ -10,6 +10,10 @@
 
 * Make `middleware.stacktrace` detect a given project's common ns prefix even in face of single-segment namespaces such as `user`.
 
+### Changes
+
+* Parallelize `cider.nrepl.middleware.stacktrace/analyze-stacktrace`.
+
 ## 0.26.0 (2021-04-22)
 
 ### New features
