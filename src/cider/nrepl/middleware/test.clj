@@ -72,6 +72,14 @@
                    println)]
     (with-out-str (print-fn object))))
 
+(def ^:dynamic *test-error-handler*
+  "A function you can override via `binding`, or safely via `alter-var-root`.
+  On test `:error`s, the related Throwable be invoked as the sole argument
+  passed to this var.
+  For example, you can use this to add an additional `println`,
+  for pretty-printing Spec failures. Remember to `flush` if doing so."
+  identity)
+
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
   and 'testing' context. Retain any exception. Pretty-print expected/actual or
@@ -80,7 +88,7 @@
   (let [{:keys [actual diffs expected fault]
          t :type} m
         c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
-        i (count (get-in (@current-report :results) [ns (:name (meta v))]))
+        i (count (get-in (:results @current-report {}) [ns (:name (meta v))]))
         gen-input (:gen-input @current-report)]
 
     ;; Errors outside assertions (faults) do not return an :expected value.
@@ -98,6 +106,7 @@
            (when (#{:error} t)
              (let [e actual
                    f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
+               (*test-error-handler* e)
                {:error e
                 :line (:line (stack-frame e f))})))))
 

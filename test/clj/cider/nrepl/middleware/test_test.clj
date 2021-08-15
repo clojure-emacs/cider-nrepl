@@ -151,3 +151,17 @@
            (#'test/print-object (with-meta {:not :printed} {:type ::custom}))))
     (is (= "{:a :b, :c :d}\n"
            (#'test/print-object {:a :b :c :d})))))
+
+(deftest test-result-test
+  (testing "It passes `:error`s to `test/*test-error-handler*`"
+    (let [proof (atom [])
+          exception (ex-info "." {::unique (rand)})]
+      (binding [test/*test-error-handler* (fn [e]
+                                            (swap! proof conj e))]
+        (with-out-str
+          (test/test-result 'some-ns
+                            #'+
+                            {:type :error
+                             :actual exception}))
+        (is (= [exception]
+               @proof))))))

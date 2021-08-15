@@ -5,6 +5,7 @@
 ### New features
 
 * [#698](https://github.com/clojure-emacs/cider-nrepl/pull/698): Add `undef-all` op to undefine all symbols and aliases in namespace
+* Introduce `cider.nrepl.middleware.test/*test-error-handler*` var which you can override with arbitrary functions.
 
 ## 0.26.0 (2021-04-22)
 
