@@ -4,7 +4,9 @@
    ;; Ensure tested tests are loaded:
    cider.nrepl.middleware.test-filter-tests
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all])
+  (:import
+   (clojure.lang ExceptionInfo)))
 
 (use-fixtures :each session/session-fixture)
 
@@ -165,3 +167,29 @@
                              :actual exception}))
         (is (= [exception]
                @proof))))))
+
+(defn throws []
+  (throw (ex-info "." {})))
+
+(defn comparable-stack-frame
+  "A stack-frame map without varying parts that make testing more cumbersome."
+  [stack-frame]
+  (dissoc stack-frame :file-url :line))
+
+(deftest stack-frame-test
+  (let [e (try
+            (throws)
+            (catch ExceptionInfo e
+              e))]
+    (is (= {:fn "throws"
+            :method "invokeStatic"
+            :ns "cider.nrepl.middleware.test-test"
+            :name "cider.nrepl.middleware.test_test$throws/invokeStatic"
+            :file "test_test.clj"
+            :type :clj
+            :var "cider.nrepl.middleware.test-test/throws"
+            :class "cider.nrepl.middleware.test_test$throws"
+            :flags #{:project :clj}}
+           (comparable-stack-frame (test/stack-frame e throws)))
+        "Returns a map representing the stack frame of the precise function
+that threw the exception")))
