@@ -14,6 +14,7 @@
 ### Changes
 
 * Parallelize `cider.nrepl.middleware.stacktrace/analyze-stacktrace`.
+* [#705](https://github.com/clojure-emacs/cider-nrepl/pull/705): Use the session classloader when loading deferred middleware
 
 ## 0.26.0 (2021-04-22)
 

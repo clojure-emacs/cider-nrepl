@@ -15,6 +15,7 @@
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
    [nrepl.middleware.session :refer [session]]
+   [nrepl.misc :as misc :refer [with-session-classloader]]
    [nrepl.server :as nrepl-server]))
 
 ;;; Functionality for deferred middleware loading
@@ -43,12 +44,13 @@
 (defn- handler-future
   "Check whether a delay exists in the `delayed-handlers`. Otherwise make a delay
   out of `fn-name` and place it in the atom. "
-  [sym ns fn-name]
+  [sym ns fn-name session]
   (or (get @delayed-handlers sym)
       (get (swap! delayed-handlers assoc sym
                   (delay
                     (locking require-lock
-                      (require ns)
+                      (with-session-classloader session
+                        (require ns))
                       (resolve-or-fail fn-name))))
            sym)))
 
@@ -58,7 +60,7 @@
   [fn-name handler msg]
   (let [ns  (symbol (namespace `~fn-name))
         sym (symbol (name `~fn-name))]
-    `(@(handler-future '~sym '~ns '~fn-name)
+    `(@(handler-future '~sym '~ns '~fn-name (:session ~msg))
       ~handler ~msg)))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
@@ -79,7 +81,7 @@
                                   [descriptor trigger-it]
                                   [trigger-it descriptor])
         trigger-it (eval trigger-it)
-        descriptor (eval descriptor)
+        descriptor (update (eval descriptor) :requires (fnil conj #{}) #'nrepl.middleware.session/session)
         cond (if (or (nil? trigger-it) (set? trigger-it))
                (let [ops-set (into (-> descriptor :handles keys set) trigger-it)]
                  `(~ops-set (:op ~'msg)))
