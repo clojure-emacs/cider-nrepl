@@ -117,7 +117,7 @@ jobs:
     steps:
       - checkout
       - with_cache:
-          cache_version: << parameters.clojure_version >>
+          cache_version: << parameters.clojure_version >>|<< parameters.jdk_version >>
           steps:
             - run:
                 name: Running tests with inlined deps
