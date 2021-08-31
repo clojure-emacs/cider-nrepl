@@ -26,6 +26,7 @@
     (Thread/sleep 300)
     @d
     (deliver p 1)
+    @f
     (are [o r] (re-find r (pr-str o))
       f #"#future\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
       d #"#delay\[\{:status :ready, :val 1\} 0x[a-z0-9]+\]"
