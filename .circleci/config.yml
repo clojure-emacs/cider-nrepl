@@ -77,7 +77,6 @@ commands:
           paths:
             - ~/.m2
             - .cpcache
-            - repo
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 # The jobs are relatively simple. One runs utility commands against
