@@ -69,7 +69,7 @@
                        ;; FIXME: `uses` and `use-macros` are maps from
                        ;; symbols to namespace names:
                        ;;     {log reagent.debug, dbg reagent.debug}
-                       ;; Since we don’t know the metadata for these
+                       ;; Since we don't know the metadata for these
                        ;; vars, we resign to "guessing" them.
                        (misc/update-vals (constantly {:arglists '([])}) uses)
                        (misc/update-vals (constantly {:arglists '([]) :macro true}) use-macros))})
