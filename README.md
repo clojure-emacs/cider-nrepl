@@ -26,7 +26,7 @@ information on how to setup `cider-nrepl` or how to leverage its nREPL API.
 
 ## Release policy
 
-We’re following [SemVer](http://semver.org/) (as much as one can be
+We're following [SemVer](http://semver.org/) (as much as one can be
 following it when the major version is 0). At this point bumps of the
 minor (second) version number are considered major releases and always
 include new features or significant changes to existing features. API
