@@ -4,7 +4,7 @@
 
 ### New features
 
-* [#698](https://github.com/clojure-emacs/cider-nrepl/pull/698): Add `undef-all` op to undefine all symbols and aliases in namespace
+* [#698](https://github.com/clojure-emacs/cider-nrepl/pull/698): Add `undef-all` op to undefine all symbols and aliases in namespace.
 * Introduce `cider.nrepl.middleware.test/*test-error-handler*` var which you can override with arbitrary functions.
 
 ### Bugs fixed
@@ -14,7 +14,7 @@
 ### Changes
 
 * Parallelize `cider.nrepl.middleware.stacktrace/analyze-stacktrace`.
-* [#705](https://github.com/clojure-emacs/cider-nrepl/pull/705): Use the session classloader when loading deferred middleware
+* [#705](https://github.com/clojure-emacs/cider-nrepl/pull/705): Use the session classloader when loading deferred middleware.
 
 ## 0.26.0 (2021-04-22)
 
