@@ -137,10 +137,10 @@
                                           try-if-let [[:block 1]]}}}]
 
              :clj-kondo [:test
-                         {:dependencies [[clj-kondo "2021.08.06"]]}]
+                         {:dependencies [[clj-kondo "2021.09.15"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "0.9.6"]]
+                        {:plugins [[jonase/eastwood "0.9.9"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
