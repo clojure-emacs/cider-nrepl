@@ -19,7 +19,8 @@ defaults: &defaults
       -Xmx3200m
       -Dclojure.main.report=stderr
 
-# Runners for OpenJDK 8 and 11
+# Runners for various OpenJDKs versions.
+# NOTE: JDK 16 can be discarded after a few months, given it's not LTS.
 
 executors:
   openjdk8:
@@ -29,6 +30,14 @@ executors:
   openjdk11:
     docker:
       - image: circleci/clojure:openjdk-11-lein-2.9.1-node
+    <<: *defaults
+  openjdk16:
+    docker:
+      - image: circleci/clojure:openjdk-16-lein-2.9.5-buster-node
+    <<: *defaults
+  openjdk17:
+    docker:
+      - image: circleci/clojure:openjdk-17-lein-2.9.5-buster-node
     <<: *defaults
 
 # Runs a given set of steps, with some standard pre- and post-
@@ -133,7 +142,7 @@ jobs:
 # The ci-test-matrix does the following:
 #
 # - run tests against the target matrix
-#   - Java 8 and 11
+#   - Java 8/11/16/...
 #   - Clojure 1.8, 1.9, 1.10, master
 # - linter, eastwood and cljfmt
 # - runs code coverage report
@@ -174,6 +183,38 @@ workflows:
           name: Java 11, Clojure master
           clojure_version: "master"
           jdk_version: openjdk11
+      - test_code:
+          name: Java 16, Clojure 1.8
+          clojure_version: "1.8"
+          jdk_version: openjdk16
+      - test_code:
+          name: Java 16, Clojure 1.9
+          clojure_version: "1.9"
+          jdk_version: openjdk16
+      - test_code:
+          name: Java 16, Clojure 1.10
+          clojure_version: "1.10"
+          jdk_version: openjdk16
+      - test_code:
+          name: Java 16, Clojure master
+          clojure_version: "master"
+          jdk_version: openjdk16
+      - test_code:
+          name: Java 17, Clojure 1.8
+          clojure_version: "1.8"
+          jdk_version: openjdk17
+      - test_code:
+          name: Java 17, Clojure 1.9
+          clojure_version: "1.9"
+          jdk_version: openjdk17
+      - test_code:
+          name: Java 17, Clojure 1.10
+          clojure_version: "1.10"
+          jdk_version: openjdk17
+      - test_code:
+          name: Java 17, Clojure master
+          clojure_version: "master"
+          jdk_version: openjdk17
       - util_job:
           name: Code Linting
           steps:
