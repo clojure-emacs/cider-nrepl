@@ -68,12 +68,16 @@
           first))))
 
 (defn- print-object
-  "Print `object` using pprint or a custom print-method, if available."
+  "Print `object` using println for matcher-combinators results and pprint
+   otherwise. The matcher-combinators library uses a custom print-method
+   which doesn't get picked up by pprint since it uses a different dispatch
+   mechanism."
   [object]
-  (let [print-fn (if (= (get-method print-method (:type (meta object)))
-                        (get-method print-method :default))
-                   pp/pprint
-                   println)]
+  (let [matcher-combinators-result? (= (:type (meta object))
+                                       :matcher-combinators.clj-test/mismatch)
+        print-fn (if matcher-combinators-result?
+                   println
+                   pp/pprint)]
     (with-out-str (print-fn object))))
 
 (def ^:dynamic *test-error-handler*

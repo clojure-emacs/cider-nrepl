@@ -159,16 +159,17 @@
                                     first
                                     :message))))))
 
-(defmethod clojure.core/print-method ::custom [_ out]
-  (binding [*out* out]
-    (print "custom-output")))
-
 (deftest print-object-test
-  (testing "use an object's print-method when applicable, otherwise invoke pprint"
-    (is (= "custom-output\n"
-           (#'test/print-object (with-meta {:not :printed} {:type ::custom}))))
-    (is (= "{:a :b, :c :d}\n"
-           (#'test/print-object {:a :b :c :d})))))
+  (testing "uses println for matcher-combinators results, otherwise invokes pprint"
+    (is (= "{no quotes}\n"
+           (#'test/print-object (with-meta {"no" "quotes"} {:type :matcher-combinators.clj-test/mismatch})))
+        "println is chosen, as indicated by strings printed without quotes")
+    (is (= "{:a\n (\"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\")}\n"
+           (#'test/print-object {:a (repeat 3 "a-sufficiently-long-string")}))
+        "pprint is chosen, as indicated by quoted strings and newlines")
+    (is (= "{:a \"b\", :c \"42\"}\n"
+           (#'test/print-object (with-meta {:a "b" :c "42"} {:type ::mismatch})))
+        "pprint is chosen, because :type does not match matchers-combinators keyword")))
 
 (deftest test-result-test
   (testing "It passes `:error`s to `test/*test-error-handler*`"
