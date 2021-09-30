@@ -10,11 +10,11 @@
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
                  ^:inline-dep [fipp "0.6.24"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.11"]
-                 ^:inline-dep [org.rksm/suitable "0.4.0" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [org.rksm/suitable "0.4.1-alpha1" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.8.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
-                 ^:inline-dep [org.clojure/tools.reader "1.3.2"]]
+                 ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
   :plugins [[thomasa/mranderson "0.5.3"]]
