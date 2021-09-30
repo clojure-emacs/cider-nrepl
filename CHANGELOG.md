@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.27.0 (2021-09-30)
+
 ### New features
 
 * [#698](https://github.com/clojure-emacs/cider-nrepl/pull/698): Add `undef-all` op to undefine all symbols and aliases in namespace.
