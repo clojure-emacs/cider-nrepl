@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "0.8.3"]
-                 ^:inline-dep [cider/orchard "0.7.2"]
+                 ^:inline-dep [cider/orchard "0.7.2" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
                  ^:inline-dep [fipp "0.6.24"] ; can be removed in unresolved-tree mode
@@ -16,6 +16,11 @@
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
+
+  :pedantic? ~(if (System/getenv "CI")
+                :abort
+                ;; :pedantic? can be problematic for certain local dev workflows:
+                false)
 
   :plugins [[thomasa/mranderson "0.5.3"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
@@ -59,7 +64,7 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.1"]
-                                       [org.clojure/clojurescript "1.10.520" :scope "provided"]]
+                                       [org.clojure/clojurescript "1.10.866" :scope "provided"]]
                         :test-paths ["test/spec"]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
