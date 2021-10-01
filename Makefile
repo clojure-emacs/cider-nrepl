@@ -1,7 +1,6 @@
-.PHONY: test eastwood cljfmt cloverage install smoketest release deploy clean detect_timeout
+.PHONY: test eastwood cljfmt install smoketest release deploy clean detect_timeout
 
 CLOJURE_VERSION ?= 1.10
-export CLOVERAGE_VERSION = 1.0.13
 
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
@@ -26,9 +25,6 @@ cljfmt:
 
 kondo:
 	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src
-
-cloverage:
-	lein with-profile -user,+$(CLOJURE_VERSION),+cloverage cloverage
 
 install: .inline-deps
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
