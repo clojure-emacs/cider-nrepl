@@ -7,22 +7,22 @@ test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
 
 .inline-deps:
-	lein with-profile -user inline-deps
+	lein with-profile -user,-dev inline-deps
 	touch .inline-deps
 
 inline-deps: .inline-deps
 
 test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
-	lein with-profile -user,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 quick-test:
-	lein with-profile -user,+$(CLOJURE_VERSION),+test test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
 
 eastwood:
-	lein with-profile -user,+$(CLOJURE_VERSION),+eastwood eastwood
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+eastwood eastwood
 
 cljfmt:
-	lein with-profile -user,+$(CLOJURE_VERSION),+cljfmt cljfmt check
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt check
 
 kondo:
 	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src
@@ -31,11 +31,11 @@ cloverage:
 	lein with-profile -user,+$(CLOJURE_VERSION),+cloverage cloverage
 
 install: .inline-deps
-	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config install
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 
 smoketest: install
 	cd test/smoketest && \
-        lein with-profile -user,+$(CLOJURE_VERSION) uberjar && \
+        lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
 
 
@@ -52,7 +52,7 @@ detect_timeout:
 BUMP ?= patch
 
 release:
-	lein with-profile -user,+$(CLOJURE_VERSION) release $(BUMP)
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION) release $(BUMP)
 
 # Deploying requires the caller to set environment variables as
 # specified in project.clj to provide a login and password to the
