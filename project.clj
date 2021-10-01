@@ -63,8 +63,14 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.1"]
-                                       [org.clojure/clojurescript "1.10.866" :scope "provided"]]
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
+                                       [org.clojure/clojurescript "1.10.866" :scope "provided"]
+                                       [com.cognitect/transit-clj "1.0.324"]
+                                       [com.fasterxml.jackson.core/jackson-core "2.10.2"]
+                                       [commons-codec "1.11"]
+                                       [com.cognitect/transit-java "1.0.343"]
+                                       [com.google.errorprone/error_prone_annotations "2.1.3"]
+                                       [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
@@ -92,7 +98,10 @@
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
-                                   [leiningen-core "2.9.6"]
+                                   [org.apache.httpcomponents/httpclient "4.5.9" :exclusions [commons-logging]]
+                                   [leiningen-core "2.9.6" :exclusions [org.clojure/clojure
+                                                                        commons-codec
+                                                                        com.google.code.findbugs/jsr305]]
                                    [pjstadig/humane-test-output "0.11.0"]
                                    [cider/piggieback "0.5.2"]]}
 
