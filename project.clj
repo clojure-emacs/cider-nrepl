@@ -86,15 +86,14 @@
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.0.194"]]}
 
-             :dev {:dependencies [[boot/base "2.8.3"]
-                                  [boot/core "2.8.3"]
-                                  [leiningen-core "2.9.6"]]
-                   :global-vars {*assert* true}}
-
-             :test {:source-paths ["test/src"]
+             :test {:global-vars {*assert* true}
+                    :source-paths ["test/src"]
                     :java-source-paths ["test/java"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[pjstadig/humane-test-output "0.11.0"]
+                    :dependencies [[boot/base "2.8.3"]
+                                   [boot/core "2.8.3"]
+                                   [leiningen-core "2.9.6"]
+                                   [pjstadig/humane-test-output "0.11.0"]
                                    [cider/piggieback "0.5.2"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
