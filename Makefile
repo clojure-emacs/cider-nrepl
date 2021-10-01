@@ -5,7 +5,7 @@ CLOJURE_VERSION ?= 1.10
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
 
-.inline-deps:
+.inline-deps: clean
 	lein with-profile -user,-dev inline-deps
 	touch .inline-deps
 
@@ -14,7 +14,7 @@ inline-deps: .inline-deps
 test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
-quick-test:
+quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
 
 eastwood:
