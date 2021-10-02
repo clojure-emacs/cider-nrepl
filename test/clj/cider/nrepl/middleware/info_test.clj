@@ -340,9 +340,10 @@
       (is (= (:status response) #{"no-info" "done"})
           (pr-str response))))
 
-  (testing "ensure info returns a no-info packet if ns not found"
+  (testing "info does not return a no-info packet if ns not found,
+but `:sym` is unqualified and resolves to a clojure.core var"
     (let [response (session/message {:op "info" :sym "+" :ns "fakefakefake"})]
-      (is (= (:status response) #{"no-info" "done"})
+      (is (= (:status response) #{"done"})
           (pr-str response))))
 
   (testing "ensure info returns a no-info packet if class not found"
@@ -361,9 +362,10 @@
       (is (= (:status response) #{"no-eldoc" "done"})
           (pr-str response))))
 
-  (testing "ensure eldoc returns a no-eldoc packet if ns not found"
+  (testing "eldoc does not return a no-eldoc packet if ns not found,
+but `:sym` is unqualified and resolves to a clojure.core var"
     (let [response (session/message {:op "eldoc" :sym "+" :ns "fakefakefake"})]
-      (is (= (:status response) #{"no-eldoc" "done"})
+      (is (= (:status response) #{"done"})
           (pr-str response))))
 
   (testing "ensure eldoc returns a no-eldoc packet if class not found"
