@@ -13,6 +13,8 @@ inline-deps: .inline-deps
 
 test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config,+tools-logging test :only cider.nrepl.middleware.out-test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config,+tools-logging test
 
 quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test

@@ -92,6 +92,8 @@
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.0.194"]]}
 
+             :tools-logging {:dependencies [[org.clojure/tools.logging "1.1.0"]]}
+
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
                     :java-source-paths ["test/java"]

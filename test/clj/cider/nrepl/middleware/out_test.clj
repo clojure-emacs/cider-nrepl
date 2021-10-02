@@ -27,3 +27,14 @@
       (is (not some-other-key)))
     (o/unsubscribe-session (:id the-meta))
     (is (empty? @o/tracked-sessions-map))))
+
+(deftest clojure-tools-logging
+  (when (try
+          (require 'clojure.tools.logging)
+          true
+          (catch Exception _
+            false))
+    (doto (eval (list 'clojure.tools.logging/log-capture! (-> ::_ namespace)))
+      (println))
+    (doto (eval '(clojure.tools.logging/error "hello"))
+      (println))))
