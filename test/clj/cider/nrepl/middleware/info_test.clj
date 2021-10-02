@@ -346,6 +346,18 @@ but `:sym` is unqualified and resolves to a clojure.core var"
       (is (= (:status response) #{"done"})
           (pr-str response))))
 
+  (testing "info does not return a no-info packet if ns not found,
+but `:sym` is qualified and resolves to a clojure.core var"
+    (let [response (session/message {:op "info" :sym "clojure.core/+" :ns "fakefakefake"})]
+      (is (= (:status response) #{"done"})
+          (pr-str response))))
+
+  (testing "info does not return a no-info packet if ns not found,
+but `:sym` is qualified and resolves to a clojure.string var"
+    (let [response (session/message {:op "info" :sym "clojure.string/replace" :ns "fakefakefake"})]
+      (is (= (:status response) #{"done"})
+          (pr-str response))))
+
   (testing "ensure info returns a no-info packet if class not found"
     (let [response (session/message {:op "info" :class "awoeijfxcvb" :member "toString"})]
       (is (= (:status response) #{"no-info" "done"})
@@ -365,6 +377,18 @@ but `:sym` is unqualified and resolves to a clojure.core var"
   (testing "eldoc does not return a no-eldoc packet if ns not found,
 but `:sym` is unqualified and resolves to a clojure.core var"
     (let [response (session/message {:op "eldoc" :sym "+" :ns "fakefakefake"})]
+      (is (= (:status response) #{"done"})
+          (pr-str response))))
+
+  (testing "eldoc does not return a no-eldoc packet if ns not found,
+but `:sym` is qualified and resolves to a clojure.core var"
+    (let [response (session/message {:op "eldoc" :sym "clojure.core/+" :ns "fakefakefake"})]
+      (is (= (:status response) #{"done"})
+          (pr-str response))))
+
+  (testing "eldoc does not return a no-eldoc packet if ns not found,
+but `:sym` is qualified and resolves to a clojure.string var"
+    (let [response (session/message {:op "eldoc" :sym "clojure.string/replace" :ns "fakefakefake"})]
       (is (= (:status response) #{"done"})
           (pr-str response))))
 
