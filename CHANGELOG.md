@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.27.1 (2021-10-02)
+
+### Bugs fixed
+
+* Upgrade `suitable` and `orchard`, bringing in related bugfixes.
+
 ## 0.27.0 (2021-09-30)
 
 ### New features
