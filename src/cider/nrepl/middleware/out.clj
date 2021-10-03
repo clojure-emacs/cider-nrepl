@@ -18,12 +18,11 @@
 
 (declare unsubscribe-session)
 
-(defn original-output
-  "Store the values of the original output streams so we can refer to them."
-  ^PrintWriter
-  [k]
-  ({:out *out*
-    :err *err*} k))
+(defonce original-output
+  ^{:doc "Store the values of the original output streams so we can refer to them.
+Please do not inline; they must not be recomputed at runtime."}
+  {:out *out*
+   :err *err*})
 
 (defmacro with-out-binding
   "Run body with v bound to the output stream of each msg in msg-seq.
