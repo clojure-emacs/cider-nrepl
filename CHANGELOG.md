@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+## 0.27.2 (2021-10-03)
+
+### Bugs fixed
+
+* [#716](https://github.com/clojure-emacs/cider-nrepl/issues/716): Fix StackOverflowErrors related to `*out*` handling.
+
 ## 0.27.1 (2021-10-02)
 
 ### Bugs fixed

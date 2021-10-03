@@ -27,3 +27,8 @@
       (is (not some-other-key)))
     (o/unsubscribe-session (:id the-meta))
     (is (empty? @o/tracked-sessions-map))))
+
+(deftest original-output-test
+  (testing "The mapping is computed once; not doing so would defeat is point and create issues."
+    (is (map? o/original-output))
+    (is (not (fn? o/original-output)))))

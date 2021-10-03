@@ -18,9 +18,10 @@
 
 (declare unsubscribe-session)
 
-(defonce original-output
+(defonce
   ^{:doc "Store the values of the original output streams so we can refer to them.
 Please do not inline; they must not be recomputed at runtime."}
+  original-output
   {:out *out*
    :err *err*})
 
