@@ -113,6 +113,19 @@
       (is (= formatted-edn-sample formatted-edn))
       (is (= #{"done"} status))))
 
+  ;; See: https://github.com/clojure-emacs/cider-nrepl/issues/722
+  (testing "Objects of classes without an associated data-reader function are converted to strings via `pr-str`"
+    (let [{:keys [formatted-edn status]
+           :as response} (session/message {:op "format-edn"
+                                           :edn (pr-str [1 2 (Object.) 3 4])})
+          [a b ^String c d e] (read-string formatted-edn)]
+      (testing (pr-str response)
+        (is (= [1 2 3 4]
+               [a b d e]))
+        (is (string? c))
+        (is (.contains c "java.lang.Object@"))
+        (is (= #{"done"} status)))))
+
   (testing "format-edn works for multiple forms"
     (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
                                                            :edn ugly-edn-forms-sample})]

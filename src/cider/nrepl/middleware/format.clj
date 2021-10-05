@@ -40,7 +40,10 @@
   (let [reader (readers/string-push-back-reader s)
         sentinel (Object.)]
     (loop [forms []]
-      (let [form (edn/read {:eof sentinel} reader)]
+      (let [form (edn/read {:eof sentinel
+                            :default (fn [tag value]
+                                       (pr-str value))}
+                           reader)]
         (if (= sentinel form)
           forms
           (recur (conj forms form)))))))
