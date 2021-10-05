@@ -22,7 +22,8 @@
                         {:op "test"
                          :ns "cider.nrepl.middleware.test-filter-tests"
                          :tests (map name tests)})]
-                   (is (= tests (keys (:cider.nrepl.middleware.test-filter-tests results)))))
+                   (is (= tests (keys (:cider.nrepl.middleware.test-filter-tests results))))
+                   true)
       [:a-puff-of-smoke-test]
       [:a-smokey-test]
       [:a-puff-of-smoke-test :a-smokey-test]
@@ -130,6 +131,21 @@
           "more tests were run")
       (is ((set tests) :a-puff-of-smoke-test)
           "smoke test is still present without a filter"))))
+
+(deftest handling-of-tests-with-throwing-fixtures
+  (require 'cider.nrepl.middleware.test-with-throwing-fixtures)
+  (testing "If a given deftest's fixture throw an exception, those are gracefully handled"
+    (let [{{{[{:keys [error]}] :cider.nrepl.middleware.test/unknown} :cider.nrepl.middleware.test-with-throwing-fixtures} :results
+           :keys [summary status]
+           :as test-result}
+          (session/message {:op "test"
+                            :ns "cider.nrepl.middleware.test-with-throwing-fixtures"})]
+      (testing (pr-str test-result)
+        (is (= error
+               "clojure.lang.ExceptionInfo: I'm an exception inside a fixture! {:data 42}"))
+        (is (= summary
+               {:error 1, :fail 0, :ns 1, :pass 0, :test 0, :var 0}))
+        (is (= status #{"done"}))))))
 
 (deftest run-test-with-map-as-documentation-message
   (testing "documentation message map is returned as string"

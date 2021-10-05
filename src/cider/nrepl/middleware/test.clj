@@ -61,7 +61,7 @@
    (stack-frame (st/directory-namespaces) e f))
   ([namespaces ^Exception e f]
    (->> (map (partial st/analyze-frame namespaces) (.getStackTrace e))
-        (filter #(= (:class %) (.getName (class f))))
+        (filter #(= (:class %) (some-> f class .getName)))
         (first))))
 
 (defn- print-object
@@ -81,6 +81,8 @@
   for pretty-printing Spec failures. Remember to `flush` if doing so."
   identity)
 
+(def fallback-var-name ::unknown)
+
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,
   and 'testing' context. Retain any exception. Pretty-print expected/actual or
@@ -88,14 +90,15 @@
   [ns v m]
   (let [{:keys [actual diffs expected fault]
          t :type} m
+        v-name (or (:name (meta v)) fallback-var-name)
         c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
-        i (count (get-in (:results @current-report {}) [ns (:name (meta v))]))
+        i (count (get-in (:results @current-report {}) [ns v-name]))
         gen-input (:gen-input @current-report)]
 
     ;; Errors outside assertions (faults) do not return an :expected value.
     ;; Type :fail returns :actual value. Type :error returns :error and :line.
     (merge (dissoc m :expected :actual)
-           {:ns ns, :var (:name (meta v)), :index i, :context c}
+           {:ns ns, :var v-name, :index i, :context c}
            (when (and (#{:fail :error} t) (not fault))
              {:expected (print-object expected)})
            (when (and (#{:fail} t) gen-input)
@@ -106,7 +109,7 @@
              {:diffs (extensions/diffs-result diffs)})
            (when (#{:error} t)
              (let [e actual
-                   f (or (:test (meta v)) @v)] ; test fn or deref'ed fixture
+                   f (or (:test (meta v)) (some-> v deref))] ; test fn or deref'ed fixture
                (*test-error-handler* e)
                {:error e
                 :line (:line (stack-frame e f))})))))
@@ -151,7 +154,8 @@
            #(-> %
                 (update-in [:summary :test] inc)
                 (update-in [:summary type] (fnil inc 0))
-                (update-in [:results ns (:name (meta v))]
+                (update-in [:results ns (or (:name (meta v))
+                                            fallback-var-name)]
                            (fnil conj [])
                            (test-result ns v m))
                 (assoc :gen-input nil)))))

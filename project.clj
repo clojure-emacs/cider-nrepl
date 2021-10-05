@@ -158,10 +158,10 @@
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
                                                      ;; This usage of `proxy` can't avoid reflection warnings given that the `proxy` construct dispatches based on name only:
-                                                     :reflection {cider.nrepl.middleware.out [{:line 54}
-                                                                                              {:line 56}
-                                                                                              {:line 58}
-                                                                                              {:line 60}
-                                                                                              {:line 62}
-                                                                                              {:line 64}]}
+                                                     :reflection {cider.nrepl.middleware.out [{:line 55}
+                                                                                              {:line 57}
+                                                                                              {:line 59}
+                                                                                              {:line 61}
+                                                                                              {:line 63}
+                                                                                              {:line 65}]}
                                                      :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]})
