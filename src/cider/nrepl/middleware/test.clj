@@ -60,9 +60,12 @@
   ([^Exception e f]
    (stack-frame (st/directory-namespaces) e f))
   ([namespaces ^Exception e f]
-   (->> (map (partial st/analyze-frame namespaces) (.getStackTrace e))
-        (filter #(= (:class %) (some-> f class .getName)))
-        (first))))
+   (when-let [class-name (some-> f class .getName)]
+     (->> e
+          .getStackTrace
+          (map (partial st/analyze-frame namespaces))
+          (filter #(= (:class %) class-name))
+          first))))
 
 (defn- print-object
   "Print `object` using pprint or a custom print-method, if available."
@@ -81,7 +84,10 @@
   for pretty-printing Spec failures. Remember to `flush` if doing so."
   identity)
 
-(def fallback-var-name ::unknown)
+(def ^:private fallback-var-name
+  "The pseudo var name which will be used when no var name can be found
+  for a given test report."
+  ::unknown)
 
 (defn test-result
   "Transform the result of a test assertion. Append ns, var, assertion index,

@@ -15,6 +15,22 @@
    :expanded-all "(loop* [] (if (loop* [] (if 1 (do (recur)))) (do (recur))))"})
 
 (deftest expander-option-test
+
+  ;; https://github.com/clojure-emacs/cider-nrepl/issues/721
+  (let [i (atom 0)]
+    (doseq [code ["(definterface IFoo%s)" "(definterface IFoo%s (^int tailoff []))"]
+            expander ["macroexpand-1" "macroexpand-all"]]
+      (testing (pr-str ["definterface" code expander])
+        (let [{:keys [expansion status err]
+               :as response} (session/message {:op "macroexpand"
+                                               :expander expander
+                                               :code (format code (swap! i inc))
+                                               :display-namespaces "none"})]
+          (testing (pr-str response)
+            (or (is (string? expansion))
+                (some-> err println))
+            (is (= #{"done"} status)))))))
+
   (testing "macroexpand-1 expander works"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand-1"
