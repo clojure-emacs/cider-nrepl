@@ -5,6 +5,7 @@
 ### Bugs fixed
 
 * [#719](https://github.com/clojure-emacs/cider-nrepl/issues/719): `middleware.test`: gracefully handle exceptions thrown within fixtures.
+* [#722](https://github.com/clojure-emacs/cider-nrepl/issues/722): `middleware.format`: print otherwise non-serializable objects as strings.
 
 ## 0.27.2 (2021-10-03)
 
