@@ -102,8 +102,7 @@
                                    [leiningen-core "2.9.6" :exclusions [org.clojure/clojure
                                                                         commons-codec
                                                                         com.google.code.findbugs/jsr305]]
-                                   [pjstadig/humane-test-output "0.11.0"]
-                                   [cider/piggieback "0.5.2"]]}
+                                   [cider/piggieback "0.5.3"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
@@ -131,15 +130,6 @@
                                                               cider.nrepl/wrap-undef
                                                               cider.nrepl/wrap-version
                                                               cider.nrepl/wrap-xref]}}]
-
-             :cloverage [:test
-                         {:plugins [[lein-cloverage "1.2.1"]]
-                          :dependencies [[cloverage "1.2.1"]]
-                          :cloverage {:codecov? true
-                                      ;; Cloverage can't handle some of the code
-                                      ;; in this project; see issue #457
-                                      :ns-exclude-regex [#".*util.instrument"]
-                                      :test-ns-regex [#"^((?!debug-integration-test).)*$$"]}}]
 
              :cljfmt [:test
                       {:plugins [[lein-cljfmt "0.8.0"]]

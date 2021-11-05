@@ -145,7 +145,6 @@ jobs:
 #   - Java 8/11/16/...
 #   - Clojure 1.8, 1.9, 1.10, master
 # - linter, eastwood and cljfmt
-# - runs code coverage report
 
 workflows:
   version: 2.1
