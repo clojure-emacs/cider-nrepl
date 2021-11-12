@@ -7,6 +7,7 @@
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [clojure.pprint :as pp]
+   [clojure.string :as string]
    [clojure.test :as test]
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
@@ -65,7 +66,8 @@
           .getStackTrace
           (map (partial st/analyze-frame namespaces))
           (filter
-           #(clojure.string/starts-with? (:class %) (.getName (class f))))
+           #(some->  (:class %)
+                     (clojure.string/starts-with? class-name)))
           first))))
 
 (defn- print-object
