@@ -64,7 +64,8 @@
      (->> e
           .getStackTrace
           (map (partial st/analyze-frame namespaces))
-          (filter #(= (:class %) class-name))
+          (filter
+           #(clojure.string/starts-with? (:class %) (.getName (class f))))
           first))))
 
 (defn- print-object
