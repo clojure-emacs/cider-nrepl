@@ -210,3 +210,15 @@
            (comparable-stack-frame (test/stack-frame e throws)))
         "Returns a map representing the stack frame of the precise function
 that threw the exception")))
+
+(deftest stack-frame-line-test
+  (let [e (try
+            (throws)
+            (catch ExceptionInfo e
+              e))]
+    ;; NOTE this offset is subject to formatting of this test
+    (is (= (+ 2 (:line (meta #'stack-frame-line-test)))
+           (:line (test/stack-frame
+                   e
+                   (-> #'stack-frame-line-test meta :test))))
+        "Returns the line of the exception")))
