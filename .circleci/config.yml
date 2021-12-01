@@ -85,6 +85,8 @@ commands:
       - save_cache:
           paths:
             - ~/.m2
+            - linux-install-1.10.3.1040.sh
+            - clojure-tools-1.10.3.1040.tar.gz
             - .cpcache
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
@@ -131,6 +133,18 @@ jobs:
             - run:
                 name: Running tests with inlined deps
                 command: make test smoketest
+            - run:
+                name: Install the Clojure CLI
+                command: |
+                  # the `nc` option skips downloading a file as already present
+                  # (as allowed by the Circle caching).
+                  wget -nc https://download.clojure.org/install/linux-install-1.10.3.1040.sh
+                  sed -i 's/curl -O/wget -nc/g' linux-install-1.10.3.1040.sh
+                  chmod +x linux-install-1.10.3.1040.sh
+                  sudo ./linux-install-1.10.3.1040.sh
+            - run:
+                name: Running tests specific to tools.deps
+                command: make tools-deps-test
 
 ######################################################################
 #

@@ -1,0 +1,5 @@
+{:paths ["."]
+ :aliases {:test {:main-opts ["-m" "macroexpand-tools-deps-test"]
+                 :jvm-opts    ["-XX:-OmitStackTraceInFastThrow"
+                               "-Dclojure.main.report=stderr"]}}
+ :deps {cider/cider-nrepl {:mvn/version "RELEASE"}}}
