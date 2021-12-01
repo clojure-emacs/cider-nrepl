@@ -11,11 +11,14 @@ test/resources/cider/nrepl/clojuredocs/export.edn:
 
 inline-deps: .inline-deps
 
-test: .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
+test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
+
+tools-deps-test: clean install
+	cd tools-deps-testing; clojure -M:test
 
 eastwood:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+eastwood eastwood
