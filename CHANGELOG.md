@@ -4,6 +4,7 @@
 
 ### Bugs fixed
 
+* [#733](https://github.com/clojure-emacs/cider-nrepl/issues/719): `middleware.out`: remove reflection.
 * [#719](https://github.com/clojure-emacs/cider-nrepl/issues/719): `middleware.test`: gracefully handle exceptions thrown within fixtures.
 * [#722](https://github.com/clojure-emacs/cider-nrepl/issues/722): `middleware.format`: print otherwise non-serializable objects as strings.
 * [#708](https://github.com/clojure-emacs/cider-nrepl/issues/708): Upgrade Compliment, improving how autocompletion works in Windows.
