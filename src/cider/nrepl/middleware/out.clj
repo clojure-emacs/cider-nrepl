@@ -18,8 +18,6 @@
 
 (declare unsubscribe-session)
 
-(set! *warn-on-reflection* true)
-
 (defonce
   ^{:doc "Store the values of the original output streams so we can refer to them.
 Please do not inline; they must not be recomputed at runtime."}
