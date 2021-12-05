@@ -1,7 +1,9 @@
 (ns cider.nrepl.middleware.out-test
   (:require
    [cider.nrepl.middleware.out :as o]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all])
+  (:import
+   [java.io PrintWriter StringWriter]))
 
 (defn random-str []
   (->> #(format "%x" (rand-int 15))
@@ -32,3 +34,71 @@
   (testing "The mapping is computed once; not doing so would defeat is point and create issues."
     (is (map? o/original-output))
     (is (not (fn? o/original-output)))))
+
+(defmacro with-original-output
+  [[m] & body]
+  `(let [orig# o/original-output]
+     (try
+       (alter-var-root #'o/original-output (constantly ~m))
+       ~@body
+       (finally
+         (alter-var-root #'o/original-output (constantly orig#))))))
+
+(defn- forking-printer-test-streams
+  []
+  (let [out-writer (StringWriter.)
+        message-writer (StringWriter.)
+        message {:session (atom {#'*out* message-writer})}
+        printer (o/forking-printer [message] :out)]
+    {:out-writer out-writer
+     :message-writer message-writer
+     :printer printer}))
+
+(deftest forking-printer-test
+  (testing "forking-printer prints to all message streams and original stream"
+    (testing "with String argument "
+      (let [{:keys [^StringWriter out-writer
+                    ^StringWriter message-writer
+                    ^PrintWriter printer]}
+            (forking-printer-test-streams)]
+        (with-original-output [{:out out-writer}]
+          (.write printer "Hello")
+          (is (= "Hello" (.toString out-writer)))
+          (is (= "Hello" (.toString message-writer))))))
+    (testing "with int"
+      (let [{:keys [^StringWriter out-writer
+                    ^StringWriter message-writer
+                    ^PrintWriter printer]}
+            (forking-printer-test-streams)
+            an-int (int 32)]
+        (with-original-output [{:out out-writer}]
+          (.write printer an-int)
+          (is (= " " (.toString out-writer)))
+          (is (= " " (.toString message-writer))))))
+    (testing "with char array"
+      (let [{:keys [^StringWriter out-writer
+                    ^StringWriter message-writer
+                    ^PrintWriter printer]}
+            (forking-printer-test-streams)]
+        (with-original-output [{:out out-writer}]
+          (.write printer (char-array "and"))
+          (is (= "and" (.toString out-writer)))
+          (is (= "and" (.toString message-writer))))))
+    (testing "with String with offsets"
+      (let [{:keys [^StringWriter out-writer
+                    ^StringWriter message-writer
+                    ^PrintWriter printer]}
+            (forking-printer-test-streams)]
+        (with-original-output [{:out out-writer}]
+          (.write printer "12 good34" 3 4)
+          (is (= "good" (.toString out-writer)))
+          (is (= "good" (.toString message-writer))))))
+    (testing "with char array with offsets"
+      (let [{:keys [^StringWriter out-writer
+                    ^StringWriter message-writer
+                    ^PrintWriter printer]}
+            (forking-printer-test-streams)]
+        (with-original-output [{:out out-writer}]
+          (.write printer (char-array " bye67") 1 3)
+          (is (= "bye" (.toString out-writer)))
+          (is (= "bye" (.toString message-writer))))))))

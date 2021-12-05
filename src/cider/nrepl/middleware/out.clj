@@ -30,10 +30,10 @@ Please do not inline; they must not be recomputed at runtime."}
   type is either :out or :err."
   [[v msg-seq type] & body]
   `(doseq [{:keys [~'session] :as ~'msg} ~msg-seq]
-     (let [~(with-meta v {:tag Writer}) (get @~'session
-                                             (case ~type
-                                               :out #'*out*
-                                               :err #'*err*))]
+     (let [~(with-meta v {:tag 'java.io.Writer}) (get @~'session
+                                                      (case ~type
+                                                        :out #'*out*
+                                                        :err #'*err*))]
        (try (binding [ieval/*msg* ~'msg]
               ~@body)
             ;; If a channel is faulty, dissoc it.
@@ -50,17 +50,42 @@ Please do not inline; they must not be recomputed at runtime."}
   [messages type]
   (PrintWriter. (proxy [Writer] []
                   (close [] (.flush ^Writer this))
+                  ;; unfortunately we can't type hint the method argument
+                  ;; as `int` and `char[]` aren't supported by proxy.
                   (write
                     ([x]
-                     (.write (original-output type) x)
                      (with-out-binding [printer messages type]
-                       (.write printer x)))
+                       (cond
+                         (string? x)
+                         (do
+                           (.write ^Writer (original-output type) ^String x)
+                           (.write printer ^String x))
+
+                         (integer? x)
+                         (do
+                           (.write ^Writer (original-output type) ^int x)
+                           (.write printer ^int x))
+                         :else
+                         (do
+                           (.write ^Writer (original-output type)
+                                   ^{:tag "[C"} x)
+                           (.write printer ^{:tag "[C"} x)))))
                     ([x ^Integer off ^Integer len]
-                     (.write (original-output type) x off len)
                      (with-out-binding [printer messages type]
-                       (.write printer x off len))))
+                       (cond
+                         (string? x)
+                         (do
+                           (.write ^Writer (original-output type)
+                                   ^String x off len)
+                           (.write printer ^String x off len))
+
+                         :else
+                         (do
+                           (.write ^Writer (original-output type)
+                                   ^{:tag "[C"} x off len)
+                           (.write printer ^{:tag "[C"} x off len))))))
                   (flush []
-                    (.flush (original-output type))
+                    (.flush ^Writer (original-output type))
                     (with-out-binding [printer messages type]
                       (.flush printer))))
                 true))
