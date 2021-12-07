@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.27.3 (2021-12-07)
+
 ### Bugs fixed
 
 * [#733](https://github.com/clojure-emacs/cider-nrepl/issues/719): `middleware.out`: remove reflection.
