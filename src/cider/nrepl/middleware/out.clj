@@ -13,7 +13,7 @@
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
-   [java.util TimerTask Timer]))
+   [java.util.concurrent Executors ThreadFactory TimeUnit]))
 
 (declare unsubscribe-session)
 
@@ -93,6 +93,14 @@ Please do not inline; they must not be recomputed at runtime."}
                       (.flush printer))))
                 true))
 
+
+(def flush-executor (Executors/newScheduledThreadPool
+                     1
+                     (proxy [ThreadFactory] []
+                       (newThread [r]
+                         (doto (Thread. r "cider-nrepl output flusher")
+                           (.setDaemon true))))))
+
 (defn print-stream
   "Returns a PrintStream suitable for binding as java.lang.System/out or
   java.lang.System/err. All operations are forwarded to all output
@@ -103,16 +111,15 @@ Please do not inline; they must not be recomputed at runtime."}
   #'clojure.core/*err*."
   [printer]
   (let [delay 100
-        print-timer (Timer.)
-        print-flusher (proxy [TimerTask] []
-                        (run []
-                          (.flush ^Writer @printer)))]
-    (.scheduleAtFixedRate print-timer print-flusher delay delay)
+        print-flusher (fn [] (.flush ^Writer @printer))
+        flush-future (.scheduleWithFixedDelay
+                      flush-executor print-flusher
+                      delay delay TimeUnit/MILLISECONDS)]
+
     (PrintStream.
      (proxy [OutputStream] []
        (close []
-         (.cancel print-flusher)
-         (.cancel print-timer)
+         (.cancel flush-future)
          (.flush ^OutputStream this))
        (write
          ([int-or-bytes]

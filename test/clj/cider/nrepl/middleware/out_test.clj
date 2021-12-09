@@ -134,3 +134,20 @@
           (is (= "byebye" (.toString out-writer)))
           (is (= "bye" (.toString ^StringWriter (message-writers 0))))
           (is (= "bye" (.toString ^StringWriter (message-writers 1)))))))))
+
+(defn find-thread [thread-name]
+  (->> (Thread/getAllStackTraces)
+       (.keySet)
+       (filter #(= thread-name (.getName ^Thread %)))
+       first))
+
+(deftest print-stream-flush-test
+  (let [out-writer (StringWriter.)
+        printer (o/print-stream (volatile! out-writer))]
+    (.write printer 32)
+    (loop [i 1000]
+      (when (and (= "" (.toString out-writer)) (>= 0 i))
+        (Thread/sleep 1)
+        (recur (unchecked-dec i))))
+    (is (find-thread "cider-nrepl output flusher"))
+    (is (= " " (.toString out-writer)))))
