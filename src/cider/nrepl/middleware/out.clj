@@ -10,8 +10,7 @@
   guarantee that the channel that sent the clone message will properly
   handle output replies."
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [nrepl.middleware.interruptible-eval :as ieval])
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
    [java.util TimerTask Timer]))
