@@ -34,11 +34,11 @@ Please do not inline; they must not be recomputed at runtime."}
                                                       (case ~type
                                                         :out #'*out*
                                                         :err #'*err*))]
-       (try (binding [ieval/*msg* ~'msg]
-              ~@body)
-            ;; If a channel is faulty, dissoc it.
-            (catch Exception ~'e
-              (unsubscribe-session ~'session))))))
+       (try
+         ~@body
+         ;; If a channel is faulty, dissoc it.
+         (catch Exception ~'e
+           (unsubscribe-session ~'session))))))
 
 (defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
