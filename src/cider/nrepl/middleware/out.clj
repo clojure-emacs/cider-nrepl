@@ -40,6 +40,17 @@ Please do not inline; they must not be recomputed at runtime."}
             (catch Exception ~'e
               (unsubscribe-session ~'session))))))
 
+(defn dispatch-write
+  ([^Writer writer x]
+   (cond
+     (string? x) (.write writer ^String x)
+     (integer? x) (.write writer ^int x)
+     :else (.write writer ^{:tag "[C"} x)))
+  ([^Writer writer x ^Integer off ^Integer len]
+   (if (string? x)
+     (.write writer ^String x off len)
+     (.write writer ^{:tag "[C"} x off len))))
+
 (defn forking-printer
   "Returns a PrintWriter suitable for binding as *out* or *err*. All
   operations are forwarded to all output bindings in the sessions of
@@ -54,36 +65,13 @@ Please do not inline; they must not be recomputed at runtime."}
                   ;; as `int` and `char[]` aren't supported by proxy.
                   (write
                     ([x]
+                     (dispatch-write (original-output type) x)
                      (with-out-binding [printer messages type]
-                       (cond
-                         (string? x)
-                         (do
-                           (.write ^Writer (original-output type) ^String x)
-                           (.write printer ^String x))
-
-                         (integer? x)
-                         (do
-                           (.write ^Writer (original-output type) ^int x)
-                           (.write printer ^int x))
-                         :else
-                         (do
-                           (.write ^Writer (original-output type)
-                                   ^{:tag "[C"} x)
-                           (.write printer ^{:tag "[C"} x)))))
+                       (dispatch-write printer x)))
                     ([x ^Integer off ^Integer len]
+                     (dispatch-write (original-output type) x off len)
                      (with-out-binding [printer messages type]
-                       (cond
-                         (string? x)
-                         (do
-                           (.write ^Writer (original-output type)
-                                   ^String x off len)
-                           (.write printer ^String x off len))
-
-                         :else
-                         (do
-                           (.write ^Writer (original-output type)
-                                   ^{:tag "[C"} x off len)
-                           (.write printer ^{:tag "[C"} x off len))))))
+                       (dispatch-write printer x off len))))
                   (flush []
                     (.flush ^Writer (original-output type))
                     (with-out-binding [printer messages type]
