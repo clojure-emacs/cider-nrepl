@@ -47,58 +47,90 @@
 (defn- forking-printer-test-streams
   []
   (let [out-writer (StringWriter.)
-        message-writer (StringWriter.)
-        message {:session (atom {#'*out* message-writer})}
-        printer (o/forking-printer [message] :out)]
+        message-writers [(StringWriter.) (StringWriter.)]
+        messages         [{:session (atom {#'*out* (message-writers 0)})}
+                          {:session (atom {#'*err* (message-writers 1)})}]
+        printers [(o/forking-printer [(messages 0) (messages 1)] :out)
+                  (o/forking-printer [(messages 0) (messages 1)] :err)]]
     {:out-writer out-writer
-     :message-writer message-writer
-     :printer printer}))
+     :message-writers message-writers
+     :printers printers}))
 
 (deftest forking-printer-test
   (testing "forking-printer prints to all message streams and original stream"
     (testing "with String argument "
       (let [{:keys [^StringWriter out-writer
-                    ^StringWriter message-writer
-                    ^PrintWriter printer]}
+                    message-writers
+                    printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
-          (.write printer "Hello")
+          (.write ^PrintWriter (printers 0) "Hello")
           (is (= "Hello" (.toString out-writer)))
-          (is (= "Hello" (.toString message-writer))))))
+          (is (= "Hello" (.toString ^StringWriter (message-writers 0))))
+          (is (= "" (.toString ^StringWriter (message-writers 1)))))
+        (with-original-output [{:err out-writer}]
+          (.write ^PrintWriter (printers 1) "Hello")
+          (is (= "HelloHello" (.toString out-writer)))
+          (is (= "Hello" (.toString ^StringWriter (message-writers 0))))
+          (is (= "Hello" (.toString ^StringWriter (message-writers 1)))))))
     (testing "with int"
       (let [{:keys [^StringWriter out-writer
-                    ^StringWriter message-writer
-                    ^PrintWriter printer]}
+                    message-writers
+                    printers]}
             (forking-printer-test-streams)
             an-int (int 32)]
         (with-original-output [{:out out-writer}]
-          (.write printer an-int)
+          (.write ^PrintWriter (printers 0) an-int)
           (is (= " " (.toString out-writer)))
-          (is (= " " (.toString message-writer))))))
+          (is (= " " (.toString ^StringWriter (message-writers 0))))
+          (is (= "" (.toString ^StringWriter (message-writers 1)))))
+        (with-original-output [{:err out-writer}]
+          (.write ^PrintWriter (printers 1) an-int)
+          (is (= "  " (.toString out-writer)))
+          (is (= " " (.toString ^StringWriter (message-writers 0))))
+          (is (= " " (.toString ^StringWriter (message-writers 1)))))))
     (testing "with char array"
       (let [{:keys [^StringWriter out-writer
-                    ^StringWriter message-writer
-                    ^PrintWriter printer]}
+                    message-writers
+                    printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
-          (.write printer (char-array "and"))
+          (.write ^PrintWriter (printers 0) (char-array "and"))
           (is (= "and" (.toString out-writer)))
-          (is (= "and" (.toString message-writer))))))
+          (is (= "and" (.toString ^StringWriter (message-writers 0))))
+          (is (= "" (.toString ^StringWriter (message-writers 1)))))
+        (with-original-output [{:err out-writer}]
+          (.write ^PrintWriter (printers 1) (char-array "and"))
+          (is (= "andand" (.toString out-writer)))
+          (is (= "and" (.toString ^StringWriter (message-writers 0))))
+          (is (= "and" (.toString ^StringWriter (message-writers 1)))))))
     (testing "with String with offsets"
       (let [{:keys [^StringWriter out-writer
-                    ^StringWriter message-writer
-                    ^PrintWriter printer]}
+                    message-writers
+                    printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
-          (.write printer "12 good34" 3 4)
+          (.write ^PrintWriter (printers 0) "12 good34" 3 4)
           (is (= "good" (.toString out-writer)))
-          (is (= "good" (.toString message-writer))))))
+          (is (= "good" (.toString ^StringWriter (message-writers 0))))
+          (is (= "" (.toString ^StringWriter (message-writers 1)))))
+        (with-original-output [{:err out-writer}]
+          (.write ^PrintWriter (printers 1) "12 good34" 3 4)
+          (is (= "goodgood" (.toString out-writer)))
+          (is (= "good" (.toString ^StringWriter (message-writers 0))))
+          (is (= "good" (.toString ^StringWriter (message-writers 1)))))))
     (testing "with char array with offsets"
       (let [{:keys [^StringWriter out-writer
-                    ^StringWriter message-writer
-                    ^PrintWriter printer]}
+                    message-writers
+                    printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
-          (.write printer (char-array " bye67") 1 3)
+          (.write ^PrintWriter (printers 0) (char-array " bye67") 1 3)
           (is (= "bye" (.toString out-writer)))
-          (is (= "bye" (.toString message-writer))))))))
+          (is (= "bye" (.toString ^StringWriter (message-writers 0))))
+          (is (= "" (.toString ^StringWriter (message-writers 1)))))
+        (with-original-output [{:err out-writer}]
+          (.write ^PrintWriter (printers 1) (char-array " bye67") 1 3)
+          (is (= "byebye" (.toString out-writer)))
+          (is (= "bye" (.toString ^StringWriter (message-writers 0))))
+          (is (= "bye" (.toString ^StringWriter (message-writers 1)))))))))
