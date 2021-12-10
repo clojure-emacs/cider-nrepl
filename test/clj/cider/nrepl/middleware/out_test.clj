@@ -145,10 +145,10 @@
       (when (and (= "" (.toString out-writer)) (>= 0 i))
         (Thread/sleep 1)
         (recur (unchecked-dec i))))
-    (is (str/starts-with?
+    (is (re-matches
+         #"cider-nrepl-output-flusher-\d+"
          (-> ^ThreadPoolExecutor o/flush-executor
              .getThreadFactory
              (.newThread #())
-             .getName)
-         "cider-nrepl-output-flusher-"))
+             .getName)))
     (is (= " " (.toString out-writer)))))
