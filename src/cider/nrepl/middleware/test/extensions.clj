@@ -23,7 +23,13 @@
                            (map #(vector % (data/diff expected# %))))})
             (merge {:message ~msg
                     :expected expected#
-                    :actual more#})
+                    :actual
+                    (if (= 1 (count more#))
+                      ;; most times,` more` has a count of 1. For this case, we unwrap `more`,
+                      ;; which has been the traditional behavior of this feature:
+                      (first more#)
+                      ;; if `more` has 2+ arguments, our :actual will closely resemble clojure.test's own:
+                      (list ~''not (apply list ~(list 'quote '=) expected# more#)))})
             test/do-report)
        result#)
     `(throw (Exception. "= expects more than one argument"))))
