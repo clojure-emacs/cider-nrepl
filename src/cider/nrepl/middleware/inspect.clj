@@ -38,8 +38,12 @@
 (defn inspector-transport
   [{:keys [^Transport transport] :as msg}]
   (reify Transport
-    (recv [this] (.recv transport))
-    (recv [this timeout] (.recv transport timeout))
+    (recv [_this]
+      (.recv transport))
+
+    (recv [_this timeout]
+      (.recv transport timeout))
+
     (send [this response]
       (cond (contains? response :value)
             (inspect-reply msg response)

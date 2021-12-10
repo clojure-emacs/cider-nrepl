@@ -117,11 +117,13 @@
   and inspect / alter them."
   [^Transport transport]
   (reify Transport
-    (recv [this]
+    (recv [_this]
       (.recv transport))
-    (recv [this timeout]
+
+    (recv [_this timeout]
       (.recv transport timeout))
-    (send [this response]
+
+    (send [_this response]
       (.send transport (response+content-type response)))))
 
 (defn handle-content-type
