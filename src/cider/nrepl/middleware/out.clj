@@ -10,8 +10,7 @@
   guarantee that the channel that sent the clone message will properly
   handle output replies."
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [nrepl.middleware.interruptible-eval :as ieval])
+   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
    [java.util TimerTask Timer]))
@@ -34,11 +33,11 @@ Please do not inline; they must not be recomputed at runtime."}
                                                       (case ~type
                                                         :out #'*out*
                                                         :err #'*err*))]
-       (try (binding [ieval/*msg* ~'msg]
-              ~@body)
-            ;; If a channel is faulty, dissoc it.
-            (catch Exception ~'e
-              (unsubscribe-session ~'session))))))
+       (try
+         ~@body
+         ;; If a channel is faulty, dissoc it.
+         (catch Exception ~'e
+           (unsubscribe-session ~'session))))))
 
 (defn- dispatch-string
   ([messages type ^String x]
