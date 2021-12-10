@@ -3,7 +3,8 @@
                                          (cider.nrepl.middleware.util.instrument/with-break)
                                          (cider.nrepl.middleware.util.instrument/instrument-special-form)
                                          (cider.nrepl.middleware.util.instrument/instrument-coll)
-                                         (cider.nrepl.print-method/def-print-method)]}
+                                         (cider.nrepl.print-method/def-print-method)
+                                         (cider.nrepl.middleware.out/with-out-binding)]}
            :unused-import {:level :off}
            :unresolved-namespace {:exclude [clojure.main]}}
  :output {:progress true
