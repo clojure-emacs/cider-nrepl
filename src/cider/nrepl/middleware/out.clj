@@ -120,6 +120,8 @@ Please do not inline; they must not be recomputed at runtime."}
     (PrintStream.
      (proxy [OutputStream] []
        (close []
+         ;; cancel, allowing any running flush to finish
+         ;; (false passed as mayInterruptIfRunning argument)
          (.cancel flush-future false)
          (.flush ^OutputStream this))
        (write
