@@ -94,12 +94,13 @@ Please do not inline; they must not be recomputed at runtime."}
                       (.flush printer))))
                 true))
 
-(def flush-executor (Executors/newScheduledThreadPool
-                     1
-                     (proxy [ThreadFactory] []
-                       (newThread [^Runnable r]
-                         (doto (Thread. r "cider-nrepl output flusher")
-                           (.setDaemon true))))))
+(def ^ScheduledExecutorService flush-executor
+  (Executors/newScheduledThreadPool
+   1
+   (proxy [ThreadFactory] []
+     (newThread [^Runnable r]
+       (doto (Thread. r "cider-nrepl output flusher")
+         (.setDaemon true))))))
 
 (defn print-stream
   "Returns a PrintStream suitable for binding as java.lang.System/out or
@@ -113,7 +114,7 @@ Please do not inline; they must not be recomputed at runtime."}
   (let [delay 100
         print-flusher (fn [] (.flush ^Writer @printer))
         flush-future (.scheduleWithFixedDelay
-                      ^ScheduledExecutorService flush-executor
+                      flush-executor
                       print-flusher
                       delay delay TimeUnit/MILLISECONDS)]
 
