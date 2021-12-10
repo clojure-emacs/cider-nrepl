@@ -222,9 +222,13 @@
   about the state."
   [{:keys [^Transport transport session] :as msg}]
   (reify Transport
-    (recv [this] (.recv transport))
-    (recv [this timeout] (.recv transport timeout))
-    (send [this {:keys [status] :as response}]
+    (recv [_this]
+      (.recv transport))
+
+    (recv [_this timeout]
+      (.recv transport timeout))
+
+    (send [_this {:keys [status] :as response}]
       (.send transport response)
       (when (contains? status :done)
         (send ns-cache update-in [session]
