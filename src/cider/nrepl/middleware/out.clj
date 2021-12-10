@@ -94,13 +94,15 @@ Please do not inline; they must not be recomputed at runtime."}
                       (.flush printer))))
                 true))
 
-(def ^ScheduledExecutorService flush-executor
-  (Executors/newScheduledThreadPool
-   1
-   (proxy [ThreadFactory] []
-     (newThread [^Runnable r]
-       (doto (Thread. r "cider-nrepl output flusher")
-         (.setDaemon true))))))
+(let [id-counter (atom 0)]
+  (def ^ScheduledExecutorService flush-executor
+    (Executors/newScheduledThreadPool
+     1
+     (proxy [ThreadFactory] []
+       (newThread [^Runnable r]
+         (doto (Thread.
+                (str "cider-nrepl output flusher " (swap! id-counter inc)))
+           (.setDaemon true)))))))
 
 (defn print-stream
   "Returns a PrintStream suitable for binding as java.lang.System/out or

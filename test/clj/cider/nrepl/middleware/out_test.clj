@@ -149,5 +149,5 @@
       (when (and (= "" (.toString out-writer)) (>= 0 i))
         (Thread/sleep 1)
         (recur (unchecked-dec i))))
-    (is (find-thread "cider-nrepl output flusher"))
+    (is (find-thread "cider-nrepl output flusher 1"))
     (is (= " " (.toString out-writer)))))
