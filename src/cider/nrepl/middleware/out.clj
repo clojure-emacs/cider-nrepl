@@ -96,6 +96,12 @@ Please do not inline; they must not be recomputed at runtime."}
 
 (let [id-counter (atom 0)]
   (def ^ScheduledExecutorService flush-executor
+    "An executor used to run flush on `print-stream` instances.
+   Using a single thread reduces resource usage, and possibly reduces
+   the interleaving of output from different streams.
+   The executor service will ensure there is always a thread available,
+   should a flush throw an exception and kill a thread.
+   Thread names are generated with id-counter, to make them unique."
     (Executors/newScheduledThreadPool
      1
      (proxy [ThreadFactory] []
