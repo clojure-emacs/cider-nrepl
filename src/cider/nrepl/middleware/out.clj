@@ -93,7 +93,6 @@ Please do not inline; they must not be recomputed at runtime."}
                       (.flush printer))))
                 true))
 
-
 (def flush-executor (Executors/newScheduledThreadPool
                      1
                      (proxy [ThreadFactory] []
