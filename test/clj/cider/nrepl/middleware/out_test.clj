@@ -56,8 +56,6 @@
      :message-writers message-writers
      :printers printers}))
 
-(set! *warn-on-reflection* true)
-
 (deftest forking-printer-test
   (testing "forking-printer prints to all message streams and original stream"
     (testing "with String argument "
