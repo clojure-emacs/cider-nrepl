@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Bugs fixed
+
+* [#737](https://github.com/clojure-emacs/cider-nrepl/pull/737): Fix a regression in `middleware.out` that could result in duplicate output.
+
 ## 0.27.3 (2021-12-07)
 
 ### Bugs fixed
