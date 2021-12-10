@@ -50,8 +50,8 @@
         message-writers [(StringWriter.) (StringWriter.)]
         messages         [{:session (atom {#'*out* (message-writers 0)})}
                           {:session (atom {#'*err* (message-writers 1)})}]
-        printers [(o/forking-printer [(messages 0)(messages 1)] :out)
-                  (o/forking-printer [(messages 0)(messages 1)] :err)]]
+        printers [(o/forking-printer [(messages 0) (messages 1)] :out)
+                  (o/forking-printer [(messages 0) (messages 1)] :err)]]
     {:out-writer out-writer
      :message-writers message-writers
      :printers printers}))
@@ -60,7 +60,7 @@
   (testing "forking-printer prints to all message streams and original stream"
     (testing "with String argument "
       (let [{:keys [^StringWriter out-writer
-                     message-writers
+                    message-writers
                     printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
@@ -91,7 +91,7 @@
           (is (= " " (.toString ^StringWriter (message-writers 1)))))))
     (testing "with char array"
       (let [{:keys [^StringWriter out-writer
-                     message-writers
+                    message-writers
                     printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
@@ -106,7 +106,7 @@
           (is (= "and" (.toString ^StringWriter (message-writers 1)))))))
     (testing "with String with offsets"
       (let [{:keys [^StringWriter out-writer
-                     message-writers
+                    message-writers
                     printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
@@ -121,7 +121,7 @@
           (is (= "good" (.toString ^StringWriter (message-writers 1)))))))
     (testing "with char array with offsets"
       (let [{:keys [^StringWriter out-writer
-                     message-writers
+                    message-writers
                     printers]}
             (forking-printer-test-streams)]
         (with-original-output [{:out out-writer}]
