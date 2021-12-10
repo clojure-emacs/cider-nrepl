@@ -101,7 +101,7 @@ Please do not inline; they must not be recomputed at runtime."}
      (proxy [ThreadFactory] []
        (newThread [^Runnable r]
          (doto (Thread.
-                (str "cider-nrepl output flusher " (swap! id-counter inc)))
+                (str "cider-nrepl-output-flusher-" (swap! id-counter inc)))
            (.setDaemon true)))))))
 
 (defn print-stream

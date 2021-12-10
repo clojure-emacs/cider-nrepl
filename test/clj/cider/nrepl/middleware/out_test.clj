@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.out-test
   (:require
    [cider.nrepl.middleware.out :as o]
+   [clojure.string :as str]
    [clojure.test :refer :all])
   (:import
    [java.io PrintWriter StringWriter]))
@@ -135,12 +136,6 @@
           (is (= "bye" (.toString ^StringWriter (message-writers 0))))
           (is (= "bye" (.toString ^StringWriter (message-writers 1)))))))))
 
-(defn find-thread [thread-name]
-  (->> (Thread/getAllStackTraces)
-       (.keySet)
-       (filter #(= thread-name (.getName ^Thread %)))
-       first))
-
 (deftest print-stream-flush-test
   (let [out-writer (StringWriter.)
         printer (o/print-stream (volatile! out-writer))]
@@ -149,5 +144,7 @@
       (when (and (= "" (.toString out-writer)) (>= 0 i))
         (Thread/sleep 1)
         (recur (unchecked-dec i))))
-    (is (find-thread "cider-nrepl output flusher 1"))
+    (is (str/starts-with?
+         (.getName (.newThread (.getThreadFactory o/flush-executor) #()))
+         "cider-nrepl-output-flusher-"))
     (is (= " " (.toString out-writer)))))
