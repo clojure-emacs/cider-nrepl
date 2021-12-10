@@ -13,7 +13,8 @@
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
-   [java.util TimerTask Timer]))
+   [java.util.concurrent
+    Executors ScheduledExecutorService ThreadFactory TimeUnit]))
 
 (declare unsubscribe-session)
 
@@ -93,6 +94,22 @@ Please do not inline; they must not be recomputed at runtime."}
                       (.flush printer))))
                 true))
 
+(let [id-counter (atom 0)]
+  (def ^ScheduledExecutorService flush-executor
+    "An executor used to run flush on `print-stream` instances.
+   Using a single thread reduces resource usage, and possibly reduces
+   the interleaving of output from different streams.
+   The executor service will ensure there is always a thread available,
+   should a flush throw an exception and kill a thread.
+   Thread names are generated with id-counter, to make them unique."
+    (Executors/newScheduledThreadPool
+     1
+     (proxy [ThreadFactory] []
+       (newThread [^Runnable r]
+         (doto (Thread.
+                (str "cider-nrepl-output-flusher-" (swap! id-counter inc)))
+           (.setDaemon true)))))))
+
 (defn print-stream
   "Returns a PrintStream suitable for binding as java.lang.System/out or
   java.lang.System/err. All operations are forwarded to all output
@@ -101,18 +118,20 @@ Please do not inline; they must not be recomputed at runtime."}
 
   `printer` is the printer var, either #'clojure.core/*out* or
   #'clojure.core/*err*."
-  [printer]
+  ^PrintStream [printer]
   (let [delay 100
-        print-timer (Timer.)
-        print-flusher (proxy [TimerTask] []
-                        (run []
-                          (.flush ^Writer @printer)))]
-    (.scheduleAtFixedRate print-timer print-flusher delay delay)
+        print-flusher (fn [] (.flush ^Writer @printer))
+        flush-future (.scheduleWithFixedDelay
+                      flush-executor
+                      print-flusher
+                      delay delay TimeUnit/MILLISECONDS)]
+
     (PrintStream.
      (proxy [OutputStream] []
        (close []
-         (.cancel print-flusher)
-         (.cancel print-timer)
+         ;; cancel, allowing any running flush to finish
+         ;; (false passed as mayInterruptIfRunning argument)
+         (.cancel flush-future false)
          (.flush ^OutputStream this))
        (write
          ([int-or-bytes]

@@ -1,9 +1,11 @@
 (ns cider.nrepl.middleware.out-test
   (:require
    [cider.nrepl.middleware.out :as o]
+   [clojure.string :as str]
    [clojure.test :refer :all])
   (:import
-   [java.io PrintWriter StringWriter]))
+   [java.io PrintWriter StringWriter]
+   [java.util.concurrent ThreadPoolExecutor]))
 
 (defn random-str []
   (->> #(format "%x" (rand-int 15))
@@ -134,3 +136,19 @@
           (is (= "byebye" (.toString out-writer)))
           (is (= "bye" (.toString ^StringWriter (message-writers 0))))
           (is (= "bye" (.toString ^StringWriter (message-writers 1)))))))))
+
+(deftest print-stream-flush-test
+  (let [out-writer (StringWriter.)
+        printer (o/print-stream (volatile! out-writer))]
+    (.write printer 32)
+    (loop [i 1000]
+      (when (and (= "" (.toString out-writer)) (>= 0 i))
+        (Thread/sleep 1)
+        (recur (unchecked-dec i))))
+    (is (re-matches
+         #"cider-nrepl-output-flusher-\d+"
+         (-> ^ThreadPoolExecutor o/flush-executor
+             .getThreadFactory
+             (.newThread #())
+             .getName)))
+    (is (= " " (.toString out-writer)))))
