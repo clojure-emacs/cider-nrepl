@@ -118,7 +118,7 @@ Please do not inline; they must not be recomputed at runtime."}
 
   `printer` is the printer var, either #'clojure.core/*out* or
   #'clojure.core/*err*."
-  [printer]
+  ^PrintStream [printer]
   (let [delay 100
         print-flusher (fn [] (.flush ^Writer @printer))
         flush-future (.scheduleWithFixedDelay

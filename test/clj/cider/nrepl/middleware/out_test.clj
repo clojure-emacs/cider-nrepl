@@ -4,7 +4,8 @@
    [clojure.string :as str]
    [clojure.test :refer :all])
   (:import
-   [java.io PrintWriter StringWriter]))
+   [java.io PrintWriter StringWriter]
+   [java.util.concurrent ThreadPoolExecutor]))
 
 (defn random-str []
   (->> #(format "%x" (rand-int 15))
@@ -145,6 +146,9 @@
         (Thread/sleep 1)
         (recur (unchecked-dec i))))
     (is (str/starts-with?
-         (.getName (.newThread (.getThreadFactory o/flush-executor) #()))
+         (-> ^ThreadPoolExecutor o/flush-executor
+             .getThreadFactory
+             (.newThread #())
+             .getName)
          "cider-nrepl-output-flusher-"))
     (is (= " " (.toString out-writer)))))
