@@ -13,7 +13,8 @@
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
-   [java.util.concurrent Executors ThreadFactory TimeUnit]))
+   [java.util.concurrent
+    Executors ScheduledExecutorService ThreadFactory TimeUnit]))
 
 (declare unsubscribe-session)
 
@@ -96,7 +97,7 @@ Please do not inline; they must not be recomputed at runtime."}
 (def flush-executor (Executors/newScheduledThreadPool
                      1
                      (proxy [ThreadFactory] []
-                       (newThread [r]
+                       (newThread [^Runnable r]
                          (doto (Thread. r "cider-nrepl output flusher")
                            (.setDaemon true))))))
 
@@ -112,13 +113,14 @@ Please do not inline; they must not be recomputed at runtime."}
   (let [delay 100
         print-flusher (fn [] (.flush ^Writer @printer))
         flush-future (.scheduleWithFixedDelay
-                      flush-executor print-flusher
+                      ^ScheduledExecutorService flush-executor
+                      print-flusher
                       delay delay TimeUnit/MILLISECONDS)]
 
     (PrintStream.
      (proxy [OutputStream] []
        (close []
-         (.cancel flush-future)
+         (.cancel flush-future false)
          (.flush ^OutputStream this))
        (write
          ([int-or-bytes]
