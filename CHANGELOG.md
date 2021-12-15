@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.27.4 (2021-12-15)
+
 ### Bugs fixed
 
 * [#721](https://github.com/clojure-emacs/cider-nrepl/issues/721): `middleware.macroexpand`: support a corner case for tools.deps.
