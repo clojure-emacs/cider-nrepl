@@ -112,7 +112,7 @@
 (defmethod content-type-response java.awt.Image [{^java.awt.Image image :value :as response}]
   (with-open [bos (ByteArrayOutputStream.)]
     (ImageIO/write image "png" ^OutputStream bos)
-    (merge response (when (ImageIO/write ^RenderedImage value "png" ^OutputStream bos)
+    (merge response (when (ImageIO/write ^RenderedImage image "png" ^OutputStream bos)
                       (slurp-reply "" ["image/png" {}] (.toByteArray bos))))))
 
 (defn content-type-transport
@@ -126,7 +126,7 @@
     (recv [_this timeout]
       (.recv transport timeout))
 
-    (send [this response]
+    (send [_this response]
       (.send transport (content-type-response response)))))
 
 (defn handle-content-type
