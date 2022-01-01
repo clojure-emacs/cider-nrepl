@@ -109,10 +109,9 @@
     (merge response (external-body-response file))
     response))
 
-(defmethod content-type-response java.awt.Image [{^java.awt.Image image :value :as response}]
+(defmethod content-type-response java.awt.image.RenderedImage [{^java.awt.image.RenderedImage image :value :as response}]
   (with-open [bos (ByteArrayOutputStream.)]
-    (ImageIO/write image "png" ^OutputStream bos)
-    (merge response (when (ImageIO/write ^RenderedImage image "png" ^OutputStream bos)
+    (merge response (when (ImageIO/write image "png" ^OutputStream bos)
                       (slurp-reply "" ["image/png" {}] (.toByteArray bos))))))
 
 (defn content-type-transport
