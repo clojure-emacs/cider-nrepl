@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#548](https://github.com/clojure-emacs/cider-nrepl/pull/548): Make the content-type middleware extensible via multimethod
+
 ## 0.27.4 (2021-12-15)
 
 ### Bugs fixed

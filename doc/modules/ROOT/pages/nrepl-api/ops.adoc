@@ -158,7 +158,9 @@ Returns::
 
 === `content-type-middleware`
 
-Enhances the ``eval`` op by adding ``content-type`` and friends to some responses. Not an op in itself.
+Enhances the ``eval`` op by adding ``content-type`` and ``body`` to certain ``eval`` responses. Not an op in itself.
+
+Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for ``URI``, ``URL``, ``File``, and ``java.awt.Image``. More type handlers can be provided by the user by extending the ``cider.nrepl.middleware.content-type/content-type-response`` multimethod. This dispatches using ``clojure.core/type``, so ``:type`` metadata on plain Clojure values can be used to provide custom handling.
 
 Required parameters::
 {blank}
@@ -168,7 +170,9 @@ Optional parameters::
 
 
 Returns::
-{blank}
+* `:body` The rich response document, if applicable.
+* `:content-type` The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`
+* `:content-transfer-encoding` The encoding of the response body (Optional, currently only one possible value `"base64"`)
 
 
 === `debug-input`

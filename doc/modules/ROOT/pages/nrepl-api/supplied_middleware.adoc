@@ -27,6 +27,12 @@
 | `complete`
 | Code completion.
 
+| `wrap-content-type`
+| -
+| No
+| `eval`
+| Rich content handling, return multimedia results beyond plain text from `eval`.
+
 | `wrap-debug`
 | -
 | No
