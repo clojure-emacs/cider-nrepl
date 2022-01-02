@@ -3,7 +3,9 @@
    [cider.nrepl.middleware.content-type :as content-type]
    [cider.nrepl.test-session :as session]
    [clojure.string :as str]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all])
+  (:import
+   [org.apache.commons.lang3 SystemUtils]))
 
 (use-fixtures :each session/session-fixture)
 
@@ -55,12 +57,14 @@
                  (select-keys [:body :content-type :content-transfer-encoding :status]))))))
 
   (testing "java.awt.image.RenderedImage"
-    (is (= {:body "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4XmNgAAIAAAUAAQYUdaMAAAAASUVORK5CYII=",
+    (is (= {:body (if (SystemUtils/IS_JAVA_1_8)
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mNgYGAAAAAEAAHI6uv5AAAAAElFTkSuQmCC"
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4XmNgYGAAAAAEAAEP0q3kAAAAAElFTkSuQmCC")
             :content-type ["image/png" {}]
             :content-transfer-encoding "base64"
             :status #{"done"}}
            (-> {:op "eval"
-                :code "(java.awt.image.BufferedImage. 1 1 java.awt.image.BufferedImage/TYPE_INT_ARGB)"
+                :code "(java.awt.image.BufferedImage. 1 1 java.awt.image.BufferedImage/TYPE_INT_RGB)"
                 :content-type "true"}
                session/message
                (select-keys [:body :content-type :content-transfer-encoding :status])))))
