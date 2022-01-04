@@ -56,24 +56,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol URLCoercable
-  (as-url [o]))
+  (as-url-string [o]))
 
 (extend-protocol URLCoercable
   Path
-  (as-url [^Path p]
-    (.. p normalize toUri toURL))
+  (as-url-string [^Path p]
+    (.. p normalize toUri toString))
 
   File
-  (as-url [^File f]
-    (.. f getCanonicalFile toURI toURL))
+  (as-url-string [^File f]
+    (.. f getCanonicalFile toURI toString))
 
   URI
-  (as-url [^URI u]
-    (.. u toURL))
+  (as-url-string [^URI u]
+    (.toString u))
 
   URL
-  (as-url [^URL u]
-    u))
+  (as-url-string [^URL u]
+    (.toString u)))
 
 (defn external-body-response
   "Partial response map having an external-body content-type referring to the given URL.
@@ -82,7 +82,7 @@
   [value]
   {:content-type ["message/external-body"
                   {"access-type" "URL"
-                   "URL" (.toString ^URL (as-url value))}]
+                   "URL" (as-url-string value)}]
    :body ""})
 
 (defmulti content-type-response
