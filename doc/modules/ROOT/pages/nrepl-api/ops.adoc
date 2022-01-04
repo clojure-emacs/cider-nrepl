@@ -156,7 +156,7 @@ Returns::
 {blank}
 
 
-=== `content-type-middleware`
+=== `content-type`
 
 Enhances the ``eval`` op by adding ``content-type`` and ``body`` to certain ``eval`` responses. Not an op in itself.
 
@@ -171,8 +171,9 @@ Optional parameters::
 
 Returns::
 * `:body` The rich response document, if applicable.
-* `:content-type` The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`
-* `:content-transfer-encoding` The encoding of the response body (Optional, currently only one possible value `"base64"`)
+* `:content-transfer-encoding` The encoding of the response body (Optional, currently only one possible value: ``"base64"``).
+* `:content-type` The Media type (MIME type) of the reponse, structured as a pair, ``[type {:as attrs}]``.
+
 
 
 === `debug-input`
@@ -928,7 +929,10 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:body` The slurped content body.
+* `:content-transfer-encoding` The encoding (if any) for the content.
+* `:content-type` A MIME type for the response, if one can be detected.
+
 
 
 === `spec-example`
@@ -973,7 +977,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
 
 
 Returns::
@@ -1199,3 +1203,4 @@ Optional parameters::
 
 Returns::
 * `:status` done
+

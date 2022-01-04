@@ -109,20 +109,22 @@
   {:doc "Middleware that adds `content-type` annotations to the result of the the eval op."
    :requires #{#'wrap-print}
    :expects #{"eval" "load-file"}
-   :returns {"content-type" "A MIME type for the response, if one can be detected."
-             "content-transfer-encoding" "The encoding (if any) of the content."
-             "body" "The content."}
-   :handles {"content-type-middleware"
-             {:doc "Enhances the `eval` op by adding `content-type` and friends to some responses. Not an op in itself."
+   :handles {"content-type"
+             {:doc "Enhances the `eval` op by adding `content-type` and `body` to certain `eval` responses. Not an op in itself.
+
+Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for `URI`, `URL`, `File`, and `java.awt.Image`. More type handlers can be provided by the user by extending the `cider.nrepl.middleware.content-type/content-type-response` multimethod. This dispatches using `clojure.core/type`, so `:type` metadata on plain Clojure values can be used to provide custom handling."
+              :returns {"body" "The rich response document, if applicable."
+                        "content-type" "The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`."
+                        "content-transfer-encoding" "The encoding of the response body (Optional, currently only one possible value: `\"base64\"`)."}
               :optional {"content-type" "If present and non-nil, try to detect and handle content-types."}}}})
 
 (def-wrapper wrap-slurp cider.nrepl.middleware.slurp/handle-slurp
   {:doc "Middleware that handles slurp requests."
-   :returns {"content-type" "A MIME type for the response, if one can be detected."
-             "content-transfer-encoding" "The encoding (if any) for the content."
-             "body" "The slurped content body."}
    :handles {"slurp"
-             {:doc "Slurps a URL from the nREPL server, returning MIME data."}}})
+             {:doc "Slurps a URL from the nREPL server, returning MIME data."
+              :returns {"content-type" "A MIME type for the response, if one can be detected."
+                        "content-transfer-encoding" "The encoding (if any) for the content."
+                        "body" "The slurped content body."}}}})
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:doc "Middleware that handles apropos requests"
