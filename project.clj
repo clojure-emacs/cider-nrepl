@@ -4,15 +4,15 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl "0.8.3"]
-                 ^:inline-dep [cider/orchard "0.8.0" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
+  :dependencies [[nrepl "0.9.0"]
+                 ^:inline-dep [cider/orchard "0.9.0" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
-                 ^:inline-dep [fipp "0.6.24"] ; can be removed in unresolved-tree mode
+                 ^:inline-dep [fipp "0.6.25"] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.12"]
                  ^:inline-dep [org.rksm/suitable "0.4.1" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.8.0" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [org.clojure/tools.namespace "1.0.0"]
+                 ^:inline-dep [org.clojure/tools.namespace "1.2.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.10"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
@@ -64,7 +64,7 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
-                                       [org.clojure/clojurescript "1.10.866" :scope "provided"]
+                                       [org.clojure/clojurescript "1.11.4" :scope "provided"]
                                        [com.cognitect/transit-clj "1.0.324"]
                                        [com.fasterxml.jackson.core/jackson-core "2.10.2"]
                                        [commons-codec "1.11"]
@@ -143,7 +143,7 @@
                          {:dependencies [[clj-kondo "2021.12.01"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.0.0"]]
+                        {:plugins [[jonase/eastwood "1.1.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}

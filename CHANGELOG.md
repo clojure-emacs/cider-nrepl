@@ -6,6 +6,10 @@
 
 * [#548](https://github.com/clojure-emacs/cider-nrepl/pull/548): Make the content-type middleware extensible via multimethod
 
+## Changes
+
+* Upgrade [Orchard](https://github.com/clojure-emacs/orchard/blob/v0.9.0/CHANGELOG.md#090-2022-01-10).
+
 ## 0.27.4 (2021-12-15)
 
 ### Bugs fixed
