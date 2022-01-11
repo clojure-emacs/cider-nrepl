@@ -14,10 +14,10 @@ Calva and other Clojure development tools based on nREPL.
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
-[CIDER's manual](https://docs.cider.mx) instead.
+[CIDER's user manual](https://docs.cider.mx) instead.
 
 People who are new to nREPL might benefit from reading [its
-manual](https://nrepl.org).
+user manual](https://nrepl.org).
 
 ## Documentation
 
