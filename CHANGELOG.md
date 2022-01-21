@@ -2,7 +2,9 @@
 
 ## master (unreleased)
 
-## Changes
+## 0.28.1 (2022-01-21)
+
+### Changes
 
 * Upgrade [Orchard to version 0.9.1](https://github.com/clojure-emacs/orchard/blob/v0.9.1/CHANGELOG.md#091-2022-01-17).
 
