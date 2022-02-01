@@ -1,4 +1,5 @@
-(defproject cider/cider-nrepl "0.28.1"
+(defproject cider/cider-nrepl (or (not-empty (System/getenv "PROJECT_VERSION"))
+                                  "0.0.0")
   :description "A collection of nREPL middleware designed to enhance Clojure editors."
   :url "https://github.com/clojure-emacs/cider-nrepl"
   :license {:name "Eclipse Public License"
@@ -143,8 +144,10 @@
                          {:dependencies [[clj-kondo "2021.12.01"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.1.0"]]
+                        {:plugins [[jonase/eastwood "1.2.2"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
-                                                     :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]})
+                                                     :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]
+
+             :deploy {:source-paths [".circleci/deploy"]}})

@@ -1,4 +1,4 @@
-.PHONY: test eastwood cljfmt install smoketest release deploy clean detect_timeout
+.PHONY: test eastwood cljfmt install smoketest deploy clean detect_timeout
 
 CLOJURE_VERSION ?= 1.10
 
@@ -21,15 +21,15 @@ tools-deps-test: clean install
 	cd tools-deps-testing; clojure -M:test
 
 eastwood:
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+eastwood eastwood
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+deploy,+eastwood eastwood
 
 cljfmt:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt check
 
 kondo:
-	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src
+	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src .circleci/deploy
 
-install: .inline-deps
+install: check-install-env .inline-deps
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 
 smoketest: install
@@ -44,21 +44,26 @@ smoketest: install
 detect_timeout:
 	(bin/ci_detect_timeout &)
 
-# When releasing, the BUMP variable controls which field in the
-# version string will be incremented in the *next* snapshot
-# version. Typically this is either "major", "minor", or "patch".
-
-BUMP ?= patch
-
-release:
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION) release $(BUMP)
-
-# Deploying requires the caller to set environment variables as
-# specified in project.clj to provide a login and password to the
-# artifact repository.
-
-deploy: .inline-deps
+# Deployment is performed via CI by creating a git tag prefixed with "v".
+# Please do not deploy locally as it skips various measures (particularly around mranderson).
+deploy: check-env .inline-deps
 	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
+
+check-env:
+ifndef CLOJARS_USERNAME
+	$(error CLOJARS_USERNAME is undefined)
+endif
+ifndef CLOJARS_PASSWORD
+	$(error CLOJARS_PASSWORD is undefined)
+endif
+ifndef CIRCLE_TAG
+	$(error CIRCLE_TAG is undefined. Please only perform deployments by publishing git tags. CI will do the rest.)
+endif
+
+check-install-env:
+ifndef PROJECT_VERSION
+	$(error Please set PROJECT_VERSION as an env var beforehand.)
+endif
 
 clean:
 	lein clean
