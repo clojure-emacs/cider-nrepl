@@ -1,3 +1,5 @@
+(def fipp-version "0.6.25")
+
 (defproject cider/cider-nrepl (or (not-empty (System/getenv "PROJECT_VERSION"))
                                   "0.0.0")
   :description "A collection of nREPL middleware designed to enhance Clojure editors."
@@ -9,12 +11,12 @@
                  ^:inline-dep [cider/orchard "0.9.1" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
-                 ^:inline-dep [fipp "0.6.25"] ; can be removed in unresolved-tree mode
+                 ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.12"]
                  ^:inline-dep [org.rksm/suitable "0.4.1" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.8.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.2.0"]
-                 ^:inline-dep [org.clojure/tools.trace "0.7.10"]
+                 ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
@@ -23,9 +25,9 @@
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
 
-  :plugins [[thomasa/mranderson "0.5.3"]]
+  :plugins [[thomasa/mranderson "0.5.4-SNAPSHOT"]]
   :mranderson {:project-prefix "cider.nrepl.inlined-deps"
-               :overrides       {[mvxcvi/puget fipp] [fipp "0.6.18"]} ; only takes effect in unresolved-tree mode
+               :overrides       {[mvxcvi/puget fipp] [fipp ~fipp-version]} ; only takes effect in unresolved-tree mode
                :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode
                :unresolved-tree false}
 
@@ -67,10 +69,10 @@
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
                                        [org.clojure/clojurescript "1.11.4" :scope "provided"]
                                        [com.cognitect/transit-clj "1.0.324"]
-                                       [com.fasterxml.jackson.core/jackson-core "2.10.2"]
-                                       [commons-codec "1.11"]
+                                       [com.fasterxml.jackson.core/jackson-core "2.13.1"]
+                                       [commons-codec "1.15"]
                                        [com.cognitect/transit-java "1.0.343"]
-                                       [com.google.errorprone/error_prone_annotations "2.1.3"]
+                                       [com.google.errorprone/error_prone_annotations "2.11.0"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
 
