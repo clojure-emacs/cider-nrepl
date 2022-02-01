@@ -4,11 +4,13 @@
 
 (def version-string
   "The current version for cider-nrepl as a string."
-  (-> (or (io/resource "cider/cider-nrepl/project.clj")
-          "project.clj")
+  (-> (io/resource "cider/nrepl/version.edn")
       slurp
-      read-string
-      (nth 2)))
+      read-string))
+
+(assert (seq version-string))
+
+(assert (string? version-string))
 
 (def version
   "Current version of CIDER nREPL as a map.

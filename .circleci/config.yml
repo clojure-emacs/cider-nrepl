@@ -8,37 +8,55 @@ version: 2.1
 
 # Default settings for executors
 
+env_defaults: &env_defaults
+  LEIN_ROOT: "true"   # we intended to run lein as root
+  # JVM_OPTS:
+  # - limit the maximum heap size to prevent out of memory errors
+  # - print stacktraces to console
+  JVM_OPTS: >
+    -Xmx3200m
+    -Dclojure.main.report=stderr
+
 defaults: &defaults
   working_directory: ~/repo
-  environment:
-    LEIN_ROOT: "true"   # we intended to run lein as root
-    # JVM_OPTS:
-    # - limit the maximum heap size to prevent out of memory errors
-    # - print stacktraces to console
-    JVM_OPTS: >
-      -Xmx3200m
-      -Dclojure.main.report=stderr
 
 # Runners for various OpenJDKs versions.
 # NOTE: JDK 16 can be discarded after a few months, given it's not LTS.
 
 executors:
+  # JDK 8 is preferred for deployments (https://github.com/benedekfazekas/mranderson/issues/57)
+  # Parallelism is disabled, at least for now (https://github.com/benedekfazekas/mranderson/issues/56)
+  openjdk8_deploy:
+    docker:
+      - image: circleci/clojure:openjdk-8-lein-2.9.1-node
+    <<: *defaults
+    environment:
+      LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
+      <<: *env_defaults
   openjdk8:
     docker:
       - image: circleci/clojure:openjdk-8-lein-2.9.1-node
     <<: *defaults
+    environment:
+      <<: *env_defaults
   openjdk11:
     docker:
       - image: circleci/clojure:openjdk-11-lein-2.9.1-node
     <<: *defaults
+    environment:
+      <<: *env_defaults
   openjdk16:
     docker:
       - image: circleci/clojure:openjdk-16-lein-2.9.5-buster-node
     <<: *defaults
+    environment:
+      <<: *env_defaults
   openjdk17:
     docker:
       - image: circleci/clojure:openjdk-17-lein-2.9.5-buster-node
     <<: *defaults
+    environment:
+      <<: *env_defaults
 
 # Runs a given set of steps, with some standard pre- and post-
 # steps, including restoring of cache, saving of cache.
@@ -111,6 +129,14 @@ jobs:
           cache_version: "1.10"
           steps: << parameters.steps >>
 
+  deploy:
+    executor: openjdk8_deploy
+    steps:
+      - checkout
+      - run:
+         name: Deploy
+         command: |
+           lein with-profile -user,+deploy run -m deploy-release make deploy
 
   test_code:
     description: |
@@ -125,6 +151,7 @@ jobs:
     executor: << parameters.jdk_version >>
     environment:
       VERSION: << parameters.clojure_version >>
+      PROJECT_VERSION: 999.99.9
     steps:
       - checkout
       - with_cache:
@@ -165,71 +192,22 @@ workflows:
   ci-test-matrix:
     jobs:
       - test_code:
-          name: Java 8, Clojure 1.8
-          clojure_version: "1.8"
-          jdk_version: openjdk8
-      - test_code:
-          name: Java 8, Clojure 1.9
-          clojure_version: "1.9"
-          jdk_version: openjdk8
-      - test_code:
-          name: Java 8, Clojure 1.10
-          clojure_version: "1.10"
-          jdk_version: openjdk8
-      - test_code:
-          name: Java 8, Clojure master
-          clojure_version: "master"
-          jdk_version: openjdk8
-      - test_code:
-          name: Java 11, Clojure 1.8
-          clojure_version: "1.8"
-          jdk_version: openjdk11
-      - test_code:
-          name: Java 11, Clojure 1.9
-          clojure_version: "1.9"
-          jdk_version: openjdk11
-      - test_code:
-          name: Java 11, Clojure 1.10
-          clojure_version: "1.10"
-          jdk_version: openjdk11
-      - test_code:
-          name: Java 11, Clojure master
-          clojure_version: "master"
-          jdk_version: openjdk11
-      - test_code:
-          name: Java 16, Clojure 1.8
-          clojure_version: "1.8"
-          jdk_version: openjdk16
-      - test_code:
-          name: Java 16, Clojure 1.9
-          clojure_version: "1.9"
-          jdk_version: openjdk16
-      - test_code:
-          name: Java 16, Clojure 1.10
-          clojure_version: "1.10"
-          jdk_version: openjdk16
-      - test_code:
-          name: Java 16, Clojure master
-          clojure_version: "master"
-          jdk_version: openjdk16
-      - test_code:
-          name: Java 17, Clojure 1.8
-          clojure_version: "1.8"
-          jdk_version: openjdk17
-      - test_code:
-          name: Java 17, Clojure 1.9
-          clojure_version: "1.9"
-          jdk_version: openjdk17
-      - test_code:
-          name: Java 17, Clojure 1.10
-          clojure_version: "1.10"
-          jdk_version: openjdk17
-      - test_code:
-          name: Java 17, Clojure master
-          clojure_version: "master"
-          jdk_version: openjdk17
+          matrix:
+            parameters:
+              clojure_version: ["1.8", "1.9", "1.10", "master"]
+              jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/
       - util_job:
           name: Code Linting
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/
           steps:
             - run:
                 name: Running cljfmt
@@ -243,3 +221,12 @@ workflows:
                 name: Running Eastwood
                 command: |
                   make eastwood
+      - deploy:
+          requires:
+            - test_code
+            - "Code Linting"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/

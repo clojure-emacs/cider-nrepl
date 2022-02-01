@@ -99,15 +99,14 @@ lein with-profile plugin.mranderson/config install
 Release to [clojars](https://clojars.org/):
 
 ```
-lein with-profile plugin.mranderson/config deploy clojars
+git tag -a v0.28.1 -m "0.28.1"
+git push --tags
 ```
 
 Or you can use the `Makefile` as:
 
 ```
-make clean
-make install
-make deploy
+PROJECT_VERSION=0.28.1 make install
 ```
 
 ## Hall of Fame

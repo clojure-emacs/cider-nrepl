@@ -1,0 +1,3 @@
+;; This file is automatically overwriten from .circleci/deploy/deploy_release.clj,
+;; whenever we perform a deployment.
+"0.0.0"
