@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## 0.28.2 (2022-02-1)
+
+Upgrade `tools.trace`.
+
 ## 0.28.1 (2022-01-21)
 
 ### Changes
