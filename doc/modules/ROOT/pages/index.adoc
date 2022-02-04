@@ -2,7 +2,7 @@
 
 == Overview
 
-`cider-nrepl` aims to extent the base functionality of an nREPL server to cater
+`cider-nrepl` aims to extend the base functionality of an nREPL server to cater
 to the needs of Clojure(Script) programming environments. It provides nREPL ops for common
 operations like:
 
