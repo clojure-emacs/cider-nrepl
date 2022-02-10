@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/clojure-emacs/cider-nrepl/tree/master.svg?style=svg)](https://circleci.com/gh/clojure-emacs/cider-nrepl/tree/master)
+[![Clojars Project](https://img.shields.io/clojars/v/cider/cider-nrepl.svg)](https://clojars.org/cider/cider-nrepl)
 [![Dependencies Status](https://versions.deps.co/clojure-emacs/cider-nrepl/status.svg)](https://versions.deps.co/clojure-emacs/cider-nrepl)
 [![Coverage](https://codecov.io/gh/clojure-emacs/cider-nrepl/branch/master/graph/badge.svg)](https://codecov.io/gh/clojure-emacs/cider-nrepl/)
 [![cljdoc badge](https://cljdoc.org/badge/cider/cider-nrepl)](https://cljdoc.org/d/cider/cider-nrepl/CURRENT)
