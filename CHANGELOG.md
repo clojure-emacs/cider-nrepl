@@ -2,7 +2,11 @@
 
 ## master (unreleased)
 
-## 0.28.2 (2022-02-1)
+## 0.28.3 (2022-02-22)
+
+* Upgrade [Orchard to version 0.9.2](https://github.com/clojure-emacs/orchard/blob/v0.9.2/CHANGELOG.md#092-2022-02-22).
+
+## 0.28.2 (2022-02-01)
 
 Upgrade `tools.trace`.
 

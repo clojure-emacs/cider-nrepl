@@ -8,7 +8,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "0.9.0"]
-                 ^:inline-dep [cider/orchard "0.9.1" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
+                 ^:inline-dep [cider/orchard "0.9.2" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.1"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
