@@ -104,7 +104,9 @@ git tag -a v0.28.3 -m "0.28.3"
 git push --tags
 ```
 
-Or you can use the `Makefile` as:
+#### Using the Makefile
+
+...Or you can use the `Makefile` as:
 
 ```
 PROJECT_VERSION=0.28.3 make install
