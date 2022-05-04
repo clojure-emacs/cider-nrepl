@@ -100,14 +100,14 @@ lein with-profile plugin.mranderson/config install
 Release to [clojars](https://clojars.org/):
 
 ```
-git tag -a v0.28.1 -m "0.28.1"
+git tag -a v0.28.3 -m "0.28.3"
 git push --tags
 ```
 
 Or you can use the `Makefile` as:
 
 ```
-PROJECT_VERSION=0.28.1 make install
+PROJECT_VERSION=0.28.3 make install
 ```
 
 ## Hall of Fame
