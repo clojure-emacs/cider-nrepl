@@ -103,7 +103,7 @@
       (is (:ex response)))))
 
 (deftest undef-all-test
-  (testing "undef-all undefines all vars in namespace"
+  (testing "undef-all undefines all vars in namespace, except default imports"
     (is (= #{"done"}
            (:status (session/message {:op "eval"
                                       :code "(do (ns other.ns (:require [clojure.walk :as walk :refer [postwalk]])))"}))))
@@ -113,6 +113,9 @@
     (is (= ["#'clojure.walk/postwalk"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'postwalk)"}))))
+    (is (= ["java.lang.System"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'System)"}))))
     (is (= #{"done"}
            (:status (session/message {:op "undef-all"
                                       :ns "other.ns"}))))
@@ -122,6 +125,9 @@
     (is (= ["nil"]
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'postwalk)"}))))
+    (is (= ["java.lang.System"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'other.ns 'System)"}))))
     (is (= ["{}"]
            (:value (session/message {:op "eval"
                                      :code "(ns-aliases 'other.ns)"}))))))
