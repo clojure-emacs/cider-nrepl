@@ -15,7 +15,7 @@
                  ^:inline-dep [compliment "0.3.12"]
                  ^:inline-dep [org.rksm/suitable "0.4.1" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.8.0" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [org.clojure/tools.namespace "1.2.0"]
+                 ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
@@ -146,7 +146,7 @@
                          {:dependencies [[clj-kondo "2021.12.01"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.2.2"]]
+                        {:plugins [[jonase/eastwood "1.2.3"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
