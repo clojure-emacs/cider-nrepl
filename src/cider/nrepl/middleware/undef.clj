@@ -31,8 +31,11 @@
   "Undefines all symbol mappings and aliases in the namespace."
   [{:keys [ns]}]
   (let [ns (misc/as-sym ns)]
-    (doseq [[sym _] (ns-map ns)]
-      (ns-unmap ns sym))
+    ;; Do not remove the default java.lang imports, as they are not relinked on the next load
+    ;; see https://github.com/clojure-emacs/cider/issues/3194
+    (doseq [[sym ref] (ns-map ns)]
+      (when-not (identical? ref (get clojure.lang.RT/DEFAULT_IMPORTS sym))
+        (ns-unmap ns sym)))
     (doseq [[sym _] (ns-aliases ns)]
       (ns-unalias ns sym))
     ns))

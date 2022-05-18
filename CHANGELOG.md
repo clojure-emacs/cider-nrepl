@@ -4,6 +4,12 @@
 
 ## 0.28.3 (2022-02-22)
 
+### Bugs Fixed 
+
+* [#751](https://github.com/clojure-emacs/cider-nrepl/issues/751): Skip unmapping of default imports in `undef-all` op.
+
+### Changes
+
 * Upgrade [Orchard to version 0.9.2](https://github.com/clojure-emacs/orchard/blob/v0.9.2/CHANGELOG.md#092-2022-02-22).
 
 ## 0.28.2 (2022-02-01)
