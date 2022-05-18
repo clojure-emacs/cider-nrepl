@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.28.4 (2022-05-18)
+
 ### Bugs Fixed 
 
 * [#751](https://github.com/clojure-emacs/cider-nrepl/issues/751): Skip unmapping of default imports in `undef-all` op.
