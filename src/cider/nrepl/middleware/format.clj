@@ -8,9 +8,10 @@
    [clojure.tools.reader.edn :as edn]
    [clojure.tools.reader.reader-types :as readers]
    [clojure.walk :as walk]
-   [nrepl.middleware.print :as print])
+   [nrepl.middleware.print :as print]
+   [orchard.misc :refer [deep-merge]])
   (:import
-   (java.io StringWriter)))
+   (java.io File StringWriter)))
 
 ;;; Code formatting
 (defn- keyword->symbol [kw]
@@ -22,15 +23,23 @@
      (assoc acc
             (keyword->symbol kw)
             (walk/postwalk #(cond-> % (string? %) keyword) rule)))
-   fmt/default-indents
+   {}
    indents))
 
+(def ^File default-config-file (File. ".cljfmt.edn"))
+
 (defn format-code-reply
-  [{:keys [code options]}]
-  (let [opts (some-> options
-                     (select-keys [:indents :alias-map])
-                     (update :indents generate-user-indents)
-                     (update :alias-map #(reduce-kv (fn [m k v] (assoc m (name k) v)) {} %)))]
+  [{:keys [code options ^File config-file]
+    :or {config-file default-config-file}}]
+  (let [config-file-opts (when (-> config-file .exists)
+                           (-> config-file slurp edn/read-string))
+        message-opts (some-> options
+                             (select-keys [:indents :alias-map])
+                             (update :indents generate-user-indents)
+                             (update :alias-map #(reduce-kv (fn [m k v] (assoc m (name k) v)) {} %)))
+        opts (deep-merge {:indents fmt/default-indents}
+                         config-file-opts
+                         message-opts)]
     {:formatted-code (fmt/reformat-string code opts)}))
 
 ;;; EDN formatting

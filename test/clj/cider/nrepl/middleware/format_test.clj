@@ -1,8 +1,13 @@
 (ns cider.nrepl.middleware.format-test
   (:require
+   [cider.nrepl.middleware.format :as sut]
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]
-   [nrepl.middleware.print :as print]))
+   [nrepl.middleware.print :as print])
+  (:import
+   (java.io File)
+   (java.nio.file Files)
+   (java.nio.file.attribute FileAttribute PosixFilePermissions)))
 
 (def ugly-code-sample
   "( let [x 3
@@ -53,6 +58,34 @@
   ")")
 
 (use-fixtures :once session/session-fixture)
+
+(def ^"[Ljava.nio.file.attribute.FileAttribute;" tmpfile-permissions
+  (into-array FileAttribute
+              [(PosixFilePermissions/asFileAttribute
+                (PosixFilePermissions/fromString "rw-------"))]))
+
+(defn tmpfile ^File []
+  (let [path (Files/createTempFile "cider" "nrepl" tmpfile-permissions)
+        file (.toFile path)]
+    (doto file (.deleteOnExit))))
+
+(deftest format-code-reply-test
+  (testing "`:config-file`"
+    (let [message-options {:indents {:let [["block" 2]]}}
+          config-file-options '{:indents {let [[:block 3]]}}
+          config-file (doto (tmpfile)
+                        (spit (pr-str config-file-options)))]
+      (is (not= (sut/format-code-reply {:config-file config-file
+                                        :code ugly-code-sample})
+                (sut/format-code-reply {:code ugly-code-sample}))
+          "The config file options take effect")
+
+      (is (= (sut/format-code-reply {:config-file config-file
+                                     :code ugly-code-sample
+                                     :options message-options})
+             (sut/format-code-reply {:code ugly-code-sample
+                                     :options message-options}))
+          "The message options take precedence"))))
 
 (deftest format-code-op-test
   (testing "format-code works"
