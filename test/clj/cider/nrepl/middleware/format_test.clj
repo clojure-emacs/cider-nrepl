@@ -72,13 +72,25 @@
 (deftest format-code-reply-test
   (testing "`:config-file`"
     (let [message-options {:indents {:let [["block" 2]]}}
-          config-file-options '{:indents {let [[:block 3]]}}
+          config-file-options "{:indents {let [[:block 3]]}}"
+          config-file-options-alt "{:indents {#re \"le.+\" [[:block 3]]}}"
           config-file (doto (tmpfile)
-                        (spit (pr-str config-file-options)))]
+                        (spit config-file-options))
+          config-file-alt (doto (tmpfile)
+                            (spit config-file-options-alt))]
+
+      (assert (not= config-file config-file-alt))
+
       (is (not= (sut/format-code-reply {:config-file config-file
                                         :code ugly-code-sample})
                 (sut/format-code-reply {:code ugly-code-sample}))
           "The config file options take effect")
+
+      (is (= (sut/format-code-reply {:config-file config-file
+                                     :code ugly-code-sample})
+             (sut/format-code-reply {:config-file config-file-alt
+                                     :code ugly-code-sample}))
+          "Interprets the `#re` reader literal")
 
       (is (= (sut/format-code-reply {:config-file config-file
                                      :code ugly-code-sample

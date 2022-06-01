@@ -32,13 +32,12 @@
   [{:keys [code options ^File config-file]
     :or {config-file default-config-file}}]
   (let [config-file-opts (when (-> config-file .exists)
-                           (-> config-file slurp edn/read-string))
+                           (->> config-file slurp (edn/read-string {:readers {'re re-pattern}})))
         message-opts (some-> options
                              (select-keys [:indents :alias-map])
                              (update :indents generate-user-indents)
                              (update :alias-map #(reduce-kv (fn [m k v] (assoc m (name k) v)) {} %)))
-        opts (deep-merge {:indents fmt/default-indents}
-                         config-file-opts
+        opts (deep-merge config-file-opts
                          message-opts)]
     {:formatted-code (fmt/reformat-string code opts)}))
 
