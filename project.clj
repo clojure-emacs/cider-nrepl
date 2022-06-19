@@ -93,7 +93,7 @@
                                      [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "1.0.194"]]}
+                     :dependencies [[org.clojure/tools.cli "1.0.206"]]}
 
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
