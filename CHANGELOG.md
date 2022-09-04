@@ -5,6 +5,7 @@
 ### Changes
 
 * Bump `fipp` to 0.6.26.
+* Bump `puget` to 1.3.2.
 
 ## 0.28.6 (2022-09-04)
 
