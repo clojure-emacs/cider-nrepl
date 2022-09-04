@@ -64,14 +64,14 @@ it on the command line through the `cider.tasks/add-middleware` task
 functionality):
 
 ----
-boot -d nrepl:0.7.0 -d cider/cider-nrepl:0.28.6 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl --server wait
+boot -d nrepl:1.0.0 -d cider/cider-nrepl:0.28.6 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl --server wait
 ----
 
 Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
 
 [source,clojure]
 ----
-(set-env! :dependencies '[[nrepl "0.7.0"]
+(set-env! :dependencies '[[nrepl "1.0.0"]
                           [cider/cider-nrepl "0.28.6"]])
 
 (require '[cider.tasks :refer [add-middleware]])
