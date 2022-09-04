@@ -97,13 +97,6 @@ release locally:
 lein with-profile plugin.mranderson/config install
 ```
 
-Release to [clojars](https://clojars.org/):
-
-```
-git tag -a v0.28.6 -m "0.28.6"
-git push --tags
-```
-
 #### Using the Makefile
 
 ...Or you can use the `Makefile` as:
@@ -111,6 +104,20 @@ git push --tags
 ```
 PROJECT_VERSION=0.28.6 make install
 ```
+
+## Releasing to Clojars
+
+**Note:** Make sure you've updated the changelog, `docs/antora.yml`, etc
+before cutting a new release.
+
+Release to [clojars](https://clojars.org/) by tagging a new release:
+
+```
+git tag -a v0.28.6 -m "Release 0.28.6"
+git push --tags
+```
+
+The CI will take it from there.
 
 ## Hall of Fame
 
