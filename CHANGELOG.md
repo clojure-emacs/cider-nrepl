@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `fipp` to 0.6.26.
+
 ## 0.28.6 (2022-09-04)
 
 ### Changes

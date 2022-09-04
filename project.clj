@@ -1,4 +1,4 @@
-(def fipp-version "0.6.25")
+(def fipp-version "0.6.26")
 
 (defproject cider/cider-nrepl (or (not-empty (System/getenv "PROJECT_VERSION"))
                                   "0.0.0")
