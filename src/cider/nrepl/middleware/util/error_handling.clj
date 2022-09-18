@@ -21,8 +21,8 @@
 (def ^:private analyze-causes
   (delay
     (do
-      (require 'cider.nrepl.middleware.stacktrace)
-      (resolve 'cider.nrepl.middleware.stacktrace/analyze-causes))))
+      (require 'orchard.stacktrace.analyzer)
+      (resolve 'orchard.stacktrace.analyzer/analyze))))
 
 ;;; UTILITY FUNCTIONS
 
