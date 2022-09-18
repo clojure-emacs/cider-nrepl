@@ -33,7 +33,7 @@
 
 (defn- analyze-most-recent
   "Analyze the most recent exception."
-  [{:keys [session transport ::print/print-fn] :as msg}]
+  [{:keys [session ::print/print-fn] :as msg}]
   (send-analysis msg (analyzer/analyze (@session #'*e) print-fn)))
 
 (defn- analyze-parameter?
@@ -44,14 +44,14 @@
 
 (defn- analyze-parameter
   "Analyze the stacktrace parameter."
-  [{:keys [stacktrace transport] :as msg}]
+  [{:keys [stacktrace] :as msg}]
   (if-let [analysis (some-> stacktrace parser/parse analyzer/analyze)]
     (send-analysis msg analysis)
     (no-error msg)))
 
 (defn handle-stacktrace
   "Handle the stacktrace request."
-  [_ {:keys [transport] :as msg}]
+  [_ msg]
   (cond
     (analyze-parameter? msg)
     (analyze-parameter msg)
