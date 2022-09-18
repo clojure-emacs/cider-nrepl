@@ -6,19 +6,35 @@
 
 (use-fixtures :each session/session-fixture)
 
-(deftest stacktrace-no-exception-test
-  (testing "stacktrace op without any exception bound to *e)"
+(deftest stacktrace-most-recent-bound-test
+  (testing "stacktrace op no most recent exception bound"
+    (session/message {:op "eval" :code "(first 1)"})
     (let [response (session/message {:op "stacktrace"})]
-      (testing "status field"
-        (is (= #{"no-error" "done"} (:status response)))))))
-
-(deftest stacktrace-exception-test
-  (testing "stacktrace op with an exception bound to *e)"
-    (session/message {:op "eval" :code    "(first 1)"})
-    (let [response (session/message {:op "stacktrace"})]
-      (testing "class field"
+      (testing "returns the exception class"
         (is (= "java.lang.IllegalArgumentException" (:class response))))
-      (testing "message field"
+      (testing "returns the exception message"
         (is (= "Don't know how to create ISeq from: java.lang.Long" (:message response))))
-      (testing "status field"
+      (testing "returns done status"
         (is (= #{"done"} (:status response)))))))
+
+(deftest stacktrace-most-recent-unbound-test
+  (testing "stacktrace op no most recent exception unbound"
+    (let [response (session/message {:op "stacktrace"})]
+      (testing "returns done and no-error status"
+        (is (= #{"done" "no-error"} (:status response)))))))
+
+(deftest stacktrace-parameter-test
+  (testing "stacktrace op with stacktrace parameter"
+    (let [response (session/message {:op "stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
+      (testing "returns the exception class"
+        (is (= "clojure.lang.ExceptionInfo" (:class response))))
+      (testing "returns the exception message"
+        (is (= "BOOM" (:message response))))
+      (testing "returns done status"
+        (is (= #{"done"} (:status response)))))))
+
+(deftest stacktrace-parameter-invalid-test
+  (testing "stacktrace op with invalid stacktrace parameter"
+    (let [response (session/message {:op "stacktrace" "stacktrace" "invalid"})]
+      (testing "returns done and no-error status"
+        (is (= #{"done" "no-error"} (:status response)))))))
