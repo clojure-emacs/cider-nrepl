@@ -3,7 +3,6 @@
   {:author "Artur Malabarba"}
   (:require
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
-   [cider.nrepl.middleware.stacktrace :as stacktrace]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
@@ -14,7 +13,8 @@
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
-   [orchard.meta :as m])
+   [orchard.meta :as m]
+   [orchard.stacktrace.analyzer :as stacktrace.analyzer])
   (:import
    [clojure.lang Compiler$LocalBinding]))
 
@@ -217,7 +217,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
                        {:status :eval-error
-                        :causes [(let [causes# (stacktrace/analyze-causes e# (::print/print-fn *msg*))]
+                        :causes [(let [causes# (stacktrace.analyzer/analyze e# (::print/print-fn *msg*))]
                                    (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)
@@ -291,7 +291,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     :causes [{:class "StackTrace"
               :message "Harmless user-requested stacktrace"
               :stacktrace (-> (Exception. "Dummy")
-                              (stacktrace/analyze-causes (::print/print-fn *msg*))
+                              (stacktrace.analyzer/analyze (::print/print-fn *msg*))
                               last :stacktrace)}]}))
 
 (def debug-commands

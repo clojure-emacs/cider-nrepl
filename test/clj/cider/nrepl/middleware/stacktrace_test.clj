@@ -1,207 +1,24 @@
 (ns cider.nrepl.middleware.stacktrace-test
   (:require
    [cider.nrepl.middleware.stacktrace :as sut :refer :all]
-   [cider.nrepl.pprint :refer [pprint]]
+   [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]))
 
-;; # Utils
+(use-fixtures :each session/session-fixture)
 
-(defn causes
-  [form]
-  (analyze-causes
-   (try (eval form)
-        (catch Exception e
-          e))
-   pprint))
+(deftest stacktrace-no-exception-test
+  (testing "stacktrace op without any exception bound to *e)"
+    (let [response (session/message {:op "stacktrace"})]
+      (testing "status field"
+        (is (= #{"no-error" "done"} (:status response)))))))
 
-(defn stack-frames
-  [form]
-  (analyze-stacktrace
-   (try (eval form)
-        (catch Exception e
-          e))))
-
-;; ## Test fixtures
-
-(def form1 '(throw (ex-info "oops" {:x 1} (ex-info "cause" {:y 2}))))
-(def form2 '(do (defn oops [] (+ 1 "2"))
-                (oops)))
-(def form3 '(not-defined))
-(defn divi [x y] (/ x y))
-(def form4 '(divi 1 0))
-
-(def frames1 (stack-frames form1))
-(def frames2 (stack-frames form2))
-(def frames4 (stack-frames form4))
-(def causes1 (causes form1))
-(def causes2 (causes form2))
-(def causes3 (causes form3))
-
-;; ## Tests
-
-(deftest stacktrace-frames-test
-  (testing "File types"
-    ;; Should be clj and java only.
-    (let [ts1 (group-by :type frames1)
-          ts2 (group-by :type frames2)]
-      (is (= #{:clj :java} (set (keys ts1))))
-      (is (= #{:clj :java} (set (keys ts2))))))
-  (testing "Full file mappings"
-    (is (every?
-         #(-> % ^String (:file-url) (.endsWith "!/clojure/core.clj"))
-         (filter #(= "clojure.core" (:ns %))
-                 frames1)))
-    (is (->> (filter #(some-> % ^String (:ns) (.contains "cider")) frames1)
-             (remove (comp #{"invoke" "invokeStatic"} :method)) ;; these don't have a file-url
-             (every?
-              #(-> % ^String (:file-url) (.startsWith "file:/"))))))
-  (testing "Clojure ns, fn, and var"
-    ;; All Clojure frames should have non-nil :ns :fn and :var attributes.
-    (is (every? #(every? identity ((juxt :ns :fn :var) %))
-                (filter #(= :clj (:type %)) frames1)))
-    (is (every? #(every? identity ((juxt :ns :fn :var) %))
-                (filter #(= :clj (:type %)) frames2))))
-  (testing "Clojure name demunging"
-    ;; Clojure fn names should be free of munging characters.
-    (is (not-any? #(re-find #"[_$]|(--\d+)" (:fn %))
-                  (filter :fn frames1)))
-    (is (not-any? #(re-find #"[_$]|(--\d+)" (:fn %))
-                  (filter :fn frames2)))))
-
-(deftest stacktrace-frame-flags-test
-  (testing "Flags"
-    (testing "for file type"
-      ;; Every frame should have its file type added as a flag.
-      (is (every? #(contains? (:flags %) (:type %)) frames1))
-      (is (every? #(contains? (:flags %) (:type %)) frames2)))
-    (testing "for tooling"
-      ;; Tooling frames are classes named with 'clojure' or 'nrepl',
-      ;; or are java thread runners...or calls made from these.
-      (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
-                (filter (comp :tooling :flags) frames1)))
-      (is (some #(re-find #"(clojure|nrepl|run)" (:name %))
-                (filter (comp :tooling :flags) frames2))))
-    (testing "for project"
-      (is (seq (filter (comp :project :flags) frames4))))
-    (testing "for duplicate frames"
-      ;; Index frames. For all frames flagged as :dup, the frame above it in
-      ;; the stack (index i - 1) should be substantially the same source info.
-      (let [ixd1 (zipmap (iterate inc 0) frames1)
-            ixd2 (zipmap (iterate inc 0) frames2)
-            dup? #(or (= (:name %1) (:name %2))
-                      (and (= (:file %1) (:file %2))
-                           (= (:line %1) (:line %2))))]
-        (is (every? (fn [[i v]] (dup? v (get ixd1 (dec i))))
-                    (filter (comp :dup :flags val) ixd1)))
-        (is (every? (fn [[i v]] (dup? v (get ixd2 (dec i))))
-                    (filter (comp :dup :flags val) ixd2)))))))
-
-(deftest exception-causes-test
-  (testing "Exception cause unrolling"
-    (is (= 2 (count causes1)))
-    (is (= 1 (count causes2))))
-  (testing "Exception data"
-    ;; If ex-data is present, the cause should have a :data attribute.
-    (is (:data (first causes1)))
-    (is (not (:data (first causes2))))))
-
-(deftest ex-data-filtering-test
-  (is (= {:a :b :c :d}
-         (filtered-ex-data (ex-info "msg" {:a :b :c :d :repl-env :e})))))
-
-(deftest cause-data-pretty-printing-test
-  (testing "print-length"
-    (is (= "{:a (0 1 2 ...)}"
-           (:data (analyze-cause (ex-info "" {:a (range)})
-                                 (fn [value writer]
-                                   (pprint value writer {:length 3})))))))
-  (testing "print-level"
-    (is (= "{:a {#}}"
-           (:data (analyze-cause (ex-info "" {:a {:b {:c {:d {:e nil}}}}})
-                                 (fn [value writer]
-                                   (pprint value writer {:level 3}))))))))
-
-(deftest compilation-errors-test
-  (let [clojure-version ((juxt :major :minor) *clojure-version*)]
-    (if (< (compare clojure-version [1 10]) 0)
-      ;; 1.8 / 1.9
-      (is (re-find #"Unable to resolve symbol: not-defined in this context"
-                   (:message (first causes3))))
-
-      ;; 1.10+
-      (is (re-find #"Syntax error compiling at \(cider/nrepl/middleware/stacktrace_test\.clj:"
-                   (:message (first causes3))))))
-
-  (testing "extract-location"
-    (is (= {:class "clojure.lang.Compiler$CompilerException"
-            :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context"
-            :file "/foo/bar/baz.clj"
-            :file-url nil
-            :path "/foo/bar/baz.clj"
-            :line 1
-            :column 42}
-           (extract-location {:class "clojure.lang.Compiler$CompilerException"
-                              :message "java.lang.RuntimeException: Unable to resolve symbol: foo in this context, compiling:(/foo/bar/baz.clj:1:42)"})))
-
-    (is (= {:class "clojure.lang.Compiler$CompilerException"
-            :message "java.lang.NegativeArraySizeException"
-            :file "/foo/bar/baz.clj"
-            :file-url nil
-            :path "/foo/bar/baz.clj"
-            :line 1
-            :column 42}
-           (extract-location {:class "clojure.lang.Compiler$CompilerException"
-                              :message "java.lang.NegativeArraySizeException, compiling:(/foo/bar/baz.clj:1:42)"}))))
-  (testing "extract-location with location-data already present"
-    (is (= {:class    "clojure.lang.Compiler$CompilerException"
-            :location '#:clojure.error{:line 1, :column 42, :source "/foo/bar/baz.clj", :phase :macroexpand, :symbol clojure.core/let},
-            :message  "Syntax error macroexpanding clojure.core/let at (1:1)."
-            :file     "/foo/bar/baz.clj"
-            :file-url nil
-            :path     "/foo/bar/baz.clj"
-            :line     1
-            :column   42}
-           (extract-location {:class    "clojure.lang.Compiler$CompilerException"
-                              :location {:clojure.error/line   1
-                                         :clojure.error/column 42
-                                         :clojure.error/source "/foo/bar/baz.clj"
-                                         :clojure.error/phase  :macroexpand
-                                         :clojure.error/symbol 'clojure.core/let}
-                              :message  "Syntax error macroexpanding clojure.core/let at (1:1)."})))))
-
-(deftest analyze-cause-test
-  (testing "check that location-data is returned"
-    (let [e (ex-info "wat?" {:clojure.error/line 1
-                             :clojure.error/column 42
-                             :clojure.error/source "/foo/bar/baz.clj"
-                             :clojure.error/phase :macroexpand
-                             :clojure.error/symbol 'clojure.core/let})
-          cause (analyze-cause e (fn [v _] v))]
-      (is (= {:clojure.error/line 1
-              :clojure.error/column 42
-              :clojure.error/source "/foo/bar/baz.clj"
-              :clojure.error/phase :macroexpand
-              :clojure.error/symbol 'clojure.core/let}
-             (:location cause))))))
-
-(deftest ns-common-prefix*-test
-  (are [input expected] (= expected
-                           (sut/ns-common-prefix* input))
-    []             {:valid false :common :missing}
-    '[a b]         {:valid false :common :missing}
-    '[a.c b.c]     {:valid false :common :missing}
-    ::not-a-coll   {:valid false :common :error}
-
-    ;; single-segment namespaces are considered to never have a common part:
-    '[user]        {:valid false :common :missing}
-    '[dev]         {:valid false :common :missing}
-    '[test-runner] {:valid false :common :missing}
-
-    '[a.a]         {:valid true :common "a.a"}
-    '[a.a a.b]     {:valid true :common "a"}
-    '[a.a.b a.a.c] {:valid true :common "a.a"}
-
-    ;; single-segment namespaces cannot foil the rest of the calculation:
-    '[dev user test-runner a.a]         {:valid true :common "a.a"}
-    '[dev user test-runner a.a a.b]     {:valid true :common "a"}
-    '[dev user test-runner a.a.b a.a.c] {:valid true :common "a.a"}))
+(deftest stacktrace-exception-test
+  (testing "stacktrace op with an exception bound to *e)"
+    (session/message {:op "eval" :code    "(first 1)"})
+    (let [response (session/message {:op "stacktrace"})]
+      (testing "class field"
+        (is (= "java.lang.IllegalArgumentException" (:class response))))
+      (testing "message field"
+        (is (= "Don't know how to create ISeq from: java.lang.Long" (:message response))))
+      (testing "status field"
+        (is (= #{"done"} (:status response)))))))
