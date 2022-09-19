@@ -194,7 +194,7 @@ workflows:
       - test_code:
           matrix:
             parameters:
-              clojure_version: ["1.8", "1.9", "1.10", "master"]
+              clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
           filters:
             branches:
