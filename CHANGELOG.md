@@ -2,20 +2,14 @@
 
 ## master (unreleased)
 
-## 0.28.7 (2022-09-17)
-
-### Changes
-
-* Bump `fipp` to 0.6.26.
-* Bump `puget` to 1.3.2.
-* Bump `cljfmt` to 0.9.0.
-
-## 0.28.6 (2022-09-04)
+## 0.28.6 (2022-09-19)
 
 ### Changes
 
 * Bump `orchard` to version [0.10.0](https://github.com/clojure-emacs/orchard/releases/tag/v0.10.0).
 * Bump `compliment` to version [0.3.14](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#0314-2022-07-11).
+* Bump `fipp` to 0.6.26.
+* Bump `cljfmt` to 0.9.0.
 
 ## 0.28.5 (2022-06-19)
 
