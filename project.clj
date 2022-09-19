@@ -102,9 +102,9 @@
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
                                    [org.apache.httpcomponents/httpclient "4.5.9" :exclusions [commons-logging]]
-                                   [leiningen-core "2.9.8" :exclusions [org.clojure/clojure
-                                                                        commons-codec
-                                                                        com.google.code.findbugs/jsr305]]
+                                   [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
+                                                                         commons-codec
+                                                                         com.google.code.findbugs/jsr305]]
                                    [cider/piggieback "0.5.3"]]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
