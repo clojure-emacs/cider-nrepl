@@ -15,7 +15,13 @@ for ClojureScript.
 
 == Does `cider-nrepl` support ClojureCLR?
 
-No, it does not.
+No, it does not. There are two reasons for this:
+
+- The lack of a compatible nREPL implementation for .NET
+- The usage of Java APIs in the current implementation of `cider-nrepl`
+
+Both problems are solvable, but they will require significant amount of work and knowledge
+of .NET that the current `cider-nrepl` team does not have.
 
 == Are there any other nREPL middleware libraries similar to `cider-nrepl`?
 
