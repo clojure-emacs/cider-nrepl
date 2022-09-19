@@ -104,7 +104,7 @@
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
-                                   [org.apache.httpcomponents/httpclient "4.5.9" :exclusions [commons-logging]]
+                                   [org.apache.httpcomponents/httpclient "4.5.13" :exclusions [commons-logging]]
                                    [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
                                                                          commons-codec
                                                                          com.google.code.findbugs/jsr305]]
