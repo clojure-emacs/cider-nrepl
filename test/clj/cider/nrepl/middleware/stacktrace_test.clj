@@ -7,7 +7,7 @@
 (use-fixtures :each session/session-fixture)
 
 (deftest stacktrace-most-recent-bound-test
-  (testing "stacktrace op no most recent exception bound"
+  (testing "stacktrace op with most recent exception bound"
     (session/message {:op "eval" :code "(first 1)"})
     (let [response (session/message {:op "stacktrace"})]
       (testing "returns the exception class"
@@ -18,14 +18,14 @@
         (is (= #{"done"} (:status response)))))))
 
 (deftest stacktrace-most-recent-unbound-test
-  (testing "stacktrace op no most recent exception unbound"
+  (testing "stacktrace op with most recent exception unbound"
     (let [response (session/message {:op "stacktrace"})]
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))
 
-(deftest stacktrace-parameter-test
+(deftest parse-stacktrace-test
   (testing "stacktrace op with stacktrace parameter"
-    (let [response (session/message {:op "stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
+    (let [response (session/message {:op "parse-stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
       (testing "returns the exception class"
         (is (= "clojure.lang.ExceptionInfo" (:class response))))
       (testing "returns the exception message"
@@ -33,8 +33,8 @@
       (testing "returns done status"
         (is (= #{"done"} (:status response)))))))
 
-(deftest stacktrace-parameter-invalid-test
+(deftest parse-stacktrace-invalid-test
   (testing "stacktrace op with invalid stacktrace parameter"
-    (let [response (session/message {:op "stacktrace" "stacktrace" "invalid"})]
+    (let [response (session/message {:op "parse-stacktrace" "stacktrace" "invalid"})]
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))

@@ -25,37 +25,41 @@
   (doseq [cause analysis]
     (t/send transport (response-for msg cause))))
 
-(defn- analyze-most-recent?
-  "Return true when the most recent exception should be analyzed,
-  otherwise false."
-  [{:keys [session]}]
-  (and session (@session #'*e)))
+;; Most recent error
 
 (defn- analyze-most-recent
   "Analyze the most recent exception."
   [{:keys [session ::print/print-fn] :as msg}]
   (send-analysis msg (analyzer/analyze (@session #'*e) print-fn)))
 
-(defn- analyze-parameter?
-  "Return true when the stacktrace parameter should be analyzed,
-  otherwise false."
-  [{:keys [stacktrace]}]
-  (not (str/blank? stacktrace)))
+(defn- handle-most-recent
+  "Handle the stacktrace request."
+  [{:keys [session] :as msg}]
+  (if (and session (@session #'*e))
+    (analyze-most-recent msg)
+    (no-error msg))
+  (done msg))
 
-(defn- analyze-parameter
-  "Analyze the stacktrace parameter."
+;; Parse stacktrace
+
+(defn- parse-stacktrace
+  "Parse the stacktrace parameter."
   [{:keys [stacktrace] :as msg}]
   (if-let [analysis (some-> stacktrace parser/parse analyzer/analyze)]
     (send-analysis msg analysis)
     (no-error msg)))
 
-(defn handle-stacktrace
-  "Handle the stacktrace request."
-  [_ msg]
-  (cond
-    (analyze-parameter? msg)
-    (analyze-parameter msg)
-    (analyze-most-recent? msg)
-    (analyze-most-recent msg)
-    :else (no-error msg))
+(defn- handle-parse-stacktrace
+  "Handle the parse stacktrace request."
+  [{:keys [stacktrace] :as msg}]
+  (if (not (str/blank? stacktrace))
+    (parse-stacktrace msg)
+    (no-error msg))
   (done msg))
+
+(defn handle-stacktrace
+  "Handle stacktrace ops."
+  [_ {:keys [op] :as msg}]
+  (case op
+    "stacktrace" (handle-most-recent msg)
+    "parse-stacktrace" (handle-parse-stacktrace msg)))
