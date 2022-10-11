@@ -436,8 +436,12 @@ Depending on the type of the return value of the evaluation this middleware may 
     :requires #{#'session #'wrap-print}
     :expects #{}
     :handles {"stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
-                            :optional (assoc wrap-print-optional-arguments "stacktrace" "The stacktrace to be parsed and analyzed as a string.")
-                            :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
+                            :optional wrap-print-optional-arguments
+                            :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
+              "parse-stacktrace" {:doc "Parse the `stacktrace` and return messages describing each cause and stack frame."
+                                  :requires {"stacktrace" "The stacktrace to be parsed and analyzed as a string."}
+                                  :optional wrap-print-optional-arguments
+                                  :returns {"status" "\"done\", or \"no-error\" if `stracktrace` is not recognized"}}}}))
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
