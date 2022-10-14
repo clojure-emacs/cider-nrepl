@@ -15,7 +15,8 @@
    [nrepl.transport :as t]
    [orchard.misc :as misc]
    [orchard.query :as query]
-   [orchard.stacktrace.analyzer :as stacktrace.analyzer]))
+   [orchard.stacktrace.analyzer :as stacktrace.analyzer]
+   [orchard.stacktrace.parser.clojure.throwable :as throwable]))
 
 ;;; ## Overview
 ;;
@@ -64,6 +65,7 @@
    (when-let [class-name (some-> f class .getName)]
      (->> e
           .getStackTrace
+          (map throwable/StackTraceElement->vec)
           (map (partial stacktrace.analyzer/analyze-frame namespaces))
           (filter
            #(when-let [frame-cname (:class %)]
