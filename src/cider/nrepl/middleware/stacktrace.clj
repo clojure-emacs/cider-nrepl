@@ -42,18 +42,18 @@
 
 ;; Parse stacktrace
 
-(defn- parse-stacktrace
+(defn- analyze-stacktrace
   "Parse the stacktrace parameter."
   [{:keys [stacktrace] :as msg}]
   (if-let [analysis (some-> stacktrace parser/parse analyzer/analyze)]
     (send-analysis msg analysis)
     (no-error msg)))
 
-(defn- handle-parse-stacktrace
+(defn- handle-analyze-stacktrace
   "Handle the parse stacktrace request."
   [{:keys [stacktrace] :as msg}]
   (if (not (str/blank? stacktrace))
-    (parse-stacktrace msg)
+    (analyze-stacktrace msg)
     (no-error msg))
   (done msg))
 
@@ -61,5 +61,5 @@
   "Handle stacktrace ops."
   [_ {:keys [op] :as msg}]
   (case op
-    "stacktrace" (handle-most-recent msg)
-    "parse-stacktrace" (handle-parse-stacktrace msg)))
+    "analyze-stacktrace" (handle-analyze-stacktrace msg)
+    "stacktrace" (handle-most-recent msg)))

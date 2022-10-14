@@ -1007,9 +1007,9 @@ Returns::
 
 
 
-=== `parse-stacktrace`
+=== `analyze-stacktrace`
 
-Parse the `:stacktrace` parameter and return messages describing each cause and stack frame. The stacktrace must be a string formatted in one of the following formats:
+Parse and analyze the `:stacktrace` parameter and return messages describing each cause and stack frame. The stacktrace must be a string formatted in one of the following formats:
 
 * `:aviso` Stacktraces printed with the https://ioavisopretty.readthedocs.io/en/latest/exceptions.html[write-exception] function of the https://github.com/AvisoNovate/pretty[Aviso] library.
 * `:clojure.tagged-literal` Stacktraces printed as a tagged literal, like a https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html[java.lang.Throwable] printed with the https://clojure.github.io/clojure/branch-master/clojure.core-api.html#clojure.core/pr[pr] function.

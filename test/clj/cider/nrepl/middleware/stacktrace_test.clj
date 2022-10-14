@@ -23,9 +23,9 @@
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))
 
-(deftest parse-stacktrace-test
+(deftest analyze-stacktrace-test
   (testing "stacktrace op with stacktrace parameter"
-    (let [response (session/message {:op "parse-stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
+    (let [response (session/message {:op "analyze-stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
       (testing "returns the exception class"
         (is (= "clojure.lang.ExceptionInfo" (:class response))))
       (testing "returns the exception message"
@@ -33,8 +33,8 @@
       (testing "returns done status"
         (is (= #{"done"} (:status response)))))))
 
-(deftest parse-stacktrace-invalid-test
+(deftest analyze-stacktrace-invalid-test
   (testing "stacktrace op with invalid stacktrace parameter"
-    (let [response (session/message {:op "parse-stacktrace" "stacktrace" "invalid"})]
+    (let [response (session/message {:op "analyze-stacktrace" "stacktrace" "invalid"})]
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))
