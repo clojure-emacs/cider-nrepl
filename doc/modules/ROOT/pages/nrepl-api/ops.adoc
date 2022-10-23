@@ -986,7 +986,7 @@ Returns::
 
 
 
-=== `stacktrace`
+=== `analyze-last-stacktrace`
 
 Return messages describing each cause and stack frame of the most recent exception.
 
@@ -1033,6 +1033,25 @@ Optional parameters::
 Returns::
 * `:status` "done", or "no-error" if ``*e`` is nil
 
+
+=== `stacktrace`
+
+Return messages describing each cause and stack frame of the most recent exception. This op is deprecated, please use the `analyze-last-stacktrace`` op instead.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:status` "done", or "no-error" if ``*e`` is nil
 
 
 === `test`

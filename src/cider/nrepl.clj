@@ -435,11 +435,14 @@ Depending on the type of the return value of the evaluation this middleware may 
            cause and stack frame info for the most recent exception."
     :requires #{#'session #'wrap-print}
     :expects #{}
-    :handles {"analyze-stacktrace" {:doc "Parse the `stacktrace` and return messages describing each cause and stack frame."
+    :handles {"analyze-last-stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
+                                         :optional wrap-print-optional-arguments
+                                         :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
+              "analyze-stacktrace" {:doc "Parse the `stacktrace` and return messages describing each cause and stack frame."
                                     :requires {"stacktrace" "The stacktrace to be parsed and analyzed as a string."}
                                     :optional wrap-print-optional-arguments
                                     :returns {"status" "\"done\", or \"no-error\" if `stracktrace` is not recognized"}}
-              "stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
+              "stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception. Deprecated: Use analyze-last-stacktrace instead."
                             :optional wrap-print-optional-arguments
                             :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
 

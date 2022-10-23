@@ -2,6 +2,7 @@
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
   (:require
+   [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [clojure.string :as str]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
@@ -25,41 +26,50 @@
   (doseq [cause analysis]
     (t/send transport (response-for msg cause))))
 
-;; Most recent error
+;; Analyze the last stacktrace
 
-(defn- analyze-most-recent
-  "Analyze the most recent exception."
+(defn- analyze-last-stacktrace
+  "Analyze the last exception."
   [{:keys [session ::print/print-fn] :as msg}]
   (send-analysis msg (analyzer/analyze (@session #'*e) print-fn)))
 
-(defn- handle-most-recent
-  "Handle the stacktrace request."
+(defn- handle-analyze-last-stacktrace-op
+  "Handle the analyze last stacktrace op."
   [{:keys [session] :as msg}]
   (if (and session (@session #'*e))
-    (analyze-most-recent msg)
+    (analyze-last-stacktrace msg)
     (no-error msg))
   (done msg))
 
-;; Parse stacktrace
+;; Analyze stacktrace
 
 (defn- analyze-stacktrace
-  "Parse the stacktrace parameter."
+  "Parse and analyze the `stacktrace`."
   [{:keys [stacktrace] :as msg}]
   (if-let [analysis (some-> stacktrace parser/parse analyzer/analyze)]
     (send-analysis msg analysis)
     (no-error msg)))
 
-(defn- handle-analyze-stacktrace
-  "Handle the parse stacktrace request."
+(defn- handle-analyze-stacktrace-op
+  "Handle the analyze stacktrace op."
   [{:keys [stacktrace] :as msg}]
   (if (not (str/blank? stacktrace))
     (analyze-stacktrace msg)
     (no-error msg))
   (done msg))
 
+;; Stacktrace
+
+(defn- handle-stacktrace-op
+  "Handle the stacktrace op."
+  [msg]
+  (handle-analyze-last-stacktrace-op msg)
+  (notify-client msg "The `stacktrace` op is deprecated, please use `analyze-last-stacktrace` instead." :warning))
+
 (defn handle-stacktrace
   "Handle stacktrace ops."
   [_ {:keys [op] :as msg}]
   (case op
-    "analyze-stacktrace" (handle-analyze-stacktrace msg)
-    "stacktrace" (handle-most-recent msg)))
+    "analyze-last-stacktrace" (handle-analyze-last-stacktrace-op msg)
+    "analyze-stacktrace" (handle-analyze-stacktrace-op msg)
+    "stacktrace" (handle-stacktrace-op msg)))
