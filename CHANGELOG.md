@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `orchard` to 0.11.0 (this adds support for Spec 2).
+
 ## 0.28.6 (2022-09-19)
 
 ### Changes
