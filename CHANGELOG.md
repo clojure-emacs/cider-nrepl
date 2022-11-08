@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* Bump `puget` to 1.3.3.
+
 ## 0.28.7 (2022-10-25)
 
 ### Changes
