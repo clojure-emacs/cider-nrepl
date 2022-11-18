@@ -7,14 +7,14 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
+   [haystack.analyzer :as stacktrace.analyzer]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
-   [orchard.meta :as m]
-   [orchard.stacktrace.analyzer :as stacktrace.analyzer])
+   [orchard.meta :as m])
   (:import
    [clojure.lang Compiler$LocalBinding]))
 

@@ -9,14 +9,14 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
+   [haystack.analyzer :as stacktrace.analyzer]
+   [haystack.parser.clojure.throwable :as throwable]
    [nrepl.middleware.interruptible-eval :as ie]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.misc :as misc]
-   [orchard.query :as query]
-   [orchard.stacktrace.analyzer :as stacktrace.analyzer]
-   [orchard.stacktrace.parser.clojure.throwable :as throwable]))
+   [orchard.query :as query]))
 
 ;;; ## Overview
 ;;

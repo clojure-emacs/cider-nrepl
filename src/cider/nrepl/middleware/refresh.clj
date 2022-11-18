@@ -10,12 +10,12 @@
    [clojure.tools.namespace.find :as find]
    [clojure.tools.namespace.reload :as reload]
    [clojure.tools.namespace.track :as track]
+   [haystack.analyzer :as stacktrace.analyzer]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.misc :as misc]
-   [orchard.stacktrace.analyzer :as stacktrace.analyzer]))
+   [orchard.misc :as misc]))
 
 (defonce ^:private refresh-tracker (volatile! (track/tracker)))
 

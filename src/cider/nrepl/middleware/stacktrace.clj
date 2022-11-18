@@ -4,11 +4,11 @@
   (:require
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [clojure.string :as str]
+   [haystack.analyzer :as analyzer]
+   [haystack.parser :as parser]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as t]
-   [orchard.stacktrace.analyzer :as analyzer]
-   [orchard.stacktrace.parser :as parser]))
+   [nrepl.transport :as t]))
 
 (defn- done
   "Send the done response to the client."
