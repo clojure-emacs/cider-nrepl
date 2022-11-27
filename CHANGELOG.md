@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#758](https://github.com/clojure-emacs/cider-nrepl/pull/758) Add NREPL op to parse stacktraces into data (`analyze-stacktrace`), rename `stacktrace` op to `analyze-last-stacktrace` and deprecate `stacktrace`.
 * Bump `puget` to 1.3.3.
 
 ## 0.28.7 (2022-10-25)
