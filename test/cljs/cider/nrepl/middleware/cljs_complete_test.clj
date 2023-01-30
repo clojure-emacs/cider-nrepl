@@ -64,7 +64,18 @@
                                      :ns "cljs.user"
                                      :prefix "js/Ob"})
           candidates (:completions response)]
-      (is (empty? candidates)))))
+      (is (empty? candidates))))
+  (testing "local bindings"
+    (let [response (session/message {:op "complete"
+                                     :ns "cljs.user"
+                                     :prefix "ba"
+                                     ;; Including `quux :quux` helps ensuring that only
+                                     ;; bindings with the specified prefix (ba*) will be
+                                     ;; suggested, instead of all the local bindings.
+                                     :context "(defn foo [bar] (let [baz :baz, quux :quux] (str __prefix__)))"
+                                     :enhanced-cljs-completion? "t"})
+          candidates (:completions response)]
+      (is (= [{:candidate "bar", :type "local"}, {:candidate "baz", :type "local"}] candidates)))))
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"
