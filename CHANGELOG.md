@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.30.0 (2023-01-31)
+
 ### New features
 
 * [#766](https://github.com/clojure-emacs/cider-nrepl/issues/766) Complete local bindings for ClojureScript files.
