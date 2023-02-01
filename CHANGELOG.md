@@ -5,6 +5,7 @@
 ### Changes
 
 * Bump `cljfmt` to 0.9.2.
+* Bump `puget` to 1.3.4.
 
 ## 0.30.0 (2023-01-31)
 
