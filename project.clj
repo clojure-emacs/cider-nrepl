@@ -15,7 +15,7 @@
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.3.14"]
                  ^:inline-dep [org.rksm/suitable "0.4.1" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.9.0" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
@@ -139,7 +139,7 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.9.0"]]
+                      {:plugins [[lein-cljfmt "0.9.2"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           delay [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]

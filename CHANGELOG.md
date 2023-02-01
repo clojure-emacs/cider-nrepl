@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `cljfmt` to 0.9.2.
+
 ## 0.30.0 (2023-01-31)
 
 ### New features
