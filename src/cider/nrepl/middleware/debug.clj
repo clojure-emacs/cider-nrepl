@@ -585,6 +585,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form]
   (ins/tag-form form #'breakpoint-with-initial-debug-bindings))
 
+(defn exception-reader
+  "#exc reader. Wrap `form` in try-catch and break only on exception"
+  [form]
+  (let [ex (gensym)]
+    `(try ~form
+          (catch Exception ~ex
+            ~(breakpoint-reader `(.getMessage ~ex))
+            (throw ~ex)))))
+
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
   `form` itself is also marked."
@@ -620,7 +629,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         fake-reader (fn [x] (reset! has-debug? true) x)]
     (binding [*ns* (find-ns (symbol (or ns "user")))
               *data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg break light])
+                                  (interleave '[dbg exc break light])
                                   (apply assoc *data-readers*))]
       (try
         ;; new-line in REPL always throws; skip for debug convenience
