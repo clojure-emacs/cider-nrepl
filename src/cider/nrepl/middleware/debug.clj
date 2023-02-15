@@ -494,6 +494,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
      (breakpoint-if-interesting
       ~form ~dbg-state ~original-form)))
 
+(defmacro breakpoint-if-exception-with-initial-debug-bindings
+  {:style/indent 1}
+  [form dbg-state original-form]
+  `(with-initial-debug-bindings
+     (breakpoint-if-exception
+      ~form ~dbg-state ~original-form)))
+
 (defn break
   "Breakpoint function.
   Send the result of form and its coordinates to the client and wait for
@@ -546,20 +553,28 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   When instrumenting, these will not be wrapped in a breakpoint."
   '#{def fn* deftype* reify* monitor-enter monitor-exit})
 
+(defn- uninteresting-form?
+  "Checks if a form is uninteresting and should be skipped
+  for instrumentation. Uninteresting forms are symbols that resolve to `clojure.core`
+  (taking locals into account), and sexps whose head is present in
+  `irrelevant-return-value-forms`."
+  [&env form]
+  (or (and (symbol? form)
+           (not (contains? &env form))
+           (try
+             (-> (resolve form) meta :ns
+                 ns-name #{'clojure.core 'schema.core})
+             (catch Exception _ nil)))
+      (and (seq? form)
+           (irrelevant-return-value-forms (first form)))))
+
 (defmacro breakpoint-if-interesting
   "Wrap form in a breakpoint if it looks interesting.
   Uninteresting forms are symbols that resolve to `clojure.core`
   (taking locals into account), and sexps whose head is present in
   `irrelevant-return-value-forms`. Used as :breakfunction in `tag-form`."
   [form {:keys [coor] :as dbg-state} original-form]
-  (if (or (and (symbol? form)
-               (not (contains? &env form))
-               (try
-                 (-> (resolve form) meta :ns
-                     ns-name #{'clojure.core 'schema.core})
-                 (catch Exception _ nil)))
-          (and (seq? form)
-               (irrelevant-return-value-forms (first form))))
+  (if (uninteresting-form? &env form)
     form
     (let [condition (:break/when (meta form))]
       (if condition
@@ -577,6 +592,25 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                         (reset! *skip-breaks* old-breaks#)))))
         `(expand-break ~form ~dbg-state ~original-form)))))
 
+(defmacro breakpoint-if-exception
+  "Wrap form in a try-catch that has breakpoint on exception.
+  Ignores uninteresting forms.
+  Uninteresting forms are symbols that resolve to `clojure.core`
+  (taking locals into account), and sexps whose head is present in
+  `irrelevant-return-value-forms`. Used as :breakfunction in `tag-form`."
+  [form dbg-state original-form]
+  (if (uninteresting-form? &env form)
+    form
+    `(try ~form
+          (catch Exception ex#
+            (let [exn-message# (.getMessage ex#)
+                  break-result# (expand-break exn-message# ~dbg-state ~original-form)]
+              (if  (= exn-message# break-result#)
+                ;; if they continued then rerun the form
+                ~form
+                ;; otherwise return the value they injected
+                break-result#))))))
+
 ;;; ## Data readers
 ;;
 ;; Set in `src/data_readers.clj`.
@@ -585,21 +619,25 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form]
   (ins/tag-form form #'breakpoint-with-initial-debug-bindings))
 
-(defn exception-reader
-  "#exc reader. Wrap `form` in try-catch and break only on exception"
-  [form]
-  (let [ex (gensym)]
-    `(try ~form
-          (catch Exception ~ex
-            ~(breakpoint-reader `(.getMessage ~ex))
-            (throw ~ex)))))
-
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
   `form` itself is also marked."
   [form]
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-interesting)
                 #'breakpoint-with-initial-debug-bindings))
+
+(defn break-on-exception-reader
+  "#exn reader. Wrap `form` in try-catch and break only on exception"
+  [form]
+  (ins/tag-form form #'breakpoint-if-exception-with-initial-debug-bindings))
+
+(defn debug-on-exception-reader
+  "#dbgexn reader. Mark all forms in `form` for breakpointing on exception.
+  `form` itself is also marked."
+  [form]
+  (println "dbgexn")
+  (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-exception)
+                #'breakpoint-if-exception-with-initial-debug-bindings))
 
 (defn instrument-and-eval [form]
   (let [form1 (ins/instrument-tagged-code form)]
@@ -629,7 +667,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         fake-reader (fn [x] (reset! has-debug? true) x)]
     (binding [*ns* (find-ns (symbol (or ns "user")))
               *data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg exc break light])
+                                  (interleave '[dbg exn dbgexn break light])
                                   (apply assoc *data-readers*))]
       (try
         ;; new-line in REPL always throws; skip for debug convenience
