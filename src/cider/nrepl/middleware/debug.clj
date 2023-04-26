@@ -413,7 +413,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                              (merge var-meta)
                              (assoc :file full-path))]
           (let [iform `(with-initial-debug-bindings
-                        ~(ins/instrument-tagged-code (debug-reader form)))]
+                         ~(ins/instrument-tagged-code (debug-reader form)))]
             ;; (ins/print-form iform true)
             (eval iform)
             (let [instrumented @v]
@@ -491,15 +491,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   {:style/indent 1}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
-    (breakpoint-if-interesting
-     ~form ~dbg-state ~original-form)))
+     (breakpoint-if-interesting
+      ~form ~dbg-state ~original-form)))
 
 (defmacro breakpoint-if-exception-with-initial-debug-bindings
   {:style/indent 1}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
-    (breakpoint-if-exception
-     ~form ~dbg-state ~original-form)))
+     (breakpoint-if-exception
+      ~form ~dbg-state ~original-form)))
 
 (defn break
   "Breakpoint function.
