@@ -413,7 +413,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                              (merge var-meta)
                              (assoc :file full-path))]
           (let [iform `(with-initial-debug-bindings
-                         ~(ins/instrument-tagged-code (debug-reader form)))]
+                        ~(ins/instrument-tagged-code (debug-reader form)))]
             ;; (ins/print-form iform true)
             (eval iform)
             (let [instrumented @v]
@@ -491,15 +491,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   {:style/indent 1}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
-     (breakpoint-if-interesting
-      ~form ~dbg-state ~original-form)))
+    (breakpoint-if-interesting
+     ~form ~dbg-state ~original-form)))
 
 (defmacro breakpoint-if-exception-with-initial-debug-bindings
   {:style/indent 1}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
-     (breakpoint-if-exception
-      ~form ~dbg-state ~original-form)))
+    (breakpoint-if-exception
+     ~form ~dbg-state ~original-form)))
 
 (defn break
   "Breakpoint function.
@@ -602,12 +602,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (if (uninteresting-form? &env form)
     form
     `(try ~form
-          (catch Exception ex#
+          (catch Throwable ex#
             (let [exn-message# (.getMessage ex#)
                   break-result# (expand-break exn-message# ~dbg-state ~original-form)]
               (if  (= exn-message# break-result#)
-                ;; if they continued then rerun the form
-                ~form
+                ;; if they continued then rethrow the exception
+                (throw ex#)
                 ;; otherwise return the value they injected
                 break-result#))))))
 
@@ -635,7 +635,6 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   "#dbgexn reader. Mark all forms in `form` for breakpointing on exception.
   `form` itself is also marked."
   [form]
-  (println "dbgexn")
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-exception)
                 #'breakpoint-if-exception-with-initial-debug-bindings))
 
