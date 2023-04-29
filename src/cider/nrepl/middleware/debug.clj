@@ -665,6 +665,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                 (eval form1)))
           (throw e))))))
 
+(def ^:dynamic *debug-data-readers*
+  "Reader macros like #dbg which cause code to be instrumented when present."
+  '#{dbg exn dbgexn break light})
+
 ;;; ## Middleware
 (defn- maybe-debug
   "Return msg, prepared for debugging if code contains debugging macros."
@@ -676,8 +680,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         fake-reader (fn [x] (reset! has-debug? true) x)]
     (binding [*ns* (find-ns (symbol (or ns "user")))
               *data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg dbg! break break! light])
-                                  (apply assoc *data-readers*))]
+                                  (zipmap *debug-data-readers*)
+                                  (merge *data-readers*))]
       (try
         ;; new-line in REPL always throws; skip for debug convenience
         (when (> (count code) 3)
