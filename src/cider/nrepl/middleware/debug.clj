@@ -284,15 +284,18 @@ this map (identified by a key), and will `dissoc` it afterwards."}
          :rendered pr-str)))
 
 (defn- debug-stacktrace
-  "Create a dummy exception, send its stack."
-  []
+  "Send the stacktrace of `value` if it is an exception.
+  Otherwise, create a dummy exception to view the call stack at the current location."
+  [value]
   (debugger-send
    {:status :stack
-    :causes [{:class "StackTrace"
-              :message "Harmless user-requested stacktrace"
-              :stacktrace (-> (Exception. "Dummy")
-                              (stacktrace.analyzer/analyze (::print/print-fn *msg*))
-                              last :stacktrace)}]}))
+    :causes (if (instance? Throwable value)
+              (stacktrace.analyzer/analyze value (::print/print-fn *msg*))
+              [{:class      "StackTrace"
+                :message    "Harmless user-requested stacktrace"
+                :stacktrace (-> (Exception. "Dummy")
+                                (stacktrace.analyzer/analyze (::print/print-fn *msg*))
+                                last :stacktrace)}])}))
 
 (def debug-commands
   "An unsorted set of commands supported by the debugger."
@@ -365,7 +368,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                         value)
         :here       (do (skip-breaks! :before coord (:code dbg-state) force?)
                         value)
-        :stacktrace (do (debug-stacktrace)
+        :stacktrace (do (debug-stacktrace value)
                         (recur value dbg-state))
         :trace      (do (skip-breaks! :trace)
                         value)
