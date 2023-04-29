@@ -225,9 +225,11 @@
     ;; Other coll types are safe, so we go inside them and only
     ;; instrument what's interesting.
     ;; Do we also need to check for seq?
-    coll? (doall (instrument-coll form))
+    coll? (cond-> (doall (instrument-coll form))
+            (::do-break (meta form)) (with-break))
     ;; Other things are uninteresting, literals or unreadable objects.
-    form))
+    (cond-> form
+      (::do-break (meta form)) (with-break))))
 
 ;;;; ## Pre-instrumentation
 ;;;
@@ -294,9 +296,14 @@
   "Tag form to be instrumented with breakfunction.
   This sets the ::breakfunction metadata of form, which can then be
   used by `instrument-tagged-code`. See this function for the meaning
-  of breakfunction."
-  [form breakfunction]
-  (m/merge-meta form {::breakfunction breakfunction}))
+  of breakfunction.
+  When `do-break?` is true it tells the instrumenter to wrap the form
+  with a breakpoint regardless of other heuristics."
+  ([form breakfunction]
+   (tag-form form breakfunction false))
+  ([form breakfunction do-break?]
+   (m/merge-meta form {::breakfunction breakfunction}
+                 (when do-break? {::do-break true}))))
 
 (defn tag-form-recursively
   "Like `tag-form` but also tag all forms inside the given form."

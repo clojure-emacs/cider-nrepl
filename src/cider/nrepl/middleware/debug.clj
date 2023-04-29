@@ -627,7 +627,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
-  (ins/tag-form form #'breakpoint-with-initial-debug-bindings))
+  (ins/tag-form form #'breakpoint-with-initial-debug-bindings true))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
@@ -639,7 +639,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn break-on-exception-reader
   "#exn reader. Wrap `form` in try-catch and break only on exception"
   [form]
-  (ins/tag-form form #'breakpoint-if-exception-with-initial-debug-bindings))
+  (ins/tag-form form #'breakpoint-if-exception-with-initial-debug-bindings true))
 
 (defn debug-on-exception-reader
   "#dbgexn reader. Mark all forms in `form` for breakpointing on exception.
