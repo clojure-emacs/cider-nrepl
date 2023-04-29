@@ -494,7 +494,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   {:style/indent 1}
   [form dbg-state original-form]
   `(with-initial-debug-bindings
-     (breakpoint-if-interesting
+     (breakpoint
       ~form ~dbg-state ~original-form)))
 
 (defmacro breakpoint-if-exception-with-initial-debug-bindings
@@ -571,29 +571,34 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       (and (seq? form)
            (irrelevant-return-value-forms (first form)))))
 
+(defmacro breakpoint
+  "Wrap form in a breakpoint unconditionally."
+  [form {:keys [coor] :as dbg-state} original-form]
+  (let [condition (:break/when (meta form))]
+    (if condition
+      ;; If there is a condition and it is falsy, we need to skip
+      ;; the current level (:deeper than parent coor), but only
+      ;; once. Next time, we need to test the condition again.
+      `(let [old-breaks# @*skip-breaks*]
+         (when-not ~condition
+           (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'STATE__)) false))
+         (try
+           (expand-break ~form ~dbg-state ~original-form)
+           ;; in case :continue-all was requested in a deeper level
+           ;; we don't want go back to the old-breaks
+           (finally (when (not= :all (:mode @*skip-breaks*))
+                      (reset! *skip-breaks* old-breaks#)))))
+      `(expand-break ~form ~dbg-state ~original-form))))
+
 (defmacro breakpoint-if-interesting
   "Wrap form in a breakpoint if it looks interesting.
   Uninteresting forms are symbols that resolve to `clojure.core`
   (taking locals into account), and sexps whose head is present in
   `irrelevant-return-value-forms`. Used as :breakfunction in `tag-form`."
-  [form {:keys [coor] :as dbg-state} original-form]
+  [form dbg-state original-form]
   (if (uninteresting-form? &env form)
     form
-    (let [condition (:break/when (meta form))]
-      (if condition
-        ;; If there is a condition and it is falsy, we need to skip
-        ;; the current level (:deeper than parent coor), but only
-        ;; once. Next time, we need to test the condition again.
-        `(let [old-breaks# @*skip-breaks*]
-           (when-not ~condition
-             (skip-breaks! :deeper ~(vec (butlast coor)) (:code (:msg ~'STATE__)) false))
-           (try
-             (expand-break ~form ~dbg-state ~original-form)
-             ;; in case :continue-all was requested in a deeper level
-             ;; we don't want go back to the old-breaks
-             (finally (when (not= :all (:mode @*skip-breaks*))
-                        (reset! *skip-breaks* old-breaks#)))))
-        `(expand-break ~form ~dbg-state ~original-form)))))
+    `(breakpoint ~form ~dbg-state ~original-form)))
 
 (defmacro breakpoint-if-exception
   "Wrap form in a try-catch that has breakpoint on exception.
