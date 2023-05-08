@@ -597,22 +597,17 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defmacro breakpoint-if-exception
   "Wrap form in a try-catch that has breakpoint on exception.
-  Ignores uninteresting forms.
-  Uninteresting forms are symbols that resolve to `clojure.core`
-  (taking locals into account), and sexps whose head is present in
-  `irrelevant-return-value-forms`. Used as :breakfunction in `tag-form`."
+  Used as :breakfunction in `tag-form`."
   [form dbg-state original-form]
-  (if (uninteresting-form? &env form)
-    form
-    `(try ~form
-          (catch Throwable ex#
-            (let [exn-message# (.getMessage ex#)
-                  break-result# (expand-break exn-message# ~dbg-state ~original-form)]
-              (if  (= exn-message# break-result#)
-                ;; if they continued then rethrow the exception
-                (throw ex#)
-                ;; otherwise return the value they injected
-                break-result#))))))
+  `(try ~form
+        (catch Throwable ex#
+          (let [exn-message# (.getMessage ex#)
+                break-result# (expand-break exn-message# ~dbg-state ~original-form)]
+            (if  (= exn-message# break-result#)
+              ;; if they continued then rethrow the exception
+              (throw ex#)
+              ;; otherwise return the value they injected
+              break-result#)))))
 
 ;;; ## Data readers
 ;;
