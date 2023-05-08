@@ -601,9 +601,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form dbg-state original-form]
   `(try ~form
         (catch Throwable ex#
-          (let [exn-message# (.getMessage ex#)
-                break-result# (expand-break exn-message# ~dbg-state ~original-form)]
-            (if  (= exn-message# break-result#)
+          (let [~'STATE__ (assoc-in ~'STATE__ [:msg :caught-msg] (.getMessage ex#))
+                break-result#  (expand-break ex# ~dbg-state ~original-form)]
+            (if (= ex# break-result#)
               ;; if they continued then rethrow the exception
               (throw ex#)
               ;; otherwise return the value they injected
