@@ -16,6 +16,7 @@
     cider.nrepl/wrap-format
     cider.nrepl/wrap-info
     cider.nrepl/wrap-inspect
+    cider.nrepl/wrap-log
     cider.nrepl/wrap-macroexpand
     cider.nrepl/wrap-ns
     cider.nrepl/wrap-out

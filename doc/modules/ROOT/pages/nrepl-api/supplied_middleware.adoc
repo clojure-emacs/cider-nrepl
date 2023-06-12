@@ -57,6 +57,12 @@
 | `inspect-(start/refresh/pop/push/reset/get-path)`
 | Inspect a Clojure expression.
 
+| `wrap-log`
+| 0.30.1
+| No
+| `cider/log-add-appender`, `cider/log-add-consumer`, `cider/log-analyze-stacktrace`, `cider/log-clear-appender`, `cider/log-exceptions`, `cider/log-format-event`, `cider/log-frameworks`, `cider/log-inspect-event`, `cider/log-levels`, `cider/log-loggers`, `cider/log-remove-appender`, `cider/log-remove-consumer`, `cider/log-search`, `cider/log-update-appender`, `cider/log-update-consumer`, `cider/log-threads`
+| Capture, debug, inspect and view log events emitted by Java logging frameworks.
+
 | `wrap-macroexpand`
 | -
 | Yes

@@ -41,6 +41,7 @@ under `:repl-options`.
                   cider.nrepl/wrap-format
                   cider.nrepl/wrap-info
                   cider.nrepl/wrap-inspect
+                  cider.nrepl/wrap-log
                   cider.nrepl/wrap-macroexpand
                   cider.nrepl/wrap-ns
                   cider.nrepl/wrap-spec
@@ -153,6 +154,7 @@ That's how CIDER's nREPL handler is created:
     cider.nrepl/wrap-format
     cider.nrepl/wrap-info
     cider.nrepl/wrap-inspect
+    cider.nrepl/wrap-log
     cider.nrepl/wrap-macroexpand
     cider.nrepl/wrap-ns
     cider.nrepl/wrap-out
