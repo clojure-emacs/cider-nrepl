@@ -1,0 +1,16 @@
+<configuration scan="true" scanPeriod="5 seconds">
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>OFF</level>
+    </filter>
+  </appender>
+
+  <root level="ALL">
+    <appender-ref ref="STDOUT"/>
+  </root>
+
+</configuration>
