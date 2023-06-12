@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#773](https://github.com/clojure-emacs/cider-nrepl/pull/773) Add middleware to capture, debug, inspect and view log events emitted by Java logging frameworks.
+
 ### Changes
 
 * Bump `orchard` to 0.12.0.

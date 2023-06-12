@@ -1,5 +1,6 @@
 {:hooks {:analyze-call {cider.nrepl.middleware.out/with-out-binding
                         hooks.core/with-out-binding}}
+ :lint-as {cider.nrepl.middleware.log-test/with-each-framework clojure.core/let}
  :linters {:unresolved-symbol {:exclude [(cider.nrepl/def-wrapper)
                                          (cider.nrepl.middleware.util.instrument/definstrumenter)
                                          (cider.nrepl.middleware.util.instrument/with-break)

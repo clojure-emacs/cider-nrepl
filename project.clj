@@ -18,7 +18,9 @@
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
-                 ^:inline-dep [org.clojure/tools.reader "1.3.6"]]
+                 ^:inline-dep [org.clojure/tools.reader "1.3.6"]
+                 ;; Not inlined because it's internal CIDER tooling with no transitive dependencies
+                 [mx.cider/logjam "0.1.1"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
   :pedantic? ~(if (System/getenv "CI")
@@ -102,9 +104,13 @@
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
                     :java-source-paths ["test/java"]
+                    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
+                                   ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
+                                   [ch.qos.logback/logback-classic "1.3.7"]
+                                   [org.clojure/test.check "1.1.1"]
                                    [org.apache.httpcomponents/httpclient "4.5.13" :exclusions [commons-logging]]
                                    [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
                                                                          commons-codec
