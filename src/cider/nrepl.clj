@@ -284,6 +284,136 @@ Depending on the type of the return value of the evaluation this middleware may 
                           "var-name" "The var name"}
                :returns {"status" "\"done\""}}}}))
 
+(def-wrapper wrap-log cider.nrepl.middleware.log/handle-log
+  {:doc "Middleware that captures log events and makes them inspect-able."
+   :requires #{#'session #'wrap-print}
+   :handles
+   {"log-add-appender"
+    {:doc "Add an appender to a log framework."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "filters" "A map from filter name to filter condition."
+                "size" "The number of events the appender keeps in memory."
+                "threshold" "The threshold in percent used to cleanup events."}
+     :optional {"logger" "The name of the logger to attach to."}
+     :returns {"status" "done"
+               "log-add-appender" "The appender that was added."}}
+
+    "log-add-consumer"
+    {:doc "Add a consumer to an appender of a log framework."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "filters" "A map from filter name to filter condition."}
+     :returns {"status" "done"
+               "log-add-consumer" "The consumer that was added."}}
+
+    "log-analyze-stacktrace"
+    {:doc "Analyze the stacktrace of a log event."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "event" "The id of the event to inspect."}
+     :returns {"status" "done"}}
+
+    "log-clear-appender"
+    {:doc "Clear all events of a log appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-clear-appender" "The appender that was cleared."}}
+
+    "log-exceptions"
+    {:doc "Return the exceptions and their frequencies for the given framework and appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-exceptions" "A map from exception name to event frequency."}}
+
+    "log-frameworks"
+    {:doc "Return the available log frameworks."
+     :returns {"status" "done"
+               "log-frameworks" "A list of log frameworks."}}
+
+    "log-format-event"
+    {:doc "Format a log event."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the log appender."
+                "event" "The id of the log event."}
+     :optional wrap-print-optional-arguments
+     :returns {"status" "done"
+               "log-format-event" "The formatted log event."}}
+
+    "log-inspect-event"
+    {:doc "Inspect a log event."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "event" "The id of the event to inspect."}
+     :returns {"status" "done"
+               "value" "The inspection result."}}
+
+    "log-levels"
+    {:doc "Return the log levels and their frequencies for the given framework and appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-levels" "A map from log level to event frequency."}}
+
+    "log-loggers"
+    {:doc "Return the loggers and their frequencies for the given framework and appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-loggers" "A map from logger name to event frequency."}}
+
+    "log-remove-appender"
+    {:doc "Remove an appender from a log framework."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-remove-appender" "The removed appender."}}
+
+    "log-remove-consumer"
+    {:doc "Remove a consumer from the appender of a log framework."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "consumer" "The name of the consumer."}
+     :returns {"status" "done"
+               "log-add-consumer" "The removed consumer."}}
+
+    "log-update-appender"
+    {:doc "Update the appender of a log framework."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "filters" "A map from filter name to filter condition."
+                "size" "The number of events the appender keeps in memory."
+                "threshold" "The threshold in percent used to cleanup events."}
+     :returns {"status" "done"
+               "log-update-appender" "The updated appender."}}
+
+    "log-update-consumer"
+    {:doc "Update the consumer of a log appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."
+                "consumer" "The name of the consumer."
+                "filters" "A map from filter name to filter condition."}
+     :returns {"status" "done"
+               "log-update-consumer" "The consumer that was updated."}}
+
+    "log-search"
+    {:doc "Search the log events of an appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :optional {"filters" "A map from filter name to filter condition."
+                "limit" "Number of log events to return."}
+     :returns {"status" "done"
+               "log-search" "The list of log events matching the search."}}
+
+    "log-threads"
+    {:doc "Return the threads and their frequencies for the given framework and appender."
+     :requires {"framework" "The id of the log framework."
+                "appender" "The name of the appender."}
+     :returns {"status" "done"
+               "log-threads" "A map from thread name to event frequency."}}}})
+
 (def-wrapper wrap-macroexpand cider.nrepl.middleware.macroexpand/handle-macroexpand
   (cljs/requires-piggieback
    {:doc "Macroexpansion middleware."

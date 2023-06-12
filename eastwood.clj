@@ -12,3 +12,11 @@
 (disable-warning
  {:linter :deprecations
   :symbol-matches #{#"^public final void java\.lang\.Thread\.stop\(\)$"}})
+
+(disable-warning
+ {:linter :deprecations
+  :symbol-matches #{#"^public long java\.lang\.Thread\.getId\(\)$"}})
+
+(disable-warning
+ {:linter :deprecations
+  :symbol-matches #{#"^public int java\.util\.logging\.LogRecord\.getThreadID\(\)$"}})

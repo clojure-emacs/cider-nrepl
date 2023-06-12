@@ -34,6 +34,8 @@
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
+  :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
+
   :source-paths ["src"]
   :resource-paths ["resources"]
   :test-paths ["test/clj" "test/cljs" "test/common"]
@@ -69,17 +71,24 @@
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
                                        [org.clojure/clojurescript "1.11.4" :scope "provided"]
+                                       [org.clojure/test.check "1.1.1"]
+                                       ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
+                                       [ch.qos.logback/logback-classic "1.3.7"]
                                        [com.cognitect/transit-clj "1.0.324"]
                                        [com.fasterxml.jackson.core/jackson-core "2.13.1"]
                                        [commons-codec "1.15"]
                                        [com.cognitect/transit-java "1.0.343"]
                                        [com.google.errorprone/error_prone_annotations "2.11.0"]
-                                       [com.google.code.findbugs/jsr305 "3.0.2"]]
+                                       [com.google.code.findbugs/jsr305 "3.0.2"]
+                                       [org.apache.logging.log4j/log4j-api "2.20.0"]
+                                       [org.apache.logging.log4j/log4j-core "2.20.0"]]
                         :test-paths ["test/spec"]}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
-                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]}
+                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]
+                                  ;; Leiningen 2.10.0 throws NoClassDefFoundError (only in Clojure 1.8)
+                                  [commons-logging/commons-logging "1.2" :scope "provided"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]
                                   [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]

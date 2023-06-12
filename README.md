@@ -94,7 +94,7 @@ to be modified in the `target/srcdeps` directory. When you want to
 release locally:
 
 ```
-lein with-profile plugin.mranderson/config install
+lein with-profile +plugin.mranderson/config install
 ```
 
 #### Using the Makefile
