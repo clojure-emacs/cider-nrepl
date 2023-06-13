@@ -1,4 +1,7 @@
 (ns cider.nrepl.middleware.log
+  "Capture, debug, inspect and view log events emitted by Java logging frameworks."
+  {:author "r0man"
+   :added "1.8"}
   (:require [cider.log.event :as event]
             [cider.log.framework :as framework]
             [cider.nrepl.middleware.inspect :as middleware.inspect]

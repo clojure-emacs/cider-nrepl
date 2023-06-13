@@ -1,4 +1,6 @@
 (ns cider.log.appender
+  "A log appender that captures log events in memory."
+  {:author "r0man"}
   (:require [cider.log.event :as event]))
 
 (def ^:private default-size

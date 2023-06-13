@@ -1,4 +1,6 @@
 (ns cider.log.framework.jul
+  "Log event capturing implementation for Java Util Logging."
+  {:author "r0man"}
   (:require [cider.log.appender :as appender]
             [clojure.set :as set])
   (:import (java.util.logging Level Logger LogRecord StreamHandler)))

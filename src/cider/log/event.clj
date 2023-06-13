@@ -1,4 +1,6 @@
 (ns cider.log.event
+  "Log event related utilities like searching and calculating frequencies."
+  {:author "r0man"}
   (:require [clojure.string :as str])
   (:import [java.util.regex Pattern]))
 

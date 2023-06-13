@@ -1,4 +1,6 @@
 (ns cider.log.framework.log4j2
+  "Log event capturing implementation for LOG4J2."
+  {:author "r0man"}
   (:require [cider.log.appender :as appender]
             [clojure.set :as set])
   (:import (org.apache.logging.log4j Level MarkerManager ThreadContext)

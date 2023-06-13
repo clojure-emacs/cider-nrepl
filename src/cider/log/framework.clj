@@ -1,12 +1,13 @@
 (ns cider.log.framework
+  "A unified interface to capture and inspect log events of Java logging
+  frameworks."
+  {:author "r0man"}
   (:require [cider.log.appender :as appender]
             [cider.log.event :as event]))
 
 (def ^:dynamic *frameworks*
   ['cider.log.framework.logback/framework
-   'cider.log.framework.jul/framework
-   ;; 'cider.log.framework.log4j2/framework
-   ])
+   'cider.log.framework.jul/framework])
 
 (defn- ex-appender-not-found
   "Return the appender not found exception info."

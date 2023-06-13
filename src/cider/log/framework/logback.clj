@@ -1,4 +1,6 @@
 (ns cider.log.framework.logback
+  "Log event capturing implementation for Logback."
+  {:author "r0man"}
   (:require [cider.log.appender :as appender]
             [clojure.set :as set])
   (:import (ch.qos.logback.classic Level Logger LoggerContext)
