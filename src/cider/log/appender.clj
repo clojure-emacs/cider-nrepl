@@ -2,11 +2,15 @@
   (:require [cider.log.event :as event]))
 
 (def ^:private default-size
-  "The default size of the appender."
+  "The default number of events captured by an appender."
   100000)
 
 (def ^:private default-threshold
-  "The default threshold of the appender in percentage."
+  "The default threshold in percentage after which log events are cleaned up.
+
+  Events of a log appender are cleanup up if the number of events reach the
+  `default-size` plus the `default-threshold` percentage of
+  `default-threshold`."
   10)
 
 (defn- garbage-collect?
