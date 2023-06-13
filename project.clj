@@ -34,8 +34,6 @@
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
-  :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
-
   :source-paths ["src"]
   :resource-paths ["resources"]
   :test-paths ["test/clj" "test/cljs" "test/common"]
@@ -111,6 +109,7 @@
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
                     :java-source-paths ["test/java"]
+                    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
