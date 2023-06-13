@@ -1,12 +1,12 @@
 = Hacking on cider-nrepl
 
-Hacking on cider-nrepl requires nothing bit a bit of knowledge of Clojure and nREPL.
+Hacking on cider-nrepl requires nothing but a bit of knowledge of Clojure and nREPL.
 In this section we'll take a look at some practical tips to make you more productive
 while working on the project.
 
 == Makefile
 
-cider-nrepl has some pretty complicated Lein profiles, as it has to deal with multiple version of
+cider-nrepl has some pretty complicated Lein profiles, as it has to deal with multiple versions of
 Clojure and ClojureScript, plus dependency inlining with Mr. Anderson. That's why we've
 added a good old `Makefile` to save you the trouble of having to think about the profiles
 and just focus on the tasks at hand.
