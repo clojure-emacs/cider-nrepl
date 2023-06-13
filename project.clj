@@ -69,7 +69,6 @@
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
                                        [org.clojure/clojurescript "1.11.4" :scope "provided"]
-                                       [org.clojure/test.check "1.1.1"]
                                        ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                                        [ch.qos.logback/logback-classic "1.3.7"]
                                        [com.cognitect/transit-clj "1.0.324"]
@@ -113,6 +112,7 @@
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
+                                   [org.clojure/test.check "1.1.1"]
                                    [org.apache.httpcomponents/httpclient "4.5.13" :exclusions [commons-logging]]
                                    [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
                                                                          commons-codec
