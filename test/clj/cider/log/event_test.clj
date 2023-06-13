@@ -1,15 +1,12 @@
 (ns cider.log.event-test
   (:require [cider.log.event :as event]
             [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]
             [clojure.set :as set]
             [cider.log.framework :as framework]
             [cider.log.test :as test]
             [clojure.test.check.generators :as gen]))
-
-(stest/instrument)
 
 (def frameworks
   (vals (framework/resolve-frameworks)))

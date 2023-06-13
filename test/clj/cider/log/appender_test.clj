@@ -1,12 +1,8 @@
 (ns cider.log.appender-test
   (:require [cider.log.appender :as appender]
-            [cider.log.specs]
             [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]))
-
-(stest/instrument)
 
 (def appender
   (appender/make-appender {:id "my-appender" :levels []}))

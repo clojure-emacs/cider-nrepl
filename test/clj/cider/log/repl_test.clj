@@ -2,11 +2,8 @@
   (:require [cider.log.framework :as framework]
             [cider.log.repl :as repl]
             [cider.log.specs]
-            [clojure.spec.test.alpha :as stest]
             [clojure.test :refer [deftest is testing]])
   (:import [java.util UUID]))
-
-(stest/instrument)
 
 (defn frameworks []
   (vals (framework/resolve-frameworks)))

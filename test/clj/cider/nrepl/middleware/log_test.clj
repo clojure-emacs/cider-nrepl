@@ -4,11 +4,8 @@
             [cider.log.test :as test]
             [cider.nrepl.test-session :as session]
             [clojure.set :as set]
-            [clojure.spec.test.alpha :as stest]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [clojure.test.check.generators :as gen]))
-
-(stest/instrument)
 
 (use-fixtures :each session/session-fixture)
 

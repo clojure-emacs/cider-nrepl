@@ -5,11 +5,8 @@
             [cider.log.framework.logback :as logback]
             [cider.log.specs]
             [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]
             [clojure.test :refer [deftest is testing]]
             [clojure.test.check.generators :as gen]))
-
-(stest/instrument)
 
 (def appender
   {:id "my-appender"})
