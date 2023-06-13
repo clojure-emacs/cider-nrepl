@@ -139,7 +139,7 @@
   "Add an appender to a log framework."
   [msg]
   (let [appender (appender msg)]
-    {:log-add-appender
+    {:cider/log-add-appender
      (-> (swap-framework! msg framework/add-appender appender)
          (framework/appender appender)
          (deref)
@@ -153,11 +153,11 @@
                   :filters (or filters {})
                   :callback (fn [consumer event]
                               (->> (response-for msg
-                                                 :log-consumer (str (:id consumer))
-                                                 :log-event (select-event event)
-                                                 :status :log-event)
+                                                 :cider/log-consumer (str (:id consumer))
+                                                 :cider/log-event (select-event event)
+                                                 :status :cider/log-event)
                                    (transport/send transport)))}]
-    {:log-add-consumer
+    {:cider/log-add-consumer
      (-> (swap-framework! msg framework/add-consumer appender consumer)
          (framework/consumer appender consumer)
          (select-consumer))}))
@@ -166,7 +166,7 @@
   "Clear all events of a log appender."
   [msg]
   (let [appender (appender msg)]
-    {:log-clear-appender
+    {:cider/log-clear-appender
      (-> (swap-framework! msg framework/clear-appender appender)
          (framework/appender appender)
          (deref)
@@ -185,15 +185,15 @@
 (defn exceptions-reply
   "Return the exceptions and their frequencies for the given framework and appender."
   [msg]
-  {:log-exceptions (->> (framework/events (framework msg) (appender msg))
-                        (event/exception-frequencies))})
+  {:cider/log-exceptions (->> (framework/events (framework msg) (appender msg))
+                              (event/exception-frequencies))})
 
 (defn frameworks-reply
   "Return the available log frameworks."
   [{:keys [session]}]
-  {:log-frameworks (->> (meta session)
-                        ::frameworks vals
-                        (map select-framework))})
+  {:cider/log-frameworks (->> (meta session)
+                              ::frameworks vals
+                              (map select-framework))})
 
 (defn format-event-reply
   "Format a log event."
@@ -201,7 +201,7 @@
   (let [event (event msg)
         writer (StringWriter.)]
     (print-fn event writer)
-    {:log-format-event (str writer)}))
+    {:cider/log-format-event (str writer)}))
 
 (defn inspect-event-reply
   "Inspect a log event."
@@ -211,21 +211,21 @@
 (defn levels-reply
   "Return the log levels and their frequencies for the given framework and appender."
   [msg]
-  {:log-levels (->> (framework/events (framework msg) (appender msg))
-                    (event/level-frequencies))})
+  {:cider/log-levels (->> (framework/events (framework msg) (appender msg))
+                          (event/level-frequencies))})
 
 (defn loggers-reply
   "Return the loggers and their frequencies for the given framework and appender."
   [msg]
-  {:log-loggers (->> (framework/events (framework msg) (appender msg))
-                     (event/logger-frequencies))})
+  {:cider/log-loggers (->> (framework/events (framework msg) (appender msg))
+                           (event/logger-frequencies))})
 
 (defn remove-appender-reply
   "Remove an appender from a log framework."
   [msg]
   (let [appender (appender msg)]
     (swap-framework! msg framework/remove-appender appender)
-    {:log-remove-appender {:id (str (:id appender))}}))
+    {:cider/log-remove-appender {:id (str (:id appender))}}))
 
 (defn remove-consumer-reply
   "Remove a consumer from the appender of a log framework."
@@ -233,13 +233,13 @@
   (let [appender (appender msg)
         consumer (consumer msg)]
     (swap-framework! msg framework/remove-consumer appender consumer)
-    {:log-remove-consumer (select-consumer consumer)}))
+    {:cider/log-remove-consumer (select-consumer consumer)}))
 
 (defn update-appender-reply
   "Update the appender of a log framework."
   [msg]
   (let [appender (appender msg)]
-    {:log-update-appender
+    {:cider/log-update-appender
      (-> (swap-framework! msg framework/update-appender appender)
          (framework/appender appender)
          (deref)
@@ -250,7 +250,7 @@
   [msg]
   (let [appender (appender msg)
         consumer (consumer msg)]
-    {:log-update-consumer
+    {:cider/log-update-consumer
      (-> (swap-framework! msg framework/update-consumer appender consumer)
          (framework/consumer appender consumer)
          (select-consumer))}))
@@ -258,7 +258,7 @@
 (defn search-reply
   "Search the log events of an appender."
   [msg]
-  {:log-search
+  {:cider/log-search
    (->> (select-keys msg [:filters :limit :offset])
         (framework/search-events (framework msg) (appender msg))
         (map select-event))})
@@ -266,8 +266,8 @@
 (defn threads-reply
   "Return the threads and their frequencies for the given framework and appender."
   [msg]
-  {:log-threads (->> (framework/events (framework msg) (appender msg))
-                     (event/thread-frequencies))})
+  {:cider/log-threads (->> (framework/events (framework msg) (appender msg))
+                           (event/thread-frequencies))})
 
 (defn handle-log
   "Handle NREPL log operations."
@@ -275,19 +275,19 @@
   (when-not (contains? (meta session) ::frameworks)
     (alter-meta! session assoc ::frameworks (framework/resolve-frameworks)))
   (with-safe-transport handler msg
-    "log-add-appender" add-appender-reply
-    "log-add-consumer" add-consumer-reply
-    "log-analyze-stacktrace" analyze-stacktrace-reply
-    "log-clear-appender" clear-appender-reply
-    "log-exceptions" exceptions-reply
-    "log-format-event" format-event-reply
-    "log-frameworks" frameworks-reply
-    "log-inspect-event" inspect-event-reply
-    "log-levels" levels-reply
-    "log-loggers" loggers-reply
-    "log-remove-appender" remove-appender-reply
-    "log-remove-consumer" remove-consumer-reply
-    "log-search" search-reply
-    "log-update-appender" update-appender-reply
-    "log-update-consumer" update-consumer-reply
-    "log-threads" threads-reply))
+    "cider/log-add-appender" add-appender-reply
+    "cider/log-add-consumer" add-consumer-reply
+    "cider/log-analyze-stacktrace" analyze-stacktrace-reply
+    "cider/log-clear-appender" clear-appender-reply
+    "cider/log-exceptions" exceptions-reply
+    "cider/log-format-event" format-event-reply
+    "cider/log-frameworks" frameworks-reply
+    "cider/log-inspect-event" inspect-event-reply
+    "cider/log-levels" levels-reply
+    "cider/log-loggers" loggers-reply
+    "cider/log-remove-appender" remove-appender-reply
+    "cider/log-remove-consumer" remove-consumer-reply
+    "cider/log-search" search-reply
+    "cider/log-update-appender" update-appender-reply
+    "cider/log-update-consumer" update-consumer-reply
+    "cider/log-threads" threads-reply))

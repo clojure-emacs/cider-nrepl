@@ -26,8 +26,8 @@
        (catch Exception _)))
 
 (defn- add-appender [framework appender & [opts]]
-  (let [{:keys [status log-add-appender] :as response}
-        (session/message (merge {:op "log-add-appender"
+  (let [{:keys [status cider/log-add-appender] :as response}
+        (session/message (merge {:op "cider/log-add-appender"
                                  :framework (:id framework)
                                  :appender (:id appender)}
                                 opts))]
@@ -35,8 +35,8 @@
     log-add-appender))
 
 (defn- add-consumer [framework appender & [opts]]
-  (let [{:keys [status log-add-consumer] :as response}
-        (session/message (merge {:op "log-add-consumer"
+  (let [{:keys [status cider/log-add-consumer] :as response}
+        (session/message (merge {:op "cider/log-add-consumer"
                                  :framework (:id framework)
                                  :appender (:id appender)}
                                 opts))]
@@ -44,16 +44,16 @@
     log-add-consumer))
 
 (defn- remove-appender [framework appender]
-  (let [{:keys [status log-remove-appender] :as response}
-        (session/message {:op "log-remove-appender"
+  (let [{:keys [status cider/log-remove-appender] :as response}
+        (session/message {:op "cider/log-remove-appender"
                           :framework (:id framework)
                           :appender (:id appender)})]
     (assert (= #{"done"} status) response)
     log-remove-appender))
 
 (defn- search-events [framework appender & [opts]]
-  (let [{:keys [status log-search] :as response}
-        (session/message (merge {:op "log-search"
+  (let [{:keys [status cider/log-search] :as response}
+        (session/message (merge {:op "cider/log-search"
                                  :framework (:id framework)
                                  :appender (:id appender)}
                                 opts))]
@@ -109,7 +109,7 @@
           (is (string? (:logger event)))
           (is (= "a-1" (:message event)))
           (is (int? (:timestamp event)))
-          (let [response (session/message {:op "log-analyze-stacktrace"
+          (let [response (session/message {:op "cider/log-analyze-stacktrace"
                                            :framework (:id framework)
                                            :appender (:id appender)
                                            :event (:id event)})]
@@ -121,7 +121,7 @@
   (with-each-framework [framework (frameworks)]
     (with-appender [framework appender]
       (framework/log framework {:message "a-1"})
-      (let [response (session/message {:op "log-clear-appender"
+      (let [response (session/message {:op "cider/log-clear-appender"
                                        :framework (:id framework)
                                        :appender (:id appender)})]
         (is (= #{"done"} (:status response)))
@@ -131,7 +131,7 @@
                 :logger (:root-logger framework)
                 :size 100000
                 :threshold 10}
-               (:log-clear-appender response)))))))
+               (:cider/log-clear-appender response)))))))
 
 (deftest test-exceptions
   (with-each-framework [framework (frameworks)]
@@ -139,16 +139,16 @@
       (framework/log framework {:message "a-1" :exception (IllegalArgumentException. "BOOM")})
       (framework/log framework {:message "b-1" :exception (IllegalStateException. "BOOM")})
       (framework/log framework {:message "b-2" :exception (IllegalStateException. "BOOM")})
-      (let [response (session/message {:op "log-exceptions"
+      (let [response (session/message {:op "cider/log-exceptions"
                                        :framework (:id framework)
                                        :appender (:id appender)})]
         (is (= #{"done"} (:status response)))
         (is (= {:java.lang.IllegalArgumentException 1
                 :java.lang.IllegalStateException 2}
-               (:log-exceptions response)))))))
+               (:cider/log-exceptions response)))))))
 
 (deftest test-frameworks
-  (let [{:keys [log-frameworks status]} (session/message {:op "log-frameworks"})]
+  (let [{:keys [cider/log-frameworks status]} (session/message {:op "cider/log-frameworks"})]
     (is (= #{"done"} status))
     (is (= ["Logback" "Java Util Logging"] (map :name log-frameworks)))
     (with-each-framework [framework (frameworks)]
@@ -169,7 +169,7 @@
 (deftest test-frameworks-add-appender
   (with-each-framework [framework (frameworks)]
     (with-appender [framework appender]
-      (let [{:keys [log-frameworks status]} (session/message {:op "log-frameworks"})]
+      (let [{:keys [cider/log-frameworks status]} (session/message {:op "cider/log-frameworks"})]
         (is (= #{"done"} status))
         (let [framework' (find-framework log-frameworks framework)]
           (is (= [{:consumers []
@@ -191,18 +191,18 @@
       (add-appender framework appender)
       (framework/log framework {:message "a-1"})
       (framework/log framework {:message "a-2"})
-      (doseq [event (:log-search
+      (doseq [event (:cider/log-search
                      (session/message
-                      {:op "log-search"
+                      {:op "cider/log-search"
                        :framework (:id framework)
                        :appender (:id appender)}))]
-        (let [response (session/message {:op "log-format-event"
+        (let [response (session/message {:op "cider/log-format-event"
                                          :framework (:id framework)
                                          :appender (:id appender)
                                          :event (:id event)})]
           (is (= #{"done"} (:status response)))
           (is (re-matches (re-pattern (str ".*" (:message event) ".*"))
-                          (:log-format-event response))))))))
+                          (:cider/log-format-event response))))))))
 
 (deftest test-inspect
   (with-each-framework [framework (frameworks)]
@@ -210,12 +210,12 @@
       (add-appender framework appender)
       (framework/log framework {:message "a-1"})
       (framework/log framework {:message "a-2"})
-      (doseq [event (:log-search
+      (doseq [event (:cider/log-search
                      (session/message
-                      {:op "log-search"
+                      {:op "cider/log-search"
                        :framework (:id framework)
                        :appender (:id appender)}))]
-        (let [response (session/message {:op "log-inspect-event"
+        (let [response (session/message {:op "cider/log-inspect-event"
                                          :framework (:id framework)
                                          :appender (:id appender)
                                          :event (:id event)})]
@@ -229,12 +229,12 @@
       (with-appender [framework appender]
         (doseq [level levels]
           (framework/log framework {:level level :message (name level)}))
-        (let [response (session/message {:op "log-levels"
+        (let [response (session/message {:op "cider/log-levels"
                                          :framework (:id framework)
                                          :appender (:id appender)})]
           (is (= #{"done"} (:status response)))
           (is (= (into {} (map #(vector % 1) levels))
-                 (:log-levels response))))))))
+                 (:cider/log-levels response))))))))
 
 (deftest test-loggers
   (with-each-framework [framework (frameworks)]
@@ -242,11 +242,11 @@
       (framework/log framework {:logger "LOGGER-A" :message "a-1"})
       (framework/log framework {:logger "LOGGER-B" :message "b-1"})
       (framework/log framework {:logger "LOGGER-B" :message "b-2"})
-      (let [response (session/message {:op "log-loggers"
+      (let [response (session/message {:op "cider/log-loggers"
                                        :framework (:id framework)
                                        :appender (:id appender)})]
         (is (= #{"done"} (:status response)))
-        (is (= {:LOGGER-A 1 :LOGGER-B 2} (:log-loggers response)))))))
+        (is (= {:LOGGER-A 1 :LOGGER-B 2} (:cider/log-loggers response)))))))
 
 (deftest test-search
   (with-each-framework [framework (frameworks)]
@@ -325,11 +325,11 @@
     (with-appender [framework appender]
       (framework/log framework {:message "a-1"})
       (let [response (session/message
-                      {:op "log-threads"
+                      {:op "cider/log-threads"
                        :framework (:id framework)
                        :appender (:id appender)})]
         (is (= #{"done"} (:status response)))
-        (let [threads (:log-threads response)]
+        (let [threads (:cider/log-threads response)]
           (is (every? keyword? (keys threads)))
           (is (every? pos-int? (vals threads))))))))
 
@@ -337,15 +337,15 @@
   (with-each-framework [framework (frameworks)]
     (testing "remove unregistered appender"
       (let [response (session/message
-                      {:op "log-remove-appender"
+                      {:op "cider/log-remove-appender"
                        :framework (:id framework)
                        :appender "unknown"})]
-        (is (= #{"log-remove-appender-error" "done"} (:status response)))))
+        (is (= #{"cider/log-remove-appender-error" "done"} (:status response)))))
     (testing "remove registered appender"
       (let [appender (add-appender framework appender)
             appender' (remove-appender framework appender)]
         (is (= (:id appender) (:id appender')))
-        (let [{:keys [log-frameworks status]} (session/message {:op "log-frameworks"})]
+        (let [{:keys [log-frameworks status]} (session/message {:op "cider/log-frameworks"})]
           (is (= #{"done"} status))
           (is (empty? (:appenders (find-framework log-frameworks framework)))))))))
 
@@ -354,14 +354,14 @@
     (with-appender [framework appender]
       (let [consumer (add-consumer framework appender {:filters {:level :INFO}})
             response (session/message
-                      {:op "log-remove-consumer"
+                      {:op "cider/log-remove-consumer"
                        :framework (:id framework)
                        :appender (:id appender)
                        :consumer (:id consumer)})]
         (is (= #{"done"} (:status response)))
         (is (= {:id (:id consumer)}
-               (:log-remove-consumer response)))
-        (let [{:keys [log-frameworks status]} (session/message {:op "log-frameworks"})]
+               (:cider/log-remove-consumer response)))
+        (let [{:keys [cider/log-frameworks status]} (session/message {:op "cider/log-frameworks"})]
           (is (= #{"done"} status))
           (is (= [{:consumers []
                    :filters {}
@@ -375,14 +375,14 @@
   (with-each-framework [framework (frameworks)]
     (with-appender [framework appender]
       (let [response (session/message
-                      {:op "log-update-appender"
+                      {:op "cider/log-update-appender"
                        :appender (:id appender)
                        :filters {:pattern "A.*"}
                        :framework (:id framework)
                        :size 2
                        :threshold 0})]
         (is (= #{"done"} (:status response)))
-        (let [appender (:log-update-appender response)]
+        (let [appender (:cider/log-update-appender response)]
           (is (= {:pattern "A.*"} (:filters appender)))
           (is (= 2 (:size appender)))
           (is (= 0 (:threshold appender)))
@@ -391,9 +391,9 @@
           (framework/log framework {:message "A3"})
           (framework/log framework {:message "A4"})
           (framework/log framework {:message "B1"})
-          (let [events (:log-search
+          (let [events (:cider/log-search
                         (session/message
-                         {:op "log-search"
+                         {:op "cider/log-search"
                           :framework (:id framework)
                           :appender (:id appender)}))]
             (is (= ["A4" "A3"] (map :message events)))))))))
@@ -403,7 +403,7 @@
     (with-appender [framework appender]
       (let [consumer (add-consumer framework appender {:filters {:level :INFO}})
             response (session/message
-                      {:op "log-update-consumer"
+                      {:op "cider/log-update-consumer"
                        :framework (:id framework)
                        :appender (:id appender)
                        :consumer (:id consumer)
@@ -411,7 +411,7 @@
         (is (= #{"done"} (:status response)))
         (is (= {:id (:id consumer)
                 :filters {:level "DEBUG"}}
-               (:log-update-consumer response)))
+               (:cider/log-update-consumer response)))
         (framework/log framework {:message "B1" :level :DEBUG})))))
 
 (defn log-something [framework & [^long n ^long sleep]]
