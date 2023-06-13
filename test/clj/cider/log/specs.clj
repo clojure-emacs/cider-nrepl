@@ -2,7 +2,8 @@
   (:require [cider.log.appender :as appender]
             [cider.log.framework :as framework]
             [cider.log.repl :as repl]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s])
+  (:import [java.util.regex Pattern]))
 
 (s/def :cider.log.level/category simple-keyword?)
 (s/def :cider.log.level/name simple-keyword?)
@@ -75,12 +76,15 @@
 (s/def :cider.log.appender/size pos-int?)
 (s/def :cider.log.appender/threshold (s/and nat-int? #(< % 100)))
 
-(s/def :cider.log/appender
+(s/def :cider.log.appender/options
   (s/keys :req-un [:cider.log.appender/id]
           :opt-un [:cider.log.appender/levels
                    :cider.log.appender/logger
                    :cider.log.appender/size
                    :cider.log.appender/threshold]))
+
+(s/def :cider.log/appender
+  #(instance? clojure.lang.Atom %))
 
 (s/def :cider.log.consumer/callback ifn?)
 (s/def :cider.log.consumer/filter (s/map-of string? any?))
@@ -113,44 +117,67 @@
 
 ;; cider.log.framework
 
+(s/fdef framework/appender
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
+  :ret :cider.log/appender)
+
+(s/fdef framework/appenders
+  :args (s/cat :framework :cider.log/framework)
+  :ret (s/coll-of :cider.log/appender))
+
 (s/fdef framework/add-appender
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
   :ret :cider.log/framework)
 
 (s/fdef framework/add-consumer
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
   :ret :cider.log/framework)
 
 (s/fdef framework/clear-appender
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
   :ret :cider.log/framework)
 
 (s/fdef framework/consumer
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
   :ret (s/nilable :cider.log/consumer))
 
 (s/fdef framework/event
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :id :cider.log.event/id)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options
+               :id :cider.log.event/id)
   :ret (s/nilable :cider.log/event))
 
 (s/fdef framework/events
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
   :ret (s/coll-of :cider.log/event))
 
 (s/fdef framework/log
-  :args (s/cat :framework :cider.log/framework :event map?)
+  :args (s/cat :framework :cider.log/framework
+               :event map?)
   :ret nil?)
 
 (s/fdef framework/remove-appender
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
   :ret :cider.log/framework)
 
 (s/fdef framework/remove-consumer
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
   :ret :cider.log/framework)
 
 (s/fdef framework/update-appender
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options)
   :ret :cider.log/framework)
 
 (s/fdef framework/resolve-framework
@@ -163,124 +190,189 @@
   :ret (s/map-of :cider.log.framework/id :cider.log/framework))
 
 (s/fdef framework/search-events
-  :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :criteria map?)
+  :args (s/cat :framework :cider.log/framework
+               :appender :cider.log.appender/options
+               :criteria map?)
   :ret (s/coll-of :cider.log/event))
 
 ;; cider.log.appender
 
 (s/fdef appender/add-consumer
-  :args (s/cat :appender :cider.log/appender :consumer :cider.log/consumer)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/add-event
-  :args (s/cat :appender :cider.log/appender :event :cider.log/event)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options
+               :event :cider.log/event)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/clear
-  :args (s/cat :appender :cider.log/appender)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/consumers
-  :args (s/cat :appender :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options)
   :ret (s/coll-of :cider.log/consumer))
 
 (s/fdef appender/consumer-by-id
-  :args (s/cat :appender :cider.log/appender :id :cider.log.consumer/id)
+  :args (s/cat :appender :cider.log.appender/options
+               :id :cider.log.consumer/id)
   :ret (s/nilable :cider.log/consumer))
 
 (s/fdef appender/event
-  :args (s/cat :appender :cider.log/appender :id :cider.log.event/id)
+  :args (s/cat :appender :cider.log.appender/options
+               :id :cider.log.event/id)
   :ret (s/nilable :cider.log/event))
 
 (s/fdef appender/events
-  :args (s/cat :appender :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options)
   :ret (s/coll-of :cider.log/event))
 
 (s/fdef appender/make-appender
-  :args (s/cat :appender :cider.log/appender)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/remove-consumer
-  :args (s/cat :appender :cider.log/appender :consumer :cider.log/consumer)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/update-appender
-  :args (s/cat :appender :cider.log/appender :settings map?)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options
+               :settings map?)
+  :ret :cider.log.appender/options)
 
 (s/fdef appender/update-consumer
-  :args (s/cat :appender :cider.log/appender :consumer :cider.log/consumer)
-  :ret :cider.log/appender)
+  :args (s/cat :appender :cider.log.appender/options
+               :consumer :cider.log/consumer)
+  :ret :cider.log.appender/options)
 
 ;; cider.log.repl
-
-(s/def :cider.log.repl.option/framework
-  (s/nilable (s/or :string string? :keyword keyword?)))
 
 (s/def :cider.log.repl.option/appender
   (s/nilable (s/or :string string? :keyword keyword?)))
 
-(s/def :cider.log.repl/options
-  (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
-                                   :cider.log.repl.option/appender]))))
+(s/def :cider.log.repl.option/callback ifn?)
+
+(s/def :cider.log.repl.option/consumer
+  (s/nilable (s/or :string string? :keyword keyword?)))
+
+(s/def :cider.log.repl.option/exceptions
+  (s/nilable (s/coll-of string?)))
+
+(s/def :cider.log.repl.option/event uuid?)
+
+(s/def :cider.log.repl.option/filters
+  (s/nilable (s/map-of keyword? any?)))
+
+(s/def :cider.log.repl.option/framework
+  (s/nilable (s/or :string string? :keyword keyword?)))
+
+(s/def :cider.log.repl.option/logger
+  (s/nilable string?))
+
+(s/def :cider.log.repl.option/loggers
+  (s/nilable (s/coll-of string?)))
+
+(s/def :cider.log.repl.option/pattern
+  (s/nilable (s/or :string string? :regex #(instance? Pattern %))))
+
+(s/def :cider.log.repl.option/size
+  (s/nilable pos-int?))
+
+(s/def :cider.log.repl.option/threads
+  (s/nilable (s/coll-of string?)))
+
+(s/def :cider.log.repl.option/threshold
+  (s/nilable (s/and nat-int? #(<= 0 % 100))))
 
 (s/fdef repl/add-appender
-  :args (s/cat :options :cider.log.repl/options)
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
+                                                         :cider.log.repl.option/appender
+                                                         :cider.log.repl.option/filters
+                                                         :cider.log.repl.option/logger
+                                                         :cider.log.repl.option/size
+                                                         :cider.log.repl.option/threshold]))))
+  :ret :cider.log/appender)
+
+(s/fdef repl/add-consumer
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/appender
+                                                         :cider.log.repl.option/callback
+                                                         :cider.log.repl.option/consumer
+                                                         :cider.log.repl.option/filters
+                                                         :cider.log.repl.option/framework]))))
   :ret :cider.log/framework)
 
-;; (s/fdef repl/add-consumer
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
-;;   :ret :cider.log/framework)
+(s/fdef repl/appender
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
+                                                         :cider.log.repl.option/appender]))))
+  :ret (s/nilable :cider.log/appender))
 
-;; (s/fdef repl/clear-appender
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
-;;   :ret :cider.log/framework)
+(s/fdef repl/appenders
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework]))))
+  :ret (s/coll-of :cider.log/appender))
 
-;; (s/fdef repl/consumer
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
-;;   :ret (s/nilable :cider.log/consumer))
+(s/fdef repl/clear-appender
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
+                                                         :cider.log.repl.option/appender]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/event
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :id :cider.log.event/id)
-;;   :ret (s/nilable :cider.log/event))
+(s/fdef repl/event
+  :args (s/cat :options (s/? (s/nilable (s/keys :req-un [:cider.log.repl.option/event]
+                                                :opt-un [:cider.log.repl.option/appender
+                                                         :cider.log.repl.option/framework]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/events
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
-;;   :ret (s/coll-of :cider.log/event))
+(s/fdef repl/events
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/appender
+                                                         :cider.log.repl.option/exceptions
+                                                         :cider.log.repl.option/framework
+                                                         :cider.log.repl.option/loggers
+                                                         :cider.log.repl.option/pattern
+                                                         :cider.log.repl.option/threads]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/log
-;;   :args (s/cat :framework :cider.log/framework :event map?)
-;;   :ret nil?)
+(s/fdef repl/framework
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/remove-appender
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
-;;   :ret :cider.log/framework)
+(s/fdef repl/remove-appender
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
+                                                         :cider.log.repl.option/appender]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/remove-consumer
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :consumer :cider.log/consumer)
-;;   :ret :cider.log/framework)
+(s/fdef repl/remove-consumer
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/appender
+                                                         :cider.log.repl.option/consumer
+                                                         :cider.log.repl.option/framework]))))
+  :ret :cider.log/framework)
 
 (s/fdef repl/set-appender!
   :args (s/cat :framework (s/or :string string? :keyword keyword?))
-  :ret nil?)
+  :ret map?)
 
-(s/fdef repl/set-framework!
-  :args (s/cat :framework (s/or :string string? :keyword keyword?))
-  :ret nil?)
+(s/fdef repl/set-consumer!
+  :args (s/cat :consumer (s/or :string string? :keyword keyword?))
+  :ret map?)
 
-;; (s/fdef repl/update-appender
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender)
-;;   :ret :cider.log/framework)
+(s/fdef repl/shutdown
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/resolve-framework
-;;   :args (s/cat :framework-sym qualified-symbol?)
-;;   :ret (s/nilable :cider.log/framework))
+(s/fdef repl/update-appender
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/framework
+                                                         :cider.log.repl.option/appender
+                                                         :cider.log.repl.option/filters
+                                                         :cider.log.repl.option/logger
+                                                         :cider.log.repl.option/size
+                                                         :cider.log.repl.option/threshold]))))
+  :ret :cider.log/framework)
 
-;; (s/fdef repl/resolve-frameworks
-;;   :args (s/or :arity-0 (s/cat)
-;;               :arity-1 (s/cat :framework-syms (s/coll-of qualified-symbol?)))
-;;   :ret (s/map-of :cider.log.framework/id :cider.log/framework))
-
-;; (s/fdef repl/search-events
-;;   :args (s/cat :framework :cider.log/framework :appender :cider.log/appender :criteria map?)
-;;   :ret (s/coll-of :cider.log/event))
+(s/fdef repl/update-consumer
+  :args (s/cat :options (s/? (s/nilable (s/keys :opt-un [:cider.log.repl.option/appender
+                                                         :cider.log.repl.option/callback
+                                                         :cider.log.repl.option/consumer
+                                                         :cider.log.repl.option/filters
+                                                         :cider.log.repl.option/framework]))))
+  :ret :cider.log/framework)
