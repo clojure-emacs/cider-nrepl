@@ -4,7 +4,7 @@
 
 (defn- exception-name
   "Return the `exception` class name."
-  [^Class exception]
+  [^Throwable exception]
   (some-> exception .getClass .getName))
 
 (defn exception-frequencies
