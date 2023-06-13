@@ -10,7 +10,7 @@
 (defn exception-frequencies
   "Return the exception name frequencies of `events`."
   [events]
-  (frequencies (remove nil? (map #(some-> % :exception exception-name) events))))
+  (frequencies (keep #(some-> % :exception exception-name) events)))
 
 (defn logger-frequencies
   "Return the logger name frequencies of `events`."
