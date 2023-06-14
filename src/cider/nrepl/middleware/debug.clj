@@ -676,7 +676,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         fake-reader (fn [x] (reset! has-debug? true) x)]
     (binding [*ns* (find-ns (symbol (or ns "user")))
               *data-readers* (->> (repeat fake-reader)
-                                  (interleave '[dbg exn dbgexn break light])
+                                  (interleave '[dbg dbg! break break! light])
                                   (apply assoc *data-readers*))]
       (try
         ;; new-line in REPL always throws; skip for debug convenience
