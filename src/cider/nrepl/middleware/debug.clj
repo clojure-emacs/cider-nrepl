@@ -497,6 +497,13 @@ this map (identified by a key), and will `dissoc` it afterwards."}
      (breakpoint
       ~form ~dbg-state ~original-form)))
 
+(defmacro breakpoint-if-interesting-with-initial-debug-bindings
+  {:style/indent 1}
+  [form dbg-state original-form]
+  `(with-initial-debug-bindings
+     (breakpoint-if-interesting
+      ~form ~dbg-state ~original-form)))
+
 (defmacro breakpoint-if-exception-with-initial-debug-bindings
   {:style/indent 1}
   [form dbg-state original-form]
@@ -627,7 +634,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   `form` itself is also marked."
   [form]
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-interesting)
-                #'breakpoint-with-initial-debug-bindings))
+                #'breakpoint-if-interesting-with-initial-debug-bindings))
 
 (defn break-on-exception-reader
   "#exn reader. Wrap `form` in try-catch and break only on exception"
