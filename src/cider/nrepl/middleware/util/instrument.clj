@@ -303,7 +303,7 @@
    (tag-form form breakfunction false))
   ([form breakfunction do-break?]
    (m/merge-meta form {::breakfunction breakfunction}
-                 (when do-break? {::do-break true}))))
+     (when do-break? {::do-break true}))))
 
 (defn tag-form-recursively
   "Like `tag-form` but also tag all forms inside the given form."
