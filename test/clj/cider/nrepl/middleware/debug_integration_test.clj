@@ -136,16 +136,57 @@
         (f)))))
 
 (deftest debug-expression-test
+  (--> :eval "(ns user.test.debug)")
+  (<-- {:ns "user.test.debug"})
+  (<-- {:status ["done"]})
+
   (testing "normal eval (no debugging)"
     (--> :eval "(+ 2 3)")
     (<-- {:value "5"})
     (<-- {:status ["done"]}))
 
-  (testing "#break reader, no breakpoints"
-    ;; This code has only literals and core functions, so it should
-    ;; not break, but should just return the value
+  (testing "Top level breakpoints do not trigger"
+    ;; Since triggering a breakpoint to inspect the toplevel value is no different
+    ;; from returning the value.
     (--> :eval "#break (+ 2 3)")
     (<-- {:value "5"})
+    (<-- {:status ["done"]}))
+
+  (testing "#break on return value of call"
+    (--> :eval "(do #break (+ 2 3) :ok)")
+    (<-- {:debug-value "5"})
+    (--> :next)
+    (<-- {:value ":ok"})
+    (<-- {:status ["done"]}))
+
+  (testing "#dbg reader on uninteresting forms"
+    ;; The return value of a def form is uninteresting, as well as the sub forms
+    ;; which are just core vars and literals.
+    ;; #dbg should not break on any of them and just return the value.
+    (--> :eval "(do #dbg (def foo [2 + {:skip \"me\"}]) foo)")
+    (<-- {:value "[2 #function[clojure.core/+] {:skip \"me\"}]"})
+    (<-- {:status ["done"]}))
+
+  (testing "#break reader on uninteresting forms"
+    ;; #break signifies that the user explicitly wants to set a breakpoint there,
+    ;; so ignore any of #dbg reader's heuristics on what an interesting form is.
+    (--> :eval "(let [a 1] #break [2 3], #break {:a a}, #break + #break (def foo 4) foo) ")
+    (<-- {:debug-value "[2 3]"})
+    (--> :next)
+    (<-- {:debug-value "{:a 1}"})
+    (--> :next)
+    (<-- {:debug-value "#function[clojure.core/+]"})
+    (--> :next)
+    (<-- {:debug-value "#'user.test.debug/foo"})
+    (--> :next)
+    (<-- {:value "4"})
+    (<-- {:status ["done"]}))
+
+  (testing "#break reader on literals"
+    ;; The instrumenter cannot tag literals which don't support metadata,
+    ;; so #break does not work on them.
+    (--> :eval "(do #break :kwd, #break 123, #break \"string\" :ok)")
+    (<-- {:value ":ok"})
     (<-- {:status ["done"]}))
 
   (testing "#dbg reader, with breaks"
