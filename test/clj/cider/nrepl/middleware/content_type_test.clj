@@ -44,14 +44,15 @@
                         [:body :content-type :content-transfer-encoding :status]))))
 
   (testing "java.io.File"
-    (let [f (java.io.File/createTempFile "foo" ".txt")]
+    (let [f (java.io.File/createTempFile "foo" ".txt")
+          path (.getCanonicalPath f)]
       (is (= {:body ""
               :content-type
               ["message/external-body"
-               {:URL (str "file:" f) :access-type "URL"}]
+               {:URL (str "file:" path) :access-type "URL"}]
               :status #{"done"}}
              (-> {:op "eval"
-                  :code (str "(java.io.File. " (pr-str (str f)) ")")
+                  :code (str "(java.io.File. " (pr-str path) ")")
                   :content-type "true"}
                  session/message
                  (select-keys [:body :content-type :content-transfer-encoding :status]))))))
