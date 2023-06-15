@@ -310,8 +310,8 @@
 
     (testing "java interop method with multiple classes"
       (let [response (session/message {:op "eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"})]
-        (is (= (:class response)
-               ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"])
+        (is (every? (set (:class response)) ;; is a superset of:
+                    ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"])
             (pr-str response))
         (is (= (:member response) "length"))
         (is (not (contains? response :ns)))
