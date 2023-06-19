@@ -87,7 +87,7 @@
   (alter-var-root #'*settings* #(apply f % args))
   *settings*)
 
-;; Log Frameworks
+;; Log Framework
 
 (defn- ensure-framework
   "Ensure that the :framework in `options` is valid. Returns the
@@ -104,7 +104,7 @@
 
   Options:
     :framework - The identifier of the framework."
-  [& [options]]
+  [& {:as options}]
   (let [{:keys [framework]} (merge-default options)]
     (get *frameworks* (some-> framework name))))
 
@@ -125,11 +125,11 @@
 
   Options:
     :framework - The identifier of the framework."
-  [& [options]]
+  [& {:as options}]
   (let [options (merge-default options)]
     (swap-framework! options framework/shutdown)))
 
-;; Log Appenders
+;; Log Appender
 
 (defn- ensure-appender
   "Ensure that the :appender in `options` is registered. Returns the
@@ -148,7 +148,7 @@
 
   Options:
     :framework - The identifier of the framework."
-  [& [options]]
+  [& {:as options}]
   (framework/appenders (ensure-framework options)))
 
 (defn appender
@@ -157,7 +157,7 @@
   Options:
     :framework - The identifier of the framework.
     :appender - The identifier of the appender."
-  [& [options]]
+  [& {:as options}]
   (let [{:keys [appender]} (merge-default options)]
     (framework/appender (ensure-framework options) {:id appender})))
 
@@ -171,10 +171,10 @@
     :logger - The name of the logger to which the append will be attached.
     :size - The number of events to capture in the appender.
     :threshold - A threshold in percentage used to garbage collect log events."
-  [& [options]]
+  [& {:as options}]
   (let [options (merge-default options)]
-    (swap-framework! options framework/add-appender (appender-options options))
-    (appender options)))
+    (-> (swap-framework! options framework/add-appender (appender-options options))
+        (framework/appender {:id (:appender options)}))))
 
 (defn clear-appender
   "Clear the events captured by and appender of a framework.
@@ -182,7 +182,7 @@
   Options:
     :framework - The identifier of the framework.
     :appender - The identifier of the appender."
-  [& [options]]
+  [& {:as options}]
   (swap-framework! options framework/clear-appender @(ensure-appender options)))
 
 (defn remove-appender
@@ -191,7 +191,7 @@
   Options:
     :framework - The identifier of the framework.
     :appender - The identifier of the appender."
-  [& [options]]
+  [& {:as options}]
   (swap-framework! options framework/remove-appender @(ensure-appender options)))
 
 (defn set-appender!
@@ -209,11 +209,11 @@
     :logger - The name of the logger to which the append will be attached.
     :size - The number of events to capture in the appender.
     :threshold - A threshold in percentage used to garbage collect log events."
-  [& [options]]
+  [& {:as options}]
   (ensure-appender options)
   (swap-framework! options framework/update-appender (appender-options options)))
 
-;; Log Consumers
+;; Log Consumer
 
 (defn add-consumer
   "Add a log consumer to a framework.
@@ -224,7 +224,7 @@
     :consumer - The identifier of the consumer.
     :callback - A function that will be called for each log event.
     :filters - A map of criteria used to filter log events."
-  [& [options]]
+  [& {:as options}]
   (swap-framework! options framework/add-consumer
                    @(ensure-appender options)
                    (consumer-options options)))
@@ -236,7 +236,7 @@
     :framework - The identifier of the framework.
     :appender - The identifier of the appender.
     :consumer - The identifier of the consumer."
-  [& [options]]
+  [& {:as options}]
   (let [{:keys [consumer]} (merge-default options)]
     (swap-framework! options framework/remove-consumer
                      @(ensure-appender options)
@@ -250,7 +250,7 @@
     :appender - The identifier of the appender.
     :consumer - The identifier of the consumer.
     :filters - A map of criteria used to filter log events."
-  [& [options]]
+  [& {:as options}]
   (let [options (merge-default options)]
     (swap-framework! options framework/update-consumer
                      @(ensure-appender options)
@@ -261,7 +261,7 @@
   [identifier]
   (update-settings! assoc :consumer (name identifier)))
 
-;; Log Events
+;; Log Event
 
 (defn event
   "Find a log event captured by the an appender of a framework.
@@ -270,7 +270,7 @@
     :framework - The identifier of the framework.
     :appender - The identifier of the appender.
     :event - The identifier of the event."
-  [& [options]]
+  [& {:as options}]
   (when-let [event-id (:event options)]
     (framework/event (ensure-framework options)
                      @(ensure-appender options)
@@ -289,7 +289,7 @@
     :pattern - Only include events whose message matches the regex pattern.
     :start-time - Only include events after this timestamp.
     :threads - Only include events emitted by the given threads."
-  [& [options]]
+  [& {:as options}]
   (framework/search-events (ensure-framework options)
                            @(ensure-appender options)
                            (criteria options)))
@@ -304,7 +304,7 @@
     :arguments - The arguments of the log event.
     :level - The level of the log event.
     :logger - The logger used to emit the log event."
-  [options]
+  [& {:as options}]
   (let [options (merge-default options)]
     (framework/log (ensure-framework options)
                    (let [{:keys [arguments level logger message mdc]} options]
