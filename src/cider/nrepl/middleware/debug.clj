@@ -667,7 +667,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (def ^:dynamic *debug-data-readers*
   "Reader macros like #dbg which cause code to be instrumented when present."
-  '#{dbg exn dbgexn break light})
+  '#{dbg dbg! break break! light})
 
 ;;; ## Middleware
 (defn- maybe-debug
