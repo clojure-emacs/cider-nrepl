@@ -6,10 +6,9 @@
 
 * Bump `cljfmt` to 0.9.2.
 * Bump `puget` to 1.3.4.
-* Bump `compliment` to 0.3.15.
 * [#769](https://github.com/clojure-emacs/cider-nrepl/issues/769): Introduce new `#break!` and `#dbg!` reader macros for breaking on exception
 * [#772](https://github.com/clojure-emacs/cider-nrepl/issues/772): Improve debugger heuristics on "interesting" breakpoints (Always break on forms tagged with #break, including vectors and maps)
-* The `wrap-debug` middleware now adds an optional `:caught-msg` key to the `eval` op response, containing the exception message when caught by the debugger.
+* The `wrap-debug` middleware now adds an optional `:caught-msg` key to the `eval` op response, containing the exception message when caught by the debugger. 
 
 ## 0.30.0 (2023-01-31)
 
