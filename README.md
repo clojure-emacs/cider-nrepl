@@ -102,7 +102,7 @@ lein with-profile plugin.mranderson/config install
 ...Or you can use the `Makefile` as:
 
 ```
-PROJECT_VERSION=0.30.0 make install
+PROJECT_VERSION=0.31.0 make install
 ```
 
 ## Releasing to Clojars
@@ -113,7 +113,7 @@ before cutting a new release.
 Release to [clojars](https://clojars.org/) by tagging a new release:
 
 ```
-git tag -a v0.30.0 -m "Release 0.30.0"
+git tag -a v0.31.0 -m "Release 0.31.0"
 git push --tags
 ```
 

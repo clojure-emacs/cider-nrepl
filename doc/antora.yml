@@ -2,6 +2,6 @@ name: cider-nrepl
 title: CIDER nREPL
 # The version should be in the format major.minor (e.g. 0.28).
 # Don't include patch in the version (e.g. 0.28.7).
-version: ~
+version: "0.31"
 nav:
 - modules/ROOT/nav.adoc
