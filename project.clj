@@ -13,7 +13,7 @@
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.3.14"]
+                 ^:inline-dep [compliment "0.3.15"]
                  ^:inline-dep [org.rksm/suitable "0.4.1" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
