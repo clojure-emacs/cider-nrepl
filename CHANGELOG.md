@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `orchard` to 0.12.0.
+
 ## 0.31.0 (2023-06-23)
 
 ### Changes
