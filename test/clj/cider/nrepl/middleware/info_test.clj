@@ -290,13 +290,13 @@
         (is (= (:status response) #{"done"})
             (pr-str response))
         (is (= (:eldoc response) [["try" "expr*" "catch-clause*" "finally-clause?"]]))
-        (is (= (:type response) "function"))))
+        (is (= (:type response) "special-form"))))
 
     (testing "clojure dot operator"
       (let [response (session/message {:op "eldoc" :sym "." :ns "user"})]
         (is (= (:status response) #{"done"})
             (pr-str response))
-        (is (= (:type response) "function"))))
+        (is (= (:type response) "special-form"))))
 
     (testing "clojure variable"
       (let [response (session/message {:op "eldoc" :sym "some-test-var" :ns "cider.test-ns.first-test-ns"})]
