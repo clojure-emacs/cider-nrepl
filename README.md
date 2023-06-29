@@ -61,7 +61,7 @@ channel are the places for questions.
 
 ### Patches
 
-Patches under any form are always welcome! GitHub pull requests are even better! :-)
+Patches in any form are always welcome! GitHub pull requests are even better! :-)
 
 Before submitting a patch or a pull request make sure all tests are
 passing and that your patch is in line with the [contribution
