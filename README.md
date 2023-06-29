@@ -46,12 +46,6 @@ own schedule.
 
 ## Contributing
 
-### Discussion
-
-For questions, suggestions and support refer to our [official mailing list](https://groups.google.com/forum/#!forum/cider-emacs)
-or the Freenode channel `#clojure-emacs`.
-Please, don't report issues there, as this makes them harder to track.
-
 ### Issues
 
 Report issues and suggest features and improvements on the
