@@ -67,7 +67,7 @@
     (#'middleware.inspect/inspector-response msg inspector)))
 
 (defn- framework
-  "Lookup the framework from the :framework key of the NREPL message."
+  "Lookup the framework from the :framework key of the nREPL message."
   [{:keys [session framework]}]
   (or (get-in (meta session) [::frameworks framework])
       (throw (ex-info "Log framework not found"
@@ -75,7 +75,7 @@
                        :framework framework}))))
 
 (defn- filters
-  "Extract the filters from an NREPL dictinary."
+  "Extract the filters from an nREPL dictinary."
   [{:keys [end-time exceptions level loggers pattern start-time threads]}]
   (cond-> {}
     (nat-int? end-time)
@@ -95,7 +95,7 @@
 
 (defn- appender
   "Make an appender map from the :appender, :filters, :size
-  and :threshold keys of the NREPL message."
+  and :threshold keys of the nREPL message."
   [{:keys [appender logger size threshold] :as msg}]
   (when (string? appender)
     (cond-> {:id appender}
@@ -109,7 +109,7 @@
       (assoc :threshold threshold))))
 
 (defn- consumer
-  "Make a consumer map from the :consumer and :filters keys of the NREPL message."
+  "Make a consumer map from the :consumer and :filters keys of the nREPL message."
   [{:keys [consumer] :as msg}]
   (when (string? consumer)
     (cond-> {:id consumer}
@@ -118,7 +118,7 @@
 
 (defn- event
   "Lookup the log event from the :framework, :appender and :event
-  keys of the NREPL `msg`."
+  keys of the nREPL `msg`."
   [{:keys [event] :as msg}]
   (or (framework/event (framework msg) (appender msg) (UUID/fromString event))
       (throw (ex-info "Log event not found"
@@ -273,7 +273,7 @@
                            (event/thread-frequencies))})
 
 (defn handle-log
-  "Handle NREPL log operations."
+  "Handle nREPL log operations."
   [handler {:keys [session] :as msg}]
   (when-not (contains? (meta session) ::frameworks)
     (alter-meta! session assoc ::frameworks (framework/resolve-frameworks)))
