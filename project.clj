@@ -87,7 +87,7 @@
                    ;; TODO: Merge the tests in this dir in to test/clj once we
                    ;; drop support for Clojure 1.8
                    :test-paths ["test/spec"]}
-             :1.10 {:dependencies [[org.clojure/clojure "1.10.1"]
+             :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.1"]
@@ -155,7 +155,7 @@
                          {:dependencies [[clj-kondo "2021.12.01"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.2.3"]]
+                        {:plugins [[jonase/eastwood "1.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}

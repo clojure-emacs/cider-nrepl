@@ -1,5 +1,6 @@
 (ns cider.nrepl.middleware.format-test
   (:require
+   [cider.nrepl.middleware.format :as sut]
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]
    [nrepl.middleware.print :as print]))
@@ -167,3 +168,35 @@
               :status #{"done" "nrepl.middleware.print/error"}
               :nrepl.middleware.print/error "Couldn't resolve var fake.nrepl.pprint/puget-pprint"}
              response)))))
+
+(deftest compute-style-indent-test
+  (are [macro-name arglists expected] (testing [macro-name arglists]
+                                        (is (= expected
+                                               (sut/compute-style-indent (str macro-name) arglists)))
+                                        true)
+    #_macro-name #_arglists              #_expected
+
+    ;; parsing based on the macro name:
+
+    'defprotocol '[[name & opts+sigs]]   [1 [:defn]]
+    ;; structurally equivalent:
+    'defprotocol '[[nAme & Opts+siGs]]   [1 [:defn]]
+    ;; structurally different:
+    'defprotocol '[[something-else]]     nil
+
+    ;; parsing based on `&`:
+
+    'anything    '[[& body]]             0
+    'anything    '[[a & body]]           1
+    'anything    '[[a {} & body]]        2
+    'anything    '[[{} & body]]          1
+    'anything    '[[{} a & body]]        2
+    ;; un-inferrable:
+    'anything    '[[a & body], [& body]] nil
+
+    ;; parsing based on argument names:
+
+    'anything    '[[foo]]                nil
+    'anything    '[[body]]               0
+    'anything    '[[a body]]             1
+    'anything    '[[a b body]]           2))

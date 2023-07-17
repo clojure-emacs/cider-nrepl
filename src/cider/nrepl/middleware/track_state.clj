@@ -2,33 +2,45 @@
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
   (:require
+   [cider.nrepl.middleware.format :as format]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
-   [orchard.cljs.analysis :as cljs-ana]
    [clojure.java.io :as io]
    [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
+   [orchard.cljs.analysis :as cljs-ana]
    [orchard.java.classpath :as cp]
    [orchard.misc :as misc])
   (:import
-   (clojure.lang Namespace MultiFn)
-   java.net.SocketException
-   java.util.jar.JarFile
-   nrepl.transport.Transport))
+   (clojure.lang MultiFn Namespace)
+   (java.net SocketException)
+   (java.util.jar JarFile)
+   (nrepl.transport Transport)))
 
 (def clojure-core (try (find-ns 'clojure.core)
                        (catch Exception _e nil)))
 
 ;;; Auxiliary
 
-(defn- var-meta-with-fn
-  "Like clojure.core/meta but adds {:fn true} for functions and macros.
+(defn- enriched-meta
+  "Like `clojure.core/meta` but adds {:fn true} for functions, multimethods and macros,
+  and `:style/indent` when missing and inferrable.
+
   Should only be used for vars."
   [the-var]
-  (cond-> (meta the-var)
-    (or (fn? @the-var) (instance? MultiFn @the-var)) (assoc :fn true)))
+  (let [m (meta the-var)]
+    (cond-> m
+      (or (fn? @the-var)
+          (instance? MultiFn @the-var))
+      (assoc :fn true)
+
+      (and (:macro m)
+           (:arglists m)
+           (not (:style/indent m))
+           (not (:indent m)))
+      format/infer-style-indent)))
 
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
@@ -36,7 +48,7 @@
   (->> refers
        (into {} (keep (fn [[sym the-var]]
                         (when (var? the-var)
-                          (let [{the-ns :ns :as the-meta} (var-meta-with-fn the-var)]
+                          (let [{the-ns :ns :as the-meta} (enriched-meta the-var)]
                             (when-not (identical? the-ns clojure-core)
                               [sym (um/relevant-meta the-meta)]))))))))
 
@@ -81,7 +93,7 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (misc/update-vals #(um/relevant-meta (var-meta-with-fn %))))}))
+                   (misc/update-vals #(um/relevant-meta (enriched-meta %))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.
@@ -159,13 +171,13 @@
 (defn update-and-send-cache
   "Send a reply to msg with state information assoc'ed.
   old-data is the ns-cache that needs to be updated (the one
-  associated with msg's session). Return the updated value for it.
+  associated with `msg`'s session). Return the updated value for it.
   This function has side-effects (sending the message)!
 
-  Two extra entries are sent in the reply. One is the :repl-type,
-  which is either :clj or :cljs.
+  Two extra entries are sent in the reply. One is the `:repl-type`,
+  which is either `:clj` or `:cljs`.
 
-  The other is :changed-namespaces, which is a map from namespace
+  The other is `:changed-namespaces`, which is a map from namespace
   names to namespace data (as returned by `ns-as-map`). This contains
   only namespaces which have changed since we last notified the
   client.

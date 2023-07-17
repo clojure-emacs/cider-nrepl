@@ -75,6 +75,7 @@
          '{c {:macro "true"
               :arglists "([name & body])"
               :fn "true"
+              :style/indent "1"
               :doc "\"Defines a test function with no arguments.  Test functions may call\\n  other tests, so tests may be composed.  If you compose tests, you\\n  should also define a function named test-ns-hook; run-tests will\\n  call test-ns-hook instead of testing all vars.\\n\\n  Note: Actually, the test body goes in the :test metadata on the var,\\n  and the real function (the value of the var) calls test-var on\\n  itself.\\n\\n  When *load-tests* is false, deftest is ignored.\""}}))
   (is (= [nil "true" "true" "true"]
          (map (comp :fn
