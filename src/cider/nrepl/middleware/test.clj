@@ -450,9 +450,12 @@
 
 (defn handle-test [handler msg & _configuration]
   (case (:op msg)
-    "test-var-query"  (handle-test-var-query-op msg)
+    ;; (NOTE: deprecated)
     "test"            (handle-test-op msg)
+    ;; (NOTE: deprecated)
     "test-all"        (handle-test-all-op msg)
+
+    "test-var-query"  (handle-test-var-query-op msg)
     "test-stacktrace" (handle-stacktrace-op msg)
     "retest"          (handle-retest-op msg)
     (handler msg)))

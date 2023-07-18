@@ -1,5 +1,5 @@
 ////
-This file is _generated_ by #'cider.nrepl.impl.docs/-main
+This file was _generated_ with `lein docs`
    *Do not edit!*
 ////
 = Supported nREPL operations
@@ -955,7 +955,7 @@ Returns::
 
 === `retest`
 
-Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
+[DEPRECATED - ``use test-var-query`` instead] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -970,7 +970,10 @@ Optional parameters::
 
 
 Returns::
-{blank}
+* `:ns-elapsed-time` a report of the elapsed time spent running the given namespaces. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+
 
 
 === `set-max-samples`
@@ -1083,7 +1086,7 @@ Returns::
 
 === `test`
 
-[DEPRECATED] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+[DEPRECATED - ``use test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -1098,12 +1101,15 @@ Optional parameters::
 
 
 Returns::
-{blank}
+* `:ns-elapsed-time` a report of the elapsed time spent running the given namespaces. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+
 
 
 === `test-all`
 
-[DEPRECATED] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
 
 Required parameters::
 {blank}
@@ -1118,7 +1124,10 @@ Optional parameters::
 
 
 Returns::
-{blank}
+* `:ns-elapsed-time` a report of the elapsed time spent running the given namespaces. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+
 
 
 === `test-stacktrace`
@@ -1159,7 +1168,8 @@ Optional parameters::
 
 
 Returns::
-* `:results` A map of test run data.
+* `:ns-elapsed-time` a report of the elapsed time spent running the given namespaces. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
 
 
@@ -1277,4 +1287,311 @@ Optional parameters::
 
 Returns::
 * `:status` done
+
+
+
+=== `log-add-appender`
+
+Add an appender to a log framework.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:filters` A map from filter name to filter condition.
+* `:framework` The id of the log framework.
+* `:size` The number of events the appender keeps in memory.
+* `:threshold` The threshold in percent used to cleanup events.
+
+
+Optional parameters::
+* `:logger` The name of the logger to attach to.
+
+
+Returns::
+* `:status` done
+* `:cider/log-add-appender` The appender that was added.
+
+
+
+=== `log-add-consumer`
+
+Add a consumer to an appender of a log framework.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:filters` A map from filter name to filter condition.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-add-consumer` The consumer that was added.
+
+
+
+=== `log-analyze-stacktrace`
+
+Analyze the stacktrace of a log event.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:event` The id of the event to inspect.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `log-clear-appender`
+
+Clear all events of a log appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-clear-appender` The appender that was cleared.
+
+
+
+=== `log-exceptions`
+
+Return the exceptions and their frequencies for the given framework and appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-exceptions` A map from exception name to event frequency.
+
+
+
+=== `log-format-event`
+
+Format a log event.
+
+Required parameters::
+* `:appender` The name of the log appender.
+* `:event` The id of the log event.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:status` done
+* `:cider/log-format-event` The formatted log event.
+
+
+
+=== `log-frameworks`
+
+Return the available log frameworks.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-frameworks` A list of log frameworks.
+
+
+
+=== `log-inspect-event`
+
+Inspect a log event.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:event` The id of the event to inspect.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:value` The inspection result.
+
+
+
+=== `log-levels`
+
+Return the log levels and their frequencies for the given framework and appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-levels` A map from log level to event frequency.
+
+
+
+=== `log-loggers`
+
+Return the loggers and their frequencies for the given framework and appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-loggers` A map from logger name to event frequency.
+
+
+
+=== `log-remove-appender`
+
+Remove an appender from a log framework.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-remove-appender` The removed appender.
+
+
+
+=== `log-remove-consumer`
+
+Remove a consumer from the appender of a log framework.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:consumer` The name of the consumer.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-add-consumer` The removed consumer.
+
+
+
+=== `log-search`
+
+Search the log events of an appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+* `:filters` A map from filter name to filter condition.
+* `:limit` Number of log events to return.
+
+
+Returns::
+* `:status` done
+* `:cider/log-search` The list of log events matching the search.
+
+
+
+=== `log-threads`
+
+Return the threads and their frequencies for the given framework and appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-threads` A map from thread name to event frequency.
+
+
+
+=== `log-update-appender`
+
+Update the appender of a log framework.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:filters` A map from filter name to filter condition.
+* `:framework` The id of the log framework.
+* `:size` The number of events the appender keeps in memory.
+* `:threshold` The threshold in percent used to cleanup events.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-update-appender` The updated appender.
+
+
+
+=== `log-update-consumer`
+
+Update the consumer of a log appender.
+
+Required parameters::
+* `:appender` The name of the appender.
+* `:consumer` The name of the consumer.
+* `:filters` A map from filter name to filter condition.
+* `:framework` The id of the log framework.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:cider/log-update-consumer` The consumer that was updated.
 
