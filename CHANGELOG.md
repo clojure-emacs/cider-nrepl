@@ -5,6 +5,7 @@
 ### New features
 
 * [#773](https://github.com/clojure-emacs/cider-nrepl/pull/773) Add middleware to capture, debug, inspect and view log events emitted by Java logging frameworks.
+* [#755](https://github.com/clojure-emacs/cider-nrepl/pull/755) `middleware.test`: now timing information is returned at var and ns level under the `:took-ms`/`:took-ms-humanized` keys. 
 
 ### Changes
 

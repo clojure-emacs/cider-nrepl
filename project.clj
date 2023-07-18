@@ -103,7 +103,8 @@
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
                     :java-source-paths ["test/java"]
-                    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
+                    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"
+                               "-Dcider.internal.testing=true"]
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
                                    [boot/core "2.8.3"]
@@ -147,6 +148,7 @@
                       {:plugins [[lein-cljfmt "0.9.2"]]
                        :cljfmt {:indents {as-> [[:inner 0]]
                                           delay [[:inner 0]]
+                                          timing [[:inner 0]]
                                           with-debug-bindings [[:inner 0]]
                                           merge-meta [[:inner 0]]
                                           try-if-let [[:block 1]]}}}]

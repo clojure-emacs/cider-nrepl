@@ -4,7 +4,9 @@
    ;; Ensure tested tests are loaded:
    cider.nrepl.middleware.test-filter-tests
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all])
+   [clojure.string :as string]
+   [clojure.test :refer :all]
+   [clojure.java.io :as io])
   (:import
    (clojure.lang ExceptionInfo)))
 
@@ -158,6 +160,41 @@
                                     :test-with-map-as-message
                                     first
                                     :message))))))
+
+(deftest timing-test
+  (require 'cider.nrepl.middleware.test-filter-tests)
+  (let [{:keys [results] :as test-result}
+        (session/message {:op "test"
+                          :ns "cider.nrepl.middleware.test-filter-tests"
+                          :tests ["test-with-map-as-message"]})])
+
+  (require 'failing-test-ns)
+  (let [test-result (session/message {:op "test"
+                                      :ns "failing-test-ns"})
+        [[var1 timing1]
+         [var2 timing2]]
+        (->> test-result
+             :results
+             :failing-test-ns
+             ((juxt :fast-failing-test :slow-failing-test))
+             (map (fn [[{:keys [var]
+                         {:keys [took-ms]} :timing}]]
+                    [var took-ms])))]
+    (is (= "fast-failing-test" var1))
+    (is (< timing1 50)
+        "Reports the timing under :timing :took-ms, as integer.
+The `10` value reflects that it times things correctly for a fast test.")
+
+    (is (= "slow-failing-test" var2))
+    (is (> timing2 998)
+        "Reports the timing under :timing :took-ms, as integer.
+The `988` value reflects that it times things correctly for a slow test.")
+
+    (let [{:keys [took-humanized took-ms]} (-> test-result :ns-timings :failing-test-ns)]
+      (is (> took-ms 998)
+          "Reports the timing for the entire ns")
+      (is (= (str "Completed in " took-ms " ms")
+             took-humanized)))))
 
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"

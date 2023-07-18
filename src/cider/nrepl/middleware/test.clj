@@ -44,8 +44,15 @@
   (atom nil))
 
 (defn report-reset! []
-  (reset! current-report {:summary {:ns 0 :var 0 :test 0 :pass 0 :fail 0 :error 0}
-                          :results {} :testing-ns nil :gen-input nil}))
+  (reset! current-report {:summary {:ns 0
+                                    :var 0
+                                    :test 0
+                                    :pass 0
+                                    :fail 0
+                                    :error 0}
+                          :results {}
+                          :testing-ns nil
+                          :gen-input nil}))
 
 ;; In the case of test errors, line number is obtained by searching the
 ;; stacktrace for the originating function. The search target will be the
@@ -176,6 +183,31 @@
                            (test-result ns v m))
                 (assoc :gen-input nil)))))
 
+(defmethod report :end-test-var
+  [{:keys [var-timing]
+    var-ref :var}]
+  (let [n (or (some-> var-ref meta :ns ns-name)
+              (:testing-ns @current-report))
+        v (or (-> var-ref meta :name)
+              fallback-var-name)
+        i (-> @current-report
+              (get-in [:results n v])
+              count
+              dec)]
+    (swap! current-report
+           assoc-in
+           [:results n v i :timing]
+           var-timing)))
+
+(defmethod report :end-test-ns
+  [{:keys [ns-ref ns-timing]}]
+  (let [n (or (some-> ns-ref ns-name)
+              (:testing-ns @current-report))]
+    (swap! current-report
+           assoc-in
+           [:ns-timings n]
+           ns-timing)))
+
 (defmethod report :pass
   [m]
   (report-final-status m))
@@ -227,6 +259,20 @@
       (report {:type :error, :fault true, :expected nil, :actual e
                :message "Uncaught exception in test fixture"}))))
 
+(defmacro ^:private timing
+  "Executes `body`, reporting the time it took by persisting it to `time-atom`."
+  {:style/indent 1}
+  [time-atom & body]
+  {:pre [(seq body)]}
+  `(let [then# (System/currentTimeMillis)
+         v# (do
+              ~@body)
+         took# (- (System/currentTimeMillis)
+                  then#)]
+     (reset! ~time-atom {:took-ms took#
+                         :took-humanized (str "Completed in " took# " ms")})
+     v#))
+
 ;;; ## Test Execution
 ;;
 ;; These functions are based on the ones in `clojure.test`, updated to accept
@@ -241,11 +287,22 @@
     (binding [test/*testing-vars* (conj test/*testing-vars* v)]
       (test/do-report {:type :begin-test-var :var v})
       (test/inc-report-counter :test)
-      (try (t)
-           (catch Throwable e
-             (test/do-report {:type :error, :fault true, :expected nil, :actual e
-                              :message "Uncaught exception, not in assertion"})))
-      (test/do-report {:type :end-test-var :var v}))))
+      (let [time-info (atom nil)
+            result (timing time-info
+                     (try
+                       (t)
+                       ::ok
+                       (catch Throwable e
+                         e)))
+            report (if (= ::ok result)
+                     {:type :end-test-var
+                      :var v}
+                     {:type :error
+                      :fault true
+                      :expected nil
+                      :actual result
+                      :message "Uncaught exception, not in assertion"})]
+        (test/do-report (assoc report :var-timing @time-info))))))
 
 (defn test-vars
   "Call `test-var` on each var, with the fixtures defined for namespace object
@@ -258,6 +315,10 @@
             (doseq [v vars]
               (each-fixture-fn (fn [] (test-var v))))))
          (catch Throwable e
+           (when (System/getProperty "cider.internal.testing")
+             ;; print stacktrace, in case it didn't have anything to do with fixtures
+             ;; (in which case, things would become very confusing)
+             (.printStackTrace e))
            (report-fixture-error ns e)))))
 
 (defn test-ns
@@ -267,11 +328,15 @@
   [ns vars]
   (binding [test/report report]
     (test/do-report {:type :begin-test-ns, :ns ns})
-    (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
-      (test-hook)
-      (test-vars ns vars))
-    (test/do-report {:type :end-test-ns, :ns ns})
-    @current-report))
+    (let [time-info (atom nil)]
+      (timing time-info
+        (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
+          (test-hook)
+          (test-vars ns vars)))
+      (test/do-report {:type :end-test-ns
+                       :ns ns
+                       :ns-timing @time-info})
+      @current-report)))
 
 (defn test-var-query
   "Call `test-ns` for each var found via var-query."
