@@ -187,6 +187,12 @@ The `988` value reflects that it times things correctly for a slow test.")
       (is (> ms 998)
           "Reports the elapsed time for the entire ns")
       (is (= (str "Completed in " ms " ms")
+             humanized)))
+
+    (let [{:keys [humanized ms]} (-> test-result :elapsed-time)]
+      (is (> ms 998)
+          "Reports the elapsed time for the entire run, across namespaces")
+      (is (= (str "Completed in " ms " ms")
              humanized)))))
 
 (deftest print-object-test

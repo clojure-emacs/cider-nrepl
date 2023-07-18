@@ -342,11 +342,13 @@
   "Call `test-ns` for each var found via var-query."
   [var-query]
   (report-reset!)
-  (doseq [[ns vars] (group-by
-                     (comp :ns meta)
-                     (query/vars var-query))]
-    (test-ns ns vars))
-  @current-report)
+  (let [elapsed-time (atom nil)]
+    (timing elapsed-time
+      (doseq [[ns vars] (group-by
+                         (comp :ns meta)
+                         (query/vars var-query))]
+        (test-ns ns vars)))
+    (assoc @current-report :elapsed-time @elapsed-time)))
 
 (defn test-nss
   "Call `test-ns` for each entry in map `m`, in which keys are namespace
@@ -355,11 +357,13 @@
   objects."
   [m]
   (report-reset!)
-  (doseq [[ns vars] m]
-    (->> (map (partial ns-resolve ns) vars)
-         (filter identity)
-         (test-ns (the-ns ns))))
-  @current-report)
+  (let [elapsed-time (atom nil)]
+    (timing elapsed-time
+      (doseq [[ns vars] m]
+        (->> (map (partial ns-resolve ns) vars)
+             (filter identity)
+             (test-ns (the-ns ns)))))
+    (assoc @current-report :elapsed-time @elapsed-time)))
 
 ;;; ## Middleware
 

@@ -608,7 +608,8 @@ stack frame of the most recent exception. This op is deprecated, please use the
                             :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}}))
 
 (def timing-info-return-doc {"status" "Either done or indication of an error"
-                             "ns-elapsed-time" "a report of the elapsed time spent running the given namespaces. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
+                             "elapsed-time" "a report of the elapsed time spent running all the given namespaces. The structure is `:elapsed-time {:ms <integer> :humanized <string>}`."
+                             "ns-elapsed-time" "a report of the elapsed time spent running each namespace. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
                              "results" "Misc information about the test result. The structure is `:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}`"})
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
