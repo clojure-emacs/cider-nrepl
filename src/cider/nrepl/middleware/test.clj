@@ -184,7 +184,7 @@
                 (assoc :gen-input nil)))))
 
 (defmethod report :end-test-var
-  [{:keys [var-timing]
+  [{:keys [var-elapsed-time]
     var-ref :var}]
   (let [n (or (some-> var-ref meta :ns ns-name)
               (:testing-ns @current-report))
@@ -196,17 +196,17 @@
               dec)]
     (swap! current-report
            assoc-in
-           [:results n v i :timing]
-           var-timing)))
+           [:results n v i :elapsed-time]
+           var-elapsed-time)))
 
 (defmethod report :end-test-ns
-  [{:keys [ns-ref ns-timing]}]
+  [{:keys [ns-ref ns-elapsed-time]}]
   (let [n (or (some-> ns-ref ns-name)
               (:testing-ns @current-report))]
     (swap! current-report
            assoc-in
-           [:ns-timings n]
-           ns-timing)))
+           [:ns-elapsed-time n]
+           ns-elapsed-time)))
 
 (defmethod report :pass
   [m]
@@ -269,8 +269,8 @@
               ~@body)
          took# (- (System/currentTimeMillis)
                   then#)]
-     (reset! ~time-atom {:took-ms took#
-                         :took-humanized (str "Completed in " took# " ms")})
+     (reset! ~time-atom {:ms took#
+                         :humanized (str "Completed in " took# " ms")})
      v#))
 
 ;;; ## Test Execution
@@ -302,7 +302,7 @@
                       :expected nil
                       :actual result
                       :message "Uncaught exception, not in assertion"})]
-        (test/do-report (assoc report :var-timing @time-info))))))
+        (test/do-report (assoc report :var-elapsed-time @time-info))))))
 
 (defn test-vars
   "Call `test-var` on each var, with the fixtures defined for namespace object
@@ -335,7 +335,7 @@
           (test-vars ns vars)))
       (test/do-report {:type :end-test-ns
                        :ns ns
-                       :ns-timing @time-info})
+                       :ns-elapsed-time @time-info})
       @current-report)))
 
 (defn test-var-query
