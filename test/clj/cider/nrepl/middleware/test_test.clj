@@ -5,8 +5,7 @@
    cider.nrepl.middleware.test-filter-tests
    [cider.nrepl.test-session :as session]
    [clojure.string :as string]
-   [clojure.test :refer :all]
-   [clojure.java.io :as io])
+   [clojure.test :refer :all])
   (:import
    (clojure.lang ExceptionInfo)))
 
@@ -162,12 +161,6 @@
                                     :message))))))
 
 (deftest timing-test
-  (require 'cider.nrepl.middleware.test-filter-tests)
-  (let [{:keys [results] :as test-result}
-        (session/message {:op "test"
-                          :ns "cider.nrepl.middleware.test-filter-tests"
-                          :tests ["test-with-map-as-message"]})])
-
   (require 'failing-test-ns)
   (let [test-result (session/message {:op "test"
                                       :ns "failing-test-ns"})
