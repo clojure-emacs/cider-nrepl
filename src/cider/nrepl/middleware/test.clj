@@ -342,11 +342,12 @@
   "Call `test-ns` for each var found via var-query."
   [var-query]
   (report-reset!)
-  (let [elapsed-time (atom nil)]
+  (let [elapsed-time (atom nil)
+        corpus (group-by
+                (comp :ns meta)
+                (query/vars var-query))]
     (timing elapsed-time
-      (doseq [[ns vars] (group-by
-                         (comp :ns meta)
-                         (query/vars var-query))]
+      (doseq [[ns vars] corpus]
         (test-ns ns vars)))
     (assoc @current-report :elapsed-time @elapsed-time)))
 
@@ -357,12 +358,14 @@
   objects."
   [m]
   (report-reset!)
-  (let [elapsed-time (atom nil)]
+  (let [elapsed-time (atom nil)
+        corpus (mapv (fn [[ns vars]]
+                       [(the-ns ns)
+                        (keep (partial ns-resolve ns) vars)])
+                     m)]
     (timing elapsed-time
-      (doseq [[ns vars] m]
-        (->> (map (partial ns-resolve ns) vars)
-             (filter identity)
-             (test-ns (the-ns ns)))))
+      (doseq [[ns vars] corpus]
+        (test-ns ns vars)))
     (assoc @current-report :elapsed-time @elapsed-time)))
 
 ;;; ## Middleware
