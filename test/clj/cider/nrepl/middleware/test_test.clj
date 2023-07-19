@@ -193,7 +193,15 @@ The `988` value reflects that it times things correctly for a slow test.")
       (is (> ms 998)
           "Reports the elapsed time for the entire run, across namespaces")
       (is (= (str "Completed in " ms " ms")
-             humanized)))))
+             humanized))))
+
+  (let [test-result (session/message {:op "retest"})]
+    (is (string? (:humanized (:elapsed-time test-result)))
+        "Timing also works for the `retest` op (global level)")
+    (is (-> test-result :ns-elapsed-time :failing-test-ns :humanized string?)
+        "Timing also works for the `retest` op (ns level)")
+    (is (-> test-result :results :failing-test-ns :fast-failing-test (get 0) :elapsed-time :humanized string?)
+        "Timing also works for the `retest` op (var level)")))
 
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"
