@@ -121,7 +121,7 @@ use in e.g. wiki pages, github, etc."
                              "\n   **Do not edit!** -->\n"
                              (describe-markdown resp))
         (= format "adoc") (str "////\n"
-                               "This file is _generated_ by " #'-main
+                               "This file was _generated_ with `lein docs`"
                                "\n   *Do not edit!*\n"
                                "////\n"
                                (describe-adoc resp))))

@@ -4,6 +4,7 @@
    ;; Ensure tested tests are loaded:
    cider.nrepl.middleware.test-filter-tests
    [cider.nrepl.test-session :as session]
+   [clojure.string :as string]
    [clojure.test :refer :all])
   (:import
    (clojure.lang ExceptionInfo)))
@@ -158,6 +159,49 @@
                                     :test-with-map-as-message
                                     first
                                     :message))))))
+
+(deftest elapsed-time-test
+  (require 'failing-test-ns)
+  (let [test-result (session/message {:op "test-var-query"
+                                      :var-query {:ns-query {:exactly ["failing-test-ns"]}}})
+        [[var1 elapsed-time1]
+         [var2 elapsed-time2]]
+        (->> test-result
+             :results
+             :failing-test-ns
+             ((juxt :fast-failing-test :slow-failing-test))
+             (map (fn [[{:keys [var]
+                         {:keys [ms]} :elapsed-time}]]
+                    [var ms])))]
+    (is (= "fast-failing-test" var1))
+    (is (< elapsed-time1 50)
+        "Reports the elapsed time under [:elapsed-time :ms], as integer.
+The `10` value reflects that it times things correctly for a fast test.")
+
+    (is (= "slow-failing-test" var2))
+    (is (> elapsed-time2 998)
+        "Reports the elapsed time under [:elapsed-time :ms], as integer.
+The `988` value reflects that it times things correctly for a slow test.")
+
+    (let [{:keys [humanized ms]} (-> test-result :ns-elapsed-time :failing-test-ns)]
+      (is (> ms 998)
+          "Reports the elapsed time for the entire ns")
+      (is (= (str "Completed in " ms " ms")
+             humanized)))
+
+    (let [{:keys [humanized ms]} (-> test-result :elapsed-time)]
+      (is (> ms 998)
+          "Reports the elapsed time for the entire run, across namespaces")
+      (is (= (str "Completed in " ms " ms")
+             humanized))))
+
+  (let [test-result (session/message {:op "retest"})]
+    (is (string? (:humanized (:elapsed-time test-result)))
+        "Timing also works for the `retest` op (global level)")
+    (is (-> test-result :ns-elapsed-time :failing-test-ns :humanized string?)
+        "Timing also works for the `retest` op (ns level)")
+    (is (-> test-result :results :failing-test-ns :fast-failing-test (get 0) :elapsed-time :humanized string?)
+        "Timing also works for the `retest` op (var level)")))
 
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"
