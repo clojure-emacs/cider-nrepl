@@ -158,6 +158,9 @@ jobs:
           cache_version: << parameters.clojure_version >>|<< parameters.jdk_version >>
           steps:
             - run:
+                name: Running tests # Redundant relative to `make test`, however it makes the CI jobs fail faster, given how much time mranderson takes.
+                command: make quick-test
+            - run:
                 name: Running tests with inlined deps
                 command: make test smoketest
             - run:
