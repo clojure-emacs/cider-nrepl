@@ -971,7 +971,7 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
-* `:fail-fast` If true, the tests will be considered complete after the first test has failed or errored.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
@@ -1104,7 +1104,7 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
-* `:fail-fast` If true, the tests will be considered complete after the first test has failed or errored.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
@@ -1129,7 +1129,7 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
-* `:fail-fast` If true, the tests will be considered complete after the first test has failed or errored.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
@@ -1175,7 +1175,7 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
-* `:fail-fast` If true, the tests will be considered complete after the first test has failed or errored.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error

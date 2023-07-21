@@ -409,7 +409,7 @@
 
 (defn handle-test-var-query-op
   [{:keys [fail-fast var-query transport session id] :as msg}]
-  (let [fail-fast? (#{true "true"} fail-fast)
+  (let [fail-fast? (= "true" fail-fast)
         {:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -468,7 +468,7 @@
                                       (assoc ret ns vars)
                                       ret)))
                                 {} @results)
-                    report (test-nss nss (#{true "true"} fail-fast))]
+                    report (test-nss nss (= "true" fail-fast))]
                 (reset! results (:results report))
                 (t/send transport (response-for msg (util/transform-value report))))))
           (fn []
