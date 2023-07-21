@@ -190,13 +190,24 @@
               (:testing-ns @current-report))
         v (or (-> var-ref meta :name)
               fallback-var-name)
-        i (-> @current-report
-              (get-in [:results n v])
-              count
-              dec)]
+        contexts-count (-> @current-report
+                           (get-in [:results n v])
+                           count)]
+    ;; Store the per-timing-context timing, when possible
+    (when (= 1 contexts-count)
+      ;; The timing info is only valid when the test var contained a single `is` assertion.
+      ;; This is because timing works at var (`deftest`) granularity, not at `is` granularity.
+      (swap! current-report
+             assoc-in
+             [:results n v 0 :elapsed-time]
+             var-elapsed-time))
+
+    ;; Store the per-var timing.
+    ;; Note that cider-test.el does not currently report test failures on a per-var manner,
+    ;; however this data could be useful in a future or for other clients.
     (swap! current-report
            assoc-in
-           [:results n v i :elapsed-time]
+           [:var-elapsed-time n v :elapsed-time]
            var-elapsed-time)))
 
 (defmethod report :end-test-ns
