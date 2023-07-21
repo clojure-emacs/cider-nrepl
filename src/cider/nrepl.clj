@@ -612,29 +612,31 @@ stack frame of the most recent exception. This op is deprecated, please use the
                              "ns-elapsed-time" "a report of the elapsed time spent running each namespace. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
                              "results" "Misc information about the test result. The structure is `:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}`"})
 
+(def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
+
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
    :requires #{#'session #'wrap-print}
    :handles {"test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
-              :optional wrap-print-optional-arguments
-              :returns timing-info-return-doc}
+              :optional (merge wrap-print-optional-arguments)
+              :returns (merge fail-fast-doc timing-info-return-doc)}
              "test"
              {:doc "[DEPRECATED - `use test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
-              :returns timing-info-return-doc}
+              :returns (merge fail-fast-doc timing-info-return-doc)}
              "test-all"
              {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
               :optional wrap-print-optional-arguments
-              :returns timing-info-return-doc}
+              :returns (merge fail-fast-doc timing-info-return-doc)}
              "test-stacktrace"
              {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments}
              "retest"
              {:doc "[DEPRECATED - `use test-var-query` instead] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
-              :returns timing-info-return-doc}}})
+              :returns (merge fail-fast-doc timing-info-return-doc)}}})
 
 (def-wrapper wrap-trace cider.nrepl.middleware.trace/handle-trace
   {:doc     "Toggle tracing of a given var."

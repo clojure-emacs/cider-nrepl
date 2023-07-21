@@ -304,69 +304,99 @@
                       :message "Uncaught exception, not in assertion"})]
         (test/do-report (assoc report :var-elapsed-time @time-info))))))
 
+(defn- current-test-run-failed? []
+  (or (some-> @current-report :summary :fail pos?)
+      (some-> @current-report :summary :error pos?)))
+
 (defn test-vars
   "Call `test-var` on each var, with the fixtures defined for namespace object
   `ns`."
-  [ns vars]
-  (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-        each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
-    (try (once-fixture-fn
-          (fn []
-            (doseq [v vars]
-              (each-fixture-fn (fn [] (test-var v))))))
-         (catch Throwable e
-           (when (System/getProperty "cider.internal.testing")
-             ;; print stacktrace, in case it didn't have anything to do with fixtures
-             ;; (in which case, things would become very confusing)
-             (.printStackTrace e))
-           (report-fixture-error ns e)))))
+  ([ns vars]
+   (test-vars ns vars false))
+
+  ([ns vars fail-fast?]
+   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
+         each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
+     (try
+       (once-fixture-fn
+        (fn []
+          (reduce (fn [_ v]
+                    (cond-> (each-fixture-fn (fn []
+                                               (test-var v)))
+                      (and fail-fast? (current-test-run-failed?))
+                      reduced))
+                  nil
+                  vars)))
+       (catch Throwable e
+         (when (System/getProperty "cider.internal.testing")
+           ;; print stacktrace, in case it didn't have anything to do with fixtures
+           ;; (in which case, things would become very confusing)
+           (.printStackTrace e))
+         (report-fixture-error ns e))))))
 
 (defn test-ns
   "If the namespace object defines a function named `test-ns-hook`, call that.
   Otherwise, test the specified vars. On completion, return a map of test
   results."
-  [ns vars]
-  (binding [test/report report]
-    (test/do-report {:type :begin-test-ns, :ns ns})
-    (let [time-info (atom nil)]
-      (timing time-info
-        (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
-          (test-hook)
-          (test-vars ns vars)))
-      (test/do-report {:type :end-test-ns
-                       :ns ns
-                       :ns-elapsed-time @time-info})
-      @current-report)))
+  ([ns vars]
+   (test-ns ns vars false))
+
+  ([ns vars fail-fast?]
+   (binding [test/report report]
+     (test/do-report {:type :begin-test-ns, :ns ns})
+     (let [time-info (atom nil)]
+       (timing time-info
+         (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
+           (test-hook)
+           (test-vars ns vars fail-fast?)))
+       (test/do-report {:type :end-test-ns
+                        :ns ns
+                        :ns-elapsed-time @time-info})
+       @current-report))))
 
 (defn test-var-query
   "Call `test-ns` for each var found via var-query."
-  [var-query]
-  (report-reset!)
-  (let [elapsed-time (atom nil)
-        corpus (group-by
-                (comp :ns meta)
-                (query/vars var-query))]
-    (timing elapsed-time
-      (doseq [[ns vars] corpus]
-        (test-ns ns vars)))
-    (assoc @current-report :elapsed-time @elapsed-time)))
+  ([var-query]
+   (test-var-query var-query false))
+
+  ([var-query fail-fast?]
+   (report-reset!)
+   (let [elapsed-time (atom nil)
+         corpus (group-by
+                 (comp :ns meta)
+                 (query/vars var-query))]
+     (timing elapsed-time
+       (reduce (fn [_ [ns vars]]
+                 (cond-> (test-ns ns vars fail-fast?)
+                   (and fail-fast? (current-test-run-failed?))
+                   reduced))
+               nil
+               corpus))
+     (assoc @current-report :elapsed-time @elapsed-time))))
 
 (defn test-nss
   "Call `test-ns` for each entry in map `m`, in which keys are namespace
   symbols and values are var symbols to be tested in that namespace (or `nil`
   to test all vars). Symbols are first resolved to their corresponding
   objects."
-  [m]
-  (report-reset!)
-  (let [elapsed-time (atom nil)
-        corpus (mapv (fn [[ns vars]]
-                       [(the-ns ns)
-                        (keep (partial ns-resolve ns) vars)])
-                     m)]
-    (timing elapsed-time
-      (doseq [[ns vars] corpus]
-        (test-ns ns vars)))
-    (assoc @current-report :elapsed-time @elapsed-time)))
+  ([m]
+   (test-nss m false))
+
+  ([m fail-fast?]
+   (report-reset!)
+   (let [elapsed-time (atom nil)
+         corpus (mapv (fn [[ns vars]]
+                        [(the-ns ns)
+                         (keep (partial ns-resolve ns) vars)])
+                      m)]
+     (timing elapsed-time
+       (reduce (fn [_ [ns vars]]
+                 (cond-> (test-ns ns vars fail-fast?)
+                   (and fail-fast? (current-test-run-failed?))
+                   reduced))
+               nil
+               corpus))
+     (assoc @current-report :elapsed-time @elapsed-time))))
 
 ;;; ## Middleware
 
@@ -378,8 +408,9 @@
   (atom {}))
 
 (defn handle-test-var-query-op
-  [{:keys [var-query transport session id] :as msg}]
-  (let [{:keys [exec]} (meta session)]
+  [{:keys [fail-fast var-query transport session id] :as msg}]
+  (let [fail-fast? (= "true" fail-fast)
+        {:keys [exec]} (meta session)]
     (exec id
           (fn []
             (with-bindings (assoc @session #'ie/*msg* msg)
@@ -394,7 +425,7 @@
                                  (assoc-in [:ns-query :has-tests?] true)
                                  (assoc :test? true)
                                  (util.coerce/var-query)
-                                 test-var-query
+                                 (test-var-query fail-fast?)
                                  stringify-msg)]
                   (reset! results (:results report))
                   (t/send transport (response-for msg (util/transform-value report))))
@@ -424,7 +455,7 @@
                            :exclude-meta-key exclude}})))
 
 (defn handle-retest-op
-  [{:keys [transport session id] :as msg}]
+  [{:keys [transport session id fail-fast] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -433,9 +464,11 @@
                                   (let [problems (filter (comp #{:fail :error} :type)
                                                          (mapcat val tests))
                                         vars (distinct (map :var problems))]
-                                    (if (seq vars) (assoc ret ns vars) ret)))
+                                    (if (seq vars)
+                                      (assoc ret ns vars)
+                                      ret)))
                                 {} @results)
-                    report (test-nss nss)]
+                    report (test-nss nss (= "true" fail-fast))]
                 (reset! results (:results report))
                 (t/send transport (response-for msg (util/transform-value report))))))
           (fn []
