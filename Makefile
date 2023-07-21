@@ -17,6 +17,8 @@ test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
 quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
 
+fast-test: quick-test
+
 tools-deps-test: clean install
 	cd tools-deps-testing; clojure -M:test
 

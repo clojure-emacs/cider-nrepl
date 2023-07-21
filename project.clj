@@ -157,7 +157,7 @@
                          {:dependencies [[clj-kondo "2021.12.01"]]}]
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.2.3"]]
+                        {:plugins [[jonase/eastwood "1.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
