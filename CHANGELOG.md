@@ -6,6 +6,8 @@
 
 * [#773](https://github.com/clojure-emacs/cider-nrepl/pull/773) Add middleware to capture, debug, inspect and view log events emitted by Java logging frameworks.
 * [#755](https://github.com/clojure-emacs/cider-nrepl/pull/755) `middleware.test`: now timing information is returned at var and ns level under the `:ms`/`:humanized` keys. 
+* `middleware.test`: only include `:diff` data when the expected/actual mismatch is deemed diffable.
+  * i.e., maps and sequences are diffable, scalar values are not.
 
 ### Changes
 

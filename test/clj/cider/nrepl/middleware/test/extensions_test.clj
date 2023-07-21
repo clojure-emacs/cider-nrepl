@@ -31,5 +31,23 @@
                                         (eval (extensions/=-body "_" subject args))
                                         @proof)))
       1 [1]   '{:expected 1, :actual 1, :message "_", :type :pass}
-      1 [2]   '{:expected 1, :actual 2, :message "_", :type :fail, :diffs ([2 [1 2 nil]])}
-      1 [2 3] '{:expected 1, :actual (not (= 1 2 3)), :message "_", :type :fail, :diffs ([2 [1 2 nil]] [3 [1 3 nil]])})))
+      1 [2]   '{:expected 1, :actual 2, :message "_", :type :fail}
+      1 [2 3] '{:expected 1, :actual (not (= 1 2 3)), :message "_", :type :fail}))
+
+  (testing ":diffs are only included for diffable objects"
+    (are [subject args expected] (= expected
+                                    (:diffs (extensions/maybe-assoc-diffs {} subject args)))
+      1       [1]               nil
+      1       [2 3]             nil
+      ;; one different, diffable value:
+      {:a :b} [{:a :c}]         '[[{:a :c} ({:a :b} {:a :c} nil)]]
+      ;; two different, diffable values:
+      {:a :b} [{:a :c} {:a :d}] '[[{:a :c} ({:a :b} {:a :c} nil)]
+                                  [{:a :d} ({:a :b} {:a :d} nil)]]
+      ;; one different, diffable value at first position:
+      {:a :b} [{:a :c} {:a :b}] '[[{:a :c} ({:a :b} {:a :c} nil)]
+                                  ;; note that this diff is useless, but we include it for consistency for clients:
+                                  [{:a :b} [nil nil {:a :b}]]]
+      ;; one different, diffable value at last position:
+      {:a :b} [{:a :b} {:a :d}] '[[{:a :b} [nil nil {:a :b}]] ;; (another 'useless' diff, see previous note)
+                                  [{:a :d} ({:a :b} {:a :d} nil)]])))
