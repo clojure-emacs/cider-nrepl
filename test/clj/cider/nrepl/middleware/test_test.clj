@@ -203,6 +203,30 @@ The `988` value reflects that it times things correctly for a slow test.")
     (is (-> test-result :results :failing-test-ns :fast-failing-test (get 0) :elapsed-time :humanized string?)
         "Timing also works for the `retest` op (var level)")))
 
+(deftest fail-fast-test
+  (require 'failing-test-ns)
+  (let [test-result (session/message {:op "test-var-query"
+                                      :var-query {:ns-query {:exactly ["failing-test-ns"]}}
+                                      :fail-fast "true"})]
+    (is (= 1
+           (count (:failing-test-ns (:results test-result))))))
+
+  (let [test-result (session/message {:op "test-var-query"
+                                      :var-query {:ns-query {:exactly ["failing-test-ns"]}}
+                                      :fail-fast "false"})]
+    (is (= 2
+           (count (:failing-test-ns (:results test-result))))))
+
+  (let [test-result (session/message {:op "retest"
+                                      :fail-fast "false"})]
+    (is (= 2
+           (count (:failing-test-ns (:results test-result))))))
+
+  (let [test-result (session/message {:op "retest"
+                                      :fail-fast "true"})]
+    (is (= 1
+           (count (:failing-test-ns (:results test-result)))))))
+
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"
     (is (= "{no quotes}\n"
