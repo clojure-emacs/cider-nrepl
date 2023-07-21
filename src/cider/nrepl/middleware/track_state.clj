@@ -149,12 +149,16 @@
     :else
     (assoc project-ns-map clojure-core clojure-core-map)))
 
-(def jar-namespaces
-  (->> (cp/classpath)
-       (filter misc/jar-file?)
-       (map #(JarFile. (io/as-file %)))
-       (mapcat ns-find/find-namespaces-in-jarfile)
-       (into #{})))
+(def ^:private jar-namespaces*
+  (future
+    (into #{}
+          (comp (filter misc/jar-file?)
+                (map #(JarFile. (io/as-file %)))
+                (mapcat ns-find/find-namespaces-in-jarfile))
+          (cp/classpath))))
+
+(defn jar-namespaces [x]
+  (contains? @jar-namespaces* x))
 
 (defn update-and-send-cache
   "Send a reply to msg with state information assoc'ed.
