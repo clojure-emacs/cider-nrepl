@@ -8,7 +8,8 @@
    nrepl.transport.Transport))
 
 (def some-ns-map {'cider.nrepl.middleware.track-state-test
-                  (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))})
+                  (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                                (all-ns))})
 
 ;;; This is to prevent the agent from flooding test reports with
 ;;; irrelevant exceptions.
@@ -52,12 +53,12 @@
              (get-sent-value full-cache)))
       (is (= (get-sent-value (into {} (drop 3 full-cache)))
              (get-sent-value (into {} (drop 3 full-cache))))))
-      ;; In particular, the sent message only contains the diff.
+    ;; In particular, the sent message only contains the diff.
 
     (let [changed-again (:changed-namespaces @sent-value)]
       (is (map? changed-again))
       (is (= 3 (count changed-again))))
-      ;; Check repl-type :cljs
+    ;; Check repl-type :cljs
 
     (with-redefs [cljs/grab-cljs-env (constantly true)]
       (update-and-send-cache-tester nil msg sent-value)
@@ -94,7 +95,7 @@
   ([]))
 
 (deftest ns-as-map-test
-  (is (empty? (st/ns-as-map nil)))
+  (is (empty? (st/ns-as-map nil (all-ns))))
   (let [m (meta #'make-transport-test)]
     ;; #'make-transport refers to the deftest, and not the defn
     (->> (interleave um/relevant-meta-keys (range))
@@ -104,7 +105,8 @@
     ;; test conditions below may change as the namespace declaration
     ;; evolves.
     (let [{:keys [interns aliases] :as ns}
-          (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+          (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                        (all-ns))]
       (is (< 5 (count interns)))
       (is (map? interns))
       (is (interns 'ns-as-map-test))
@@ -115,12 +117,13 @@
       (is (= 'cider.nrepl.middleware.track-state (aliases 'st))))
     (alter-meta! #'make-transport-test (fn [x y] y) m))
   (let [{:keys [interns aliases] :as ns}
-        (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test))]
+        (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                      (all-ns))]
     (is interns)))
 
 (deftest ns-as-map-cljs-test
-  (let [cljs-ns {:use-macros {'sym-0 #'test-fn}
-                 :uses {'sym-1 #'ns-as-map-cljs-test}
+  (let [cljs-ns {:use-macros {'test-fn 'cider.nrepl.middleware.track-state-test}
+                 :uses {'sym-1 'some-other-cljs-ns}
                  :defs {'a-fn {:fn-var true}
                         'b-fn {:tag 'function}
                         'c-fn {:tag 'cljs.core/MultiFn}
@@ -128,23 +131,27 @@
                         'a-var {:tag 'something}}
                  :require-macros {'sym-2 'some-namespace}
                  :requires {'sym-3 'some-namespace}}
-        {:keys [aliases interns]} (st/ns-as-map cljs-ns)]
+        other-namespaces [{:name 'some-other-cljs-ns
+                           :defs {'sym-1 {:meta {:arglists '([] [a] [a b])}}}}]
+        {:keys [aliases interns]} (st/ns-as-map cljs-ns other-namespaces)]
     (is (= '{sym-2 some-namespace sym-3 some-namespace} aliases))
-    (is (= '{sym-0 {:arglists ([]) :macro true}
-             sym-1 {:arglists ([])}
-             a-var {}
-             a-fn {:fn "true"}
-             b-fn {:fn "true"}
-             c-fn {:fn "true"}
-             d-fn {:fn "true"}}
+    (is (= '{a-fn {:fn "true"},
+             b-fn {:fn "true"},
+             c-fn {:fn "true"},
+             d-fn {:fn "true"},
+             a-var {},
+             ;; fetched by traversing `other-namespaces`:
+             sym-1 {:arglists "([] [a] [a b])"},
+             ;; fetched by inspecting the JVM clojure environment:
+             test-fn {:arglists "([a b] [a] [])", :doc "\"docstring\""}}
            interns))))
 
 (deftest calculate-used-aliases-test
-  (is (contains? (st/merge-used-aliases some-ns-map nil ns-name)
+  (is (contains? (st/merge-used-aliases some-ns-map nil ns-name (all-ns))
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (st/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name)
+  (is (contains? (st/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name (all-ns))
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (st/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name)
+  (is (contains? (st/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name (all-ns))
                  'cider.nrepl.middleware.track-state)))
 
 (deftest ensure-clojure-core-present
@@ -153,7 +160,8 @@
     ;; actual use and in fact the msg is much more complicated
     (is (-> (st/ensure-clojure-core-present {}
                                             {'cljs.core :present}
-                                            {:msg :stuff})
+                                            {:msg :stuff}
+                                            (all-ns))
             keys
             #{st/clojure-core}
             not)))
@@ -161,9 +169,10 @@
     (is (= :present
            (-> (st/ensure-clojure-core-present {}
                                                {st/clojure-core :present}
-                                               nil)
+                                               nil
+                                               (all-ns))
                (get st/clojure-core)))))
   (testing "if core missing and not cljs, it adds it"
     (is (= st/clojure-core-map
-           (-> (st/ensure-clojure-core-present {} {} nil)
+           (-> (st/ensure-clojure-core-present {} {} nil (all-ns))
                (get st/clojure-core))))))

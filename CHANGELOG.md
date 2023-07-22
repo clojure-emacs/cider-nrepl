@@ -14,6 +14,7 @@
 
 * Bump `orchard` to 0.13.0.
 * Bump `compliment` to [0.4.0](https://github.com/alexander-yakushev/compliment/blob/0.4.0/CHANGELOG.md#040-2023-07-05).
+* The `track-state` middleware now returns accurate metadata for cljs requests.
 
 ## 0.31.0 (2023-06-23)
 
