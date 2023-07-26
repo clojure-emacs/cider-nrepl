@@ -52,7 +52,47 @@
 
 ;;; Namespaces
 
-(defn ns-as-map [object]
+(defn- remove-redundant-quote
+  "Fixes double-quoted arglists coming from the ClojureScript analyzer."
+  [{:keys [arglists] :as m}]
+  (if (and (sequential? arglists)
+           (-> arglists first #{'quote}))
+    (assoc m :arglists (second arglists))
+    m))
+
+(defn- uses-metadata
+  "Creates a var->metadata map for all the `:uses` of a given cljs ns.
+
+  It accomplishes so by querying `all-cljs-namespaces`"
+  [all-cljs-namespaces uses]
+  (into {}
+        (map (fn [[var-name var-ns]]
+               (let [defs (some->> all-cljs-namespaces
+                                   (filter (fn [x]
+                                             (and (map? x)
+                                                  (= (:name x)
+                                                     var-ns))))
+                                   first
+                                   :defs)]
+                 (if-let [var-meta (some-> defs (get var-name) (get :meta))]
+                   [var-name (remove-redundant-quote var-meta)]
+                   [var-name {:arglists '([])}]))))
+        uses))
+
+(defn- use-macros-metadata
+  "Creates a var->metadata map for all the `:use-macros` of a given cljs ns.
+
+  It accomplishes so by querying the JVM Clojure environment."
+  [use-macros]
+  (into {}
+        (map (fn [[var-name var-ns]]
+               (if-let [var-ref (resolve (symbol (name var-ns)
+                                                 (name var-name)))]
+                 [var-name (meta var-ref)]
+                 [var-name {:arglists '([]) :macro true}])))
+        use-macros))
+
+(defn ns-as-map [object all-objects]
   (cond
     ;; Clojure Namespaces
     (instance? Namespace object)
@@ -66,13 +106,10 @@
        ;; For some reason, cljs (or piggieback) adds a :test key to the
        ;; var metadata stored in the namespace.
        :interns (merge (misc/update-vals #(dissoc (um/relevant-meta (cljs-meta-with-fn %)) :test) defs)
-                       ;; FIXME: `uses` and `use-macros` are maps from
-                       ;; symbols to namespace names:
-                       ;;     {log reagent.debug, dbg reagent.debug}
-                       ;; Since we don't know the metadata for these
-                       ;; vars, we resign to "guessing" them.
-                       (misc/update-vals (constantly {:arglists '([])}) uses)
-                       (misc/update-vals (constantly {:arglists '([]) :macro true}) use-macros))})
+                       (misc/update-vals um/relevant-meta
+                                         (uses-metadata all-objects uses))
+                       (misc/update-vals um/relevant-meta
+                                         (use-macros-metadata use-macros)))})
 
     :else {}))
 
@@ -102,7 +139,8 @@
   namespace names."
   [^clojure.lang.PersistentHashMap new-ns-map
    ^clojure.lang.PersistentHashMap old-ns-map
-   val-fn]
+   val-fn
+   all-namespaces]
   (->> (vals new-ns-map)
        (map :aliases)
        (mapcat vals)
@@ -110,7 +148,8 @@
                  (if (or (get acc name)
                          (get old-ns-map name))
                    acc
-                   (assoc acc name (ns-as-map (val-fn name)))))
+                   (assoc acc name (ns-as-map (val-fn name)
+                                              all-namespaces))))
                new-ns-map)))
 
 (def ns-cache
@@ -132,11 +171,12 @@
   "Check if `old-ns-map` has clojure.core, else add it to
   current-ns-map. If `cljs` we inject cljs.core instead. `cljs` is the
   cljs environment grabbed from the message (if present)."
-  [old-ns-map project-ns-map cljs]
+  [old-ns-map project-ns-map cljs all-namespaces]
   (cond
     (and cljs (not (contains? old-ns-map 'cljs.core)))
     (assoc project-ns-map 'cljs.core
-           (ns-as-map (cljs-ana/find-ns cljs "cljs.core")))
+           (ns-as-map (cljs-ana/find-ns cljs "cljs.core")
+                      all-namespaces))
 
     ;; we have cljs and the cljs core, nothing to do
     cljs
@@ -194,21 +234,24 @@
          ;; was empty, everything is considered to have changed (and
          ;; the cache will then be filled).
          ns-name-fn     (if cljs :name ns-name)
-         ;; Remove all jar namespaces.
+         all-namespaces (if cljs
+                          (vals (cljs-ana/all-ns cljs))
+                          (all-ns))
          project-ns-map (fast-reduce (fn [acc ns]
                                        (let [name (ns-name-fn ns)]
                                          (if (jar-ns-fn name)
-                                           acc
-                                           (assoc! acc name (ns-as-map ns)))))
-                                     (if cljs
-                                       (vals (cljs-ana/all-ns cljs))
-                                       (all-ns)))
+                                           acc ;; Remove all jar namespaces.
+                                           (assoc! acc name (ns-as-map ns all-namespaces)))))
+                                     all-namespaces)
          project-ns-map (ensure-clojure-core-present old-data
                                                      project-ns-map
-                                                     cljs)
+                                                     cljs
+                                                     all-namespaces)
          changed-ns-map (-> project-ns-map
                             ;; Add back namespaces that the project depends on.
-                            (merge-used-aliases (or old-data {}) find-ns-fn)
+                            (merge-used-aliases (or old-data {})
+                                                find-ns-fn
+                                                all-namespaces)
                             (calculate-changed-ns-map old-data))]
      (try (->> (response-for
                 msg :status :state
