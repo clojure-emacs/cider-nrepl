@@ -162,6 +162,7 @@
 
 (deftest elapsed-time-test
   (require 'failing-test-ns)
+  (require 'failing-test-ns-2)
   (let [test-result (session/message {:op "test-var-query"
                                       :var-query {:ns-query {:exactly ["failing-test-ns"]}}})
         [[var1 elapsed-time1]
@@ -201,7 +202,35 @@ The `988` value reflects that it times things correctly for a slow test.")
     (is (-> test-result :ns-elapsed-time :failing-test-ns :humanized string?)
         "Timing also works for the `retest` op (ns level)")
     (is (-> test-result :results :failing-test-ns :fast-failing-test (get 0) :elapsed-time :humanized string?)
-        "Timing also works for the `retest` op (var level)")))
+        "Timing also works for the `retest` op (var level)"))
+
+  (testing "Tests with multiple testing contexts"
+    (let [test-result (session/message {:op "test-var-query"
+                                        :var-query {:ns-query {:exactly ["failing-test-ns2"]}}})
+          vars1 (-> test-result :results :failing-test-ns2 :two-clauses)
+          vars2 (-> test-result :results :failing-test-ns2 :uses-are)]
+      (assert (-> vars1 count #{2})
+              "There's a test with two testing contexts")
+      (assert (-> vars2 count #{2})
+              "There's a test with two testing contexts")
+      (assert (every? (fn [m]
+                        (contains? m :expected))
+                      vars1))
+      (assert (every? (fn [m]
+                        (contains? m :expected))
+                      vars2))
+      (is (not-any? (fn [m]
+                      (contains? m :elapsed-time))
+                    vars1)
+          "If a deftest contains two testing contexts, :elapsed-time will be absent")
+      (is (not-any? (fn [m]
+                      (contains? m :elapsed-time))
+                    vars2)
+          "If a deftest contains two testing contexts, :elapsed-time will be absent")
+      (is (-> test-result :var-elapsed-time :failing-test-ns2 :two-clauses :elapsed-time)
+          "Timing info is, however, available at the var level")
+      (is (-> test-result :var-elapsed-time :failing-test-ns2 :uses-are :elapsed-time)
+          "Timing info is, however, available at the var level"))))
 
 (deftest fail-fast-test
   (require 'failing-test-ns)

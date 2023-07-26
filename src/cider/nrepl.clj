@@ -610,6 +610,7 @@ stack frame of the most recent exception. This op is deprecated, please use the
 (def timing-info-return-doc {"status" "Either done or indication of an error"
                              "elapsed-time" "a report of the elapsed time spent running all the given namespaces. The structure is `:elapsed-time {:ms <integer> :humanized <string>}`."
                              "ns-elapsed-time" "a report of the elapsed time spent running each namespace. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
+                             "var-elapsed-time" "a report of the elapsed time spent running each var. The structure is `:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}`."
                              "results" "Misc information about the test result. The structure is `:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}`"})
 
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
