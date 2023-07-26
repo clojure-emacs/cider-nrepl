@@ -60,6 +60,38 @@
     (assoc m :arglists (second arglists))
     m))
 
+(defn- uses-metadata
+  "Creates a var->metadata map for all the `:uses` of a given cljs ns.
+
+  It accomplishes so by querying `all-cljs-namespaces`"
+  [all-cljs-namespaces uses]
+  (into {}
+        (map (fn [[var-name var-ns]]
+               (let [defs (some->> all-cljs-namespaces
+                                   (filter (fn [x]
+                                             (and (map? x)
+                                                  (= (:name x)
+                                                     var-ns))))
+                                   first
+                                   :defs)]
+                 (if-let [var-meta (some-> defs (get var-name) (get :meta))]
+                   [var-name (remove-redundant-quote var-meta)]
+                   [var-name {:arglists '([])}]))))
+        uses))
+
+(defn- use-macros-metadata
+  "Creates a var->metadata map for all the `:use-macros` of a given cljs ns.
+
+  It accomplishes so by querying the JVM Clojure environment."
+  [use-macros]
+  (into {}
+        (map (fn [[var-name var-ns]]
+               (if-let [var-ref (resolve (symbol (name var-ns)
+                                                 (name var-name)))]
+                 [var-name (meta var-ref)]
+                 [var-name {:arglists '([]) :macro true}])))
+        use-macros))
+
 (defn ns-as-map [object all-objects]
   (cond
     ;; Clojure Namespaces
@@ -75,27 +107,9 @@
        ;; var metadata stored in the namespace.
        :interns (merge (misc/update-vals #(dissoc (um/relevant-meta (cljs-meta-with-fn %)) :test) defs)
                        (misc/update-vals um/relevant-meta
-                                         (into {}
-                                               (map (fn [[var-name var-ns]]
-                                                      (let [defs (some->> all-objects
-                                                                          (filter (fn [x]
-                                                                                    (and (map? x)
-                                                                                         (= (:name x)
-                                                                                            var-ns))))
-                                                                          first
-                                                                          :defs)]
-                                                        (if-let [var-meta (some-> defs (get var-name) (get :meta))]
-                                                          [var-name (remove-redundant-quote var-meta)]
-                                                          [var-name {:arglists '([])}]))))
-                                               uses))
+                                         (uses-metadata all-objects uses))
                        (misc/update-vals um/relevant-meta
-                                         (into {}
-                                               (map (fn [[var-name var-ns]]
-                                                      (if-let [var-ref (resolve (symbol (name var-ns)
-                                                                                        (name var-name)))]
-                                                        [var-name (meta var-ref)]
-                                                        [var-name {:arglists '([]) :macro true}])))
-                                               use-macros)))})
+                                         (use-macros-metadata use-macros)))})
 
     :else {}))
 
