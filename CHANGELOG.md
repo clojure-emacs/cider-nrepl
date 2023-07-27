@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [#777](https://github.com/clojure-emacs/cider-nrepl/issues/777) `middleware.track-state`: now an inferred `:style/indent` metadata value is included, when adequate.
+
 ## 0.32.0 (2023-07-26)
 
 ### New features
