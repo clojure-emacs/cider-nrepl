@@ -6,6 +6,7 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [clojure.java.io :as io]
+   [clojure.string :as string]
    [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
@@ -28,7 +29,21 @@
   (and (:macro m)
        (:arglists m)
        (not (:style/indent m))
-       (not (:indent m))))
+       (not (:indent m))
+       (if-let [namespace-name (some-> (cond
+                                         (instance? Namespace (:ns m)) ;; JVM clojure
+                                         (-> m :ns ns-name)
+
+                                         (symbol? (:ns m)) ;; possible edge cases
+                                         (:ns m)
+
+                                         ;; cljs analyzer info
+                                         :else
+                                         (some-> m :name namespace symbol))
+                                       str)]
+         (not (or (string/starts-with? namespace-name "clojure.")
+                  (string/starts-with? namespace-name "cljs.")))
+         true)))
 
 (defn- enriched-meta
   "Like `clojure.core/meta` but adds {:fn true} for functions, multimethods and macros,
@@ -268,7 +283,7 @@
                                                      cljs
                                                      all-namespaces)
          changed-ns-map (-> project-ns-map
-                          ;; Add back namespaces that the project depends on.
+                            ;; Add back namespaces that the project depends on.
                             (merge-used-aliases (or old-data {})
                                                 find-ns-fn
                                                 all-namespaces)
