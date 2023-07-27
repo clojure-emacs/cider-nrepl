@@ -268,19 +268,21 @@
                                                      cljs
                                                      all-namespaces)
          changed-ns-map (-> project-ns-map
-                            ;; Add back namespaces that the project depends on.
+                          ;; Add back namespaces that the project depends on.
                             (merge-used-aliases (or old-data {})
                                                 find-ns-fn
                                                 all-namespaces)
                             (calculate-changed-ns-map old-data))]
-     (try (->> (response-for
-                msg :status :state
-                :repl-type (if cljs :cljs :clj)
-                :changed-namespaces (util/transform-value changed-ns-map))
-               (transport-send-fn (:transport msg)))
-          ;; We run async, so the connection might have been closed in
-          ;; the mean time.
-          (catch SocketException _ nil))
+     (try
+       (->> (response-for
+             msg :status :state
+             :repl-type (if cljs :cljs :clj)
+             :changed-namespaces (util/transform-value changed-ns-map))
+            (transport-send-fn (:transport msg)))
+       ;; We run async, so the connection might have been closed in
+       ;; the mean time.
+       (catch SocketException _
+         nil))
      (merge old-data changed-ns-map))))
 
 ;;; Middleware
