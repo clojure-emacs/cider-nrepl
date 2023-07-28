@@ -203,14 +203,14 @@ workflows:
             branches:
               only: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/
+              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
       - util_job:
           name: Code Linting
           filters:
             branches:
               only: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/
+              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
           steps:
             - run:
                 name: Running cljfmt
