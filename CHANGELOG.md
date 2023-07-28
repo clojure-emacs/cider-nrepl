@@ -6,6 +6,10 @@
 
 * [#777](https://github.com/clojure-emacs/cider-nrepl/issues/777) `middleware.track-state`: now an inferred `:style/indent` metadata value is included, when adequate.
 
+### Changes
+
+* Bump `suitable` to [0.5.0](https://github.com/clojure-emacs/clj-suitable/blob/v0.5.0/CHANGELOG.md#050-2023-07-28).
+
 ## 0.32.0 (2023-07-26)
 
 ### New features
