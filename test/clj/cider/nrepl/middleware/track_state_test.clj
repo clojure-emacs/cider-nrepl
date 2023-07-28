@@ -1,36 +1,36 @@
 (ns cider.nrepl.middleware.track-state-test
   (:require
-   [cider.nrepl.middleware.track-state :as st]
+   [cider.nrepl.middleware.track-state :as sut]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [clojure.test :refer :all])
   (:import
-   nrepl.transport.Transport))
+   (nrepl.transport Transport)))
 
 (def some-ns-map {'cider.nrepl.middleware.track-state-test
-                  (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
-                                (all-ns))})
+                  (sut/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                                 (all-ns))})
 
 ;;; This is to prevent the agent from flooding test reports with
 ;;; irrelevant exceptions.
-(set-error-handler! st/ns-cache (constantly nil))
-(set-error-mode! st/ns-cache :continue)
+(set-error-handler! sut/ns-cache (constantly nil))
+(set-error-mode! sut/ns-cache :continue)
 
-(def ^:const msg {:session :dummy})
+(def msg {:session :dummy})
 
 (deftest make-transport-test
-  (is (instance? Transport (st/make-transport msg)))
-  (is (try (send (st/make-transport msg) 10)
+  (is (instance? Transport (sut/make-transport msg)))
+  (is (try (send (sut/make-transport msg) 10)
            nil
            (catch Exception e true))))
 
 (defn update-and-send-cache-tester
-  "Use the other arity of st/update-and-send-cache to evaluate
+  "Use the other arity of sut/update-and-send-cache to evaluate
   strictly in test mode."
   [old-data msg sent-value]
-  (st/update-and-send-cache old-data msg
-                            #{}
-                            (fn [t m] (reset! sent-value m))))
+  (sut/update-and-send-cache old-data msg
+                             #{}
+                             (fn [t m] (reset! sent-value m))))
 
 (deftest update-and-send-cache-test
   (let [sent-value (atom nil)]
@@ -72,21 +72,21 @@
 (defmulti fn-test-multi (fn [x]))
 
 (deftest filter-core-and-get-meta-test
-  (is (= (st/filter-core-and-get-meta {'and #'and, 'b #'map, 'c #'deftest})
+  (is (= (sut/filter-core-and-get-meta {'and #'and, 'b #'map, 'c #'deftest})
          '{c {:macro "true"
               :arglists "([name & body])"
               :fn "true"
               :doc "\"Defines a test function with no arguments.  Test functions may call\\n  other tests, so tests may be composed.  If you compose tests, you\\n  should also define a function named test-ns-hook; run-tests will\\n  call test-ns-hook instead of testing all vars.\\n\\n  Note: Actually, the test body goes in the :test metadata on the var,\\n  and the real function (the value of the var) calls test-var on\\n  itself.\\n\\n  When *load-tests* is false, deftest is ignored.\""}}))
   (is (= [nil "true" "true" "true"]
          (map (comp :fn
-                    (st/filter-core-and-get-meta
+                    (sut/filter-core-and-get-meta
                      {'fn-test-var #'fn-test-var
                       'fn-test-def-fn #'fn-test-def-fn
                       'fn-test-defn-fn #'fn-test-defn-fn
                       'fn-test-multi #'fn-test-multi}))
               '[fn-test-var fn-test-def-fn fn-test-defn-fn fn-test-multi])))
   (is (-> (find-ns 'clojure.core)
-          ns-map st/filter-core-and-get-meta
+          ns-map sut/filter-core-and-get-meta
           seq not)))
 
 (defn- test-fn "docstring"
@@ -94,8 +94,10 @@
   ([a] nil)
   ([]))
 
+(defmacro test-macro [a & body])
+
 (deftest ns-as-map-test
-  (is (empty? (st/ns-as-map nil (all-ns))))
+  (is (empty? (sut/ns-as-map nil (all-ns))))
   (let [m (meta #'make-transport-test)]
     ;; #'make-transport refers to the deftest, and not the defn
     (->> (interleave um/relevant-meta-keys (range))
@@ -105,8 +107,8 @@
     ;; test conditions below may change as the namespace declaration
     ;; evolves.
     (let [{:keys [interns aliases] :as ns}
-          (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
-                        (all-ns))]
+          (sut/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                         (all-ns))]
       (is (< 5 (count interns)))
       (is (map? interns))
       (is (interns 'ns-as-map-test))
@@ -114,15 +116,17 @@
       (is (= (into #{} (keys (interns 'make-transport-test)))
              (into #{} um/relevant-meta-keys)))
       (is (= 3 (count aliases)))
-      (is (= 'cider.nrepl.middleware.track-state (aliases 'st))))
+      (is (= 'cider.nrepl.middleware.track-state (aliases 'sut))))
     (alter-meta! #'make-transport-test (fn [x y] y) m))
   (let [{:keys [interns aliases] :as ns}
-        (st/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
-                      (all-ns))]
+        (sut/ns-as-map (find-ns 'cider.nrepl.middleware.track-state-test)
+                       (all-ns))]
     (is interns)))
 
 (deftest ns-as-map-cljs-test
-  (let [cljs-ns {:use-macros {'test-fn 'cider.nrepl.middleware.track-state-test}
+  (let [cljs-ns {:use-macros {'test-fn 'cider.nrepl.middleware.track-state-test
+
+                              'test-macro 'cider.nrepl.middleware.track-state-test}
                  :uses {'sym-1 'some-other-cljs-ns}
                  :defs {'a-fn {:fn-var true}
                         'b-fn {:tag 'function}
@@ -133,7 +137,7 @@
                  :requires {'sym-3 'some-namespace}}
         other-namespaces [{:name 'some-other-cljs-ns
                            :defs {'sym-1 {:meta {:arglists '([] [a] [a b])}}}}]
-        {:keys [aliases interns]} (st/ns-as-map cljs-ns other-namespaces)]
+        {:keys [aliases interns]} (sut/ns-as-map cljs-ns other-namespaces)]
     (is (= '{sym-2 some-namespace sym-3 some-namespace} aliases))
     (is (= '{a-fn {:fn "true"},
              b-fn {:fn "true"},
@@ -143,36 +147,67 @@
              ;; fetched by traversing `other-namespaces`:
              sym-1 {:arglists "([] [a] [a b])"},
              ;; fetched by inspecting the JVM clojure environment:
-             test-fn {:arglists "([a b] [a] [])", :doc "\"docstring\""}}
+             test-fn {:arglists "([a b] [a] [])", :doc "\"docstring\""}
+             ;; adds :style/indent despite it not being originally present:
+             test-macro {:macro "true", :arglists "([a & body])", :style/indent "1"}}
            interns))))
 
 (deftest calculate-used-aliases-test
-  (is (contains? (st/merge-used-aliases some-ns-map nil ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases some-ns-map nil ns-name (all-ns))
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (st/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name (all-ns))
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (st/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name (all-ns))
                  'cider.nrepl.middleware.track-state)))
 
 (deftest ensure-clojure-core-present
   (testing "if clojurescript doesn't add clojure"
     ;; note that the {:msg :stuff} object is much more complex in
     ;; actual use and in fact the msg is much more complicated
-    (is (-> (st/ensure-clojure-core-present {}
-                                            {'cljs.core :present}
-                                            {:msg :stuff}
-                                            (all-ns))
+    (is (-> (sut/ensure-clojure-core-present {}
+                                             {'cljs.core :present}
+                                             {:msg :stuff}
+                                             (all-ns))
             keys
-            #{st/clojure-core}
+            #{sut/clojure-core}
             not)))
   (testing "if core already present doesn't overwrite or add"
     (is (= :present
-           (-> (st/ensure-clojure-core-present {}
-                                               {st/clojure-core :present}
-                                               nil
-                                               (all-ns))
-               (get st/clojure-core)))))
+           (-> (sut/ensure-clojure-core-present {}
+                                                {sut/clojure-core :present}
+                                                nil
+                                                (all-ns))
+               (get sut/clojure-core)))))
   (testing "if core missing and not cljs, it adds it"
-    (is (= st/clojure-core-map
-           (-> (st/ensure-clojure-core-present {} {} nil (all-ns))
-               (get st/clojure-core))))))
+    (is (= sut/clojure-core-map
+           (-> (sut/ensure-clojure-core-present {} {} nil (all-ns))
+               (get sut/clojure-core))))))
+
+(defmacro macro-without-style-indent-1 [opts & body])
+(defmacro macro-without-style-indent-2 [opts body])
+(defmacro macro-without-style-indent-3 [opts baddy])
+
+(def mock-msg (reify nrepl.transport/Transport
+                (recv [this])
+                (recv [this timeout])
+                (send [this msg])))
+
+(deftest indentation-inference-test
+  (testing "Adds `:style/indent` metadata when it's suitable to do so"
+    (let [cache (sut/update-and-send-cache nil
+                                           {:transport mock-msg})
+          interns (-> cache
+                      (get 'cider.nrepl.middleware.track-state-test)
+                      :interns)]
+      (is (= "1"
+             (-> interns (get 'macro-without-style-indent-1) :style/indent)))
+      (is (= "1"
+             (-> interns (get 'macro-without-style-indent-2) :style/indent)))
+      (is (= nil
+             (-> interns (get 'macro-without-style-indent-3) :style/indent))))))
+
+(deftest inferrable-indent?-test
+  (testing "clojure.* macros are not inferrable"
+    (is (#'sut/inferrable-indent? (meta #'macro-without-style-indent-1)))
+    (is (not (#'sut/inferrable-indent? (meta #'defn))))
+    (is (not (#'sut/inferrable-indent? (meta #'deftest))))))
