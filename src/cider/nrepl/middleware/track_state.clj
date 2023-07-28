@@ -25,7 +25,9 @@
 
 ;;; Auxiliary
 
-(defn- inferrable-indent? [m]
+(defn- inferrable-indent?
+  "Does metadata map `m` lack, need a `:style/indent` value, and is a suitable candidate for it?"
+  [m]
   (and (:macro m)
        (:arglists m)
        (not (:style/indent m))
@@ -41,6 +43,13 @@
                                          :else
                                          (some-> m :name namespace symbol))
                                        str)]
+         ;; Official Clojure libraries are unlikely to ever include :style/indent metadata.
+         ;; So our normal recommendation of adding it to any macro cannot apply here.
+         ;; Inferring metadata for these would be problematic because:
+         ;; * Their intended indents are already intentfully coded in clojure-mode.el
+         ;; * The `orchard.indent` logic is not meant to operate on clojure.core stuff,
+         ;;   because it compares a given macro against a clojure.core counterpart
+         ;;   (which doesn't make sense for a macro which already belongs to clojure.core)
          (not (or (string/starts-with? namespace-name "clojure.")
                   (string/starts-with? namespace-name "cljs.")))
          true)))
