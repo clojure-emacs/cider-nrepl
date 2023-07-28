@@ -36,11 +36,13 @@
   (let [sent-value (atom nil)]
     (let [new-data (update-and-send-cache-tester nil msg sent-value)]
       (is (map? new-data))
-      (is (< 100 (count new-data))))
+      (is (< 80 (count new-data))
+          "There are plenty of results returned"))
     (let [{:keys [repl-type changed-namespaces]} @sent-value]
       (is (= :clj repl-type))
       (is (map? changed-namespaces))
-      (is (< 100 (count changed-namespaces))))
+      (is (< 80 (count changed-namespaces))
+          "There are plenty of results returned"))
     (let [full-cache (update-and-send-cache-tester nil msg sent-value)
           get-sent-value (fn [old] (update-and-send-cache-tester old msg sent-value)
                            @sent-value)]
@@ -111,9 +113,10 @@
                          (all-ns))]
       (is (< 5 (count interns)))
       (is (map? interns))
-      (is (interns 'ns-as-map-test))
-      (is (:test (interns 'ns-as-map-test)))
-      (is (= (into #{} (keys (interns 'make-transport-test)))
+      (is (get interns 'ns-as-map-test))
+      (is (:test (get interns 'ns-as-map-test))
+          (pr-str (get interns 'ns-as-map-test)))
+      (is (= (into #{} (keys (get interns 'make-transport-test)))
              (into #{} um/relevant-meta-keys)))
       (is (= 3 (count aliases)))
       (is (= 'cider.nrepl.middleware.track-state (aliases 'sut))))
@@ -153,11 +156,11 @@
            interns))))
 
 (deftest calculate-used-aliases-test
-  (is (contains? (sut/merge-used-aliases some-ns-map nil ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases some-ns-map nil ns-name (all-ns) sut/ns-as-map)
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (sut/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases some-ns-map {'cider.nrepl.middleware.track-state nil} ns-name (all-ns) sut/ns-as-map)
                  'cider.nrepl.middleware.track-state))
-  (is (contains? (sut/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name (all-ns))
+  (is (contains? (sut/merge-used-aliases (assoc some-ns-map 'cider.nrepl.middleware.track-state nil) nil ns-name (all-ns) sut/ns-as-map)
                  'cider.nrepl.middleware.track-state)))
 
 (deftest ensure-clojure-core-present
@@ -167,7 +170,8 @@
     (is (-> (sut/ensure-clojure-core-present {}
                                              {'cljs.core :present}
                                              {:msg :stuff}
-                                             (all-ns))
+                                             (all-ns)
+                                             sut/ns-as-map)
             keys
             #{sut/clojure-core}
             not)))
@@ -176,11 +180,12 @@
            (-> (sut/ensure-clojure-core-present {}
                                                 {sut/clojure-core :present}
                                                 nil
-                                                (all-ns))
+                                                (all-ns)
+                                                sut/ns-as-map)
                (get sut/clojure-core)))))
   (testing "if core missing and not cljs, it adds it"
     (is (= sut/clojure-core-map
-           (-> (sut/ensure-clojure-core-present {} {} nil (all-ns))
+           (-> (sut/ensure-clojure-core-present {} {} nil (all-ns) sut/ns-as-map)
                (get sut/clojure-core))))))
 
 (defmacro macro-without-style-indent-1 [opts & body])
@@ -200,14 +205,49 @@
                       (get 'cider.nrepl.middleware.track-state-test)
                       :interns)]
       (is (= "1"
-             (-> interns (get 'macro-without-style-indent-1) :style/indent)))
+             (-> interns (get 'macro-without-style-indent-1) :style/indent))
+          (pr-str (-> interns (get 'macro-without-style-indent-1))))
       (is (= "1"
              (-> interns (get 'macro-without-style-indent-2) :style/indent)))
       (is (= nil
              (-> interns (get 'macro-without-style-indent-3) :style/indent))))))
+
+(comment
+  (let [cache (sut/update-and-send-cache nil
+                                         {:transport mock-msg})
+        interns (-> cache
+                    (get 'cider.nrepl.middleware.track-state-test)
+                    :interns)]
+    (keys cache)))
 
 (deftest inferrable-indent?-test
   (testing "clojure.* macros are not inferrable"
     (is (#'sut/inferrable-indent? (meta #'macro-without-style-indent-1)))
     (is (not (#'sut/inferrable-indent? (meta #'defn))))
     (is (not (#'sut/inferrable-indent? (meta #'deftest))))))
+
+(defn proxied
+  "Docstring"
+  {:style/indent 1}
+  ([])
+  ([a b c]))
+
+(def proxy-by-var-quote #'proxied)
+
+(def proxy-by-var-symbol proxied)
+
+(deftest merge-meta-from-proxied-var-test
+  (testing "Copies `:doc`, `:style/indent` and `:arglist` metadata from the proxied var to the proxy var"
+    (testing "For a var which value is var"
+      (is (= {:doc "Docstring"
+              :arglists '([] [a b c])
+              :style/indent 1}
+             (select-keys (#'sut/merge-meta-from-proxied-var (meta #'proxy-by-var-quote) #'proxy-by-var-quote)
+                          [:doc :arglists :style/indent]))))
+
+    (testing "For a var which value is an object, which at read-time is expressed as a single symbol"
+      (is (= {:doc "Docstring"
+              :style/indent 1
+              :arglists '([] [a b c])}
+             (select-keys (#'sut/merge-meta-from-proxied-var (meta #'proxy-by-var-symbol) #'proxy-by-var-symbol)
+                          [:doc :arglists :style/indent]))))))

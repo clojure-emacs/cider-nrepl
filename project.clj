@@ -19,6 +19,9 @@
                  ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]
+                 ;; it's dependency-free, would cause https://github.com/benedekfazekas/mranderson/issues/76
+                 [org.clj-commons/claypoole "1.2.2"]
+                 ;; it's dependency-free
                  [mx.cider/logjam "0.1.1"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 

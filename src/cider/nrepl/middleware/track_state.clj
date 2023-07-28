@@ -5,9 +5,11 @@
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
+   [cider.nrepl.utils.reader :as utils.reader]
    [clojure.java.io :as io]
    [clojure.string :as string]
    [clojure.tools.namespace.find :as ns-find]
+   [com.climate.claypoole :as claypoole]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.cljs.analysis :as cljs-ana]
@@ -15,7 +17,7 @@
    [orchard.java.classpath :as cp]
    [orchard.misc :as misc])
   (:import
-   (clojure.lang MultiFn Namespace)
+   (clojure.lang MultiFn Namespace Var)
    (java.net SocketException)
    (java.util.jar JarFile)
    (nrepl.transport Transport)))
@@ -54,12 +56,60 @@
                   (string/starts-with? namespace-name "cljs.")))
          true)))
 
+(defn- merge-meta-from-proxied-var
+  "If `var-ref` is var that proxies another var (expressed as a var, or as a symbol denoting a var),
+  and `var-ref` lacks metadata that is present in its proxied var,
+  copies metadata from the praxied var to `var-ref`.
+
+  This is useful for when Clojure users code e.g. `(def foo bar)`, where `bar` has a docstring,
+  and for whatever reason, they do not wish to keep in sync the docstring from #'bar to #'foo manually.
+
+  Only important, safe-to-copy metadata is possibly copied: `:doc`, `:arglists`, ` :style/indent`..."
+  [target-map ^Var var-ref]
+  (let [original-meta (meta var-ref)
+        interesting-meta-keys [:doc :arglists :style/indent :indent]
+        original-has-interesting-meta? (seq (select-keys original-meta interesting-meta-keys))
+        proxied-var-ref-from-value (delay
+                                     (let [v @var-ref]
+                                       (when (var? v)
+                                         v)))
+        var-ns (:ns original-meta)
+        var-ns (if (instance? Namespace var-ns)
+                 var-ns
+                 (some-> var-ns :ns find-ns))
+        proxied-var-ref-from-reader (delay
+                                      (try
+                                        (let [form (utils.reader/read-form-at original-meta var-ns)]
+                                          (when (seq? form)
+                                            (let [proxied-var-as-symbol (last form)]
+                                              (when (symbol? proxied-var-as-symbol)
+                                                (ns-resolve var-ns proxied-var-as-symbol)))))
+                                        (catch Exception _
+                                          ;; IO might have failed in `utils.reader/read-form-at`
+                                          nil)))
+        proxied-var (when-not original-has-interesting-meta?
+                      (or @proxied-var-ref-from-value
+                          @proxied-var-ref-from-reader))]
+    (or (when proxied-var
+          (when-let [copy (not-empty (select-keys (meta proxied-var)
+                                                  (into []
+                                                        (remove (fn [k]
+                                                                  (contains? original-meta k)))
+                                                        interesting-meta-keys)))]
+            (merge target-map copy)))
+        target-map)))
+
 (defn- enriched-meta
-  "Like `clojure.core/meta` but adds {:fn true} for functions, multimethods and macros,
+  "(Only used for JVM Clojure)
+
+  Like `clojure.core/meta` but adds {:fn true} for functions, multimethods and macros,
   and `:style/indent` when missing and inferrable.
 
+  Also, tried detecting if the var is an ad-hoc 'proxy' for another var that might have richer metadata,
+  and merges it. Skip this behavior with `skip-proxy-inference?`.
+
   Should only be used for vars."
-  [the-var]
+  [the-var skip-proxy-inference?]
   (let [m (meta the-var)]
     (cond-> m
       (or (fn? @the-var)
@@ -67,17 +117,26 @@
       (assoc :fn true)
 
       (inferrable-indent? m)
-      indent/infer-style-indent)))
+      indent/infer-style-indent
+
+      (and (var? the-var)
+           (not skip-proxy-inference?)
+           ;; If the original metadata was not `:fn`,
+           ;; then it was a `def` and not a `defn`.
+           ;; Only `def`s are meant to be processed through `merge-meta-from-proxied-var`:
+           (not (:fn m)))
+      (merge-meta-from-proxied-var the-var))))
 
 (defn filter-core-and-get-meta
   "Remove keys whose values are vars in the core namespace."
   [refers]
-  (->> refers
-       (into {} (keep (fn [[sym the-var]]
-                        (when (var? the-var)
-                          (let [{the-ns :ns :as the-meta} (enriched-meta the-var)]
-                            (when-not (identical? the-ns clojure-core)
-                              [sym (um/relevant-meta the-meta)]))))))))
+  (into {}
+        (keep (fn [[sym the-var]]
+                (when (var? the-var)
+                  (let [{the-ns :ns :as the-meta} (enriched-meta the-var false)]
+                    (when-not (identical? the-ns clojure-core)
+                      [sym (um/relevant-meta the-meta)])))))
+        refers))
 
 (defn- cljs-meta-with-fn
   "Like (:meta m) but adds {:fn true} if (:fn-var m) is true, (:tag m) is
@@ -162,7 +221,11 @@
     {:aliases {}
      :interns (->> (ns-map clojure-core)
                    (filter #(var? (second %)))
-                   (misc/update-vals #(um/relevant-meta (enriched-meta %))))}))
+                   (misc/update-vals #(um/relevant-meta (enriched-meta %
+                                                                       ;; skip 'proxy inference',
+                                                                       ;; which is not a pattern in clojure.core
+                                                                       ;; and would slightly degrade performance:
+                                                                       true))))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.
@@ -184,7 +247,8 @@
   [^clojure.lang.PersistentHashMap new-ns-map
    ^clojure.lang.PersistentHashMap old-ns-map
    val-fn
-   all-namespaces]
+   all-namespaces
+   ns-as-map-fn]
   (->> (vals new-ns-map)
        (map :aliases)
        (mapcat vals)
@@ -192,8 +256,8 @@
                  (if (or (get acc name)
                          (get old-ns-map name))
                    acc
-                   (assoc acc name (ns-as-map (val-fn name)
-                                              all-namespaces))))
+                   (assoc acc name (ns-as-map-fn (val-fn name)
+                                                 all-namespaces))))
                new-ns-map)))
 
 (def ns-cache
@@ -215,12 +279,12 @@
   "Check if `old-ns-map` has clojure.core, else add it to
   current-ns-map. If `cljs` we inject cljs.core instead. `cljs` is the
   cljs environment grabbed from the message (if present)."
-  [old-ns-map project-ns-map cljs all-namespaces]
+  [old-ns-map project-ns-map cljs all-namespaces ns-as-map-fn]
   (cond
     (and cljs (not (contains? old-ns-map 'cljs.core)))
     (assoc project-ns-map 'cljs.core
-           (ns-as-map (cljs-ana/find-ns cljs "cljs.core")
-                      all-namespaces))
+           (ns-as-map-fn (cljs-ana/find-ns cljs "cljs.core")
+                         all-namespaces))
 
     ;; we have cljs and the cljs core, nothing to do
     cljs
@@ -281,21 +345,32 @@
          all-namespaces (if cljs
                           (vals (cljs-ana/all-ns cljs))
                           (all-ns))
-         project-ns-map (fast-reduce (fn [acc ns]
-                                       (let [name (ns-name-fn ns)]
-                                         (if (jar-ns-fn name)
-                                           acc ;; Remove all jar namespaces.
-                                           (assoc! acc name (ns-as-map ns all-namespaces)))))
-                                     all-namespaces)
+         ns-as-map-fn (memoize ns-as-map)
+         project-ns-map (claypoole/with-shutdown! [pool (claypoole/threadpool (if (System/getenv "CI")
+                                                                                1
+                                                                                4))]
+                          (->> all-namespaces
+                               (claypoole/pmap pool
+                                               (fn [ns]
+                                                 (let [n (ns-name-fn ns)]
+                                                   {:namespace-name n
+                                                    :jar-ns? (jar-ns-fn n)
+                                                    :ns-m (ns-as-map-fn ns all-namespaces)})))
+                               (fast-reduce (fn [acc {:keys [namespace-name jar-ns? ns-m]}]
+                                              (if jar-ns?
+                                                acc ;; Remove all jar namespaces.
+                                                (assoc! acc namespace-name ns-m))))))
          project-ns-map (ensure-clojure-core-present old-data
                                                      project-ns-map
                                                      cljs
-                                                     all-namespaces)
+                                                     all-namespaces
+                                                     ns-as-map-fn)
          changed-ns-map (-> project-ns-map
                             ;; Add back namespaces that the project depends on.
                             (merge-used-aliases (or old-data {})
                                                 find-ns-fn
-                                                all-namespaces)
+                                                all-namespaces
+                                                ns-as-map-fn)
                             (calculate-changed-ns-map old-data))]
      (try
        (->> (response-for
