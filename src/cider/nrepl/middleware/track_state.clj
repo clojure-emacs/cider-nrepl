@@ -219,7 +219,7 @@
   (cond
     (and cljs (not (contains? old-ns-map 'cljs.core)))
     (assoc project-ns-map 'cljs.core
-           (ns-as-map (cljs-ana/find-ns cljs "cljs.core")
+           (ns-as-map (cljs-ana/find-ns cljs 'cljs.core)
                       all-namespaces))
 
     ;; we have cljs and the cljs core, nothing to do

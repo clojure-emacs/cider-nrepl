@@ -10,6 +10,10 @@
 
 * Bump `suitable` to [0.5.0](https://github.com/clojure-emacs/clj-suitable/blob/v0.5.0/CHANGELOG.md#050-2023-07-28).
 
+### Bugs Fixed
+
+* [CIDER #3385](https://github.com/clojure-emacs/cider/issues/3385): `track-state`: Include `cljs.core` ns info.
+
 ## 0.32.0 (2023-07-26)
 
 ### New features
