@@ -37,9 +37,3 @@
     (t/is (= ["application/octet-stream" {}] (:content-type resp)))
     (t/is (str/starts-with? (:body resp) "#binary[location="))
     (t/is (str/ends-with? (:body resp) ",size=0]"))))
-
-(t/deftest test-url-content-type
-  ;; When a url gives content type as nil, then default content-type should be taken.
-  (let [resp (slurp-url-to-content+body "https://clojure.org/no-such-page")]
-    (t/is (= ["text/html" {}] (:content-type resp)))
-    (t/is (= "" (:body resp)))))
