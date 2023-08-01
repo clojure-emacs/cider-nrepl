@@ -79,6 +79,12 @@
        :content-transfer-encoding "base64"
        :body (base64-bytes buff)})))
 
+(defn get-content-type [^URLConnection conn]
+  (try
+    (.getContentType conn)
+    (catch FileNotFoundException _
+      nil)))
+
 (defn slurp-url-to-content+body
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
   [url-str]
@@ -93,9 +99,7 @@
       ;; It's not a file, so just try to open it on up
       (let [^URLConnection conn (.openConnection url)
             content-type (normalize-content-type
-                          (or (try
-                                (.getContentType conn)
-                                (catch FileNotFoundException _))
+                          (or (get-content-type conn)
                               "application/octet-stream"))
             ;; FIXME (arrdem 2018-04-03):
             ;;   There's gotta be a better way here
