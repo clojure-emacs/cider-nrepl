@@ -23,13 +23,22 @@
      :line (:line var-meta)
      :column (:column var-meta)}))
 
+(defn file-line-column [{:keys [file-url file line column]}]
+  [(or file-url file) line column])
+
 (defn fn-refs-reply [{:keys [ns sym]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
-    {:fn-refs (map xref-data (xref/fn-refs var))}))
+    {:fn-refs (->> var
+                   xref/fn-refs
+                   (map xref-data)
+                   (sort-by file-line-column))}))
 
 (defn fn-deps-reply [{:keys [ns sym]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
-    {:fn-deps (map xref-data (xref/fn-deps var))}))
+    {:fn-deps (->> var
+                   xref/fn-deps
+                   (map xref-data)
+                   (sort-by file-line-column))}))
 
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
