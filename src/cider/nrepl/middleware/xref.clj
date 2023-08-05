@@ -24,7 +24,7 @@
      :column (:column var-meta)}))
 
 (defn file-line-column [{:keys [file-url file line column]}]
-  [(or file-url file) line column])
+  [(or file-url file) line (or column 0)])
 
 (defn fn-refs-reply [{:keys [ns sym]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
