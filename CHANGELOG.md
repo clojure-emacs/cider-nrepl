@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+* [#796](https://github.com/clojure-emacs/cider-nrepl/issues/796): `fn-refs` and `fn-deps` middleware: add new `:file-url` field.
+  * these are absolute and prefixed by `file:` or `file:jar:`, whenever possible.
+* Bump `orchard` to [1.4.1](https://github.com/clojure-emacs/orchard/blob/v0.14.1/CHANGELOG.md#0141-2023-08-05).
+
 ## 0.34.0 (2023-08-03)
 
 * Bump `orchard` to [1.4.0](https://github.com/clojure-emacs/orchard/blob/v0.14.0/CHANGELOG.md#0140-2023-08-03).

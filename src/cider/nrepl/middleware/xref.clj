@@ -4,15 +4,22 @@
    :added "0.22"}
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [orchard.xref :as xref]
+   [clojure.java.io :as io]
    [orchard.meta :as meta]
-   [orchard.misc :as misc]))
+   [orchard.misc :as misc]
+   [orchard.xref :as xref]))
 
-(defn xref-data [v]
+(defn- filename-as-url [filename]
+  (if-let [resource (io/resource filename)]
+    (str resource) ;; adds "file:" / "jar:file:" in front of the filename, besides from an absolute path
+    filename))
+
+(defn- xref-data [v]
   (let [var-meta (meta/var-meta v)]
     {:name (meta/var-name v)
      :doc (meta/var-doc 1 v)
      :file (:file var-meta)
+     :file-url (some-> var-meta :file filename-as-url)
      :line (:line var-meta)
      :column (:column var-meta)}))
 
