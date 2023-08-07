@@ -2,6 +2,15 @@
 
 ## master (unreleased)
 
+### New features
+
+* Make the `track-state` middleware invokeable directly, by requesting the new `"cider/state"` op.
+  * This makes it possible to access `:changed-namespaces` info on demand, which can be necessary for:
+    * non-Piggieback based clojurescript repls
+    * re-computing the ns info responding to external (non-nREPL triggered) events. 
+
+### Changes
+
 * [#796](https://github.com/clojure-emacs/cider-nrepl/issues/796): `fn-refs` and `fn-deps` middleware: add new `:file-url` field.
   * these are absolute and prefixed by `file:` or `file:jar:`, whenever possible.
 * `fn-refs` and `fn-deps` middleware: sort the results by file, line and column.
