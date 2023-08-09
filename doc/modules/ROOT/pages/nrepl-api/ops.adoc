@@ -1288,6 +1288,20 @@ Returns::
 
 
 
+=== `cider/get-state`
+
+
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
 === `cider/log-add-appender`
 
 Add an appender to a log framework.
@@ -1593,17 +1607,3 @@ Returns::
 * `:status` done
 * `:cider/log-update-consumer` The consumer that was updated.
 
-
-
-=== `cider/state`
-
-
-
-Required parameters::
-{blank}
-
-Optional parameters::
-{blank}
-
-Returns::
-{blank}

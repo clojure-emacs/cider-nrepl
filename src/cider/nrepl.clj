@@ -661,10 +661,10 @@ stack frame of the most recent exception. This op is deprecated, please use the
   ops-that-can-eval
   (cljs/expects-piggieback
    {:doc "Under its normal operation mode, enhances the `eval` op by notifying the client of the current REPL state.
-You can also request to compute the info directly by requesting the \"cider/state\" op."
+You can also request to compute the info directly by requesting the \"cider/get-state\" op."
     :requires #{#'session}
     :expects ops-that-can-eval
-    :handles {"cider/state" {}}
+    :handles {"cider/get-state" {}}
     :returns {"repl-type" "`:clj` or `:cljs`."
               "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}}))
 

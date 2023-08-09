@@ -4,7 +4,7 @@
 
 ### New features
 
-* Make the `track-state` middleware invokeable directly, by requesting the new `"cider/state"` op.
+* Make the `track-state` middleware invokeable directly, by requesting the new `"cider/get-state"` op.
   * This makes it possible to access `:changed-namespaces` info on demand, which can be necessary for:
     * non-Piggieback based clojurescript repls
     * re-computing the ns info responding to external (non-nREPL triggered) events. 

@@ -334,7 +334,7 @@
 
 (defn handle-tracker [handler {:keys [op session] :as msg}]
   (cond
-    (= "cider/state" op)
+    (= "cider/get-state" op)
     (send ns-cache update-in [session] update-and-send-cache msg)
 
     (ops-that-can-eval op)
