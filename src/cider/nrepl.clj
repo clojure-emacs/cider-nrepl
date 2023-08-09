@@ -695,13 +695,13 @@ stack frame of the most recent exception. This op is deprecated, please use the
              {:doc "Look up functions that reference a particular function."
               :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
-              :returns {"fn-refs" "A list of function references."
+              :returns {"fn-refs" "A list of function references, with a `:name :doc :file :file-url :line :column` structure."
                         "status" "done"}}
              "fn-deps"
              {:doc "Look up the function dependencies of particular function."
               :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
-              :returns {"fn-deps" "A list of function deps."
+              :returns {"fn-deps" "A list of function deps, with a `:name :doc :file :file-url :line :column` structure."
                         "status" "done"}}}})
 
 (def-wrapper wrap-clojuredocs cider.nrepl.middleware.clojuredocs/handle-clojuredocs

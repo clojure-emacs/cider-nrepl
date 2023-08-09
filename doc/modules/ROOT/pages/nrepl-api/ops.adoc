@@ -348,7 +348,7 @@ Optional parameters::
 {blank}
 
 Returns::
-* `:fn-deps` A list of function deps.
+* `:fn-deps` A list of function deps, with a ``:name :doc :file :file-url :line :column`` structure.
 * `:status` done
 
 
@@ -366,7 +366,7 @@ Optional parameters::
 {blank}
 
 Returns::
-* `:fn-refs` A list of function references.
+* `:fn-refs` A list of function references, with a ``:name :doc :file :file-url :line :column`` structure.
 * `:status` done
 
 

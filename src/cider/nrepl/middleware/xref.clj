@@ -4,25 +4,41 @@
    :added "0.22"}
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [orchard.xref :as xref]
+   [clojure.java.io :as io]
    [orchard.meta :as meta]
-   [orchard.misc :as misc]))
+   [orchard.misc :as misc]
+   [orchard.xref :as xref]))
 
-(defn xref-data [v]
+(defn- filename-as-url [filename]
+  (if-let [resource (io/resource filename)]
+    (str resource) ;; adds "file:" / "jar:file:" in front of the filename, besides from an absolute path
+    filename))
+
+(defn- xref-data [v]
   (let [var-meta (meta/var-meta v)]
     {:name (meta/var-name v)
      :doc (meta/var-doc 1 v)
      :file (:file var-meta)
+     :file-url (some-> var-meta :file filename-as-url)
      :line (:line var-meta)
      :column (:column var-meta)}))
 
+(defn file-line-column [{:keys [file-url file line column]}]
+  [(or file-url file) (or line 0) (or column 0)])
+
 (defn fn-refs-reply [{:keys [ns sym]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
-    {:fn-refs (map xref-data (xref/fn-refs var))}))
+    {:fn-refs (->> var
+                   xref/fn-refs
+                   (map xref-data)
+                   (sort-by file-line-column))}))
 
 (defn fn-deps-reply [{:keys [ns sym]}]
   (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
-    {:fn-deps (map xref-data (xref/fn-deps var))}))
+    {:fn-deps (->> var
+                   xref/fn-deps
+                   (map xref-data)
+                   (sort-by file-line-column))}))
 
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
