@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.35.0 (2023-08-09)
+
 ### New features
 
 * Make the `track-state` middleware invokeable directly, by requesting the new `"cider/get-state"` op.
