@@ -660,13 +660,13 @@ stack frame of the most recent exception. This op is deprecated, please use the
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   ops-that-can-eval
   (cljs/expects-piggieback
-   {:doc "Enhances the `eval` op by notifying the client of the current REPL
-           state. Currently, only the REPL type (Clojure or ClojureScript) is
-           informed."
+   {:doc "Under its normal operation mode, enhances the `eval` op by notifying the client of the current REPL state.
+You can also request to compute the info directly by requesting the \"cider/get-state\" op."
     :requires #{#'session}
     :expects ops-that-can-eval
-    :handles {"track-state-middleware" ;; <- not handled !?
-              {}}}))
+    :handles {"cider/get-state" {}}
+    :returns {"repl-type" "`:clj` or `:cljs`."
+              "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}}))
 
 (def-wrapper wrap-undef cider.nrepl.middleware.undef/handle-undef
   {:doc "Middleware to undefine a symbol in a namespace."

@@ -95,6 +95,12 @@ use in e.g. wiki pages, github, etc."
                  (format "* `%s` %s\n" (pr-str k) (adoc-escape v))))
     "{blank}"))
 
+(defn op-name [op]
+  (let [op-ns (namespace op)
+        op-name (name op)]
+    (cond->> op-name
+      op-ns (str op-ns "/"))))
+
 (defn- describe-adoc
   "Given a message containing the response to a verbose :describe message,
   generates a asciidoc string conveying the information therein, suitable for
@@ -105,7 +111,7 @@ use in e.g. wiki pages, github, etc."
          (:version-string version/version)
          ")#\n\n== Operations"
          (for [[op {:keys [doc optional requires returns]}] (sort (relevant-ops ops))]
-           (str "\n\n=== `" (name op) "`\n\n"
+           (str "\n\n=== `" (op-name op) "`\n\n"
                 (adoc-escape doc) "\n\n"
                 "Required parameters::\n"
                 (message-slot-adoc (sort requires))

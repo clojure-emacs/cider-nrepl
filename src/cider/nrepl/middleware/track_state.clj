@@ -332,7 +332,13 @@
   #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
     "toggle-trace-var" "toggle-trace-ns" "undef"})
 
-(defn handle-tracker [handler msg]
-  (if (ops-that-can-eval (:op msg))
+(defn handle-tracker [handler {:keys [op session] :as msg}]
+  (cond
+    (= "cider/get-state" op)
+    (send ns-cache update-in [session] update-and-send-cache msg)
+
+    (ops-that-can-eval op)
     (handler (assoc msg :transport (make-transport msg)))
+
+    :else
     (handler msg)))

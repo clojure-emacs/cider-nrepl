@@ -1255,20 +1255,6 @@ Returns::
 
 
 
-=== `track-state-middleware`
-
-
-
-Required parameters::
-{blank}
-
-Optional parameters::
-{blank}
-
-Returns::
-{blank}
-
-
 === `undef`
 
 Undefine a symbol
@@ -1302,7 +1288,21 @@ Returns::
 
 
 
-=== `log-add-appender`
+=== `cider/get-state`
+
+
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `cider/log-add-appender`
 
 Add an appender to a log framework.
 
@@ -1324,7 +1324,7 @@ Returns::
 
 
 
-=== `log-add-consumer`
+=== `cider/log-add-consumer`
 
 Add a consumer to an appender of a log framework.
 
@@ -1343,7 +1343,7 @@ Returns::
 
 
 
-=== `log-analyze-stacktrace`
+=== `cider/log-analyze-stacktrace`
 
 Analyze the stacktrace of a log event.
 
@@ -1361,7 +1361,7 @@ Returns::
 
 
 
-=== `log-clear-appender`
+=== `cider/log-clear-appender`
 
 Clear all events of a log appender.
 
@@ -1379,7 +1379,7 @@ Returns::
 
 
 
-=== `log-exceptions`
+=== `cider/log-exceptions`
 
 Return the exceptions and their frequencies for the given framework and appender.
 
@@ -1397,7 +1397,7 @@ Returns::
 
 
 
-=== `log-format-event`
+=== `cider/log-format-event`
 
 Format a log event.
 
@@ -1422,7 +1422,7 @@ Returns::
 
 
 
-=== `log-frameworks`
+=== `cider/log-frameworks`
 
 Return the available log frameworks.
 
@@ -1438,7 +1438,7 @@ Returns::
 
 
 
-=== `log-inspect-event`
+=== `cider/log-inspect-event`
 
 Inspect a log event.
 
@@ -1457,7 +1457,7 @@ Returns::
 
 
 
-=== `log-levels`
+=== `cider/log-levels`
 
 Return the log levels and their frequencies for the given framework and appender.
 
@@ -1475,7 +1475,7 @@ Returns::
 
 
 
-=== `log-loggers`
+=== `cider/log-loggers`
 
 Return the loggers and their frequencies for the given framework and appender.
 
@@ -1493,7 +1493,7 @@ Returns::
 
 
 
-=== `log-remove-appender`
+=== `cider/log-remove-appender`
 
 Remove an appender from a log framework.
 
@@ -1511,7 +1511,7 @@ Returns::
 
 
 
-=== `log-remove-consumer`
+=== `cider/log-remove-consumer`
 
 Remove a consumer from the appender of a log framework.
 
@@ -1530,7 +1530,7 @@ Returns::
 
 
 
-=== `log-search`
+=== `cider/log-search`
 
 Search the log events of an appender.
 
@@ -1550,7 +1550,7 @@ Returns::
 
 
 
-=== `log-threads`
+=== `cider/log-threads`
 
 Return the threads and their frequencies for the given framework and appender.
 
@@ -1568,7 +1568,7 @@ Returns::
 
 
 
-=== `log-update-appender`
+=== `cider/log-update-appender`
 
 Update the appender of a log framework.
 
@@ -1589,7 +1589,7 @@ Returns::
 
 
 
-=== `log-update-consumer`
+=== `cider/log-update-consumer`
 
 Update the consumer of a log appender.
 
