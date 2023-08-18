@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `haystack` to [0.1.0](https://github.com/clojure-emacs/haystack/blob/v0.1.0/CHANGELOG.md#010).
+
 ## 0.35.0 (2023-08-09)
 
 ### New features
