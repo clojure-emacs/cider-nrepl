@@ -31,7 +31,7 @@ cljfmt:
 kondo:
 	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src .circleci/deploy
 
-# PROJECT_VERSION=0.35.1 make install
+# PROJECT_VERSION=0.36.0 make install
 install: check-install-env .inline-deps
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 
