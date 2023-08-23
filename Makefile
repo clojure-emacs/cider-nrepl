@@ -1,4 +1,5 @@
 .PHONY: test eastwood cljfmt install smoketest deploy clean detect_timeout
+.DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.10
 
