@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.37.0 (2023-08-27)
+
 ### Changes
 
 * `"ns-path"` op: also include a `:url` attribute in the response.
