@@ -96,13 +96,17 @@
              {:arglists "([c])"})))))
 
 (deftest ns-path-integration-test
-  (let [ns-path (:path (session/message {:op "ns-path"
-                                         :ns "cider.nrepl.middleware.ns"}))
-        core-path (:path (session/message {:op "ns-path"
-                                           :ns "clojure.core"}))]
+  (let [{ns-path :path
+         ns-url :url} (session/message {:op "ns-path"
+                                        :ns "cider.nrepl.middleware.ns"})
+        {core-path :path
+         core-url :url} (session/message {:op "ns-path"
+                                          :ns "clojure.core"})]
     (is (.endsWith ^String ns-path "cider/nrepl/middleware/ns.clj"))
     (is (.endsWith ^String core-path "clojure/core.clj"))
-    (is (.startsWith ^String core-path "jar:"))))
+    (is (.startsWith ^String core-path "jar:"))
+    (is (= ns-path ns-url))
+    (is (= core-path core-url))))
 
 (deftest ns-load-all-integration-test
   (let [loaded-ns (:loaded-ns (session/message {:op "ns-load-all"}))]

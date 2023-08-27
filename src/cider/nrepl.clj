@@ -452,14 +452,16 @@ Depending on the type of the return value of the evaluation this middleware may 
               "ns-path"
               {:doc "Returns the path to the file containing ns."
                :requires {"ns" "The namespace to find."}
-               :return {"status" "done" "path" "The path to the file containing ns."}}
+               :returns {"status" "done"
+                         "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
+                         "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
               "ns-load-all"
               {:doc "Loads all project namespaces."
-               :return {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
+               :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
               "ns-aliases"
               {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
                :requires {"ns" "The namespace to use."}
-               :return {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}}}))
+               :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}}}))
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   (cljs/expects-piggieback

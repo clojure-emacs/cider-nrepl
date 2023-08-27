@@ -47,9 +47,11 @@
              {:arglists "(quote ([e]))"}))))
 
   (testing "ns-path op"
-    (let [{:keys [^String path]} (session/message {:op "ns-path"
-                                                   :ns "cljs.core"})]
-      (is (.endsWith path "cljs/core.cljs")))
+    (let [{:keys [^String path ^String url]} (session/message {:op "ns-path"
+                                                               :ns "cljs.core"})]
+      (is (.endsWith path "cljs/core.cljs"))
+      (is (not= path url))
+      (is (.startsWith url "jar:file:/")))
 
     (let [{:keys [^String path]} (session/message {:op "ns-path"
                                                    :ns "cljs.repl"})]

@@ -7,6 +7,7 @@
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cider.nrepl.middleware.util.meta :as um]
    [orchard.cljs.analysis :as cljs-analysis]
+   [clojure.java.io :as io]
    [orchard.info :as info]
    [orchard.misc :as misc]
    [orchard.namespace :as ns]
@@ -100,7 +101,13 @@
   {:ns-vars-with-meta (ns-vars-with-meta msg)})
 
 (defn- ns-path-reply [msg]
-  {:path (ns-path msg)})
+  (let [v (ns-path msg)
+        cljs? (cljs/grab-cljs-env msg)]
+    {:path v
+     :url (if cljs?
+            (or (some-> v io/resource str)
+                v)
+            v)}))
 
 (defn- ns-load-all-reply
   [_msg]
