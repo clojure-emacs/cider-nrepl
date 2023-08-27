@@ -690,7 +690,9 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:ns-aliases` The map of [ns-alias] to [ns-name] in a namespace.
+* `:status` done
+
 
 
 === `ns-list`
@@ -738,7 +740,9 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:loaded-ns` The list of ns that were loaded.
+* `:status` done
+
 
 
 === `ns-path`
@@ -753,7 +757,10 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:path` The path to the file containing ns. Please favor ``:url`` in ClojureScript, but fall back to ``:path``.
+* `:status` done
+* `:url` The Java URL indicating the file containing ns. Please favor this attribute over ``:path`` when possible. If this value is nil, you can fall back to ``:path``.
+
 
 
 === `ns-vars`
