@@ -1,4 +1,4 @@
-.PHONY: test eastwood cljfmt install smoketest deploy clean detect_timeout
+.PHONY: test eastwood cljfmt install smoketest deploy clean detect_timeout check_antora
 .DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.10
@@ -73,3 +73,6 @@ clean:
 	lein clean
 	cd test/smoketest && lein clean
 	rm -f .inline-deps
+
+check_antora:
+	lein run -m clojure.main -- .circleci/check_antora.clj

@@ -213,6 +213,10 @@ workflows:
               only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
           steps:
             - run:
+                name: Linting antora documentation
+                command: |
+                  make check_antora
+            - run:
                 name: Running cljfmt
                 command: |
                   make cljfmt
