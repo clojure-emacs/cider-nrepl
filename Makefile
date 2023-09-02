@@ -7,6 +7,7 @@ test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
 
 .inline-deps: clean
+	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 	lein with-profile -user,-dev inline-deps
 	touch .inline-deps
 
@@ -35,6 +36,7 @@ kondo:
 # PROJECT_VERSION=0.37.0 make install
 install: check-install-env .inline-deps
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
+	make clean
 
 smoketest: install
 	cd test/smoketest && \
@@ -73,3 +75,4 @@ clean:
 	lein clean
 	cd test/smoketest && lein clean
 	rm -f .inline-deps
+	git checkout resources/cider/nrepl/version.edn
