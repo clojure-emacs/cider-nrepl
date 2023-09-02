@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Bugs Fixed
+
+* `middleware.track-state`: handle non-existing .jar files that may be in the classpath.
+
 ## 0.37.0 (2023-08-27)
 
 ### Changes
