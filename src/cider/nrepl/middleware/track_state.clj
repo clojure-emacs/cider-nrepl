@@ -16,6 +16,7 @@
    [orchard.misc :as misc])
   (:import
    (clojure.lang MultiFn Namespace)
+   (java.io File)
    (java.net SocketException)
    (java.util.jar JarFile)
    (nrepl.transport Transport)))
@@ -237,7 +238,10 @@
   (future
     (into #{}
           (comp (filter misc/jar-file?)
-                (map #(JarFile. (io/as-file %)))
+                (keep (fn [url]
+                        (let [^File file (io/as-file url)]
+                          (when (.exists file)
+                            (JarFile. file)))))
                 (mapcat ns-find/find-namespaces-in-jarfile))
           (cp/classpath))))
 
