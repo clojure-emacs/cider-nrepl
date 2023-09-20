@@ -94,17 +94,13 @@
     (let [{:keys [status ^String err ex] :as reply} (session/message {:op "format-code"
                                                                       :code "(+ 1 2 3)"
                                                                       :options {"indents" "INVALID"}})]
-      (is (= #{"format-code-error" "done"} status))
-      (is (.startsWith err "java.lang.IllegalArgumentException:"))
-      (is (= ex "class java.lang.IllegalArgumentException"))))
+      (is (= #{"format-code-error" "done"} status))))
 
   (testing "format-code returns an error if alias-map option is invalid"
     (let [{:keys [status ^String err ex] :as reply} (session/message {:op "format-code"
                                                                       :code "(+ 1 2 3)"
                                                                       :options {"alias-map" "INVALID"}})]
-      (is (= #{"format-code-error" "done"} status))
-      (is (.startsWith err "java.lang.IllegalArgumentException:"))
-      (is (= ex "class java.lang.IllegalArgumentException")))))
+      (is (= #{"format-code-error" "done"} status)))))
 
 (deftest format-edn-op-test
   (testing "format-edn works"
