@@ -92,6 +92,11 @@ PROJECT_VERSION=0.37.1 make fast-install
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
 # Please try to run this before pushing commits.
 make lint
+
+# Regenerates our user manual.
+# When you modify our middleware such that its schema changes, please reflect so in the `cider.nrepl` namespace
+# and run:
+make docs
 ```
 
 ## Releasing to Clojars

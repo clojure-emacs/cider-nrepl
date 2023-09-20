@@ -205,6 +205,14 @@ Depending on the type of the return value of the evaluation this middleware may 
               :optional wrap-print-optional-arguments
               :returns {"formatted-edn" "The formatted data."}}}})
 
+(def fragments-desc
+  "It's a vector of fragments, where fragment is a map with `:type` ('text' or 'html') and `:content` plain text or html markup, respectively")
+
+(def fragments-doc
+  {"doc-fragments"                (str "May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. " fragments-desc)
+   "doc-first-sentence-fragments" (str "May be absent. Represents the first sentence of a Java doc comment. " fragments-desc)
+   "doc-block-tags-fragments"     (str "May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. " fragments-desc)})
+
 (def-wrapper wrap-info cider.nrepl.middleware.info/handle-info
   (cljs/requires-piggieback
    {:requires #{#'session}
@@ -212,12 +220,12 @@ Depending on the type of the return value of the evaluation this middleware may 
               {:doc "Return a map of information about the specified symbol."
                :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
-               :returns {"status" "done"}}
+               :returns (merge {"status" "done"} fragments-doc)}
               "eldoc"
               {:doc "Return a map of information about the specified symbol."
                :requires {"sym" "The symbol to lookup"
                           "ns" "The current namespace"}
-               :returns {"status" "done"}}
+               :returns (merge {"status" "done"} fragments-doc)}
               "eldoc-datomic-query"
               {:doc "Return a map containing the inputs of the datomic query."
                :requires {"sym" "The symbol to lookup"

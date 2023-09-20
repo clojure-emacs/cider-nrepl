@@ -81,8 +81,11 @@
 
 (defn eldoc-reply
   [msg]
-  (if-let [info (info msg)]
-    (eldoc/eldoc info)
+  (if-let [{:keys [doc-first-sentence-fragments doc-fragments doc-block-tags-fragments] :as info} (info msg)]
+    (cond-> (eldoc/eldoc info)
+      (seq doc-fragments)                (assoc :doc-fragments doc-fragments)
+      (seq doc-first-sentence-fragments) (assoc :doc-first-sentence-fragments doc-first-sentence-fragments)
+      (seq doc-block-tags-fragments)     (assoc :doc-block-tags-fragments doc-block-tags-fragments))
     {:status :no-eldoc}))
 
 (defn eldoc-datomic-query-reply
