@@ -61,42 +61,37 @@ Before submitting a patch or a pull request make sure all tests are
 passing and that your patch is in line with the [contribution
 guidelines](.github/CONTRIBUTING.md).
 
-### Working with mranderson (inlining runtime dependencies)
+### Local development
 
-[mranderson][] is used to
-avoid classpath collisions.
+Local development tasks, like firing up a repl, running the tests or locally installing cider-nrepl are offered by our Makefile.
+We recommend using it, since some aspects can be intrincate to newcomers.
 
-To work with `mranderson` the first thing to do is:
-
-```
-lein do clean, inline-deps
-```
-
-This creates the munged local dependencies in `target/srcdeps` directory.
-
-After that you can run your tests or your REPL with:
+These are its main tasks for local development:
 
 ```
-lein with-profile +plugin.mranderson/config repl
-lein with-profile +plugin.mranderson/config test
-```
+# Fire up a repl and nrepl server you can cider-connect to:
+make repl
 
-Note the `+` sign before the leiningen profile. For this leiningen
-profile to work **you need leiningen version 2.5.0+!** If you want to
-use `mranderson` while developing locally with the REPL the source has
-to be modified in the `target/srcdeps` directory. When you want to
-release locally:
+# Run tests, using mranderson (slower but more realistic)
+make test
 
-```
-lein with-profile plugin.mranderson/config install
-```
+# Run tests, without using mranderson (considerably faster)
+make fast-test
 
-#### Using the Makefile
-
-...Or you can use the `Makefile` as:
-
-```
+# Install the project in your local ~/.m2 directory, using mranderson (recommended)
+# The JVM flag is a temporary workaround.
+export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
 PROJECT_VERSION=0.37.1 make install
+
+# Install the project in your local ~/.m2 directory, without using mranderson
+# (it's faster, but please only use when you repeatedly need to install cider-nrepl)
+# The JVM flag is a temporary workaround.
+export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
+PROJECT_VERSION=0.37.1 make fast-install
+
+# Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
+# Please try to run this before pushing commits.
+make lint
 ```
 
 ## Releasing to Clojars
