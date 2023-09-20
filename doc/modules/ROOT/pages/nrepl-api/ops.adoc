@@ -306,12 +306,19 @@ Returns::
 Return a map of information about the specified symbol.
 
 Required parameters::
+{blank}
+
+Optional parameters::
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
+* `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
+with the difference that the symbol at point should be entirely replaced by "\__prefix__".
+
+For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
+making the results more accurate (and less numerous).
+* `:member` A Java class member.
 * `:ns` The current namespace
 * `:sym` The symbol to lookup
 
-
-Optional parameters::
-{blank}
 
 Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
@@ -434,12 +441,19 @@ Returns::
 Return a map of information about the specified symbol.
 
 Required parameters::
+{blank}
+
+Optional parameters::
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
+* `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
+with the difference that the symbol at point should be entirely replaced by "\__prefix__".
+
+For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
+making the results more accurate (and less numerous).
+* `:member` A Java class member.
 * `:ns` The current namespace
 * `:sym` The symbol to lookup
 
-
-Optional parameters::
-{blank}
 
 Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively

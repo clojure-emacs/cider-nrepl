@@ -1,5 +1,7 @@
 (ns cider.nrepl.middleware.info
   (:require
+   [compliment.context]
+   [compliment.sources.class-members]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
@@ -57,9 +59,44 @@
           blacklist
           util/transform-value))))
 
+(defn extract-class-from-compliment [ns-str context]
+  (when (and (seq ns-str)
+             (seq context))
+    (try
+      (when-let [ns-obj (find-ns (symbol ns-str))]
+        (let [c (compliment.context/cache-context context)
+              ^Class c (compliment.sources.class-members/try-get-object-class ns-obj c)]
+          (some-> c .getName)))
+      (catch Exception _
+        ;; We can always be analyzing a broken context.
+        nil))))
+
 (defn info
-  [{:keys [ns sym symbol class member] :as msg}]
-  (let [[ns sym class member] (map misc/as-sym [ns (or sym symbol) class member])
+  [{:keys [ns sym class member context]
+    legacy-sym :symbol
+    :as msg}]
+  (let [sym (or (not-empty legacy-sym)
+                (not-empty sym))
+        class (try
+                (or (when (and (seq class)
+                               (seq ns)
+                               (find-ns (symbol ns)))
+                      (some-> ^Class (ns-resolve (find-ns (symbol ns))
+                                                 (symbol class))
+                              .getName))
+                    (not-empty class)
+                    (when (some-> sym (str/starts-with? "."))
+                      (extract-class-from-compliment ns context)))
+                (catch Exception e
+                  nil))
+        java? (seq class)
+        [ns sym class member] (mapv misc/as-sym [ns
+                                                 (cond-> sym
+                                                   (and (seq sym)
+                                                        java?)
+                                                   (str/replace #"^\." ""))
+                                                 class
+                                                 member])
         env (cljs/grab-cljs-env msg)
         info-params (merge {:dialect :clj
                             :ns ns
@@ -68,10 +105,9 @@
                              {:env env
                               :dialect :cljs}))]
     (cond
+      java? (info/info-java class (or member sym))
       (and ns sym) (info/info* info-params)
-      (and class member) (info/info-java class member)
-      :else (throw (Exception.
-                    "Either \"symbol\", or (\"class\", \"member\") must be supplied")))))
+      :else nil)))
 
 (defn info-reply
   [msg]
