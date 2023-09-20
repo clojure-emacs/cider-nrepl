@@ -1,20 +1,22 @@
 .PHONY: test eastwood cljfmt install smoketest deploy clean detect_timeout
 .DEFAULT_GOAL := quick-test
 
-CLOJURE_VERSION ?= 1.10
+CLOJURE_VERSION ?= 1.11
 
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
 
-.inline-deps: clean
+dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
-	lein with-profile -user,-dev inline-deps
+
+.inline-deps: dump-version clean
+	lein with-profile -user,-dev,+mranderson inline-deps
 	touch .inline-deps
 
 inline-deps: .inline-deps
 
 test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+mranderson,+plugin.mranderson/config test
 
 quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
@@ -50,7 +52,14 @@ lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=0.37.1 make install
 install: check-install-env .inline-deps
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
+	touch .no-pedantic
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+mranderson,+plugin.mranderson/config install
+	touch .no-pedantic
+	make clean
+
+# PROJECT_VERSION=0.37.1 make fast-install
+fast-install: dump-version check-install-env
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
 	make clean
 
 smoketest: install
@@ -68,7 +77,7 @@ detect_timeout:
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
 deploy: check-env .inline-deps
-	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
+	lein with-profile -user,+$(CLOJURE_VERSION),+mranderson,+plugin.mranderson/config deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME
@@ -87,7 +96,7 @@ ifndef PROJECT_VERSION
 endif
 
 clean:
-	lein clean
-	cd test/smoketest && lein clean
+	lein with-profile -user clean
+	cd test/smoketest && lein with-profile -user clean
 	rm -f .inline-deps
 	git checkout resources/cider/nrepl/version.edn
