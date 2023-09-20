@@ -1,4 +1,4 @@
-.PHONY: test eastwood cljfmt install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo
+.PHONY: test quick-test fast-test eastwood cljfmt install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo
 .DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.11
