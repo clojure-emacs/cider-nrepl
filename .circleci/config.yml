@@ -216,10 +216,11 @@ workflows:
                 name: Running cljfmt
                 command: |
                   make cljfmt
+            # TODO: use `make kondo` instead once there's a fix for https://github.com/clj-kondo/clj-kondo/issues/2189
             - run:
                 name: Running clj-kondo
                 command: |
-                  make kondo
+                  make light-kondo
             - run:
                 name: Running Eastwood
                 command: |

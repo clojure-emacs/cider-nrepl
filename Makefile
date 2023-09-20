@@ -30,8 +30,23 @@ eastwood:
 cljfmt:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt check
 
-kondo:
-	lein with-profile -user,-dev,+clj-kondo run -m clj-kondo.main --lint src .circleci/deploy
+.make_kondo_prep: project.clj .clj-kondo/config.edn
+	touch .no-pedantic
+	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
+	rm .no-pedantic
+
+kondo: .make_kondo_prep clean
+	touch .no-pedantic
+	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
+	rm .no-pedantic
+
+# A variation that does not analyze the classpath, as it OOMs otherwise on CircleCI.
+light-kondo: clean
+	touch .no-pedantic
+	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
+	rm .no-pedantic
+
+lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=0.37.1 make install
 install: check-install-env .inline-deps

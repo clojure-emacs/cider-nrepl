@@ -378,17 +378,17 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         :inspect    (->> (debug-inspect page-size value)
                          (assoc dbg-state :inspect)
                          (recur value))
-        :inspect-prompt (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
-                          (->> (debug-inspect page-size val)
-                               (assoc dbg-state :inspect)
-                               (recur value))
-                          (recur value dbg-state))
-        :inject     (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
-                      val
-                      (recur value dbg-state))
-        :eval       (try-if-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
-                      (recur value (assoc dbg-state :debug-value (pr-short val)))
-                      (recur value dbg-state))
+        :inspect-prompt #_:clj-kondo/ignore (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
+                                              (->> (debug-inspect page-size val)
+                                                   (assoc dbg-state :inspect)
+                                                   (recur value))
+                                              (recur value dbg-state))
+        :inject     #_:clj-kondo/ignore (try-if-let [val (read-eval-expression "Expression to inject: " dbg-state code)]
+                                          val
+                                          (recur value dbg-state))
+        :eval       #_:clj-kondo/ignore (try-if-let [val (read-eval-expression "Expression to evaluate: " dbg-state code)]
+                                          (recur value (assoc dbg-state :debug-value (pr-short val)))
+                                          (recur value dbg-state))
         :quit       (abort!)
         (do (abort!)
             (throw (ex-info "Invalid input from `read-debug-input`."
@@ -470,7 +470,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   __ to avid conflicts with user locals and to signify that it's an internal
   variable which is cleaned in `sanitize-env' along other clojure's
   temporaries."
-  {:style/indent 1}
+  {:style/indent 0}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
   `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]

@@ -69,7 +69,7 @@
   (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
 
 ;; Used below in an integration test
-(def ^{:protocol #'clojure.data/Diff} junk-protocol-client)
+(def ^{:protocol #'clojure.data/Diff} junk-protocol-client nil)
 
 (defn testing-function
   "This is used for testing"
