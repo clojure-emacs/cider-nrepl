@@ -4,6 +4,7 @@
 
 ### Changes
 
+* Bump `orchard` to [1.5.0](https://github.com/clojure-emacs/orchard/blob/v0.15.0/CHANGELOG.md#0150-2023-09-20).
 * Bump `compliment` to [0.4.2](https://github.com/alexander-yakushev/compliment/blob/f7d872d/CHANGELOG.md#042-2023-09-17).
 
 ## 0.37.1 (2023-09-08)
