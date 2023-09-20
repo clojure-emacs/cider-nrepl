@@ -22,7 +22,8 @@
                  [mx.cider/logjam "0.1.1"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
-  :pedantic? ~(if (System/getenv "CI")
+  :pedantic? ~(if (and (System/getenv "CI")
+                       (not (-> ".no-pedantic" java.io.File. .exists)))
                 :abort
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
@@ -69,11 +70,11 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
-                                       [org.clojure/clojurescript "1.11.4" :scope "provided"]
-                                       [com.cognitect/transit-clj "1.0.324"]
-                                       [com.fasterxml.jackson.core/jackson-core "2.13.1"]
+                                       [org.clojure/clojurescript "1.11.60" :scope "provided"]
+                                       [com.cognitect/transit-clj "1.0.333"]
+                                       [com.fasterxml.jackson.core/jackson-core "2.15.2"]
                                        [commons-codec "1.15"]
-                                       [com.cognitect/transit-java "1.0.343"]
+                                       [com.cognitect/transit-java "1.0.371"]
                                        [com.google.errorprone/error_prone_annotations "2.11.0"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
@@ -153,8 +154,7 @@
                                           merge-meta [[:inner 0]]
                                           try-if-let [[:block 1]]}}}]
 
-             :clj-kondo [:test
-                         {:dependencies [[clj-kondo "2021.12.01"]]}]
+             :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2023.09.07"]]}
 
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.0"]]
