@@ -1,18 +1,24 @@
 (ns cider.nrepl.middleware.info-test
   (:require
-   [clojure.data]
-   [clojure.test :refer :all]
-   [clojure.string :as str]
    [cider.nrepl.middleware.info :as info]
    [cider.nrepl.test-session :as session]
-   [cider.test-ns.first-test-ns :as test-ns])
+   [cider.test-ns.first-test-ns :as test-ns]
+   [clojure.data]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.test :refer :all])
   (:import
-   [cider.nrepl.test TestClass AnotherTestClass YetAnotherTest]
-   [org.apache.commons.lang3 SystemUtils]))
+   (cider.nrepl.test AnotherTestClass TestClass YetAnotherTest)
+   (org.apache.commons.lang3 SystemUtils)))
 
 (defprotocol FormatResponseTest
   (proto-foo [this])
   (proto-bar [this] "baz"))
+
+(def enriched-classpath?
+  "Is enrich-classpath (or something equivalent) augmenting the classpath?"
+  (boolean (or (io/resource "java/lang/Thread.java")
+               (io/resource "java.base/java/lang/Thread.java"))))
 
 (deftest format-response-test
   (is (re-find #"^(https?|file|jar|zip):" ; resolved either locally or online
@@ -32,7 +38,7 @@
   (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.info" :sym "notincanter.core"}))))
   ;; unfound nses should fall through
   (is (nil? (info/format-response (info/info {:ns "cider.nrepl.middleware.nonexistent-namespace" :sym "a-var"}))))
-  ;; protorol docstring
+  ;; protocol docstring
   (is (-> (info/format-response (info/info {:ns "cider.nrepl.middleware.info-test" :sym "proto-foo"}))
           (contains? "doc")
           not))
@@ -105,6 +111,19 @@
         (is (= (:macro response) "true"))
         (is (= (:doc response) "a macro for testing"))
         (is (nil? (:spec response)))))
+
+    (when enriched-classpath?
+      (testing "'fragments' attributes are returned"
+        (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
+               :as response}
+              (session/message {:op "info"
+                                :class "java.lang.Thread"
+                                :member "sleep"})]
+          (testing (pr-str response)
+            (doseq [f [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]]
+              (is (vector? f))
+              (is (map? (first f))))
+            (is (= #{"done"} (:status response)))))))
 
     (testing "get info of a java instance method with return value"
       (let [response (session/message {:op "info"
@@ -316,6 +335,17 @@
         (is (= (:member response) "length"))
         (is (not (contains? response :ns)))
         (is (= (:type response) "function"))))
+
+    (when enriched-classpath?
+      (testing "Fragments for java interop method with single class"
+        (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
+               :as response}
+              (session/message {:op "eldoc" :member "sleep" :class "java.lang.Thread"})]
+          (testing (pr-str response)
+
+            (doseq [f [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]]
+              (is (vector? f))
+              (is (map? (first f))))))))
 
     (testing "java interop method with single class"
       (let [response (session/message {:op "eldoc" :sym ".startsWith" :ns "cider.nrepl.middleware.info-test"})]
