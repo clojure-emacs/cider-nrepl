@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.38.1 (2023-09-21)
+
 * Bump `orchard` to [1.5.1](https://github.com/clojure-emacs/orchard/blob/v0.15.1/CHANGELOG.md#0151-2023-09-21).
 
 ## 0.38.0 (2023-09-21)
