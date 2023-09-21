@@ -13,7 +13,7 @@
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.4.2"]
+                 ^:inline-dep [compliment "0.4.3"]
                  ^:inline-dep [org.rksm/suitable "0.5.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
@@ -27,6 +27,17 @@
                 :abort
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
+
+  ;; mranderson cannot be put in a profile (as the other plugins),
+  ;; so we conditionally disable it, because otherwise clj-kondo cannot run.
+  :plugins ~(if (-> ".no-mranderson" java.io.File. .exists)
+              []
+              '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
+
+  :mranderson {:project-prefix "cider.nrepl.inlined.deps"
+               :overrides       {[mvxcvi/puget fipp] [fipp ~fipp-version]} ; only takes effect in unresolved-tree mode
+               :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode
+               :unresolved-tree false}
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
@@ -45,7 +56,9 @@
                                        true))))
                    :debugger :debugger}
 
-  :aliases {"docs" ["with-profile" "+maint" "run" "-m" "cider.nrepl.impl.docs" "--file"
+  :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]
+            "mranderson"   ["with-profile" "+plugin.mranderson/config"]
+            "docs" ["with-profile" "+maint" "run" "-m" "cider.nrepl.impl.docs" "--file"
                     ~(clojure.java.io/as-relative-path
                       (clojure.java.io/file "doc" "modules" "ROOT" "pages" "nrepl-api" "ops.adoc"))]}
 
@@ -70,12 +83,6 @@
                                        [com.google.errorprone/error_prone_annotations "2.11.0"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
-
-             :mranderson {:plugins [[thomasa/mranderson "0.5.4-SNAPSHOT"]]
-                          :mranderson {:project-prefix "cider.nrepl.inlined.deps"
-                                       :overrides       {[mvxcvi/puget fipp] [fipp ~fipp-version]} ;; only takes effect in unresolved-tree mode
-                                       :expositions     [[mvxcvi/puget fipp]] ;; only takes effect unresolved-tree mode
-                                       :unresolved-tree false}}
 
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]

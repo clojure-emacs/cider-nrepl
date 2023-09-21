@@ -7,8 +7,9 @@
 * `info` and `eldoc` ops: also return `:doc-fragments`, `:doc-first-sentence-fragments`, `:doc-first-sentence-fragments` attributes when available.
   * These are explained in https://github.com/clojure-emacs/orchard/blob/v0.15.0/src-newer-jdks/orchard/java/parser_next.clj#L2-L20
   * These typically are only available when running a modern JDK through enrich-classpath.
+* `info` and `eldoc` ops: accept a Compliment-style `context` parameter that helps infering the Java class of the object being queried.
 * Bump `orchard` to [1.5.0](https://github.com/clojure-emacs/orchard/blob/v0.15.0/CHANGELOG.md#0150-2023-09-20).
-* Bump `compliment` to [0.4.2](https://github.com/alexander-yakushev/compliment/blob/f7d872d/CHANGELOG.md#042-2023-09-17).
+* Bump `compliment` to [0.4.3](https://github.com/alexander-yakushev/compliment/blob/0.4.3/CHANGELOG.md#043-2023-09-21).
 
 ## 0.37.1 (2023-09-08)
 

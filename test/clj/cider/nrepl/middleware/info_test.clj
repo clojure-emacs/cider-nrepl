@@ -62,17 +62,47 @@
             "resource" "clojure/core.clj"}))))
 
 (deftest info-test
-  ;; handle zero-lenth input
-  (is (nil? (info/info {:ns (ns-name *ns*) :sym ""})))
+  ;; handle zero-length input
+  (is (nil? (info/info {:ns (str (ns-name *ns*)) :sym ""})))
   (is (nil? (info/info {:ns "" :sym ""})))
+  (is (nil? (info/info {:ns "cider.nrepl.middleware.info-test"
+                        :class "Thread"})))
 
-  ;; either symbol or (class method) should be passed
-  (is (thrown? Exception
-               (info/info {:ns "cider.nrepl.middleware.info-test"
-                           :class "Thread"})))
+  (is (nil? (info/info {:class "java.lang.Thread" :member "false123"})))
 
-  ;; this is a replacement for (is (not (thrown? ..)))
-  (is (nil? (info/info {:class "Thread" :member "UncaughtExceptionHandler"}))))
+  (is (nil? (info/info {:sym "ns-resolve"}))
+      "A `:ns` is needed for Clojure queries")
+
+  (is (contains? (info/info {:ns (-> ::_ namespace str)
+                             :sym "ns-resolve"})
+                 :doc))
+  (is (= (info/info {:ns (-> ::_ namespace str)
+                     :sym "ns-resolve"})
+         (info/info {:ns (-> ::_ namespace str)
+                     :context "(let [v \"\"] \n (__prefix__ v))"
+                     :sym "ns-resolve"}))
+      "The context is ignored for non-Java queries")
+
+  (is (nil? (info/info {:class "Thread" :member "checkAccess"}))
+      "A non-fully qualified class won't be resolved")
+  (is (some? (info/info {:class "java.lang.Thread" :member "checkAccess"})))
+  (is (some? (info/info {:ns (-> ::_ namespace str) :class "Thread" :member "checkAccess"}))
+      "A `:ns` can help resolving a non-fully qualified class")
+  (let [false-ns "a123"]
+    (remove-ns (symbol false-ns))
+    (is (nil? (info/info {:ns false-ns :class "Thread" :member "checkAccess"}))
+        "A non-existing ns won't help resolving a non-fully qualified class"))
+
+  (testing "A `:context` can disambiguate input, reducing the `:candidates` to just one"
+    (let [base {:ns (str *ns*)
+                :symbol ".codePointCount"}
+          response-without-context (info/info base)
+          response-with-context (info/info (assoc base :context "(let [v \"\"] \n (__prefix__ v))"))]
+      (is (= '[java.lang.String java.lang.StringBuffer java.lang.Character java.lang.StringBuilder]
+             (-> response-without-context :candidates keys)))
+      (is (not (:candidates response-with-context)))
+      (is (= `String
+             (:class response-with-context))))))
 
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client nil)
@@ -163,7 +193,7 @@
             (pr-str response))
         (is (= (:class response) "cider.nrepl.test.TestClass"))
         (is (= (:member response) "doSomething"))
-        (is (= (:arglists-str response) "[int int java.lang.String]"))
+        (is (= "[int int java.lang.String]" (:arglists-str response)))
         (is (= (:argtypes response) ["int" "int" "java.lang.String"]))
         (is (= (:returns response) "void"))
         (is (= (:modifiers response) "#{:private :static}"))
@@ -328,13 +358,25 @@
         (is (= (:type response) "variable"))))
 
     (testing "java interop method with multiple classes"
-      (let [response (session/message {:op "eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"})]
-        (is (every? (set (:class response)) ;; is a superset of:
-                    ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"])
-            (pr-str response))
-        (is (= (:member response) "length"))
-        (is (not (contains? response :ns)))
-        (is (= (:type response) "function"))))
+      (let [msg {:op "eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"}]
+
+        (testing "Without a `:context` being provided"
+          (let [response (session/message msg)]
+            (testing (pr-str response)
+              (is (every? (set (:class response)) ;; is a superset of:
+                          ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"]))
+              (is (= "length" (:member response)))
+              (is (not (contains? response :ns)))
+              (is (= "function" (:type response))))))
+
+        (testing "With a `:context` being provided"
+          (let [response (session/message (assoc msg :context "(let [v \"\"] \n (__prefix__ v))"))]
+            (testing (pr-str response)
+              (is (= (:class response)
+                     ["java.lang.String"])))
+            (is (= "length" (:member response)))
+            (is (not (contains? response :ns)))
+            (is (= "function" (:type response)))))))
 
     (when enriched-classpath?
       (testing "Fragments for java interop method with single class"
@@ -362,7 +404,7 @@
                  ["this" "byte[]" "java.lang.Object[]" "java.util.List"]} ;;YetAnotherTest
                (set (:eldoc response)))
             (pr-str response))
-        (is (= (:type response) "function"))))))
+        (is (= "function" (:type response)))))))
 
 (deftest missing-info-test
   (testing "ensure info returns a no-info packet if symbol not found"
@@ -433,56 +475,10 @@ but `:sym` is qualified and resolves to a clojure.string var"
           (pr-str response)))))
 
 (deftest error-handling-test
-  (testing "handle the exception thrown if no member provided to a java class info query"
-    (let [response (session/message {:op "info" :class "test"})]
-      (is (= (:status response) #{"info-error" "done"})
-          (pr-str response))
-      (is (= (:ex response) "class java.lang.Exception"))
-      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
-      (is (:pp-stacktrace response))))
-
-  (testing "handle the exception thrown if no member provided to a java class eldoc query"
-    (let [response (session/message {:op "eldoc" :class "test"})]
-      (is (= (:status response) #{"eldoc-error" "done"})
-          (pr-str response))
-      (is (= (:ex response) "class java.lang.Exception"))
-      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
-      (is (:pp-stacktrace response))))
-
-  (testing "handle the exception thrown if no class provided to a java member info query"
-    (let [response (session/message {:op "info" :member "test"})]
-      (is (= (:status response) #{"info-error" "done"})
-          (pr-str response))
-      (is (= (:ex response) "class java.lang.Exception"))
-      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
-      (is (:pp-stacktrace response))))
-
-  (testing "handle the exception thrown if no class provided to a java member eldoc query"
-    (let [response (session/message {:op "eldoc" :member "test"})]
-      (is (= (:status response) #{"eldoc-error" "done"})
-          (pr-str response))
-      (is (= (:ex response) "class java.lang.Exception"))
-      (is (-> response ^String (:err) (.startsWith "java.lang.Exception: Either")))
-      (is (:pp-stacktrace response))))
-
-  (testing "handle the exception thrown if there's a mocked info retrieval error"
-    (with-redefs [info/info (fn [& _] (throw (Exception. "info-exception")))]
-      (let [response (session/message {:op "info" :sym "test" :ns "user"})]
-        (is (= (:status response) #{"info-error" "done"})
-            (pr-str response))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: info-exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "handle the exception thrown if there's a mocked eldoc retreival error "
-    (with-redefs [info/eldoc-reply (fn [& _] (throw (Exception. "eldoc-exception")))]
-      (let [response (session/message {:op "eldoc" :sym "test" :ns "user"})]
-        (is (= (:status response) #{"eldoc-error" "done"})
-
-            (pr-str response))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: eldoc-exception")))
-        (is (:pp-stacktrace response))))))
+  (is (= #{"no-info" "done"} (:status (session/message {:op "info" :class "test"}))))
+  (is (= #{"no-eldoc" "done"} (:status (session/message {:op "eldoc" :class "test"}))))
+  (is (= #{"no-info" "done"} (:status (session/message {:op "info" :member "test"}))))
+  (is (= #{"no-eldoc" "done"} (:status (session/message {:op "eldoc" :member "test"})))))
 
 ;;;; eldoc datomic query
 (def testing-datomic-query '[:find ?x
