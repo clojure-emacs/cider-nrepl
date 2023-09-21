@@ -28,7 +28,12 @@
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
 
-  :plugins [[thomasa/mranderson "0.5.4-SNAPSHOT"]]
+  ;; mranderson cannot be put in a profile (as the other plugins),
+  ;; we conditionally disable it, because otherwise clj-kondo cannot run.
+  :plugins ~(if (-> ".no-mranderson" java.io.File. .exists)
+              []
+              '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
+
   :mranderson {:project-prefix "cider.nrepl.inlined.deps"
                :overrides       {[mvxcvi/puget fipp] [fipp ~fipp-version]} ; only takes effect in unresolved-tree mode
                :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode

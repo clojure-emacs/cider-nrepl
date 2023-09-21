@@ -19,3 +19,4 @@ out
 .nrepl-port
 .source-deps
 .clj-kondo/.cache
+/.no-mranderson

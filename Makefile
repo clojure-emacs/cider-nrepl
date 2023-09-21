@@ -44,19 +44,25 @@ cljfmt:
 
 .make_kondo_prep: project.clj .clj-kondo/config.edn
 	touch .no-pedantic
+	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
 	rm .no-pedantic
+	rm .no-mranderson
 
 kondo: .make_kondo_prep clean
 	touch .no-pedantic
+	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
 	rm .no-pedantic
+	rm .no-mranderson
 
 # A variation that does not analyze the classpath, as it OOMs otherwise on CircleCI.
 light-kondo: clean
 	touch .no-pedantic
+	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
 	rm .no-pedantic
+	rm .no-mranderson
 
 lint: kondo cljfmt eastwood
 
