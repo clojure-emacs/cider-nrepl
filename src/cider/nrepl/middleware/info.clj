@@ -59,7 +59,10 @@
           blacklist
           util/transform-value))))
 
-(defn extract-class-from-compliment [ns-str context]
+(defn- extract-class-from-compliment
+  "Given a Compliment-style `context`, returns the inferred class name
+  of the object placed at __prefix__."
+  [ns-str context]
   (when (and (seq ns-str)
              (seq context))
     (try
