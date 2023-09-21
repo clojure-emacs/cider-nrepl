@@ -66,7 +66,7 @@ light-kondo: clean
 
 lint: kondo cljfmt eastwood
 
-# PROJECT_VERSION=0.37.1 make install
+# PROJECT_VERSION=0.38.0 make install
 install: dump-version check-install-env .inline-deps
 	rm -f .no-mranderson
 	touch .no-pedantic
@@ -75,7 +75,7 @@ install: dump-version check-install-env .inline-deps
 	make clean
 	git checkout resources/cider/nrepl/version.edn
 
-# PROJECT_VERSION=0.37.1 make fast-install
+# PROJECT_VERSION=0.38.0 make fast-install
 fast-install: dump-version check-install-env
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
 	make clean
@@ -85,7 +85,6 @@ smoketest: install
 	cd test/smoketest && \
         lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
-
 
 # Run a background process that prints all JVM stacktraces after five minutes,
 # then kills all JVMs, to help diagnose issues with ClojureScript tests getting

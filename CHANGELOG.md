@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.38.0 (2023-09-21)
+
 ### Changes
 
 * `info` and `eldoc` ops: also return `:doc-fragments`, `:doc-first-sentence-fragments`, `:doc-first-sentence-fragments` attributes when available.
