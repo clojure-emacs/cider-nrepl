@@ -20,13 +20,13 @@ dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
 .inline-deps: dump-version clean
-	lein with-profile -user,-dev,+mranderson inline-deps
 	touch .inline-deps
+	lein with-profile -user,-dev inline-deps
 
 inline-deps: .inline-deps
 
 test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+mranderson,+plugin.mranderson/config test
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 quick-test: clean
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
@@ -63,7 +63,7 @@ lint: kondo cljfmt eastwood
 # PROJECT_VERSION=0.37.1 make install
 install: check-install-env .inline-deps
 	touch .no-pedantic
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+mranderson,+plugin.mranderson/config install
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 	touch .no-pedantic
 	make clean
 
@@ -87,7 +87,7 @@ detect_timeout:
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
 deploy: check-env .inline-deps
-	lein with-profile -user,+$(CLOJURE_VERSION),+mranderson,+plugin.mranderson/config deploy clojars
+	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME
