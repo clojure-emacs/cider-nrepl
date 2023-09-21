@@ -29,7 +29,7 @@
                 false)
 
   ;; mranderson cannot be put in a profile (as the other plugins),
-  ;; we conditionally disable it, because otherwise clj-kondo cannot run.
+  ;; so we conditionally disable it, because otherwise clj-kondo cannot run.
   :plugins ~(if (-> ".no-mranderson" java.io.File. .exists)
               []
               '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])

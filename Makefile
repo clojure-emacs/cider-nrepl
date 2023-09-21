@@ -20,12 +20,12 @@ dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
 .inline-deps: project.clj clean
+	rm -f .no-mranderson
 	lein with-profile -user,-dev inline-deps
 	touch $@
 
-inline-deps: .inline-deps
-
 test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
+	rm -f .no-mranderson
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
 
 quick-test: clean
@@ -46,28 +46,29 @@ cljfmt:
 	touch .no-pedantic
 	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
-	rm .no-pedantic
-	rm .no-mranderson
+	rm -f .no-pedantic
+	rm -f .no-mranderson
 
 kondo: .make_kondo_prep clean
 	touch .no-pedantic
 	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
-	rm .no-pedantic
-	rm .no-mranderson
+	rm -f .no-pedantic
+	rm -f .no-mranderson
 
 # A variation that does not analyze the classpath, as it OOMs otherwise on CircleCI.
 light-kondo: clean
 	touch .no-pedantic
 	touch .no-mranderson
 	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
-	rm .no-pedantic
-	rm .no-mranderson
+	rm -f .no-pedantic
+	rm -f .no-mranderson
 
 lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=0.37.1 make install
 install: dump-version check-install-env .inline-deps
+	rm -f .no-mranderson
 	touch .no-pedantic
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 	touch .no-pedantic
@@ -95,6 +96,7 @@ detect_timeout:
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
 deploy: check-env .inline-deps
+	rm -f .no-mranderson
 	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 check-env:
