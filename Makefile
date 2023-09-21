@@ -19,9 +19,9 @@ test/resources/cider/nrepl/clojuredocs/export.edn:
 dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
-.inline-deps: dump-version clean
-	touch .inline-deps
+.inline-deps: project.clj clean
 	lein with-profile -user,-dev inline-deps
+	touch $@
 
 inline-deps: .inline-deps
 
@@ -61,16 +61,18 @@ light-kondo: clean
 lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=0.37.1 make install
-install: check-install-env .inline-deps
+install: dump-version check-install-env .inline-deps
 	touch .no-pedantic
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 	touch .no-pedantic
 	make clean
+	git checkout resources/cider/nrepl/version.edn
 
 # PROJECT_VERSION=0.37.1 make fast-install
 fast-install: dump-version check-install-env
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
 	make clean
+	git checkout resources/cider/nrepl/version.edn
 
 smoketest: install
 	cd test/smoketest && \
@@ -109,7 +111,6 @@ clean:
 	lein with-profile -user clean
 	cd test/smoketest && lein with-profile -user clean
 	rm -f .inline-deps
-	git checkout resources/cider/nrepl/version.edn
 
 # Create and cache a `java` command. project.clj is mandatory; the others are optional but are taken into account for cache recomputation.
 # It's important not to silence with step with @ syntax, so that Enrich progress can be seen as it resolves dependencies.
