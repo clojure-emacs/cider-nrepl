@@ -96,13 +96,17 @@
   (testing "A `:context` can disambiguate input, reducing the `:candidates` to just one"
     (let [base {:ns (str *ns*)
                 :symbol ".codePointCount"}
+          base-with-context (assoc base :context "(let [v \"\"] \n (__prefix__ v))")
           response-without-context (info/info base)
-          response-with-context (info/info (assoc base :context "(let [v \"\"] \n (__prefix__ v))"))]
+          response-with-context (info/info base-with-context)]
       (is (= '[java.lang.String java.lang.StringBuffer java.lang.Character java.lang.StringBuilder]
              (-> response-without-context :candidates keys)))
       (is (not (:candidates response-with-context)))
       (is (= `String
-             (:class response-with-context))))))
+             (:class response-with-context)))
+      (is (= {:added "1.0", :ns 'clojure.core, :name '.., :file "clojure/core.clj"}
+             (-> base-with-context (assoc :symbol "..") info/info (select-keys [:class :added :ns :name :file])))
+          "The context is ignored for the special form `..`"))))
 
 ;; Used below in an integration test
 (def ^{:protocol #'clojure.data/Diff} junk-protocol-client nil)
