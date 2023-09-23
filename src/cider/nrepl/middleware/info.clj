@@ -88,7 +88,9 @@
                                                  (symbol class))
                               .getName))
                     (not-empty class)
-                    (when (some-> sym (str/starts-with? "."))
+                    (when (and (some-> sym (str/starts-with? "."))
+                               ;; .. cannot be a class member, so class inference doesn't make sense here:
+                               (not= sym ".."))
                       (extract-class-from-compliment ns context)))
                 (catch Exception e
                   nil))
