@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+* Bump `haystack` to [0.3.0](https://github.com/clojure-emacs/haystack/blob/v0.3.0/CHANGELOG.md#030-2023-09-29).
+
+### Changes
+
 ### Bugs Fixed
 
 * `info` and `eldoc` ops: fix regression for the special form `..`.
