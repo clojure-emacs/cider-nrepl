@@ -2,7 +2,8 @@
 
 ## master (unreleased)
 
-* Bump `haystack` to [0.3.0](https://github.com/clojure-emacs/haystack/blob/v0.3.0/CHANGELOG.md#030-2023-09-29).
+* Bump `haystack` to [0.3.1](https://github.com/clojure-emacs/haystack/blob/v0.3.1/CHANGELOG.md#031-2023-09-29).
+* Cache the last result of internal Haystack (exception analysis) calls.
 
 ### Changes
 
