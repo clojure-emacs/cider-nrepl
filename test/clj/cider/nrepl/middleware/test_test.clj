@@ -175,9 +175,11 @@
                          {:keys [ms]} :elapsed-time}]]
                     [var ms])))]
     (is (= "fast-failing-test" var1))
-    (is (< elapsed-time1 50)
+    (is (< elapsed-time1 (if (System/getenv "CI")
+                           200
+                           50))
         "Reports the elapsed time under [:elapsed-time :ms], as integer.
-The `10` value reflects that it times things correctly for a fast test.")
+The low numberic value reflects that it times things correctly for a fast test.")
 
     (is (= "slow-failing-test" var2))
     (is (> elapsed-time2 998)
