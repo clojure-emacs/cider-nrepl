@@ -8,7 +8,9 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "1.0.0"]
-                 ^:inline-dep [cider/orchard "0.15.1" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
+                 ~(with-meta '[cider/orchard "0.15.1" :exclusions [com.google.code.findbugs/jsr305 com.google.errorprone/error_prone_annotations]]
+                    ;; orchard is used in a test, so we cannot inline it while running tests.
+                    {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
                  ^:inline-dep [mx.cider/haystack "0.3.1"]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4"]
@@ -16,7 +18,9 @@
                  ^:inline-dep [compliment "0.4.4-20230929.205009-1"]
                  ^:inline-dep [org.rksm/suitable "0.5.0" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
-                 ^:inline-dep [org.clojure/tools.namespace "1.3.0"]
+                 ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
+                    ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
+                    {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]
                  [mx.cider/logjam "0.1.1"]]
@@ -104,7 +108,7 @@
                                      [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "1.0.206"]]}
+                     :dependencies [[org.clojure/tools.cli "1.0.214"]]}
 
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
@@ -122,6 +126,26 @@
                                                                          commons-codec
                                                                          com.google.code.findbugs/jsr305]]
                                    [cider/piggieback "0.5.3"]]}
+
+             ;; Running the tests with enrich-classpath doing its thing isn't compatible with `lein test`
+             ;; (because there's no such thing as "run `lein test` using this specific classpath"),
+             ;; So we use cognitect.test-runner instead.
+             :cognitest {:dependencies [[org.clojure/tools.namespace "1.4.4"]
+                                        [org.clojure/tools.cli "1.0.214"]]
+                         :source-paths ["test-runner/src"]
+                         ;; This piece of middleware dynamically adds the test paths to a cognitect.test-runner main invocation.
+                         :middleware [~(do
+                                         (defn add-cognitest [{:keys [test-paths] :as project}]
+                                           (assert (seq test-paths))
+                                           (let [cmd (reduce into [["cognitect.test-runner"]
+                                                                   (vec
+                                                                    (interleave (take (count test-paths)
+                                                                                      (repeat "--dir"))
+                                                                                test-paths))
+                                                                   ["--namespace-regex" (pr-str ".*")]
+                                                                   ["--exclude" "cognitest-exclude"]])]
+                                             (assoc-in project [:enrich-classpath :main] (clojure.string/join " " cmd))))
+                                         `add-cognitest)]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
