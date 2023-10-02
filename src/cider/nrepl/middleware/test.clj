@@ -353,17 +353,18 @@
    (test-ns ns vars false))
 
   ([ns vars fail-fast?]
-   (binding [test/report report]
-     (test/do-report {:type :begin-test-ns, :ns ns})
-     (let [time-info (atom nil)]
-       (timing time-info
-         (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
-           (test-hook)
-           (test-vars ns vars fail-fast?)))
-       (test/do-report {:type :end-test-ns
-                        :ns ns
-                        :ns-elapsed-time @time-info})
-       @current-report))))
+   (let [parent test/report]
+     (binding [test/report (fn [msg] (parent msg) (report msg))]
+       (test/do-report {:type :begin-test-ns, :ns ns})
+       (let [time-info (atom nil)]
+         (timing time-info
+           (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
+             (test-hook)
+             (test-vars ns vars fail-fast?)))
+         (test/do-report {:type :end-test-ns
+                          :ns ns
+                          :ns-elapsed-time @time-info})
+         @current-report)))))
 
 (defn test-var-query
   "Call `test-ns` for each var found via var-query."
