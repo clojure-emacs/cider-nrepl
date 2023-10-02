@@ -148,6 +148,9 @@ jobs:
       clojure_version:
         description: Version of Clojure to test against
         type: string
+      parser_target:
+        description: The Orchard Java parser to be exercised
+        type: string
     executor: << parameters.jdk_version >>
     environment:
       VERSION: << parameters.clojure_version >>
@@ -159,10 +162,10 @@ jobs:
           steps:
             - run:
                 name: Running tests # Redundant relative to `make test`, however it makes the CI jobs fail faster, given how much time mranderson takes.
-                command: make quick-test
+                command: PARSER_TARGET=<< parameters.parser_target >> make --debug quick-test
             - run:
                 name: Running tests with inlined deps
-                command: make test smoketest
+                command: PARSER_TARGET=<< parameters.parser_target >> make --debug test smoketest
             - run:
                 name: Install the Clojure CLI
                 command: |
@@ -199,6 +202,7 @@ workflows:
             parameters:
               clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
+              parser_target: ["parser-next", "parser", "legacy-parser"]
           filters:
             branches:
               only: /.*/

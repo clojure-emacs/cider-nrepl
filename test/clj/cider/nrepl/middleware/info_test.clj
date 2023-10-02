@@ -6,7 +6,8 @@
    [clojure.data]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.test :refer :all])
+   [clojure.test :refer :all]
+   [orchard.misc :as misc])
   (:import
    (cider.nrepl.test AnotherTestClass TestClass YetAnotherTest)
    (org.apache.commons.lang3 SystemUtils)))
@@ -19,6 +20,23 @@
   "Is enrich-classpath (or something equivalent) augmenting the classpath?"
   (boolean (or (io/resource "java/lang/Thread.java")
                (io/resource "java.base/java/lang/Thread.java"))))
+
+;; TODO: use `orchard.java/parser-next-available?` after Orchar's next release
+(def parser-next-available?
+  (delay ;; avoid the side-effects at compile-time
+    (atom ;; make the result mutable - this is helpful in case the detection below wasn't sufficient
+     (and (>= misc/java-api-version 9)
+          (try
+            ;; indicates that the classes are available
+            ;; however it does not indicate if necessary `add-opens=...` JVM flag is in place:
+            (and
+             (Class/forName "com.sun.tools.javac.tree.DCTree$DCBlockTag")
+             (Class/forName "com.sun.tools.javac.code.Type$ArrayType")
+             (seq (do
+                    (require 'orchard.java.parser-next)
+                    ((resolve 'orchard.java.parser-next/source-info) `String))))
+            (catch Throwable e
+              false))))))
 
 (deftest format-response-test
   (is (re-find #"^(https?|file|jar|zip):" ; resolved either locally or online
@@ -146,7 +164,7 @@
         (is (= (:doc response) "a macro for testing"))
         (is (nil? (:spec response)))))
 
-    (when enriched-classpath?
+    (when @@parser-next-available?
       (testing "'fragments' attributes are returned"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}
@@ -197,7 +215,9 @@
             (pr-str response))
         (is (= (:class response) "cider.nrepl.test.TestClass"))
         (is (= (:member response) "doSomething"))
-        (is (= "[int int java.lang.String]" (:arglists-str response)))
+        (is (#{"[int int java.lang.String]" ;; without enrich-classpath in
+               "[a b c]"} ;; with enrich-classpath in
+             (:arglists-str response)))
         (is (= (:argtypes response) ["int" "int" "java.lang.String"]))
         (is (= (:returns response) "void"))
         (is (= (:modifiers response) "#{:private :static}"))
@@ -382,7 +402,7 @@
             (is (not (contains? response :ns)))
             (is (= "function" (:type response)))))))
 
-    (when enriched-classpath?
+    (when @@parser-next-available?
       (testing "Fragments for java interop method with single class"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}
@@ -403,10 +423,16 @@
 
     (testing "java method eldoc lookup, internal testing methods"
       (let [response (session/message {:op "eldoc" :sym "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
-        (is (= #{["this"] ;;TestClass
+        (is (#{;; without enrich-classpath in:
+               #{["this"] ;;TestClass
                  ["int" "java.lang.String" "boolean"] ;;AnotherTestClass
                  ["this" "byte[]" "java.lang.Object[]" "java.util.List"]} ;;YetAnotherTest
-               (set (:eldoc response)))
+
+               ;; with enrich-classpath in:
+               #{["this"]
+                 ["a" "b" "c"]
+                 ["this" "prim" "things" "generic"]}}
+             (set (:eldoc response)))
             (pr-str response))
         (is (= "function" (:type response)))))))
 

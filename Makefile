@@ -1,4 +1,4 @@
-.PHONY: test quick-test fast-test eastwood cljfmt install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs
+.PHONY: test quick-test fast-test eastwood cljfmt install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
 .DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.11
@@ -9,9 +9,26 @@ CLOJURE_VERSION ?= 1.11
 # Don't use spaces here.
 LEIN_PROFILES ?= "+dev,+test"
 
+TEST_PROFILES ?= "-user,-dev,+test"
+
 # The enrich-classpath version to be injected.
 # Feel free to upgrade this.
-ENRICH_CLASSPATH_VERSION="1.17.1"
+ENRICH_CLASSPATH_VERSION="1.18.0"
+
+# Set bash instead of sh for the @if [[ conditions,
+# and use the usual safety flags:
+SHELL = /bin/bash -Eeu
+
+ifeq ($(OS),Darwin) # macOS
+	SED_INPLACE = -i ''
+else
+	SED_INPLACE = -i
+endif
+
+TEST_RUNNER_SOURCE_DIR = test-runner
+
+$(TEST_RUNNER_SOURCE_DIR):
+	@if [ ! -d "$(TEST_RUNNER_SOURCE_DIR)" ]; then git clone https://github.com/cognitect-labs/test-runner.git $(TEST_RUNNER_SOURCE_DIR) --depth=1; fi
 
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
@@ -24,12 +41,35 @@ dump-version:
 	lein with-profile -user,-dev inline-deps
 	touch $@
 
-test: clean .inline-deps test/resources/cider/nrepl/clojuredocs/export.edn
+test_impl: $(TEST_RUNNER_SOURCE_DIR) test/resources/cider/nrepl/clojuredocs/export.edn
 	rm -f .no-mranderson
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test,+plugin.mranderson/config test
+	@if [[ "$$PARSER_TARGET" == "parser-next" ]] ; then \
+		export SKIP_INLINING_TEST_DEPS=true; \
+		bash 'lein' 'update-in' ':plugins' 'conj' "[mx.cider/lein-enrich-classpath \"$(ENRICH_CLASSPATH_VERSION)\"]" '--' 'with-profile' $(TEST_PROFILES),+cognitest,+$(CLOJURE_VERSION) 'update-in' ':middleware' 'conj' 'cider.enrich-classpath.plugin-v2/middleware' '--' 'repl' | grep " -cp " > .test-classpath; \
+		cat .test-classpath; \
+		eval "$$(cat .test-classpath)"; \
+		rm .test-classpath; \
+	elif [[ "$$PARSER_TARGET" == "parser" ]] ; then \
+		export SKIP_INLINING_TEST_DEPS=true; \
+		bash 'lein' 'update-in' ':plugins' 'conj' "[mx.cider/lein-enrich-classpath \"$(ENRICH_CLASSPATH_VERSION)\"]" '--' 'with-profile' $(TEST_PROFILES),+cognitest,+$(CLOJURE_VERSION) 'update-in' ':middleware' 'conj' 'cider.enrich-classpath.plugin-v2/middleware' '--' 'repl' | grep " -cp " > .test-classpath; \
+		cat .test-classpath; \
+		sed $(SED_INPLACE) 's/--add-opens=jdk.compiler\/com.sun.tools.javac.code=ALL-UNNAMED//g' .test-classpath; \
+		sed $(SED_INPLACE) 's/--add-opens=jdk.compiler\/com.sun.tools.javac.tree=ALL-UNNAMED//g' .test-classpath; \
+		cat .test-classpath; \
+		eval "$$(cat .test-classpath)"; \
+		rm .test-classpath; \
+	elif [[ "$$PARSER_TARGET" == "legacy-parser" ]] ; then \
+		export SKIP_INLINING_TEST_DEPS=true; \
+		lein with-profile +$(CLOJURE_VERSION),$(TEST_PROFILES) test; \
+	else \
+		echo "PARSER_TARGET unset!"; \
+		exit 1; \
+	fi
 
-quick-test: clean
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+test test
+test: clean .inline-deps
+	@make test_impl TEST_PROFILES="$(TEST_PROFILES),+plugin.mranderson/config"
+
+quick-test: clean test_impl
 
 fast-test: quick-test
 
@@ -81,7 +121,9 @@ fast-install: dump-version check-install-env
 	make clean
 	git checkout resources/cider/nrepl/version.edn
 
-smoketest: install
+smoketest:
+	export SKIP_INLINING_TEST_DEPS=true
+	make install
 	cd test/smoketest && \
         lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
@@ -127,6 +169,7 @@ clean:
 # Launches a repl, falling back to vanilla lein repl if something went wrong during classpath calculation.
 lein-repl: .enrich-classpath-lein-repl
 	@if grep --silent " -cp " .enrich-classpath-lein-repl; then \
+		export YOURKIT_SESSION_NAME="$(basename $(PWD))";
 		eval "$$(cat .enrich-classpath-lein-repl) --interactive"; \
 	else \
 		echo "Falling back to lein repl... (you can avoid further falling back by removing .enrich-classpath-lein-repl)"; \

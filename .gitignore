@@ -20,3 +20,5 @@ out
 .source-deps
 .clj-kondo/.cache
 /.no-mranderson
+/test-runner
+/.test-classpath
