@@ -2,11 +2,12 @@
 
 ## master (unreleased)
 
-* Bump `orchard` to [0.16.1](https://github.com/clojure-emacs/orchard/blob/v0.16.1/CHANGELOG.md#0161-2023-10-05).
-* Bump `haystack` to [0.3.1](https://github.com/clojure-emacs/haystack/blob/v0.3.1/CHANGELOG.md#031-2023-09-29).
-* Cache the last result of internal Haystack (exception analysis) calls.
+## 0.39.0 (2023-10-05)
 
 ### Changes
+
+* Bump `orchard` to [0.16.1](https://github.com/clojure-emacs/orchard/blob/v0.16.1/CHANGELOG.md#0161-2023-10-05).
+* Bump `haystack` to [0.3.1](https://github.com/clojure-emacs/haystack/blob/v0.3.1/CHANGELOG.md#031-2023-09-29).
 
 ### Bugs Fixed
 
