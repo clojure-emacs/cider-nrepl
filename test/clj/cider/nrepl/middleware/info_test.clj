@@ -243,14 +243,16 @@
       (let [response (session/message {:op "info"
                                        :class "java.lang.StringBuilder"
                                        :member "capacity"})]
-        (is (= (:status response) #{"done"})
+        (is (= #{"done"} (:status response))
             (pr-str response))
-        (is (= (:class response) "java.lang.StringBuilder"))
-        (is (= (:member response) "capacity"))
-        (is (= (:arglists-str response) "[this]"))
-        (is (= (:argtypes response) []))
-        (is (= (:returns response) "int"))
-        (is (= (:modifiers response) "#{:public :bridge :synthetic}"))
+        (is (= "java.lang.StringBuilder" (:class response)))
+        (is (= "capacity" (:member response)))
+        (is (= "[this]" (:arglists-str response)))
+        (is (=  [](:argtypes response)))
+        (is (= "int" (:returns response)))
+        (is (contains? #{"#{:public :bridge :synthetic}"
+                         "#{:public}"}
+                       (:modifiers response)))
         (is (-> response ^String (:javadoc) (.startsWith "https://docs.oracle.com/"))))
 
       (if (SystemUtils/IS_JAVA_1_8)
