@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `compliment` to [0.4.4](https://github.com/alexander-yakushev/compliment/blob/0.4.4/CHANGELOG.md#044-2023-10-10).
+
 ## 0.39.0 (2023-10-05)
 
 ### Changes
