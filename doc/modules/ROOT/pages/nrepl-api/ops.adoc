@@ -512,6 +512,21 @@ Returns::
 
 
 
+=== `inspect-tap-current-value`
+
+Sends the currently inspected value to Clojures tap>.
+
+Required parameters::
+* `:session` The current session
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
 === `inspect-get-path`
 
 Returns the path to the current position in the inspected value.
