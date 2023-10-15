@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.40.0 (2023-10-15)
+
 ### Changes
 
 * `track-state`: include var info for macros defined for ClojureScript namespaces.
