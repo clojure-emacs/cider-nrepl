@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+### Changes
+
+* `track-state`: include var info for macros defined for ClojureScript namespaces.
+  * e.g. for `foo.cljs`, now var info for any macros contained in `foo.clj` is also included.  
+
 ## 0.39.1 (2023-10-12)
 
 ### Changes

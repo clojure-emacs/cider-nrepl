@@ -13,7 +13,7 @@ TEST_PROFILES ?= "-user,-dev,+test"
 
 # The enrich-classpath version to be injected.
 # Feel free to upgrade this.
-ENRICH_CLASSPATH_VERSION="1.18.0"
+ENRICH_CLASSPATH_VERSION="1.18.2"
 
 # Set bash instead of sh for the @if [[ conditions,
 # and use the usual safety flags:
@@ -169,7 +169,7 @@ clean:
 # Launches a repl, falling back to vanilla lein repl if something went wrong during classpath calculation.
 lein-repl: .enrich-classpath-lein-repl
 	@if grep --silent " -cp " .enrich-classpath-lein-repl; then \
-		export YOURKIT_SESSION_NAME="$(basename $(PWD))";
+		export YOURKIT_SESSION_NAME="$(basename $(PWD))"; \
 		eval "$$(cat .enrich-classpath-lein-repl) --interactive"; \
 	else \
 		echo "Falling back to lein repl... (you can avoid further falling back by removing .enrich-classpath-lein-repl)"; \
