@@ -514,7 +514,7 @@ Returns::
 
 === `inspect-tap-current-value`
 
-Sends the currently inspected value to Clojures tap>.
+Sends the currently inspected value to the Clojure tap>.
 
 Required parameters::
 * `:session` The current session
