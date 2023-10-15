@@ -133,11 +133,29 @@
                         'c-fn {:tag 'cljs.core/MultiFn}
                         'd-fn {}
                         'a-var {:tag 'something}}
+                 :macros '{from-macros-with-style-indent {:arglists ([& args]),
+                                                          :style/indent :defn,
+                                                          :line 387,
+                                                          :column 1,
+                                                          :file "helix/dom.cljc",
+                                                          :name helix.dom/form,
+                                                          :ns helix.dom,
+                                                          :macro true},
+                           from-macros-without-style-indent {:arglists ([& args]),
+                                                             :line 246,
+                                                             :column 1,
+                                                             :file "helix/dom.cljc",
+                                                             :name helix.dom/audio,
+                                                             :ns helix.dom,
+                                                             :macro true}}
                  :require-macros {'sym-2 'some-namespace}
                  :requires {'sym-3 'some-namespace}}
         other-namespaces [{:name 'some-other-cljs-ns
                            :defs {'sym-1 {:meta {:arglists '([] [a] [a b])}}}}]
         {:keys [aliases interns]} (sut/ns-as-map cljs-ns other-namespaces)]
+    (is (any? (sut/ns-as-map (dissoc cljs-ns :macros :require-macros :use-macrps)
+                             other-namespaces))
+        "Doesn't throw exceptions in the absence of optional keys")
     (is (= '{sym-2 some-namespace sym-3 some-namespace} aliases))
     (is (= '{a-fn {:fn "true"},
              b-fn {:fn "true"},
@@ -149,7 +167,11 @@
              ;; fetched by inspecting the JVM clojure environment:
              test-fn {:arglists "([a b] [a] [])", :doc "\"docstring\""}
              ;; adds :style/indent despite it not being originally present:
-             test-macro {:macro "true", :arglists "([a & body])", :style/indent "1"}}
+             test-macro {:macro "true", :arglists "([a & body])", :style/indent "1"}
+             ;; :style/indent is preserved:
+             from-macros-with-style-indent {:macro "true", :arglists "([& args])", :style/indent ":defn"},
+             ;; :style/indent is inferred:
+             from-macros-without-style-indent {:macro "true", :arglists "([& args])", :style/indent "0"}}
            interns))))
 
 (deftest calculate-used-aliases-test

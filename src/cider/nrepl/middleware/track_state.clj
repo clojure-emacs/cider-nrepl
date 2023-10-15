@@ -141,7 +141,7 @@
 
     ;; ClojureScript Namespaces
     (associative? object)
-    (let [{:keys [use-macros uses require-macros requires defs]} object
+    (let [{:keys [use-macros uses macros require-macros requires defs]} object
           post-process (fn [result]
                          (misc/update-vals (fn [x]
                                              (cond-> x
@@ -154,7 +154,8 @@
       {:aliases (merge require-macros requires)
        :interns (merge (post-process (misc/update-vals cljs-meta-with-fn defs))
                        (post-process (uses-metadata all-objects uses))
-                       (post-process (use-macros-metadata use-macros)))})
+                       (post-process (use-macros-metadata use-macros))
+                       (post-process macros))})
 
     :else {}))
 

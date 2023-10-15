@@ -1,4 +1,6 @@
 (ns cider.nrepl.middleware.out-test
+  {:clojure.tools.namespace.repl/unload false
+   :clojure.tools.namespace.repl/load false}
   (:require
    [cider.nrepl.middleware.out :as o]
    [clojure.string :as str]
