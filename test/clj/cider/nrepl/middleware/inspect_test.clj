@@ -516,8 +516,6 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-
-
 (deftest inspect-tap-current-value-test
   (testing "inspect-tap-current-value taps the current inspector value"
     (do
