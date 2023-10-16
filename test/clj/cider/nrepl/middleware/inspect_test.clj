@@ -506,8 +506,6 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-
-
 (def inspect-tap-current-value-test-atom (atom nil))
 
 (defn set-inspect-tap-current-value-test-atom-fn [x]
@@ -525,15 +523,12 @@
   (testing "inspect-tap-current-value taps the current inspector value"
     (do
       (session/message {:op   "eval"
-                        :code "(def x (+ 3 4)))"
-                        })
+                        :code "(def x (+ 3 4)))"})
       (session/message {:op "eval"
                         :inspect "true"
                         :code    "x"})
       (session/message {:op  "inspect-push"
                         :idx 1})
-      (session/message {:op  "inspect-tap-current-value"
-                        })
-      )
-    (is (= "7"  @inspect-tap-current-value-test-atom))
-    ))
+      (session/message {:op  "inspect-tap-current-value"}))
+
+    (is (= "7"  @inspect-tap-current-value-test-atom))))
