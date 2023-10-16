@@ -110,8 +110,18 @@
   (edn/read-string (first value)))
 
 ;; integration tests
+(def inspect-tap-current-value-test-atom (atom nil))
 
-(use-fixtures :each session/session-fixture)
+(defn set-inspect-tap-current-value-test-atom-fn [x]
+  (reset! inspect-tap-current-value-test-atom x))
+
+(defn inspect-tap-current-value-test-fixture [f]
+  (add-tap set-inspect-tap-current-value-test-atom-fn)
+  (f)
+  (reset! inspect-tap-current-value-test-atom nil)
+  (remove-tap set-inspect-tap-current-value-test-atom-fn))
+
+(use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
 
 (deftest nil-integration-test
   (testing "nil renders correctly"
@@ -506,18 +516,7 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-(def inspect-tap-current-value-test-atom (atom nil))
 
-(defn set-inspect-tap-current-value-test-atom-fn [x]
-  (reset! inspect-tap-current-value-test-atom x))
-
-(defn inspect-tap-current-value-test-fixture [f]
-  (add-tap set-inspect-tap-current-value-test-atom-fn)
-  (f)
-  (reset! inspect-tap-current-value-test-atom nil)
-  (remove-tap set-inspect-tap-current-value-test-atom-fn))
-
-(use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
 
 (deftest inspect-tap-current-value-test
   (testing "inspect-tap-current-value taps the current inspector value"
