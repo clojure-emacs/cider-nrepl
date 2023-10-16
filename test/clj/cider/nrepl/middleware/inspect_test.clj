@@ -117,8 +117,11 @@
 
 (defn inspect-tap-current-value-test-fixture [f]
   (add-tap set-inspect-tap-current-value-test-atom-fn)
+  (Thread/sleep 5000)
   (f)
+  (Thread/sleep 5000)
   (reset! inspect-tap-current-value-test-atom nil)
+  (Thread/sleep 5000)
   (remove-tap set-inspect-tap-current-value-test-atom-fn))
 
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
