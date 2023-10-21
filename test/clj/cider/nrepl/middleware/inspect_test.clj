@@ -530,5 +530,5 @@
       (session/message {:op  "inspect-push"
                         :idx 1})
       (session/message {:op  "inspect-tap-current-value"}))
-
+    (Thread/sleep 10000)
     (is (= "7"  @inspect-tap-current-value-test-atom))))
