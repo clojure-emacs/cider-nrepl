@@ -299,6 +299,10 @@ making the results more accurate (and less numerous)."
                :requires {"session" "The current session"
                           "ns" "Namespace to define var on"
                           "var-name" "The var name"}
+               :returns {"status" "\"done\""}}
+              "inspect-tap-current-value"
+              {:doc "Send the currently inspected value to the Clojure tap>."
+               :requires {"session" "The current session"}
                :returns {"status" "\"done\""}}}}))
 
 (def-wrapper wrap-log cider.nrepl.middleware.log/handle-log

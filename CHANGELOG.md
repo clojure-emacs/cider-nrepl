@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* `middleware.inspect:` add new `inspect-tap-current-value` op.
+
 ## 0.40.0 (2023-10-15)
 
 ### Changes

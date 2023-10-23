@@ -105,6 +105,9 @@
 (defn def-current-value [msg]
   (inspector-response msg (swap-inspector! msg inspect/def-current-value (symbol (:ns msg)) (:var-name msg))))
 
+(defn tap-current-value [msg]
+  (inspector-response msg (swap-inspector! msg inspect/tap-current-value)))
+
 (defn handle-inspect [handler msg]
   (if (= (:op msg) "eval")
     (eval-reply handler msg)
@@ -120,4 +123,5 @@
       "inspect-set-max-atom-length" set-max-atom-length-reply
       "inspect-set-max-coll-size" set-max-coll-size-reply
       "inspect-clear" clear-reply
-      "inspect-def-current-value" def-current-value)))
+      "inspect-def-current-value" def-current-value
+      "inspect-tap-current-value" tap-current-value)))

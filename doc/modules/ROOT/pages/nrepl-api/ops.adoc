@@ -660,6 +660,22 @@ Returns::
 
 
 
+=== `inspect-tap-current-value`
+
+Send the currently inspected value to the Clojure tap>.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
 === `is-var-profiled`
 
 Reports wheth symbol is currently profiled.

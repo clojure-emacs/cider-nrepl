@@ -6,6 +6,21 @@
    [clojure.string :as string]
    [clojure.test :refer :all]))
 
+(def inspect-tap-current-value-test-atom (atom nil))
+
+(defn set-inspect-tap-current-value-test-atom-fn [x]
+  (reset! inspect-tap-current-value-test-atom x))
+
+(defn inspect-tap-current-value-test-fixture [f]
+  (add-tap set-inspect-tap-current-value-test-atom-fn)
+  (try
+    (f)
+    (finally
+      (reset! inspect-tap-current-value-test-atom nil)
+      (remove-tap set-inspect-tap-current-value-test-atom-fn))))
+
+(use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
+
 (def datafy?
   (some? (resolve 'clojure.core.protocols/datafy)))
 
@@ -110,8 +125,6 @@
   (edn/read-string (first value)))
 
 ;; integration tests
-
-(use-fixtures :each session/session-fixture)
 
 (deftest nil-integration-test
   (testing "nil renders correctly"
@@ -505,3 +518,25 @@
                                               :var-name "sub-map"})
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
+
+(deftest inspect-tap-current-value-test
+  (testing "inspect-tap-current-value taps the current inspector value"
+    (session/message {:op   "eval"
+                      :code "(def x (+ 3 4)))"})
+    (session/message {:op "eval"
+                      :inspect "true"
+                      :code    "x"})
+    (session/message {:op  "inspect-push"
+                      :idx 1})
+    (session/message {:op  "inspect-tap-current-value"})
+
+    (let [max-time 10000
+          ms 50
+          iterations (long (/ max-time ms))]
+      (loop [i 0]
+        (when (and (not= "7" @inspect-tap-current-value-test-atom)
+                   (< i iterations))
+          (Thread/sleep ms)
+          (recur (inc i)))))
+
+    (is (= "7" @inspect-tap-current-value-test-atom))))
