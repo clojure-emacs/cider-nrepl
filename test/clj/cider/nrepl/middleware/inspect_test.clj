@@ -534,9 +534,9 @@
           ms 50
           iterations (long (/ max-time ms))]
       (loop [i 0]
-        (when (and (not= "7" @inspect-tap-current-value-test-atom)
+        (when (and (not= 7 @inspect-tap-current-value-test-atom)
                    (< i iterations))
           (Thread/sleep ms)
           (recur (inc i)))))
 
-    (is (= "7" @inspect-tap-current-value-test-atom))))
+    (is (= 7 @inspect-tap-current-value-test-atom))))

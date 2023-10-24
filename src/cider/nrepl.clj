@@ -259,6 +259,16 @@ making the results more accurate (and less numerous)."
                :requires {"idx" "Index of the internal value currently rendered."
                           "session" "The current session"}
                :returns {"status" "\"done\""}}
+              "inspect-next-sibling"
+              {:doc "Increment the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
+              "inspect-previous-sibling"
+              {:doc "Decrement the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value."
+               :requires {"session" "The current session"}
+               :returns {"status" "\"done\""}}
               "inspect-refresh"
               {:doc "Re-renders the currently inspected value."
                :requires {"session" "The current session"}

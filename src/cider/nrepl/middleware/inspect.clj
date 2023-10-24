@@ -76,6 +76,12 @@
 (defn push-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/down (:idx msg))))
 
+(defn next-sibling-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/next-sibling)))
+
+(defn previous-sibling-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/previous-sibling)))
+
 (defn refresh-reply [msg]
   (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
 
@@ -115,6 +121,8 @@
     (with-safe-transport handler msg
       "inspect-pop" pop-reply
       "inspect-push" push-reply
+      "inspect-next-sibling" next-sibling-reply
+      "inspect-previous-sibling" previous-sibling-reply
       "inspect-refresh" refresh-reply
       "inspect-get-path" get-path-reply
       "inspect-next-page" next-page-reply
