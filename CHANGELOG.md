@@ -5,6 +5,7 @@
 ### New features
 
 * `middleware.inspect:` add new `inspect-tap-current-value` op.
+* `middleware.inspect:` add new `inspect-previous-sibling`, `inspect-next-sibling` ops.
 
 ## 0.40.0 (2023-10-15)
 

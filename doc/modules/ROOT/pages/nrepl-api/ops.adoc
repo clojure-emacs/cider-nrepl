@@ -544,6 +544,23 @@ Returns::
 
 
 
+=== `inspect-next-sibling`
+
+Increment the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
 === `inspect-pop`
 
 Moves one level up in the inspector stack.
@@ -563,6 +580,23 @@ Returns::
 === `inspect-prev-page`
 
 Jumps to the previous page in paginated collection view.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done"
+
+
+
+=== `inspect-previous-sibling`
+
+Decrement the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value.
 
 Required parameters::
 * `:session` The current session
