@@ -23,6 +23,16 @@
       (is (= (:expanded-1 code) expansion))
       (is (= #{"done"} status))))
 
+  (testing "error handling works"
+    (let [{:keys [status err ex]} (session/message {:op "macroexpand"
+                                                    :expander "macroexpand-1"
+                                                    ;; A faulty sexpr:
+                                                    :code "(let 1)"
+                                                    :display-namespaces "none"})]
+      (is (string? err))
+      (is (string? ex))
+      (is (= #{"macroexpand-error" "done"} status))))
+
   (testing "macroexpand expander works"
     (let [{:keys [expansion status]} (session/message {:op "macroexpand"
                                                        :expander "macroexpand"
