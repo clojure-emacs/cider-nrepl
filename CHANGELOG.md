@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Warmup Orchard (`info`, `complete`, `eldoc`) caches in advance.
+  * Restores the first-time performance that had been lost for a few releases.
+
 ## 0.41.0 (2023-10-24)
 
 ### New features

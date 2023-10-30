@@ -16,7 +16,20 @@
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
    [nrepl.middleware.session :refer [session]]
    [nrepl.misc :as misc :refer [with-session-classloader]]
-   [nrepl.server :as nrepl-server]))
+   [nrepl.server :as nrepl-server]
+   [orchard.java]))
+
+;; Perform the dynamic `require` asap, and also not within a separate thread:
+@@orchard.java/parser-next-available?
+
+;; Warm up this cache, drastically improving the completion and info UX performance for first hits.
+;; (This was our behavior for many years, then had to be disabled for test suite reasons in Orchard 0.15.0 to 0.17.0 / cider-nrepl 0.38.0 to 0.41.0, and now it's restored again)
+;; Note that this can only be done cider-nrepl side, unlike before when it was done in Orchard itself.
+(def initializer
+  (future
+    @orchard.java/cache-initializer
+    ;; Leave an indicator that can help up assess the size of a cache in a future:
+    (-> orchard.java/cache keys count)))
 
 ;;; Functionality for deferred middleware loading
 ;;
