@@ -81,13 +81,13 @@ PARSER_TARGET=parser-next make fast-test
 # Install the project in your local ~/.m2 directory, using mranderson (recommended)
 # The JVM flag is a temporary workaround.
 export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
-PROJECT_VERSION=0.41.0 make install
+PROJECT_VERSION=0.42.0 make install
 
 # Install the project in your local ~/.m2 directory, without using mranderson
 # (it's faster, but please only use when you repeatedly need to install cider-nrepl)
 # The JVM flag is a temporary workaround.
 export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
-PROJECT_VERSION=0.41.0 make fast-install
+PROJECT_VERSION=0.42.0 make fast-install
 
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
 # Please try to run this before pushing commits.
@@ -107,7 +107,7 @@ before cutting a new release.
 Release to [clojars](https://clojars.org/) by tagging a new release:
 
 ```
-git tag -a v0.41.0 -m "Release 0.41.0"
+git tag -a v0.42.0 -m "Release 0.42.0"
 git push --tags
 ```
 
