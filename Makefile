@@ -106,7 +106,7 @@ light-kondo: clean
 
 lint: kondo cljfmt eastwood
 
-# PROJECT_VERSION=0.42.0 make install
+# PROJECT_VERSION=0.42.1 make install
 install: dump-version check-install-env .inline-deps
 	rm -f .no-mranderson
 	touch .no-pedantic
@@ -115,7 +115,7 @@ install: dump-version check-install-env .inline-deps
 	make clean
 	git checkout resources/cider/nrepl/version.edn
 
-# PROJECT_VERSION=0.42.0 make fast-install
+# PROJECT_VERSION=0.42.1 make fast-install
 fast-install: dump-version check-install-env
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
 	make clean
