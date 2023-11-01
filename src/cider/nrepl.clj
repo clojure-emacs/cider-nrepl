@@ -11,6 +11,7 @@
    [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
+   [haystack.analyzer :as analyzer]
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
@@ -19,15 +20,28 @@
    [nrepl.server :as nrepl-server]
    [orchard.java]))
 
-;; Perform the dynamic `require` asap, and also not within a separate thread:
+;; Perform the underlying dynamic `require`s asap, and also not within a separate thread
+;; (note the `future` used in `#'initializer`),
+;; since `require` is not thread-safe:
 @@orchard.java/parser-next-available?
+@analyzer/spec-abbrev
 
 ;; Warm up this cache, drastically improving the completion and info UX performance for first hits.
-;; (This was our behavior for many years, then had to be disabled for test suite reasons in Orchard 0.15.0 to 0.17.0 / cider-nrepl 0.38.0 to 0.41.0, and now it's restored again)
+;; (This was our behavior for many years,
+;; then had to be disabled for test suite reasons in Orchard 0.15.0 to 0.17.0 / cider-nrepl 0.38.0 to 0.41.0, and now it's restored again)
 ;; Note that this can only be done cider-nrepl side, unlike before when it was done in Orchard itself.
 (def initializer
   (future
+    ;; 1.- Warmup the overall cache for core Java and Clojure stuff
     @orchard.java/cache-initializer
+    ;; 2.- Also cache members involved in a typical exception (which includes stuff from nrepl, clojure.repl, etc)
+    (try
+      @analyzer/ns-common-prefix
+      (/ 2 0) ;; throw an exception for its analysis
+      (catch Exception e
+        ;; This performs a many `orchard.info/info*` calls (one per stacktrace frame).
+        ;; Without analyzing one exception in advance, first-time usages of Haystack will be noticeably slow (#828) - prevent that:
+        (analyzer/analyze e)))
     ;; Leave an indicator that can help up assess the size of a cache in a future:
     (-> orchard.java/cache keys count)))
 

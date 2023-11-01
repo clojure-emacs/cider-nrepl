@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+### Changes
+
+* [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for exceptions in advance.
+  * This noticeably improves the first-time performance of exception-related ops, e.g. `analyze-last-stacktrace`.
+
 ## 0.42.1 (2023-10-31)
 
 * Bump `suitable` to [0.5.1](https://github.com/clojure-emacs/clj-suitable/blob/v0.5.1/CHANGELOG.md#051-2023-10-31).
