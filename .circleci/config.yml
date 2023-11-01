@@ -200,6 +200,39 @@ workflows:
               clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
+            # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
+            # (given that JDK8 is explicitly excluded by those parsers), so we exclude those combinations from the CI matrix:
+            exclude:
+              - jdk_version: openjdk8
+                parser_target: "parser-next"
+                clojure_version: "1.8"
+              - jdk_version: openjdk8
+                parser_target: "parser"
+                clojure_version: "1.8"
+              - jdk_version: openjdk8
+                parser_target: "parser-next"
+                clojure_version: "1.9"
+              - jdk_version: openjdk8
+                parser_target: "parser"
+                clojure_version: "1.9"
+              - jdk_version: openjdk8
+                parser_target: "parser-next"
+                clojure_version: "1.10"
+              - jdk_version: openjdk8
+                parser_target: "parser"
+                clojure_version: "1.10"
+              - jdk_version: openjdk8
+                parser_target: "parser-next"
+                clojure_version: "1.11"
+              - jdk_version: openjdk8
+                parser_target: "parser"
+                clojure_version: "1.11"
+              - jdk_version: openjdk8
+                parser_target: "parser-next"
+                clojure_version: "master"
+              - jdk_version: openjdk8
+                parser_target: "parser"
+                clojure_version: "master"
           filters:
             branches:
               only: /.*/
