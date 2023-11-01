@@ -10,8 +10,8 @@
 A collection of [nREPL](https://github.com/nrepl/nrepl)
 middleware, originally designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
-`cider-nrepl` is also used by `vim-fireplace`, `iced-vim`,
-Calva and other Clojure development tools based on nREPL.
+`cider-nrepl` is also used by [fireplace.vim](https://github.com/tpope/vim-fireplace), [vim-iced](https://github.com/liquidz/vim-iced),
+[Calva](https://calva.io/), [Conjure](https://github.com/Olical/conjure) and other Clojure development tools based on nREPL.
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
