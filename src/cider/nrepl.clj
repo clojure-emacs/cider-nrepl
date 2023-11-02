@@ -627,6 +627,11 @@ if applicable, and re-render the updated value."
     :handles {"analyze-last-stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
                                          :optional wrap-print-optional-arguments
                                          :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
+              "inspect-last-exception" {:doc "Returns an Inspector response for the last exception that has been processed through `analyze-last-stacktrace` for the current nrepl session.
+Assumes that `analyze-last-stacktrace` has been called first, returning \"no-error\" otherwise."
+                                        :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
+                                        :returns {"status" "\"done\", or \"no-error\" if `analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
+                                                  "value" "A value, as produced by the Inspector middleware."}}
               "analyze-stacktrace" {:doc "Parse and analyze the `:stacktrace`
 parameter and return messages describing each cause and stack frame. The
 stacktrace must be a string formatted in one of the following formats:

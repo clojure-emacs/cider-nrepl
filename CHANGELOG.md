@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* [cider#3565](https://github.com/clojure-emacs/cider/issues/3565): Add new [`inspect-last-exception`](https://docs.cider.mx/cider-nrepl/nrepl-api/ops.html#inspect-last-exception) op.
+
 ### Changes
 
 * [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for exceptions in advance.

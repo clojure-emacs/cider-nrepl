@@ -24,16 +24,21 @@
                  (pr-str rendered))]
      (response-for msg resp {:value value}))))
 
-(defn inspect-reply
-  [{:keys [page-size transport max-atom-length max-coll-size] :as msg} eval-response]
-  (let [value (cljs/response-value msg eval-response)
-        page-size (or page-size 32)
+(defn inspect-reply*
+  [{:keys [page-size max-atom-length max-coll-size] :as msg} value]
+  (let [page-size (or page-size 32)
         inspector (swap-inspector! msg #(-> %
                                             (assoc :page-size page-size
                                                    :max-atom-length max-atom-length
                                                    :max-coll-size max-coll-size)
                                             (inspect/start value)))]
-    (transport/send transport (inspector-response msg inspector {}))))
+    (inspector-response msg inspector {})))
+
+(defn inspect-reply
+  [msg eval-response]
+  (let [value (cljs/response-value msg eval-response)]
+    (transport/send (:transport msg)
+                    (inspect-reply* msg value))))
 
 (defn inspector-transport
   [{:keys [^Transport transport] :as msg}]
