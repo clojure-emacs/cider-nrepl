@@ -245,7 +245,6 @@ Depending on the type of the return value of the evaluation this middleware may 
    "ns"      "The current namespace"
    "context" "A Compliment completion context, just like the ones already passed for the \"complete\" op,
 with the difference that the symbol at point should be entirely replaced by \"__prefix__\".
-
 For Java interop queries, it helps inferring the precise type of the object the `:sym` or `:member` refers to,
 making the results more accurate (and less numerous)."
    "class"  "A Java class. If `:ns` is passed, it will be used for fully-qualifiying the class, if necessary."
