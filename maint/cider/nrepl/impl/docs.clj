@@ -157,4 +157,5 @@ use in e.g. wiki pages, github, etc."
             docs (format-response format resp)]
         (if (= *out* file) (println docs)
             (do (spit file docs)
-                (println (str "Regenerated " (.getAbsolutePath file)))))))))
+                (println (str "Regenerated " (.getAbsolutePath file)))))))
+    (shutdown-agents)))
