@@ -7,6 +7,7 @@
    [haystack.analyzer :as analyzer]
    [haystack.parser :as parser]
    [nrepl.middleware.print :as print]
+   [cider.nrepl.middleware.inspect :as middleware.inspect]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]))
 
@@ -28,10 +29,14 @@
 
 ;; Analyze the last stacktrace
 
+(def ^:dynamic *last-exception* nil)
+
 (defn- analyze-last-stacktrace
   "Analyze the last exception."
   [{:keys [session ::print/print-fn] :as msg}]
-  (send-analysis msg (analyzer/analyze (@session #'*e) print-fn)))
+  (let [last-exception (@session #'*e)]
+    (swap! session assoc #'*last-exception* last-exception) ;; note that *e can change later, so this entry isn't redundant
+    (send-analysis msg (analyzer/analyze last-exception print-fn))))
 
 (defn- handle-analyze-last-stacktrace-op
   "Handle the analyze last stacktrace op."
@@ -66,10 +71,27 @@
   (handle-analyze-last-stacktrace-op msg)
   (notify-client msg "The `stacktrace` op is deprecated, please use `analyze-last-stacktrace` instead." :warning))
 
+(defn handle-inspect-last-exception-op [{:keys [index transport] :as msg}]
+  (let [le (when index
+             (some-> msg :session deref (get #'*last-exception*)))
+        cause (when le
+                (loop [n 0
+                       cause le]
+                  (if (= n index)
+                    cause
+                    (when cause
+                      (recur (inc n)
+                             (ex-cause cause))))))]
+    (if cause
+      (t/send transport (middleware.inspect/inspect-reply* msg cause))
+      (no-error msg))
+    (done msg)))
+
 (defn handle-stacktrace
   "Handle stacktrace ops."
   [_ {:keys [op] :as msg}]
   (case op
     "analyze-last-stacktrace" (handle-analyze-last-stacktrace-op msg)
-    "analyze-stacktrace" (handle-analyze-stacktrace-op msg)
-    "stacktrace" (handle-stacktrace-op msg)))
+    "inspect-last-exception"  (handle-inspect-last-exception-op msg)
+    "analyze-stacktrace"      (handle-analyze-stacktrace-op msg)
+    "stacktrace"              (handle-stacktrace-op msg)))

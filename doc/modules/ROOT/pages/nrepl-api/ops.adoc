@@ -312,7 +312,6 @@ Optional parameters::
 * `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
 * `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
 with the difference that the symbol at point should be entirely replaced by "\__prefix__".
-
 For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
 making the results more accurate (and less numerous).
 * `:member` A Java class member.
@@ -447,7 +446,6 @@ Optional parameters::
 * `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
 * `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
 with the difference that the symbol at point should be entirely replaced by "\__prefix__".
-
 For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
 making the results more accurate (and less numerous).
 * `:member` A Java class member.
@@ -525,6 +523,24 @@ Optional parameters::
 
 Returns::
 * `:status` "done"
+
+
+
+=== `inspect-last-exception`
+
+Returns an Inspector response for the last exception that has been processed through ``analyze-last-stacktrace`` for the current nrepl session.
+Assumes that ``analyze-last-stacktrace`` has been called first, returning "no-error" otherwise.
+
+Required parameters::
+* `:index` 0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done", or "no-error" if ``analyze-last-stacktrace`` wasn't called beforehand (or the ``index`` was out of bounds).
+* `:value` A value, as produced by the Inspector middleware.
 
 
 
