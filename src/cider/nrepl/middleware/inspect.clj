@@ -6,6 +6,7 @@
    [nrepl.middleware.caught :as caught]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
+   [orchard.info :as info]
    [orchard.inspect :as inspect])
   (:import
    nrepl.transport.Transport))
@@ -27,11 +28,19 @@
 (defn inspect-reply*
   [{:keys [page-size max-atom-length max-coll-size] :as msg} value]
   (let [page-size (or page-size 32)
-        inspector (swap-inspector! msg #(-> %
-                                            (assoc :page-size page-size
-                                                   :max-atom-length max-atom-length
-                                                   :max-coll-size max-coll-size)
-                                            (inspect/start value)))]
+        {inspector-value :value
+         :as inspector} (swap-inspector! msg #(-> %
+                                                  (assoc :page-size page-size
+                                                         :max-atom-length max-atom-length
+                                                         :max-coll-size max-coll-size)
+                                                  (inspect/start value)))]
+    (when-let [^Class inspector-value-class (class inspector-value)]
+      (future
+        ;; Warmup the Orchard cache for the class of the currently inspected value.
+        ;; This way, if the user inspects this class next,
+        ;; the underlying inspect request will complete quickly.
+        (info/info 'user
+                   (-> inspector-value-class .getCanonicalName symbol))))
     (inspector-response msg inspector {})))
 
 (defn inspect-reply
