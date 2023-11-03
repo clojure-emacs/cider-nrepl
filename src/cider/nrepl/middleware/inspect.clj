@@ -1,15 +1,14 @@
 (ns cider.nrepl.middleware.inspect
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [base-error-response
-                                                       with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [base-error-response with-safe-transport]]
    [nrepl.middleware.caught :as caught]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect])
   (:import
-   nrepl.transport.Transport))
+   (nrepl.transport Transport)))
 
 (defn swap-inspector!
   [{:keys [session]} f & args]
@@ -20,10 +19,26 @@
 (defn- inspector-response
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
-  ([msg {:keys [rendered]} resp]
-   (let [value (binding [*print-length* nil]
-                 (pr-str rendered))]
-     (response-for msg resp {:value value}))))
+
+  ([msg {:keys [rendered value]} resp]
+   (let [class-sym (when (class? value)
+                     (-> ^Class value .getCanonicalName symbol))
+         method-sym (when (instance? java.lang.reflect.Method value)
+                      (symbol (str (-> ^java.lang.reflect.Method value .getDeclaringClass .getCanonicalName)
+                                   "/"
+                                   (-> ^java.lang.reflect.Method value .getName))))
+         field-sym (when (instance? java.lang.reflect.Field value)
+                     (symbol (str (-> ^java.lang.reflect.Field value .getDeclaringClass .getCanonicalName)
+                                  "/"
+                                  (-> ^java.lang.reflect.Field value .getName))))
+         fragments-sym (or method-sym field-sym class-sym)]
+     (response-for msg resp (merge (when fragments-sym
+                                     (select-keys (info/info 'user fragments-sym)
+                                                  [:doc-fragments
+                                                   :doc-first-sentence-fragments
+                                                   :doc-block-tags-fragments]))
+                                   {:value (binding [*print-length* nil]
+                                             (pr-str rendered))})))))
 
 (defn inspect-reply*
   [{:keys [page-size max-atom-length max-coll-size] :as msg} value]
