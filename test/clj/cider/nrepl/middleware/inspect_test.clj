@@ -4,7 +4,8 @@
    [cider.nrepl.test-session :as session]
    [clojure.edn :as edn]
    [clojure.string :as string]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [orchard.info :as info]))
 
 (def inspect-tap-current-value-test-atom (atom nil))
 
@@ -540,3 +541,28 @@
           (recur (inc i)))))
 
     (is (= 7 @inspect-tap-current-value-test-atom))))
+
+(deftest doc-fragments-test
+  (when (contains? (info/info 'user `Thread/sleep)
+                   :doc-fragments) ;; this test is only runnable with enrich-classpath active
+    (testing "Responses for classes, methods and fields contain `:doc-fragments` attributes"
+      (doseq [code ["java.lang.Thread"
+                    "(-> java.lang.Thread .getMethods first)"
+                    "(-> java.lang.Thread .getFields first)"]]
+        (let [response (session/message {:op      "eval"
+                                         :inspect "true"
+                                         :code    code})]
+          (is (contains? response :doc-fragments))
+          (is (contains? response :doc-first-sentence-fragments))
+          (is (contains? response :doc-block-tags-fragments))))))
+
+  (testing "Responses for other objects do not contain `:doc-fragments` attributes"
+    (doseq [code ["1"
+                  "{}"
+                  "true"]]
+      (let [response (session/message {:op      "eval"
+                                       :inspect "true"
+                                       :code    code})]
+        (is (not (contains? response :doc-fragments)))
+        (is (not (contains? response :doc-first-sentence-fragments)))
+        (is (not (contains? response :doc-block-tags-fragments)))))))

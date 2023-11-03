@@ -267,6 +267,10 @@ making the results more accurate (and less numerous)."
                           "ns" "The current namespace"}
                :returns {"status" "done"}}}}))
 
+(def inspector-returns (merge {"status" "\"done\""
+                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."}
+                              fragments-doc))
+
 (def-wrapper wrap-inspect cider.nrepl.middleware.inspect/handle-inspect
   #{"eval"}
   (cljs/expects-piggieback
@@ -279,67 +283,67 @@ making the results more accurate (and less numerous)."
     :handles {"inspect-pop"
               {:doc "Moves one level up in the inspector stack."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-push"
               {:doc "Inspects the inside value specified by index."
                :requires {"idx" "Index of the internal value currently rendered."
                           "session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-next-sibling"
               {:doc "Increment the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-previous-sibling"
               {:doc "Decrement the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-refresh"
               {:doc "Re-renders the currently inspected value."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-get-path"
               {:doc "Returns the path to the current position in the inspected value."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-next-page"
               {:doc "Jumps to the next page in paginated collection view."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-prev-page"
               {:doc "Jumps to the previous page in paginated collection view."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-set-page-size"
               {:doc "Sets the page size in paginated view to specified value."
                :requires {"page-size" "New page size."
                           "session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-set-max-atom-length"
               {:doc "Set the max length of nested atoms to specified value."
                :requires {"max-atom-length" "New max length."
                           "session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-set-max-coll-size"
               {:doc "Set the number of nested collection members to display before truncating."
                :requires {"max-coll-size" "New collection size."
                           "session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-clear"
               {:doc "Clears the state state of the inspector."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-def-current-value"
               {:doc "Define the currently inspected value as a var with the given var-name in the provided namespace."
                :requires {"session" "The current session"
                           "ns" "Namespace to define var on"
                           "var-name" "The var name"}
-               :returns {"status" "\"done\""}}
+               :returns inspector-returns}
               "inspect-tap-current-value"
               {:doc "Send the currently inspected value to the Clojure tap>."
                :requires {"session" "The current session"}
-               :returns {"status" "\"done\""}}}}))
+               :returns inspector-returns}}}))
 
 (def-wrapper wrap-log cider.nrepl.middleware.log/handle-log
   {:doc "Middleware that captures log events and makes them inspect-able."
