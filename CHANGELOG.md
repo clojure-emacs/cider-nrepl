@@ -11,6 +11,7 @@
 
 * [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for exceptions in advance.
   * This noticeably improves the first-time performance of exception-related ops, e.g. `analyze-last-stacktrace`.
+* Bump `orchard` to [0.19.0](https://github.com/clojure-emacs/orchard/blob/v0.19.0/CHANGELOG.md#0190-2023-11-04).
 
 ## 0.42.1 (2023-10-31)
 
