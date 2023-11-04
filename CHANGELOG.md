@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.43.0 (2023-11-04)
+
 ### New features
 
 * [cider#3565](https://github.com/clojure-emacs/cider/issues/3565): Add new [`inspect-last-exception`](https://docs.cider.mx/cider-nrepl/nrepl-api/ops.html#inspect-last-exception) op.
