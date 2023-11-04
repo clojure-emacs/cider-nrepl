@@ -6,7 +6,8 @@
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.info :as info]
-   [orchard.inspect :as inspect])
+   [orchard.inspect :as inspect]
+   [orchard.java])
   (:import
    (nrepl.transport Transport)))
 
@@ -50,12 +51,14 @@
                                                          :max-coll-size max-coll-size)
                                                   (inspect/start value)))]
     (when-let [^Class inspector-value-class (class inspector-value)]
-      (future
-        ;; Warmup the Orchard cache for the class of the currently inspected value.
-        ;; This way, if the user inspects this class next,
-        ;; the underlying inspect request will complete quickly.
-        (info/info 'user
-                   (-> inspector-value-class .getCanonicalName symbol))))
+      ;; Don't spawn a `future` for already-computed caches:
+      (when-not (get orchard.java/cache (-> inspector-value-class .getCanonicalName symbol))
+        (future
+          ;; Warmup the Orchard cache for the class of the currently inspected value.
+          ;; This way, if the user inspects this class next,
+          ;; the underlying inspect request will complete quickly.
+          (info/info 'user
+                     (-> inspector-value-class .getCanonicalName symbol)))))
     (inspector-response msg inspector {})))
 
 (defn inspect-reply
