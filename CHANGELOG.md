@@ -9,6 +9,8 @@
 
 ### Changes
 
+* [#830](https://github.com/clojure-emacs/cider-nrepl/issues/830): Warmup Orchard caches for Java imported classes in advance.
+  * Speculatively improves performance for the classes that users are more likely to use in a given project.
 * [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for exceptions in advance.
   * This noticeably improves the first-time performance of exception-related ops, e.g. `analyze-last-stacktrace`.
 * Bump `orchard` to [0.19.0](https://github.com/clojure-emacs/orchard/blob/v0.19.0/CHANGELOG.md#0190-2023-11-04).
