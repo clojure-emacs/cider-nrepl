@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `suitable` to [0.6.0](https://github.com/clojure-emacs/clj-suitable/blob/v0.6.0/CHANGELOG.md#060-2023-11-05).
+
 ## 0.43.0 (2023-11-04)
 
 ### New features
