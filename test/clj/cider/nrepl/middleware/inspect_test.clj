@@ -1,11 +1,15 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require
+   [matcher-combinators.matchers :as matchers]
    [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.test-session :as session]
    [clojure.edn :as edn]
    [clojure.string :as string]
    [clojure.test :refer :all]
    [orchard.info :as info]))
+
+;; for `match?`
+(require 'matcher-combinators.test)
 
 (def inspect-tap-current-value-test-atom (atom nil))
 
@@ -335,6 +339,31 @@
                     (session/message {:op  "inspect-push"
                                       :idx 2})
                     (session/message {:op "inspect-refresh"})))))))
+
+(defn inspector-response [x]
+  (-> x :value first read-string))
+
+(deftest refresh-atom-test
+  (testing "refreshing an inspected atom"
+    (session/message {:op      "eval"
+                      :inspect "true"
+                      :code    "(def X (atom 111))"})
+    (session/message {:op  "inspect-push"
+                      :idx 1})
+    (let [before "111"
+          after  "112"]
+      (is (match? (matchers/embeds ["Value" ": " (list :value before 2) '(:newline)])
+                  (-> {:op "inspect-refresh"}
+                      session/message
+                      inspector-response)))
+      (testing "After modifying an atom"
+        (session/message {:op      "eval"
+                          :code    "(swap! X inc)"})
+        (testing "Refreshing it shows its newest value"
+          (is (match? (matchers/embeds ["Value" ": " (list :value after 2) '(:newline)])
+                      (-> {:op "inspect-refresh"}
+                          session/message
+                          inspector-response))))))))
 
 (deftest session-binding-integration-test
   (testing "session bindings can be inspected"

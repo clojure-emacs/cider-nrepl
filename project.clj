@@ -123,7 +123,8 @@
                                    [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
                                                                          commons-codec
                                                                          com.google.code.findbugs/jsr305]]
-                                   [cider/piggieback "0.5.3"]]}
+                                   [cider/piggieback "0.5.3"]
+                                   [nubank/matcher-combinators "3.8.8"]]}
 
              ;; Running the tests with enrich-classpath doing its thing isn't compatible with `lein test`
              ;; (because there's no such thing as "run `lein test` using this specific classpath"),
