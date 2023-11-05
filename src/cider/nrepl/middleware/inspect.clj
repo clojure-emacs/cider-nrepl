@@ -115,7 +115,9 @@
   (inspector-response msg (swap-inspector! msg inspect/previous-sibling)))
 
 (defn refresh-reply [msg]
-  (inspector-response msg (swap-inspector! msg #(or % (inspect/fresh)))))
+  (inspector-response msg (swap-inspector! msg #(or (some-> %
+                                                            inspect/inspect-render)
+                                                    (inspect/fresh)))))
 
 (defn get-path-reply [{:keys [session]}]
   (get-in (meta session) [::inspector :path]))
