@@ -1,13 +1,15 @@
 (ns cider.nrepl.middleware.test-test
   (:require
    [cider.nrepl.middleware.test :as test]
-   ;; Ensure tested tests are loaded:
-   cider.nrepl.middleware.test-filter-tests
    [cider.nrepl.test-session :as session]
    [clojure.string :as string]
-   [clojure.test :refer :all])
+   [clojure.test :refer :all]
+   [matcher-combinators.clj-test])
   (:import
    (clojure.lang ExceptionInfo)))
+
+;; Ensure tested tests are loaded:
+(require 'cider.nrepl.middleware.test-filter-tests)
 
 (use-fixtures :each session/session-fixture)
 
@@ -261,7 +263,9 @@ The `988` value reflects that it times things correctly for a slow test.")
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"
     (is (= "{no quotes}\n"
-           (#'test/print-object (with-meta {"no" "quotes"} {:type :matcher-combinators.clj-test/mismatch})))
+           (#'test/print-object (matcher-combinators.clj-test/tagged-for-pretty-printing
+                                 '(not (match? 1 2))
+                                 {:matcher-combinators.result/value {"no" "quotes"}})))
         "println is chosen, as indicated by strings printed without quotes")
     (is (= "{:a\n (\"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\")}\n"
            (#'test/print-object {:a (repeat 3 "a-sufficiently-long-string")}))
