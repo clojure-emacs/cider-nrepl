@@ -90,8 +90,10 @@
                                        :matcher-combinators.clj-test/mismatch)
         print-fn (if matcher-combinators-result?
                    println
-                   pp/pprint)]
-    (with-out-str (print-fn object))))
+                   pp/pprint)
+        result (with-out-str (print-fn object))]
+    ;; Replace extra newlines at the end, as sometimes returned by matchers-combinators:
+    (str/replace result #"\n\n+$" "\n")))
 
 (def ^:dynamic *test-error-handler*
   "A function you can override via `binding`, or safely via `alter-var-root`.

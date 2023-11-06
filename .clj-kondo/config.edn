@@ -7,7 +7,9 @@
                                              (cider.nrepl.middleware.util.instrument/with-break)
                                              (cider.nrepl.middleware.util.instrument/instrument-special-form)
                                              (cider.nrepl.middleware.util.instrument/instrument-coll)
-                                             (cider.nrepl.print-method/def-print-method)]}
+                                             (cider.nrepl.print-method/def-print-method)
+                                             (cljs.test/is [match? thrown-match?])
+                                             (clojure.test/is [match? thrown-match?])]}
            :unused-import         {:level :off}
            :unresolved-var        {:level :off}
            :unused-binding        {:level :off}
