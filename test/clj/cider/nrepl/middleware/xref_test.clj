@@ -11,17 +11,20 @@
 (deftest fn-refs-integration-test
   (let [response (session/message {:op "fn-refs" :ns "clojure.core" :sym "map"})
         fn-refs (:fn-refs response)]
-    (is (= (:status response) #{"done"}))
-    (is (> (count fn-refs) 0))
-    (is (every? map? fn-refs)))
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (> (count fn-refs) 0))
+      (is (every? map? fn-refs))))
 
   (testing "`:file-url`"
-    (let [x (->> {:op "fn-refs"
-                  :ns "cider.nrepl.middleware.xref"
-                  :sym "fn-refs-reply"}
-                 session/message
+    (let [response (session/message {:op "fn-refs"
+                                     :ns "cider.nrepl.middleware.xref"
+                                     :sym "fn-refs-reply"})
+          x (->> response
                  :fn-refs
                  (map :file-url))]
+      (assert (= (:status response) #{"done"})
+              (pr-str response))
       (assert (seq x))
       (doseq [i x]
         (is (or (string/starts-with? i "file:")
