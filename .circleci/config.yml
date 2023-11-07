@@ -151,6 +151,9 @@ jobs:
       parser_target:
         description: The Orchard Java parser to be exercised
         type: string
+      test_command:
+        description: The command to run
+        type: string
     executor: << parameters.jdk_version >>
     environment:
       VERSION: << parameters.clojure_version >>
@@ -162,7 +165,7 @@ jobs:
           steps:
             - run:
                 name: Running tests with inlined deps
-                command: PARSER_TARGET=<< parameters.parser_target >> make --debug test smoketest
+                command: PARSER_TARGET=<< parameters.parser_target >> make --debug << parameters.test_command >>
             - run:
                 name: Install the Clojure CLI
                 command: |
@@ -190,49 +193,70 @@ jobs:
 #   - Clojure 1.8, 1.9, 1.10, master
 # - linter, eastwood and cljfmt
 
+matrix_excludes: &matrix_excludes
+  exclude:
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.8"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.8"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.9"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.9"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.10"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.10"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.11"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.11"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "master"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "master"
+
 workflows:
   version: 2.1
   ci-test-matrix:
     jobs:
       - test_code:
           matrix:
+            alias: "plaintest_code"
             parameters:
               clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
+              test_command: ["test"]
             # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
             # (given that JDK8 is explicitly excluded by those parsers), so we exclude those combinations from the CI matrix:
-            exclude:
-              - jdk_version: openjdk8
-                parser_target: "parser-next"
-                clojure_version: "1.8"
-              - jdk_version: openjdk8
-                parser_target: "parser"
-                clojure_version: "1.8"
-              - jdk_version: openjdk8
-                parser_target: "parser-next"
-                clojure_version: "1.9"
-              - jdk_version: openjdk8
-                parser_target: "parser"
-                clojure_version: "1.9"
-              - jdk_version: openjdk8
-                parser_target: "parser-next"
-                clojure_version: "1.10"
-              - jdk_version: openjdk8
-                parser_target: "parser"
-                clojure_version: "1.10"
-              - jdk_version: openjdk8
-                parser_target: "parser-next"
-                clojure_version: "1.11"
-              - jdk_version: openjdk8
-                parser_target: "parser"
-                clojure_version: "1.11"
-              - jdk_version: openjdk8
-                parser_target: "parser-next"
-                clojure_version: "master"
-              - jdk_version: openjdk8
-                parser_target: "parser"
-                clojure_version: "master"
+            <<: *matrix_excludes
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+      - test_code:
+          matrix:
+            alias: "smoketest_code"
+            parameters:
+              clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
+              jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
+              parser_target: ["parser-next", "parser", "legacy-parser"]
+              test_command: ["smoketest"]
+            # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
+            # (given that JDK8 is explicitly excluded by those parsers), so we exclude those combinations from the CI matrix:
+            <<: *matrix_excludes
           filters:
             branches:
               only: /.*/
@@ -261,7 +285,8 @@ workflows:
                   make eastwood
       - deploy:
           requires:
-            - test_code
+            - "plaintest_code"
+            - "smoketest_code"
             - "Code Linting"
           filters:
             branches:
