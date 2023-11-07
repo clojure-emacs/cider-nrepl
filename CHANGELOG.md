@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.43.1 (2023-11-07)
+
 ### Changes
 
 * [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for compile-time exceptions in advance.
