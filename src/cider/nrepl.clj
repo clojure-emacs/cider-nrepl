@@ -36,16 +36,25 @@
   []
   ;; 1.- Warmup the overall cache for core Java and Clojure stuff
   @orchard.java/cache-initializer
-  ;; 2.- Also cache members involved in a typical exception (which includes stuff from nrepl, clojure.repl, etc)
+  ;; 2.- Also cache members involved in a typical runtime exception (which includes stuff from nrepl, clojure.repl, etc)
   @analyzer/ns-common-prefix
   (try
     (/ 2 0) ;; throw an exception for its analysis
     (catch Exception e
-      ;; This performs a many `orchard.info/info*` calls (one per stacktrace frame).
+      ;; This performs many `orchard.info/info*` calls (one per stacktrace frame).
       ;; Without analyzing one exception in advance, first-time usages of Haystack will be noticeably slow (#828) - prevent that:
       (analyzer/analyze e)))
-  ;; 3.- Also cache classes that are `:import`ed throughout the project.
-  ;;     The class list is obtanied through `ns` form analysis,
+
+  ;; 3.- Also cache members involved in a typical compile-time exceptions
+  (doseq [sexpr ["(let 1)" ":::invalid-keyword"]]
+    (try
+      (eval (read-string sexpr));; throw an exception for its analysis
+      (catch Exception e
+        ;; This performs many `orchard.info/info*` calls (one per stacktrace frame).
+        ;; Without analyzing one exception in advance, first-time usages of Haystack will be noticeably slow (#828) - prevent that:
+        (analyzer/analyze e))))
+  ;; 4.- Also cache classes that are `:import`ed throughout the project.
+  ;;     The class list is obtained through `ns` form analysis,
   ;;      so that we don't depend on whether the namespaces have been loaded yet:
   (doseq [ns-form (vals (orchard.namespace/project-ns-forms))
           class-sym (orchard.namespace/ns-form-imports ns-form)
@@ -55,7 +64,7 @@
                                  (.getContextClassLoader (Thread/currentThread)))
                   (catch Throwable _))]
     (orchard.info/info 'user class-sym))
-  ;; 4.- Leave an indicator that can help up assess the size of a cache in a future:
+  ;; 5.- Leave an indicator that can help up assess the cache size in a future:
   (-> orchard.java/cache .keySet .size))
 
 (def initializer

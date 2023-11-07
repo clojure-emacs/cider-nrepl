@@ -4,6 +4,8 @@
 
 ### Changes
 
+* [#828](https://github.com/clojure-emacs/cider-nrepl/issues/828): Warmup Orchard caches for compile-time exceptions in advance.
+  * This is similar to a change introduced in 0.43.0, but for compile-time exceptions this time.
 * Bump `suitable` to [0.6.0](https://github.com/clojure-emacs/clj-suitable/blob/v0.6.0/CHANGELOG.md#060-2023-11-05).
 
 ## Bugs fixed
