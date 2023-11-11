@@ -198,33 +198,83 @@ matrix_excludes: &matrix_excludes
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "1.8"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser"
       clojure_version: "1.8"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "1.9"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser"
       clojure_version: "1.9"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "1.10"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser"
       clojure_version: "1.10"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "1.11"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser"
       clojure_version: "1.11"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "master"
+      test_command: "test"
     - jdk_version: openjdk8
       parser_target: "parser"
       clojure_version: "master"
+      test_command: "test"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.8"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.8"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.9"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.9"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.10"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.10"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "1.11"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "1.11"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser-next"
+      clojure_version: "master"
+      test_command: "smoketest"
+    - jdk_version: openjdk8
+      parser_target: "parser"
+      clojure_version: "master"
+      test_command: "smoketest"
 
 workflows:
   version: 2.1
