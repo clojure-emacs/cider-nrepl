@@ -58,7 +58,11 @@
           ;; This way, if the user inspects this class next,
           ;; the underlying inspect request will complete quickly.
           (info/info 'user
-                     (-> inspector-value-class .getCanonicalName symbol)))))
+                     (-> inspector-value-class .getCanonicalName symbol))
+          ;; Same for its implemented interfaces:
+          (doseq [interface (.getInterfaces inspector-value-class)]
+            (info/info 'user
+                       (-> interface .getCanonicalName symbol))))))
     (inspector-response msg inspector {})))
 
 (defn inspect-reply

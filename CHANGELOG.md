@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+## Changes
+
+* `middleware.inspect:` warm up Orchard info for a value's class implemented interfaces in advance.
+  * Can speed up navigation.
+
 ## 0.43.3 (2023-11-11)
 
 ### Changes
