@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## New features
+
+* Add `inspect-tap-indexed` op.
+
 ## Changes
 
 * `middleware.inspect:` warm up Orchard info for a value's class implemented interfaces in advance.

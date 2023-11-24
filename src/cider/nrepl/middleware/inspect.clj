@@ -60,7 +60,7 @@
           (info/info 'user
                      (-> inspector-value-class .getCanonicalName symbol))
           ;; Same for its implemented interfaces:
-          (doseq [interface (.getInterfaces inspector-value-class)]
+          (doseq [^Class interface (.getInterfaces inspector-value-class)]
             (info/info 'user
                        (-> interface .getCanonicalName symbol))))))
     (inspector-response msg inspector {})))
@@ -152,6 +152,9 @@
 (defn tap-current-value [msg]
   (inspector-response msg (swap-inspector! msg inspect/tap-current-value)))
 
+(defn tap-indexed [msg]
+  (inspector-response msg (swap-inspector! msg inspect/tap-indexed (:idx msg))))
+
 (defn handle-inspect [handler msg]
   (if (= (:op msg) "eval")
     (eval-reply handler msg)
@@ -170,4 +173,5 @@
       "inspect-set-max-coll-size" set-max-coll-size-reply
       "inspect-clear" clear-reply
       "inspect-def-current-value" def-current-value
-      "inspect-tap-current-value" tap-current-value)))
+      "inspect-tap-current-value" tap-current-value
+      "inspect-tap-indexed" tap-indexed)))

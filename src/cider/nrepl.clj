@@ -352,6 +352,11 @@ if applicable, and re-render the updated value."
               "inspect-tap-current-value"
               {:doc "Send the currently inspected value to the Clojure tap>."
                :requires {"session" "The current session"}
+               :returns inspector-returns}
+              "inspect-tap-indexed"
+              {:doc "Send the currently inspected sub-value at `idx` to the Clojure tap>."
+               :requires {"session" "The current session"
+                          "idx" "Index of the internal value to be tapped"}
                :returns inspector-returns}}}))
 
 (def-wrapper wrap-log cider.nrepl.middleware.log/handle-log
