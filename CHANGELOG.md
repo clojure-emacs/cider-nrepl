@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.44.0 (2023-11-24)
+
 ## New features
 
 * Add `inspect-tap-indexed` op.
