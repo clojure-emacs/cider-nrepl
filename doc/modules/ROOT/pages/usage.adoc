@@ -95,7 +95,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ----
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.44.0"} }}' -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.44.0"} }}' -M -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
 ----
 
 There are also two convenient aliases you can employ:
@@ -119,7 +119,7 @@ There are also two convenient aliases you can employ:
 Which then allow you to simply run:
 
 ----
-clj -A:cider-clj
+clj -M:cider-clj
 ----
 
 == Via embedding nREPL in your application
