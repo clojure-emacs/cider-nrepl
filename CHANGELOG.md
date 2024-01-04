@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## Changes
+
+* Bump `logjam` to [0.2.0](https://github.com/clojure-emacs/logjam/blob/v0.2.0/CHANGELOG.md#020-2024-01-04).
+
 ## 0.44.0 (2023-11-24)
 
 ## New features
