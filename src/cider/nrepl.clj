@@ -10,7 +10,6 @@
    [cider.nrepl.version :as version]
    [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
    [haystack.analyzer :as analyzer]
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
@@ -546,6 +545,10 @@ if applicable, and re-render the updated value."
               {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
               "out-unsubscribe"
               {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
+
+(def-wrapper wrap-print-method cider.nrepl.middleware.print-method/handle-print-method
+  {:doc     "Enables `cider.nrepl.print-method/*pretty-objects*`"
+   :expects #{"eval"}})
 
 (def-wrapper wrap-profile cider.nrepl.middleware.profile/handle-profile
   {:doc     "Middleware that provides supports Profiling based on https://github.com/thunknyc/profile"

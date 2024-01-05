@@ -5,6 +5,10 @@
   (:import
    java.util.regex.Pattern))
 
+(use-fixtures :each (fn [t]
+                      (binding [*pretty-objects* true]
+                        (t))))
+
 (defn dummy-fn [o])
 
 (deftest print-atoms-test

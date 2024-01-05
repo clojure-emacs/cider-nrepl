@@ -21,6 +21,7 @@
     cider.nrepl/wrap-ns
     cider.nrepl/wrap-out
     cider.nrepl/wrap-slurp
+    cider.nrepl/wrap-print-method
     cider.nrepl/wrap-profile
     cider.nrepl/wrap-refresh
     cider.nrepl/wrap-resource

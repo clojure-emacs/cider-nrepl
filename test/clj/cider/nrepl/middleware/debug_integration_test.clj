@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl :refer [wrap-debug]]
    [cider.nrepl.middleware.debug :as d]
+   [cider.nrepl.print-method :refer [*pretty-objects*]]
    [clojure.test :refer :all]
    [nrepl.core :as nrepl]
    [nrepl.server :as nrepl.server]
@@ -55,7 +56,8 @@
     ;; Create a session by sending the "clone" op
     (transport/send transport {:op "clone" :id (next-id)})
     (binding [*transport*  transport
-              *session-id* (:new-session (transport/recv transport 1000))]
+              *session-id* (:new-session (transport/recv transport 1000))
+              *pretty-objects* true]
       (f))))
 
 (defmacro with-nrepl-session [& body]

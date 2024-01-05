@@ -10,15 +10,17 @@
    [java.io Writer]))
 
 (def ^:dynamic *pretty-objects*
-  "If true, cider prettifies some object descriptions.
+  "If true, cider-nrepl prettifies some object descriptions.
   For instance, instead of printing functions as
       #object[clojure.core$_PLUS_ 0x4e648e99 \"clojure.core$_PLUS_@4e648e99\"]
   they are printed as
       #function[clojure.core/+]
 
-  To disable this feature, do
-      (alter-var-root #'cider.nrepl.print-method/*pretty-objects* not)"
-  true)
+  This feature is disabled globally by default
+  while enabled dynamically in the context of REPL evaluations.
+
+  To always disable this feature, remove `cider.nrepl/wrap-print-method` from the nREPL middleware stack."
+  false)
 
 (defmacro def-print-method [dispatch-val arg & strings]
   `(defmethod print-method ~dispatch-val [~arg ~'^Writer w]
