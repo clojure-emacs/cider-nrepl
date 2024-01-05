@@ -16,13 +16,18 @@
 (defn set-inspect-tap-current-value-test-atom-fn [x]
   (reset! inspect-tap-current-value-test-atom x))
 
+(def tap?
+  (resolve 'add-tap))
+
 (defn inspect-tap-current-value-test-fixture [f]
-  (add-tap set-inspect-tap-current-value-test-atom-fn)
+  (when tap?
+    ((resolve 'add-tap) set-inspect-tap-current-value-test-atom-fn))
   (try
     (f)
     (finally
       (reset! inspect-tap-current-value-test-atom nil)
-      (remove-tap set-inspect-tap-current-value-test-atom-fn))))
+      (when tap?
+        ((resolve 'remove-tap) set-inspect-tap-current-value-test-atom-fn)))))
 
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
 
@@ -549,27 +554,28 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-(deftest inspect-tap-current-value-test
-  (testing "inspect-tap-current-value taps the current inspector value"
-    (session/message {:op   "eval"
-                      :code "(def x (+ 3 4)))"})
-    (session/message {:op "eval"
-                      :inspect "true"
-                      :code    "x"})
-    (session/message {:op  "inspect-push"
-                      :idx 1})
-    (session/message {:op  "inspect-tap-current-value"})
+(when tap?
+  (deftest inspect-tap-current-value-test
+    (testing "inspect-tap-current-value taps the current inspector value"
+      (session/message {:op   "eval"
+                        :code "(def x (+ 3 4)))"})
+      (session/message {:op "eval"
+                        :inspect "true"
+                        :code    "x"})
+      (session/message {:op  "inspect-push"
+                        :idx 1})
+      (session/message {:op  "inspect-tap-current-value"})
 
-    (let [max-time 10000
-          ms 50
-          iterations (long (/ max-time ms))]
-      (loop [i 0]
-        (when (and (not= 7 @inspect-tap-current-value-test-atom)
-                   (< i iterations))
-          (Thread/sleep ms)
-          (recur (inc i)))))
+      (let [max-time 10000
+            ms 50
+            iterations (long (/ max-time ms))]
+        (loop [i 0]
+          (when (and (not= 7 @inspect-tap-current-value-test-atom)
+                     (< i iterations))
+            (Thread/sleep ms)
+            (recur (inc i)))))
 
-    (is (= 7 @inspect-tap-current-value-test-atom))))
+      (is (= 7 @inspect-tap-current-value-test-atom)))))
 
 (deftest doc-fragments-test
   (when (contains? (info/info 'user `Thread/sleep)

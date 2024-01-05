@@ -2,9 +2,7 @@
   :dependencies [[nrepl "1.0.0"]
                  [cider/cider-nrepl "RELEASE"]]
   :exclusions [org.clojure/clojure]
-  :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
-             :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
+  :profiles {:1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.1"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.1"]]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]

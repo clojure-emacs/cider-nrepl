@@ -85,15 +85,10 @@
                                        [com.google.errorprone/error_prone_annotations "2.11.0"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
-
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]
-                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]
-                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]}
-             :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]
-                                  [javax.xml.bind/jaxb-api "2.3.1" :scope "provided"]]
-                   ;; TODO: Merge the tests in this dir in to test/clj once we
-                   ;; drop support for Clojure 1.8
+             :1.9 {:dependencies [[commons-logging/commons-logging "1.3.0"]
+                                  [org.clojure/clojure "1.9.0"]
+                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]]
+                   ;; TODO: Merge the tests in this dir in to test/clj
                    :test-paths ["test/spec"]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
