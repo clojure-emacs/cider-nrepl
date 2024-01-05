@@ -122,7 +122,7 @@ jobs:
         type: steps
     executor: openjdk11
     environment:
-      VERSION: "1.10"
+      CLOJURE_VERSION: "1.10"
     steps:
       - checkout
       - with_cache:
@@ -156,7 +156,7 @@ jobs:
         type: string
     executor: << parameters.jdk_version >>
     environment:
-      VERSION: << parameters.clojure_version >>
+      CLOJURE_VERSION: << parameters.clojure_version >>
       PROJECT_VERSION: 999.99.9
     steps:
       - checkout
@@ -190,21 +190,13 @@ jobs:
 #
 # - run tests against the target matrix
 #   - Java 8/11/16/...
-#   - Clojure 1.8, 1.9, 1.10, master
+#   - Clojure 1.9, 1.10, 1.11, master
 # - linter, eastwood and cljfmt
 
 matrix_excludes: &matrix_excludes
   exclude:
     - jdk_version: openjdk8
       parser_target: "parser-next"
-      clojure_version: "1.8"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.8"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
       clojure_version: "1.9"
       test_command: "test"
     - jdk_version: openjdk8
@@ -235,14 +227,6 @@ matrix_excludes: &matrix_excludes
       parser_target: "parser"
       clojure_version: "master"
       test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.8"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.8"
-      test_command: "smoketest"
     - jdk_version: openjdk8
       parser_target: "parser-next"
       clojure_version: "1.9"
@@ -284,7 +268,7 @@ workflows:
           matrix:
             alias: "plaintest_code"
             parameters:
-              clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
+              clojure_version: ["1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
               test_command: ["test"]
@@ -300,7 +284,7 @@ workflows:
           matrix:
             alias: "smoketest_code"
             parameters:
-              clojure_version: ["1.8", "1.9", "1.10", "1.11", "master"]
+              clojure_version: ["1.9", "1.10", "1.11", "master"]
               jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
               test_command: ["smoketest"]

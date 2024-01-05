@@ -7,7 +7,7 @@
    [leiningen.core.main :as lein]))
 
 (def minimum-versions {:lein    "2.8.3"
-                       :clojure "1.8.0"})
+                       :clojure "1.9.0"})
 
 (defn valid-version? [kind version] (lein/version-satisfies? version (minimum-versions kind)))
 (def valid-lein-version? (partial valid-version? :lein))
@@ -46,9 +46,9 @@
     (when-not lein-version-ok?
       (lein/warn "Warning: cider-nrepl requires Leiningen 2.8.3 or greater."))
     (when-not clojure-version-ok?
-      (lein/warn "Warning: cider-nrepl requires Clojure 1.8 or greater."))
+      (lein/warn "Warning: cider-nrepl requires Clojure 1.9 or greater."))
     (when clojure-excluded?
-      (lein/warn "Warning: Clojure is excluded, assuming an appropriate fork (Clojure 1.8 or later) is provided."))
+      (lein/warn "Warning: Clojure is excluded, assuming an appropriate fork (Clojure 1.9 or later) is provided."))
     (when-not (and lein-version-ok? clojure-version-ok?)
       (lein/warn "Warning: cider-nrepl will not be included in your project."))
 

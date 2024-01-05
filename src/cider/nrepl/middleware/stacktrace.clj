@@ -81,7 +81,7 @@
                     cause
                     (when cause
                       (recur (inc n)
-                             (ex-cause cause))))))]
+                             (some-> ^Throwable cause .getCause))))))]
     (if cause
       (t/send transport (middleware.inspect/inspect-reply* msg cause))
       (no-error msg))

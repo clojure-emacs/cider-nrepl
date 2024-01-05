@@ -9,7 +9,7 @@ by Oracle.
 
 == Clojure
 
-`cider-nrepl` targets Clojure 1.8+. As Clojure doesn't have the concept of supported releases
+`cider-nrepl` targets Clojure 1.9+. As Clojure doesn't have the concept of supported releases
 we have to get a bit creative to determine the minimum version to target.
 
 The minimum required Clojure version is currently derived using data
@@ -79,6 +79,11 @@ requirements were bumped to nREPL 0.6 in recent versions.
 | 8
 | 1.8
 | 0.6
+
+| 0.45.0
+| 8
+| 1.9
+| 1.0.0
 
 |===
 
