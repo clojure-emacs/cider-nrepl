@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* Bump `compliment` to [0.5.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#051-2023-11-30).
+
 ## Changes
 
 * Bump `logjam` to [0.2.0](https://github.com/clojure-emacs/logjam/blob/v0.2.0/CHANGELOG.md#020-2024-01-04).
