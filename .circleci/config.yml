@@ -199,7 +199,7 @@ workflows:
     jobs:
       - test_code:
           matrix:
-            alias: "plaintest_code_jdk8"
+            alias: "test_code_jdk8"
             parameters:
               # Clojure 1.9 is tested only against JDK8.
               clojure_version: ["1.9", "1.10", "1.11", "master"]
@@ -207,7 +207,7 @@ workflows:
               # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
               # (given that JDK8 is explicitly excluded by those parsers)
               parser_target: ["legacy-parser"]
-              test_command: ["test"]
+              test_command: ["test", "smoketest"]
           filters:
             branches:
               only: /.*/
@@ -215,41 +215,12 @@ workflows:
               only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
       - test_code:
           matrix:
-            alias: "plaintest_code"
+            alias: "test_code"
             parameters:
               clojure_version: ["1.10", "1.11", "master"]
               jdk_version: [openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
-              test_command: ["test"]
-          filters:
-            branches:
-              only: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
-      - test_code:
-          matrix:
-            alias: "smoketest_code_jdk8"
-            parameters:
-              # Clojure 1.9 is tested only against JDK8.
-              clojure_version: ["1.9", "1.10", "1.11", "master"]
-              jdk_version: [openjdk8]
-              # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
-              # (given that JDK8 is explicitly excluded by those parsers)
-              parser_target: ["legacy-parser"]
-              test_command: ["smoketest"]
-          filters:
-            branches:
-              only: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
-      - test_code:
-          matrix:
-            alias: "smoketest_code"
-            parameters:
-              clojure_version: ["1.10", "1.11", "master"]
-              jdk_version: [openjdk11, openjdk16, openjdk17]
-              parser_target: ["parser-next", "parser", "legacy-parser"]
-              test_command: ["smoketest"]
+              test_command: ["test", "smoketest"]
           filters:
             branches:
               only: /.*/
@@ -278,10 +249,8 @@ workflows:
                   make eastwood
       - deploy:
           requires:
-            - "plaintest_code"
-            - "smoketest_code"
-            - "plaintest_code_jdk8"
-            - "smoketest_code_jdk8"
+            - "test_code"
+            - "test_code_jdk8"
             - "Code Linting"
           filters:
             branches:
