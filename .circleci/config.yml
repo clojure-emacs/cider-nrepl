@@ -193,88 +193,21 @@ jobs:
 #   - Clojure 1.9, 1.10, 1.11, master
 # - linter, eastwood and cljfmt
 
-matrix_excludes: &matrix_excludes
-  exclude:
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.9"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.9"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.10"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.10"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.11"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.11"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "master"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "master"
-      test_command: "test"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.9"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.9"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.10"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.10"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "1.11"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "1.11"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser-next"
-      clojure_version: "master"
-      test_command: "smoketest"
-    - jdk_version: openjdk8
-      parser_target: "parser"
-      clojure_version: "master"
-      test_command: "smoketest"
-
 workflows:
   version: 2.1
   ci-test-matrix:
     jobs:
       - test_code:
           matrix:
-            alias: "plaintest_code"
+            alias: "test_code_jdk8"
             parameters:
+              # Clojure 1.9 is tested only against JDK8.
               clojure_version: ["1.9", "1.10", "1.11", "master"]
-              jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
-              parser_target: ["parser-next", "parser", "legacy-parser"]
-              test_command: ["test"]
-            # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
-            # (given that JDK8 is explicitly excluded by those parsers), so we exclude those combinations from the CI matrix:
-            <<: *matrix_excludes
+              jdk_version: [openjdk8]
+              # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
+              # (given that JDK8 is explicitly excluded by those parsers)
+              parser_target: ["legacy-parser"]
+              test_command: ["test", "smoketest"]
           filters:
             branches:
               only: /.*/
@@ -282,15 +215,12 @@ workflows:
               only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
       - test_code:
           matrix:
-            alias: "smoketest_code"
+            alias: "test_code"
             parameters:
-              clojure_version: ["1.9", "1.10", "1.11", "master"]
-              jdk_version: [openjdk8, openjdk11, openjdk16, openjdk17]
+              clojure_version: ["1.10", "1.11", "master"]
+              jdk_version: [openjdk11, openjdk16, openjdk17]
               parser_target: ["parser-next", "parser", "legacy-parser"]
-              test_command: ["smoketest"]
-            # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
-            # (given that JDK8 is explicitly excluded by those parsers), so we exclude those combinations from the CI matrix:
-            <<: *matrix_excludes
+              test_command: ["test", "smoketest"]
           filters:
             branches:
               only: /.*/
@@ -319,8 +249,8 @@ workflows:
                   make eastwood
       - deploy:
           requires:
-            - "plaintest_code"
-            - "smoketest_code"
+            - "test_code"
+            - "test_code_jdk8"
             - "Code Linting"
           filters:
             branches:
