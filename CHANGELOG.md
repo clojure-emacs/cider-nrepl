@@ -7,6 +7,8 @@
 * Bump `orchard` to [0.22.0](https://github.com/clojure-emacs/orchard/blob/v0.22.0/CHANGELOG.md#0220-2024-01-14).
 * Bump `logjam` to [0.2.0](https://github.com/clojure-emacs/logjam/blob/v0.2.0/CHANGELOG.md#020-2024-01-04).
 * [#842](https://github.com/clojure-emacs/cider-nrepl/issues/842): Initial cache warmup: ensure that no classes' static initializers are run.
+* Forcibly exit the JVM on older (unsupported) Clojure versions.
+  * This can help users and maintainers alike diagnose issues more quickly, avoiding problematic code paths in our middleware, and clients like cider.el.
 
 ## 0.44.0 (2023-11-24)
 

@@ -22,6 +22,25 @@
    [orchard.namespace]
    [orchard.java]))
 
+(def min-clojure-verion
+  "Having an enforced minimmum version can help users and maintainers alike diagnose issues more quickly,
+  avoiding problematic code paths in our middleware, and clients like cider.el."
+  {:major 1
+   :minor 9})
+
+(when (or (< (-> *clojure-version* :major long)
+             (-> min-clojure-verion :major long))
+
+          (and (= (-> *clojure-version* :major long)
+                  (-> min-clojure-verion :major long))
+               (< (-> *clojure-version* :minor long)
+                  (-> min-clojure-verion :minor long))))
+  (try
+    (.println System/err (format "cider-nrepl cannot be run with older Clojure versions (found: %s). Exiting."
+                                 *clojure-version*))
+    (finally
+      (System/exit 1))))
+
 ;; Perform the underlying dynamic `require`s asap, and also not within a separate thread
 ;; (note the `future` used in `#'initializer`),
 ;; since `require` is not thread-safe:
@@ -43,7 +62,7 @@
           class-sym (orchard.namespace/ns-form-imports ns-form)
           :when (try
                   (Class/forName (str class-sym)
-                                 false ;; Don't initialize this class, avoiding side-effects (includic static class initializers; with the exception of static fields with an initial value)
+                                 false ;; Don't initialize this class, avoiding side-effects (including static class initializers; with the exception of static fields with an initial value)
                                  (.getContextClassLoader (Thread/currentThread)))
                   (catch Throwable _))]
     (orchard.java/class-info class-sym))
