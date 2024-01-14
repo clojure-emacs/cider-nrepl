@@ -43,10 +43,10 @@
           class-sym (orchard.namespace/ns-form-imports ns-form)
           :when (try
                   (Class/forName (str class-sym)
-                                 false ;; Don't initialize this class, avoiding side-effects
+                                 false ;; Don't initialize this class, avoiding side-effects (includic static class initializers; with the exception of static fields with an initial value)
                                  (.getContextClassLoader (Thread/currentThread)))
                   (catch Throwable _))]
-    (orchard.info/info 'user class-sym))
+    (orchard.java/class-info class-sym))
   ;; 3.- Leave an indicator that can help up assess the cache size in a future:
   (-> orchard.java/cache .keySet .size))
 
