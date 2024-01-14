@@ -22,6 +22,11 @@
    [orchard.namespace]
    [orchard.java]))
 
+(when (and (< (-> *clojure-version* :major long) 2)
+           (< (-> *clojure-version* :minor long) 9))
+  (.println System/err "cider-nrepl cannot be run with older Clojure versions. Exiting.")
+  (System/exit 1))
+
 ;; Perform the underlying dynamic `require`s asap, and also not within a separate thread
 ;; (note the `future` used in `#'initializer`),
 ;; since `require` is not thread-safe:
@@ -43,7 +48,7 @@
           class-sym (orchard.namespace/ns-form-imports ns-form)
           :when (try
                   (Class/forName (str class-sym)
-                                 false ;; Don't initialize this class, avoiding side-effects (includic static class initializers; with the exception of static fields with an initial value)
+                                 false ;; Don't initialize this class, avoiding side-effects (including static class initializers; with the exception of static fields with an initial value)
                                  (.getContextClassLoader (Thread/currentThread)))
                   (catch Throwable _))]
     (orchard.java/class-info class-sym))
