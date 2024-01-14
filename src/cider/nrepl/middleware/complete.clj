@@ -24,15 +24,16 @@
 
 (def clj-sources
   "A list of Clojure completion sources for compliment."
-  [:compliment.sources.special-forms/literals
+  [:compliment.sources.vars/vars
+   :compliment.sources.namespaces/namespaces
+   :compliment.sources.classes/classes
+   :compliment.sources.class-members/members
    :compliment.sources.class-members/static-members
-   :compliment.sources.ns-mappings/ns-mappings
-   :compliment.sources.resources/resources
    :compliment.sources.keywords/keywords
    :compliment.sources.local-bindings/local-bindings
-   :compliment.sources.class-members/members
-   :compliment.sources.namespaces-and-classes/namespaces-and-classes
-   :compliment.sources.special-forms/special-forms])
+   :compliment.sources.resources/resources
+   :compliment.sources.special-forms/special-forms
+   :compliment.sources.special-forms/literals])
 
 (def cljs-sources
   "A list of ClojureScript completion sources for compliment."

@@ -28,32 +28,32 @@ executors:
   # Parallelism is disabled, at least for now (https://github.com/benedekfazekas/mranderson/issues/56)
   openjdk8_deploy:
     docker:
-      - image: circleci/clojure:openjdk-8-lein-2.9.1-node
+      - image: clojure:temurin-8-lein-2.10.0-jammy
     <<: *defaults
     environment:
       LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
       <<: *env_defaults
   openjdk8:
     docker:
-      - image: circleci/clojure:openjdk-8-lein-2.9.1-node
+      - image: clojure:temurin-8-lein-2.10.0-jammy
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk11:
     docker:
-      - image: circleci/clojure:openjdk-11-lein-2.9.1-node
-    <<: *defaults
-    environment:
-      <<: *env_defaults
-  openjdk16:
-    docker:
-      - image: circleci/clojure:openjdk-16-lein-2.9.5-buster-node
+      - image: clojure:temurin-11-lein-2.10.0-jammy
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk17:
     docker:
-      - image: circleci/clojure:openjdk-17-lein-2.9.5-buster-node
+      - image: clojure:temurin-17-lein-2.10.0-jammy
+    <<: *defaults
+    environment:
+      <<: *env_defaults
+  openjdk21:
+    docker:
+      - image: clojure:temurin-21-lein-2.10.0-jammy
     <<: *defaults
     environment:
       <<: *env_defaults
@@ -87,16 +87,16 @@ commands:
         default: "1"
     steps:
       - run:
-          name: Install make
+          name: Install make, git, and node
           command: |
-            sudo apt-get install make
+            apt-get update && apt-get install -y make git nodejs wget
       - run:
           name: Generate Cache Checksum
           command: |
             for file in << parameters.files >>
             do
               find . -name $file -exec cat {} +
-            done | shasum | awk '{print $1}' > /tmp/clojure_cache_seed
+            done | sha256sum | awk '{print $1}' > /tmp/clojure_cache_seed
       - restore_cache:
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
       - steps: << parameters.steps >>
@@ -174,7 +174,7 @@ jobs:
                   wget -nc https://download.clojure.org/install/linux-install-1.10.3.1040.sh
                   sed -i 's/curl -O/wget -nc/g' linux-install-1.10.3.1040.sh
                   chmod +x linux-install-1.10.3.1040.sh
-                  sudo ./linux-install-1.10.3.1040.sh
+                  ./linux-install-1.10.3.1040.sh
             - run:
                 name: Running tests specific to tools.deps
                 command: make tools-deps-test
@@ -218,7 +218,7 @@ workflows:
             alias: "test_code"
             parameters:
               clojure_version: ["1.10", "1.11", "master"]
-              jdk_version: [openjdk11, openjdk16, openjdk17]
+              jdk_version: [openjdk11, openjdk17, openjdk21]
               parser_target: ["parser-next", "parser", "legacy-parser"]
               test_command: ["test", "smoketest"]
           filters:
