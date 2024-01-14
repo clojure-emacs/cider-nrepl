@@ -4,6 +4,7 @@
 
 ## Changes
 
+* Bump `orchard` to [0.22.0](https://github.com/clojure-emacs/orchard/blob/v0.22.0/CHANGELOG.md#0220-2024-01-14).
 * Bump `logjam` to [0.2.0](https://github.com/clojure-emacs/logjam/blob/v0.2.0/CHANGELOG.md#020-2024-01-04).
 
 ## 0.44.0 (2023-11-24)
