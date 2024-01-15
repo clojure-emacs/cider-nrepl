@@ -36,8 +36,9 @@
                (< (-> *clojure-version* :minor long)
                   (-> min-clojure-verion :minor long))))
   (try
-    (.println System/err (format "cider-nrepl cannot be run with older Clojure versions (found: %s). Exiting."
-                                 *clojure-version*))
+    (.println System/err (format "cider-nrepl cannot be run with older Clojure versions (found: %s, minimum: %s). Exiting."
+                                 *clojure-version*
+                                 min-clojure-verion))
     (finally
       (System/exit 1))))
 
