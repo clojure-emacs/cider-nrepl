@@ -572,9 +572,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   `irrelevant-return-value-forms`."
   [&env form]
   (or (and (symbol? form)
-           (not (contains? &env form))
            (try
-             (-> (resolve form) meta :ns
+             (-> (resolve &env form) meta :ns
                  ns-name #{'clojure.core 'schema.core})
              (catch Exception _ nil)))
       (and (seq? form)
