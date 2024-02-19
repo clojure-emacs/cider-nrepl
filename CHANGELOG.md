@@ -4,7 +4,7 @@
 
 ## 0.45.0 (2024-01-14)
 
-## Changes
+### Changes
 
 * Bump `orchard` to [0.22.0](https://github.com/clojure-emacs/orchard/blob/v0.22.0/CHANGELOG.md#0220-2024-01-14).
 * Bump `logjam` to [0.2.0](https://github.com/clojure-emacs/logjam/blob/v0.2.0/CHANGELOG.md#020-2024-01-04).
@@ -16,11 +16,11 @@
 
 ## 0.44.0 (2023-11-24)
 
-## New features
+### New features
 
 * Add `inspect-tap-indexed` op.
 
-## Changes
+### Changes
 
 * `middleware.inspect:` warm up Orchard info for a value's class implemented interfaces in advance.
   * Can speed up navigation.
@@ -84,7 +84,7 @@
 ### Changes
 
 * `track-state`: include var info for macros defined for ClojureScript namespaces.
-  * e.g. for `foo.cljs`, now var info for any macros contained in `foo.clj` is also included.  
+  * e.g. for `foo.cljs`, now var info for any macros contained in `foo.clj` is also included.
 
 ## 0.39.1 (2023-10-12)
 
@@ -155,7 +155,7 @@
 * Make the `track-state` middleware invokeable directly, by requesting the new `"cider/get-state"` op.
   * This makes it possible to access `:changed-namespaces` info on demand, which can be necessary for:
     * non-Piggieback based clojurescript repls
-    * re-computing the ns info responding to external (non-nREPL triggered) events. 
+    * re-computing the ns info responding to external (non-nREPL triggered) events.
 
 ### Changes
 
@@ -187,7 +187,7 @@
 ### New features
 
 * [#773](https://github.com/clojure-emacs/cider-nrepl/pull/773) Add middleware to capture, debug, inspect and view log events emitted by Java logging frameworks.
-* [#755](https://github.com/clojure-emacs/cider-nrepl/pull/755) `middleware.test`: now timing information is returned at var and ns level under the `:ms`/`:humanized` keys. 
+* [#755](https://github.com/clojure-emacs/cider-nrepl/pull/755) `middleware.test`: now timing information is returned at var and ns level under the `:ms`/`:humanized` keys.
 * `middleware.test`: only include `:diff` data when the expected/actual mismatch is deemed diffable.
   * i.e., maps, sets and sequences are diffable, scalar values are not.
 * [#709](https://github.com/clojure-emacs/cider-nrepl/pull/709) `middleware.test`: offer fail-fast functionality.
