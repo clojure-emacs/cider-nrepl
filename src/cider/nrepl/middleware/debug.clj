@@ -447,7 +447,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn looks-step-innable?
   "Decide whether a form looks like a call to a function that we could
-  instrument and step into."
+  instrument and step into.
+  You should prefer the second arity with the `&env` argument
+  to handle a local shadowing correctly."
   ([form]
    (looks-step-innable? nil form))
   ([&env form]
