@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## Bugs fixed
+
+*  [#846](https://github.com/clojure-emacs/cider-nrepl/issues/846): `middleware.debug`: use `resolve` with `&env` to fix debugging in case of a local shadows a var.
+
 ## 0.45.0 (2024-01-14)
 
 ### Changes

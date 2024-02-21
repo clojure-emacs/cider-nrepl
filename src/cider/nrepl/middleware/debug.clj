@@ -447,17 +447,21 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn looks-step-innable?
   "Decide whether a form looks like a call to a function that we could
-  instrument and step into."
-  [form]
-  (when (and (seq? form) (symbol? (first form)))
-    (let [v (resolve (first form)) ; Note: special forms resolve to nil
-          m (meta v)]
-      ;; We do not go so far as to actually try to read the code of the function
-      ;; at this point, which is at macroexpansion time.
-      (and v
-           (safe-to-debug? (:ns m))
-           (not (:macro m))
-           (not (:inline m))))))
+  instrument and step into.
+  You should prefer the second arity with the `&env` argument
+  to handle a local shadowing correctly."
+  ([form]
+   (looks-step-innable? nil form))
+  ([&env form]
+   (when (and (seq? form) (symbol? (first form)))
+     (let [v (resolve &env (first form)) ; Note: special forms resolve to nil
+           m (meta v)]
+       ;; We do not go so far as to actually try to read the code of the function
+       ;; at this point, which is at macroexpansion time.
+       (and v
+            (safe-to-debug? (:ns m))
+            (not (:macro m))
+            (not (:inline m)))))))
 
 ;;;  ## Breakpoint logic
 
@@ -547,7 +551,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defmacro expand-break
   "Internal macro to avoid code repetition in `breakpoint-if-interesting`."
   [form {:keys [coor]} original-form]
-  (let [val-form (if (looks-step-innable? form)
+  (let [val-form (if (looks-step-innable? &env form)
                    (let [[fn-sym & args] form]
                      `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'STATE__))
                    form)
@@ -570,9 +574,8 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   `irrelevant-return-value-forms`."
   [&env form]
   (or (and (symbol? form)
-           (not (contains? &env form))
            (try
-             (-> (resolve form) meta :ns
+             (-> (resolve &env form) meta :ns
                  ns-name #{'clojure.core 'schema.core})
              (catch Exception _ nil)))
       (and (seq? form)
