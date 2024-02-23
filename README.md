@@ -136,6 +136,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 * [clj-suitable][] - for ClojureScript code completion using runtime inspection
 * [tools.trace][] - for tracing
 * [tools.namespace][] - for namespace reloading
+* [clj-reload][] - for namespace reloading
 * [cljfmt][] - for code formatting
 
 ## License
@@ -149,6 +150,7 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [clj-suitable]: https://github.com/clojure-emacs/clj-suitable
 [tools.trace]: https://github.com/clojure/tools.trace
 [tools.namespace]: https://github.com/clojure/tools.namespace
+[clj-reload]: https://github.com/tonsky/clj-reload
 [cljfmt]: https://github.com/weavejester/cljfmt
 [vim-replant]: https://github.com/SevereOverfl0w/vim-replant
 [vim-fireplace]: https://github.com/tpope/vim-fireplace

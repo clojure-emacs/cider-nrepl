@@ -1783,3 +1783,54 @@ Returns::
 * `:status` done
 * `:cider/log-update-consumer` The consumer that was updated.
 
+
+
+=== `cider.clj-reload/reload`
+
+Reloads all changed files in dependency order,
+using the io.github.tonsky/clj-reload library. It is bundled with cider-nrepl.
+If that dependency is already in present your project and clj-reload.core/init has been invoked beforehand,
+those configured directories will be honored.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:progress` Description of current namespace being unloaded/loaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `cider.clj-reload/reload-all`
+
+Reloads all files in dependency order.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:reloading` Description of current namespace being unloaded/loaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `cider.clj-reload/reload-clear`
+
+Clears the state of clj-reload. This can help recover from a failed load or a circular dependency error.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
