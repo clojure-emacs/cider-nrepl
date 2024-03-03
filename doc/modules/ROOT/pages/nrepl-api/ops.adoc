@@ -317,6 +317,9 @@ making the results more accurate (and less numerous).
 * `:member` A Java class member.
 * `:ns` The current namespace
 * `:sym` The symbol to lookup
+* `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
+Defaults to the value of ``orchard.meta/var-meta-allowlist``.
+If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
 
 
 Returns::
@@ -451,6 +454,9 @@ making the results more accurate (and less numerous).
 * `:member` A Java class member.
 * `:ns` The current namespace
 * `:sym` The symbol to lookup
+* `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
+Defaults to the value of ``orchard.meta/var-meta-allowlist``.
+If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
 
 
 Returns::

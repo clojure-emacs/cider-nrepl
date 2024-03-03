@@ -82,6 +82,11 @@
                info/format-response
                (dissoc "file" "see-also"))))))
 
+(defn var-with-custom-meta
+  {:custom/meta 1}
+  [foo]
+  :bar)
+
 (deftest info-test
   ;; handle zero-length input
   (is (nil? (info/info {:ns (str (ns-name *ns*)) :sym ""})))
@@ -97,6 +102,16 @@
   (is (contains? (info/info {:ns (-> ::_ namespace str)
                              :sym "ns-resolve"})
                  :doc))
+
+  (testing "`:var-meta-allowlist`"
+    (let [base-keys [:ns :name :file :arglists :line :column]]
+      (is (= base-keys (keys (info/info {:ns (-> ::_ namespace str)
+                                         :sym "var-with-custom-meta"}))))
+      (is (= (conj base-keys :custom/meta)
+             (keys (info/info {:ns (-> ::_ namespace str)
+                               :sym "var-with-custom-meta"
+                               :var-meta-allowlist [:custom/meta]}))))))
+
   (is (= (info/info {:ns (-> ::_ namespace str)
                      :sym "ns-resolve"})
          (info/info {:ns (-> ::_ namespace str)
