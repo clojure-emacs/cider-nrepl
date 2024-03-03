@@ -21,7 +21,7 @@
                     {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
                  ^:inline-dep [org.clojure/tools.trace "0.7.11"]
                  ^:inline-dep [org.clojure/tools.reader "1.3.6"]
-                 [mx.cider/logjam "0.2.0"]]
+                 [mx.cider/logjam "0.3.0"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
   :pedantic? ~(if (and (System/getenv "CI")
