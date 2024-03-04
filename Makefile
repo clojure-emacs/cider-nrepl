@@ -1,4 +1,4 @@
-.PHONY: test quick-test fast-test eastwood cljfmt install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
+.PHONY: test quick-test fast-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
 .DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.11
@@ -81,6 +81,9 @@ eastwood:
 
 cljfmt:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt check
+
+cljfmt-fix:
+	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt fix
 
 .make_kondo_prep: project.clj .clj-kondo/config.edn
 	touch .no-pedantic

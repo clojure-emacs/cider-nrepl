@@ -41,25 +41,25 @@
 
 (def var-result
   (cond-> '("Class"
-           ": "
-           (:value "clojure.lang.Var" 0)
-           (:newline)
-           "Value: "
-           (:value "true" 1)
-           (:newline)
-           (:newline)
-           "--- Meta Information:"
-           (:newline)
-           "  "
-           (:value ":line" 2) " = " (:value "40" 3) (:newline)
-           "  "
-           (:value ":column" 4) " = " (:value "1" 5) (:newline)
-           "  "
-           (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
-           "  "
-           (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
-           "  "
-           (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline))
+            ": "
+            (:value "clojure.lang.Var" 0)
+            (:newline)
+            "Value: "
+            (:value "true" 1)
+            (:newline)
+            (:newline)
+            "--- Meta Information:"
+            (:newline)
+            "  "
+            (:value ":line" 2) " = " (:value "40" 3) (:newline)
+            "  "
+            (:value ":column" 4) " = " (:value "1" 5) (:newline)
+            "  "
+            (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
+            "  "
+            (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
+            "  "
+            (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline))
     datafy? (concat '((:newline)
                       "--- Datafy:"
                       (:newline)
