@@ -25,7 +25,7 @@
   "Return the log `appender` in a Bencode compatible format."
   [appender]
   (-> (select-keys appender [:filters :logger :id :size :threshold])
-      (assoc :consumers (map select-consumer (vals (:consumers appender))))))
+      (assoc :consumers (map select-consumer (vals @(:consumers appender))))))
 
 (defn- select-framework
   "Return the log `frameowrk` in a Bencode compatible format."

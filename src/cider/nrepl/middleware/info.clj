@@ -8,6 +8,7 @@
    [clojure.string :as str]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
+   [orchard.meta :as meta]
    [orchard.misc :as misc]))
 
 (declare format-response)
@@ -74,8 +75,11 @@
         ;; We can always be analyzing a broken context.
         nil))))
 
+(def var-meta-allowlist-set
+  (set meta/var-meta-allowlist))
+
 (defn info
-  [{:keys [ns sym class member context]
+  [{:keys [ns sym class member context var-meta-allowlist]
     legacy-sym :symbol
     :as msg}]
   (let [sym (or (not-empty legacy-sym)
@@ -108,7 +112,11 @@
                             :sym sym}
                            (when env
                              {:env env
-                              :dialect :cljs}))]
+                              :dialect :cljs})
+                           (when var-meta-allowlist
+                             {:var-meta-allowlist (into meta/var-meta-allowlist
+                                                        (remove var-meta-allowlist-set)
+                                                        var-meta-allowlist)}))]
     (cond
       java? (info/info-java class (or member sym))
       (and ns sym) (info/info* info-params)

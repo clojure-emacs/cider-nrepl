@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Bump `orchard` to [0.23.0](https://github.com/clojure-emacs/orchard/blob/v0.23.0/CHANGELOG.md#0230-2024-03-03).
+* Bump `logjam` to [0.3.0](https://github.com/clojure-emacs/logjam/blob/v0.3.0/CHANGELOG.md#030-2024-03-03).
+* [#851](https://github.com/clojure-emacs/cider-nrepl/issues/851): `middleware.info`: offer new `var-meta-allowlist` option.
+
 ## Bugs fixed
 
 *  [#846](https://github.com/clojure-emacs/cider-nrepl/issues/846): `middleware.debug`: use `resolve` with `&env` to fix debugging in case of a local shadows a var.

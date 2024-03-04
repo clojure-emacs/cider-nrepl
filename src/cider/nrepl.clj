@@ -272,14 +272,17 @@ Depending on the type of the return value of the evaluation this middleware may 
    "doc-block-tags-fragments"     (str "May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. " fragments-desc)})
 
 (def info-params
-  {"sym"     "The symbol to lookup"
-   "ns"      "The current namespace"
-   "context" "A Compliment completion context, just like the ones already passed for the \"complete\" op,
+  {"sym"                "The symbol to lookup"
+   "ns"                 "The current namespace"
+   "context"            "A Compliment completion context, just like the ones already passed for the \"complete\" op,
 with the difference that the symbol at point should be entirely replaced by \"__prefix__\".
 For Java interop queries, it helps inferring the precise type of the object the `:sym` or `:member` refers to,
 making the results more accurate (and less numerous)."
-   "class"  "A Java class. If `:ns` is passed, it will be used for fully-qualifiying the class, if necessary."
-   "member" "A Java class member."})
+   "class"              "A Java class. If `:ns` is passed, it will be used for fully-qualifiying the class, if necessary."
+   "member"             "A Java class member."
+   "var-meta-allowlist" "The metadata keys from vars to be returned. Currently only affects `:clj`.
+Defaults to the value of `orchard.meta/var-meta-allowlist`.
+If specified, the value will be concatenated to that of `orchard.meta/var-meta-allowlist`."})
 
 (def-wrapper wrap-info cider.nrepl.middleware.info/handle-info
   (cljs/requires-piggieback

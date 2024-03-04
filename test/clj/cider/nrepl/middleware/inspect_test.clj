@@ -37,23 +37,33 @@
 (def nil-result
   '["nil" (:newline)])
 
+(def any-var true)
+
 (def var-result
   (cond-> '("Class"
-            ": " (:value "clojure.lang.Var" 0)
-            (:newline)
-            "Value: " (:value "true" 1)
-            (:newline)
-            (:newline)
-            "--- Meta Information:"
-            (:newline)
-            "  " (:value ":ns" 2) " = " (:value "clojure.core" 3)
-            (:newline)
-            "  " (:value ":name" 4) " = " (:value "*assert*" 5)
-            (:newline))
+           ": "
+           (:value "clojure.lang.Var" 0)
+           (:newline)
+           "Value: "
+           (:value "true" 1)
+           (:newline)
+           (:newline)
+           "--- Meta Information:"
+           (:newline)
+           "  "
+           (:value ":line" 2) " = " (:value "40" 3) (:newline)
+           "  "
+           (:value ":column" 4) " = " (:value "1" 5) (:newline)
+           "  "
+           (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
+           "  "
+           (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
+           "  "
+           (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline))
     datafy? (concat '((:newline)
                       "--- Datafy:"
                       (:newline)
-                      "  " "0" ". " (:value "true" 6) (:newline)))))
+                      "  " "0" ". " (:value "true" 12) (:newline)))))
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
@@ -264,7 +274,7 @@
     (is (= var-result
            (value (session/message {:op      "eval"
                                     :inspect "true"
-                                    :code    "#'*assert*"}))))))
+                                    :code    "#'cider.nrepl.middleware.inspect-test/any-var"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
