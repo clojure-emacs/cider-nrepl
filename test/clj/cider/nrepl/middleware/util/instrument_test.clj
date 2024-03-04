@@ -1,6 +1,7 @@
 (ns ^:debugger cider.nrepl.middleware.util.instrument-test
   (:require
    [cider.nrepl.middleware.util.instrument :as t]
+   [clojure.data :as data]
    [clojure.set :as set]
    [clojure.test :refer :all]
    [clojure.walk :as walk]))
@@ -105,19 +106,42 @@
                                    this)))
          reify-result)))
 
+(defn slashize
+  "Converts interop dot notation into slash notation."
+  [coll]
+  (walk/postwalk (fn [x]
+                   (if (and (seq? x)
+                            (-> x first (= '.)))
+                     (let [[_ class member & args] x]
+                       (apply list (symbol (str class)
+                                           (str member))
+                              args))
+                     x))
+                 coll))
+
+(deftest slashize-test
+  (is (= '[(System/currentTimeMillis) [3 3 1]]
+         (slashize '[(. System currentTimeMillis) [3 3 1]]))))
+
 (deftest instrument-function-call-test
-  (is (= (t/breakpoint-tester
-          '(defn test-fn []
-             (let [start-time (System/currentTimeMillis)]
-               (Thread/sleep 1000)
-               (- (System/currentTimeMillis) start-time))))
-         '#{[(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) {:coor [3]} (let [start-time (System/currentTimeMillis)] (Thread/sleep 1000) (- (System/currentTimeMillis) start-time)))))) []]
-            [(let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) [3]]
-            [(- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) [3 3]]
-            [(. System currentTimeMillis) [3 1 1]]
-            [(. Thread sleep 1000) [3 2]]
-            [start-time [3 3 2]]
-            [(. System currentTimeMillis) [3 3 1]]})))
+  (let [expected '#{[(def test-fn (fn* ([] (bp (let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) {:coor [3]} (let [start-time (System/currentTimeMillis)] (Thread/sleep 1000) (- (System/currentTimeMillis) start-time)))))) []]
+                    [(let* [start-time (bp (. System currentTimeMillis) {:coor [3 1 1]} (System/currentTimeMillis))] (bp (. Thread sleep 1000) {:coor [3 2]} (Thread/sleep 1000)) (bp (- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) {:coor [3 3]} (- (System/currentTimeMillis) start-time))) [3]]
+                    [(- (bp (. System currentTimeMillis) {:coor [3 3 1]} (System/currentTimeMillis)) (bp start-time {:coor [3 3 2]} start-time)) [3 3]]
+                    [(. System currentTimeMillis) [3 1 1]]
+                    [(. Thread sleep 1000) [3 2]]
+                    [start-time [3 3 2]]
+                    [(. System currentTimeMillis) [3 3 1]]}
+        actual (t/breakpoint-tester
+                '(defn test-fn []
+                   (let [start-time (System/currentTimeMillis)]
+                     (Thread/sleep 1000)
+                     (- (System/currentTimeMillis) start-time))))]
+    (is (or
+         ;; Clojure < 1.12:
+         (= expected actual)
+         ;; Clojure >= 1.12:
+         (= (slashize expected) actual))
+        (pr-str (data/diff expected actual)))))
 
 (deftest instrument-try-test
   ;; No breakpoints around `catch`, `finally`, `Exception`, or `e`.
