@@ -2,6 +2,13 @@
 
 ## master (unreleased)
 
+## 0.46.0 (2024-0305)
+
+### New features
+
+* `Add [`clj-reload`](https://github.com/tonsky/clj-reload) functionality by implementing new `cider.clj-reload/reload`, `cider.clj-reload/reload-all`, `cider.clj-reload/reload-clear` ops.
+  * These are drop-in replacements for `refresh`, `refresh-all`, `refresh-clear`.
+
 ### Changes
 
 * Bump `orchard` to [0.23.0](https://github.com/clojure-emacs/orchard/blob/v0.23.0/CHANGELOG.md#0230-2024-03-03).

@@ -85,7 +85,7 @@ requirements were bumped to nREPL 0.6 in recent versions.
 | 1.9
 | 1.0.0
 
-| 0.45.0
+| 0.46.0
 | 8
 | 1.9
 | 1.0.0
