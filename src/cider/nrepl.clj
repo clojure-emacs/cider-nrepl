@@ -635,6 +635,25 @@ if applicable, and re-render the updated value."
              "refresh-clear"
              {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}}})
 
+(def-wrapper wrap-reload cider.nrepl.middleware.reload/handle-reload
+  {:doc "Reload middleware."
+   :requires #{"clone" #'wrap-print}
+   :handles {"cider.clj-reload/reload"
+             {:doc "Reloads all changed files in dependency order,
+using the io.github.tonsky/clj-reload library. It is bundled with cider-nrepl.
+If that dependency is already in present your project and clj-reload.core/init has been invoked beforehand,
+those configured directories will be honored."
+              :returns {"progress" "Description of current namespace being unloaded/loaded."
+                        "status" "`:ok` if reloading was successful; otherwise `:error`."
+                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
+             "cider.clj-reload/reload-all"
+             {:doc "Reloads all files in dependency order."
+              :returns {"reloading" "Description of current namespace being unloaded/loaded."
+                        "status" "`:ok` if reloading was successful; otherwise `:error`."
+                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
+             "cider.clj-reload/reload-clear"
+             {:doc "Clears the state of clj-reload. This can help recover from a failed load or a circular dependency error."}}})
+
 (def-wrapper wrap-resource cider.nrepl.middleware.resource/handle-resource
   {:doc "Middleware that provides the path to resource."
    :handles {"resource"

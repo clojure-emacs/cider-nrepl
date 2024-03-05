@@ -23,6 +23,7 @@
     cider.nrepl/wrap-slurp
     cider.nrepl/wrap-profile
     cider.nrepl/wrap-refresh
+    cider.nrepl/wrap-reload
     cider.nrepl/wrap-resource
     cider.nrepl/wrap-spec
     cider.nrepl/wrap-stacktrace
