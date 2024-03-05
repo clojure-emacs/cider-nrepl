@@ -6,7 +6,7 @@
 
 ### New features
 
-* Add [`clj-reload`](https://github.com/tonsky/clj-reload) functionality by implementing new `cider.clj-reload/reload`, `cider.clj-reload/reload-all`, `cider.clj-reload/reload-clear` ops.
+* [#850](https://github.com/clojure-emacs/cider-nrepl/pull/850): Add [clj-reload](https://github.com/tonsky/clj-reload) functionality by implementing new `cider.clj-reload/reload`, `cider.clj-reload/reload-all`, `cider.clj-reload/reload-clear` ops.
   * These are drop-in replacements for `refresh`, `refresh-all`, `refresh-clear`.
 
 ### Changes
