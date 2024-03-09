@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.middleware.reload :as rl]
    [cider.nrepl.test-session :as session]
+   [clojure.string :as str]
    [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
@@ -33,8 +34,10 @@
 
 (deftest reload-all-op-test
   (testing "reload-all op works"
-    (let [response (session/message {:op "cider.clj-reload/reload-all"})]
-      (is (seq (:progress response)))
+    (let [response (session/message {:op "cider.clj-reload/reload-all"})
+          progress-str (:progress response)]
+      (is (str/includes? progress-str "Unloading cider.nrepl.middleware.util.meta-test"))
+      (is (str/includes? progress-str "Loading cider.nrepl.middleware.util.meta-test"))
       (is (= #{"done" "ok"} (:status response))))))
 
 (deftest reload-clear-op-test
