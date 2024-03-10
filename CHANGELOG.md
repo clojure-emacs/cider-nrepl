@@ -4,8 +4,12 @@
 
 ### Changes
 
-* Bump `orchard` to [0.23.1](https://github.com/clojure-emacs/orchard/blob/v0.23.1/CHANGELOG.md#0231-2024-03-10).
+* Bump `orchard` to [0.23.2](https://github.com/clojure-emacs/orchard/blob/v0.23.2/CHANGELOG.md#0232-2024-03-10).
 * Bump `compliment` to [0.5.2](https://github.com/alexander-yakushev/compliment/blob/951604/CHANGELOG.md#master-unreleased).
+
+### Changes
+
+* Bump `orchard` to [0.23.1](https://github.com/clojure-emacs/orchard/blob/v0.23.1/CHANGELOG.md#0231-2024-03-10).
 
 ## Bugs fixed
 
