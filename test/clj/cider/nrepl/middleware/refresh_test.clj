@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.refresh-test
   (:require
    [cider.nrepl.middleware.refresh :as r]
+   [cider.nrepl.middleware.util.reload :as reload-utils]
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]))
 
@@ -24,7 +25,7 @@
 
 (deftest invoking-function-tests
   (testing "invoking named function works"
-    (is (#'r/zero-arity-callable?
+    (is (#'reload-utils/zero-arity-callable?
          (resolve (symbol "cider.nrepl.middleware.refresh-test" "before-fn"))))))
 
 (deftest refresh-op-test

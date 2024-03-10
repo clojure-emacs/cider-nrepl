@@ -9,7 +9,8 @@
 
 ## Bugs fixed
 
-* [#854](https://github.com/clojure-emacs/cider-nrepl/pull/854): fix cider.clj-reload/reload-all and improve its test
+* [#854](https://github.com/clojure-emacs/cider-nrepl/pull/854): Fix `cider.nrepl.middleware.reload/reload-all`.
+* `cider.nrepl.middleware.reload`: support `:before` / `:after` functions.
 
 ## 0.46.0 (2024-0305)
 

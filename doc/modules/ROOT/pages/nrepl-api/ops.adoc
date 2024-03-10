@@ -1796,7 +1796,9 @@ Required parameters::
 {blank}
 
 Optional parameters::
-{blank}
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+
 
 Returns::
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
@@ -1813,7 +1815,9 @@ Required parameters::
 {blank}
 
 Optional parameters::
-{blank}
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+
 
 Returns::
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
