@@ -609,15 +609,18 @@ if applicable, and re-render the updated value."
                                     :requires {}
                                     :returns  {"status" "Done"}}}})
 
+(def code-reloading-before-after-opts
+  {"before" "The namespace-qualified name of a zero-arity function to call before reloading."
+   "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
+
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:doc "Refresh middleware."
    :requires #{"clone" #'wrap-print}
    :handles {"refresh"
              {:doc "Reloads all changed files in dependency order."
               :optional (merge wrap-print-optional-arguments
-                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
-                                "before" "The namespace-qualified name of a zero-arity function to call before reloading."
-                                "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
+                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."}
+                               code-reloading-before-after-opts)
               :returns {"reloading" "List of namespaces that will be reloaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."
                         "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
@@ -643,11 +646,13 @@ if applicable, and re-render the updated value."
 using the io.github.tonsky/clj-reload library. It is bundled with cider-nrepl.
 If that dependency is already in present your project and clj-reload.core/init has been invoked beforehand,
 those configured directories will be honored."
+              :optional code-reloading-before-after-opts
               :returns {"progress" "Description of current namespace being unloaded/loaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."
                         "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
              "cider.clj-reload/reload-all"
              {:doc "Reloads all files in dependency order."
+              :optional code-reloading-before-after-opts
               :returns {"reloading" "Description of current namespace being unloaded/loaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."
                         "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
