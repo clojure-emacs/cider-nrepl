@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.47.0 (2024-03-10)
+
 ### Changes
 
 * Bump `orchard` to [0.23.2](https://github.com/clojure-emacs/orchard/blob/v0.23.2/CHANGELOG.md#0232-2024-03-10).
@@ -12,7 +14,7 @@
 * [#854](https://github.com/clojure-emacs/cider-nrepl/pull/854): Fix `cider.nrepl.middleware.reload/reload-all`.
 * `cider.nrepl.middleware.reload`: support `:before` / `:after` functions.
 
-## 0.46.0 (2024-0305)
+## 0.46.0 (2024-03-05)
 
 ### New features
 
