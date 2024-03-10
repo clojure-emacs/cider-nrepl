@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## Bugs fixed
+
+* [#854](https://github.com/clojure-emacs/cider-nrepl/pull/854): fix cider.clj-reload/reload-all and improve its test
+
 ## 0.46.0 (2024-0305)
 
 ### New features

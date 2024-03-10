@@ -37,7 +37,7 @@
         reload (user-reload 'reload reload/reload)
         unload (user-reload 'unload reload/unload)]
     (cond
-      (:all msg)   (reload (assoc opts :all true))
+      (:all msg)   (reload (assoc opts :only :all))
       (:clear msg) (unload opts)
       :else        (reload opts))))
 
