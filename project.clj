@@ -94,7 +94,7 @@
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
-             :1.11 {:dependencies [[org.clojure/clojure "1.11.1"]
+             :1.11 {:dependencies [[org.clojure/clojure "1.11.2"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]
                     :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
