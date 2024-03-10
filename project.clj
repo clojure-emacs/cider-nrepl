@@ -8,12 +8,12 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "1.0.0"]
-                 [cider/orchard "0.23.0"]
+                 [cider/orchard "0.23.2"]
                  ^:inline-dep [mx.cider/haystack "0.3.3" :exclusions [cider/orchard]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.5.1"]
+                 ^:inline-dep [compliment "0.5.2"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
@@ -94,7 +94,7 @@
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
-             :1.11 {:dependencies [[org.clojure/clojure "1.11.1"]
+             :1.11 {:dependencies [[org.clojure/clojure "1.11.2"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]
                     :test-paths ["test/spec"]}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
