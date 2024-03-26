@@ -100,55 +100,16 @@
 (def sibling-result
   '("Class"
     ": "
-    (:value "java.lang.Long" 0)
+    (:value "java.lang.String" 0)
     (:newline)
-    "Value"
-    ": "
-    (:value "2" 1)
+    "Value: "
+    "\"c\""
     (:newline)
     (:newline)
-    "--- Static fields:"
-    (:newline)
-    "  "
-    (:value "BYTES" 2)
-    " = "
-    (:value "8" 3)
+    "--- Print:"
     (:newline)
     "  "
-    (:value "MAX_VALUE" 4)
-    " = "
-    (:value "9223372036854775807" 5)
-    (:newline)
-    "  "
-    (:value "MIN_VALUE" 6)
-    " = "
-    (:value "-9223372036854775808" 7)
-    (:newline)
-    "  "
-    (:value "SIZE" 8)
-    " = "
-    (:value "64" 9)
-    (:newline)
-    "  "
-    (:value "TYPE" 10)
-    " = "
-    (:value "long" 11)
-    (:newline)
-    (:newline)
-    "--- Private instance fields:"
-    (:newline)
-    "  "
-    (:value "value" 12)
-    " = "
-    (:value "<non-inspectable value>" 13)
-    (:newline)
-    (:newline)
-    "--- Private static fields:"
-    (:newline)
-    "  "
-    (:value "serialVersionUID" 14)
-    " = "
-    (:value "<non-inspectable value>" 15)
+    "c"
     (:newline)
     (:newline)
     "--- Path:"
@@ -374,7 +335,7 @@
            (value (do
                     (session/message {:op      "eval"
                                       :inspect "true"
-                                      :code    "(map identity (range 35))"})
+                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
                     (session/message {:op  "inspect-push"
                                       :idx 2})
                     (session/message {:op  "inspect-next-sibling"})))))))
@@ -385,7 +346,7 @@
            (value (do
                     (session/message {:op      "eval"
                                       :inspect "true"
-                                      :code    "(map identity (range 35))"})
+                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
                     (session/message {:op  "inspect-push"
                                       :idx 4})
                     (session/message {:op  "inspect-previous-sibling"})))))))
