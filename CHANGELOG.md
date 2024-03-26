@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* Refine `ops-that-can-eval` internals, adapting them to the new `cider.nrepl.middleware.reload` ops.
+
 ## 0.47.1 (2024-03-24)
 
 ### Changes
