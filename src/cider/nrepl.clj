@@ -233,7 +233,7 @@ Depending on the type of the return value of the evaluation this middleware may 
               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
                :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
               "debug-instrumented-defs"
-              {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed."
+              {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed."
                :returns {"status" "done"
                          "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
               "debug-middleware"
@@ -278,7 +278,7 @@ Depending on the type of the return value of the evaluation this middleware may 
 with the difference that the symbol at point should be entirely replaced by \"__prefix__\".
 For Java interop queries, it helps inferring the precise type of the object the `:sym` or `:member` refers to,
 making the results more accurate (and less numerous)."
-   "class"              "A Java class. If `:ns` is passed, it will be used for fully-qualifiying the class, if necessary."
+   "class"              "A Java class. If `:ns` is passed, it will be used for fully-qualifying the class, if necessary."
    "member"             "A Java class member."
    "var-meta-allowlist" "The metadata keys from vars to be returned. Currently only affects `:clj`.
 Defaults to the value of `orchard.meta/var-meta-allowlist`.
@@ -578,7 +578,7 @@ if applicable, and re-render the updated value."
                                     :requires {"ns" "The current namespace"}
                                     :returns  {"status" "Done"
                                                "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
-             "is-var-profiled"     {:doc      "Reports wheth symbol is currently profiled."
+             "is-var-profiled"     {:doc      "Reports whether symbol is currently profiled."
                                     :requires {"sym" "The symbol to check"
                                                "ns"  "The current namespace"}
                                     :returns  {"status" "Done"
@@ -588,7 +588,7 @@ if applicable, and re-render the updated value."
                                     :returns  {"status" "Done"
                                                "value"  "String representing number of max-sample-count"}}
              "set-max-samples"     {:doc      "Sets maximum sample count. Returns new max-sample-count."
-                                    :requires {"max-samples" "Maxiumum samples to collect for any single var."}
+                                    :requires {"max-samples" "Maximum samples to collect for any single var."}
                                     :returns  {"status" "Done"
                                                "value"  "String representing number of max-sample-count"}}
              "toggle-profile"      {:doc      "Toggle profiling of a given var."
