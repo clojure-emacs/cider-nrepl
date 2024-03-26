@@ -97,6 +97,65 @@
     (:newline)
     "  " ":a"))
 
+(def sibling-result
+  '("Class"
+    ": "
+    (:value "java.lang.Long" 0)
+    (:newline)
+    "Value"
+    ": "
+    (:value "2" 1)
+    (:newline)
+    (:newline)
+    "--- Static fields:"
+    (:newline)
+    "  "
+    (:value "BYTES" 2)
+    " = "
+    (:value "8" 3)
+    (:newline)
+    "  "
+    (:value "MAX_VALUE" 4)
+    " = "
+    (:value "9223372036854775807" 5)
+    (:newline)
+    "  "
+    (:value "MIN_VALUE" 6)
+    " = "
+    (:value "-9223372036854775808" 7)
+    (:newline)
+    "  "
+    (:value "SIZE" 8)
+    " = "
+    (:value "64" 9)
+    (:newline)
+    "  "
+    (:value "TYPE" 10)
+    " = "
+    (:value "long" 11)
+    (:newline)
+    (:newline)
+    "--- Private instance fields:"
+    (:newline)
+    "  "
+    (:value "value" 12)
+    " = "
+    (:value "<non-inspectable value>" 13)
+    (:newline)
+    (:newline)
+    "--- Private static fields:"
+    (:newline)
+    "  "
+    (:value "serialVersionUID" 14)
+    " = "
+    (:value "<non-inspectable value>" 15)
+    (:newline)
+    (:newline)
+    "--- Path:"
+    (:newline)
+    "  "
+    "(nth 2)"))
+
 (def next-page-result
   '("Class"
     ": " (:value "clojure.lang.LazySeq" 0)
@@ -229,6 +288,22 @@
         (is (-> response ^String (:err) (.startsWith "java.lang.Exception: refresh exception")))
         (is (:pp-stacktrace response)))))
 
+  (testing "inspect-next-sibling error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-sibling exception")))]
+      (let [response (session/message {:op "inspect-next-sibling"})]
+        (is (= (:status response) #{"inspect-next-sibling-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: next-sibling exception")))
+        (is (:pp-stacktrace response)))))
+
+  (testing "inspect-previous-sibling error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "previous-sibling exception")))]
+      (let [response (session/message {:op "inspect-previous-sibling"})]
+        (is (= (:status response) #{"inspect-previous-sibling-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: previous-sibling exception")))
+        (is (:pp-stacktrace response)))))
+
   (testing "inspect-next-page error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-page exception")))]
       (let [response (session/message {:op "inspect-next-page"})]
@@ -292,6 +367,28 @@
                                       :code    code})
                     (session/message {:op  "inspect-push"
                                       :idx 2})))))))
+
+(deftest next-sibling-integration-test
+  (testing "jumping to next sibling in a rendered expr inspector"
+    (is (= sibling-result
+           (value (do
+                    (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    "(map identity (range 35))"})
+                    (session/message {:op  "inspect-push"
+                                      :idx 2})
+                    (session/message {:op  "inspect-next-sibling"})))))))
+
+(deftest previous-sibling-integration-test
+  (testing "jumping to previous sibling in a rendered expr inspector"
+    (is (= sibling-result
+           (value (do
+                    (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    "(map identity (range 35))"})
+                    (session/message {:op  "inspect-push"
+                                      :idx 4})
+                    (session/message {:op  "inspect-previous-sibling"})))))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
