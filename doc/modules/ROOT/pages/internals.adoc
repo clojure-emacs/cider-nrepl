@@ -12,7 +12,7 @@ nREPL convention to be supplied in the same file where the middleware is defined
 
 == Dealing with unhandled exception
 
-Even though nREPL requests are asychronous in their nature, some editors might be forced
+Even though nREPL requests are asynchronous in their nature, some editors might be forced
 to wait for the response of a request. This is obviously going to result in lock-up in
 case of an unhandled exception, that's why `cider-nrepl` introduced the concept of
 a "safe transport" that does some reasonable handling of such errors.

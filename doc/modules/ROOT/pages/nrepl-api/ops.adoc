@@ -267,7 +267,7 @@ Returns::
 
 === `debug-instrumented-defs`
 
-Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false postives, but there will not be false negatives. Instrumentations inside protocols are not listed.
+Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed.
 
 Required parameters::
 {blank}
@@ -309,7 +309,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifying the class, if necessary.
 * `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
 with the difference that the symbol at point should be entirely replaced by "\__prefix__".
 For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
@@ -446,7 +446,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifiying the class, if necessary.
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifying the class, if necessary.
 * `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
 with the difference that the symbol at point should be entirely replaced by "\__prefix__".
 For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
@@ -811,7 +811,7 @@ Returns::
 
 === `is-var-profiled`
 
-Reports wheth symbol is currently profiled.
+Reports whether symbol is currently profiled.
 
 Required parameters::
 * `:ns` The current namespace
@@ -1160,7 +1160,7 @@ Returns::
 Sets maximum sample count. Returns new max-sample-count.
 
 Required parameters::
-* `:max-samples` Maxiumum samples to collect for any single var.
+* `:max-samples` Maximum samples to collect for any single var.
 
 
 Optional parameters::

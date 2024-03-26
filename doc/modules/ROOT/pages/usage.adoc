@@ -62,7 +62,7 @@ under `:repl-options`.
 
 Boot users can configure the injected middleware by either specifying
 it on the command line through the `cider.tasks/add-middleware` task
-(the lenghty command below will include the `apropos` and `version`
+(the lengthy command below will include the `apropos` and `version`
 functionality):
 
 ----
