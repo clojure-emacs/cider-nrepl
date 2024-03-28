@@ -785,7 +785,9 @@ stack frame of the most recent exception. This op is deprecated, please use the
 
 (def ops-that-can-eval
   "Set of nREPL ops that can lead to code being evaluated."
-  #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
+  #{"eval" "load-file"
+    "refresh" "refresh-all" "refresh-clear"
+    "cider.clj-reload/reload" "cider.clj-reload/reload-all" "cider.clj-reload/reload-clear"
     "toggle-trace-var" "toggle-trace-ns" "undef" "undef-all"})
 
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
