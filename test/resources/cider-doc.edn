@@ -1,0 +1,2 @@
+{[cider-doc-edn-example] {:info-provider cider.nrepl.middleware.info-test/sample-info-provider
+                          :if            cider.nrepl.middleware.info-test/sample-info-provider?}}

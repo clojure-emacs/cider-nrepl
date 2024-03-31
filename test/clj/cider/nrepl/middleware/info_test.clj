@@ -12,6 +12,27 @@
    (cider.nrepl.test AnotherTestClass TestClass YetAnotherTest)
    (org.apache.commons.lang3 SystemUtils)))
 
+(defn sample-info-provider [{:keys [symbol ns file context]}]
+  {:ns ns
+   :name symbol
+   :doc (format "%s rocks - doc dynamically generated from %s"
+                symbol
+                (-> ::_ namespace))
+   :file file
+   :arglists []
+   ;; :forms
+   :macro false
+   :special-form false
+   :protocol false
+   ;; :line
+   ;; :column
+   :static false
+   :added "1.0"
+   :deprecated false})
+
+(defn sample-info-provider? [{:keys [symbol ns file context]}]
+  true)
+
 (defprotocol FormatResponseTest
   (proto-foo [this])
   (proto-bar [this] "baz"))
@@ -370,6 +391,12 @@
 
       (let [response (session/message {:op "info" :sym "xyz"})]
         (is (nil? (:see-also response))
+            (pr-str response))))
+
+    (testing "cider-doc.edn"
+      (let [response (session/message {:op "info" :sym "cider-doc-edn-example"})]
+        (is (= "cider-doc-edn-example rocks - doc dynamically generated from cider.nrepl.middleware.info-test"
+               (:doc response))
             (pr-str response)))))
 
   (testing "eldoc op"

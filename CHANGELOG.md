@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* Observe `cider-doc.edn` Java resource files for user-extensible documentation. 
+
 ### Changes
 
 * Refine `ops-that-can-eval` internals, adapting them to the new `cider.nrepl.middleware.reload` ops.
