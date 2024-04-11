@@ -7,23 +7,24 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl "1.1.1"]
-                 [cider/orchard "0.23.3"]
+  :dependencies [[nrepl "1.1.1" :exclusions [org.clojure/clojure]]
+                 [cider/orchard "0.23.3" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [mx.cider/haystack "0.3.3" :exclusions [cider/orchard]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
-                 ^:inline-dep [mvxcvi/puget "1.3.4"]
+                 ^:inline-dep [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.5.3"]
-                 ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
+                                                                      org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
                     ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
                     {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
-                 ^:inline-dep [io.github.tonsky/clj-reload "0.4.3"]
+                 ^:inline-dep [io.github.tonsky/clj-reload "0.4.3" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [org.clojure/tools.trace "0.8.0"]
                  ^:inline-dep [org.clojure/tools.reader "1.4.1"]
-                 [mx.cider/logjam "0.3.0"]]
-  :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
+                 [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
+   ; see Clojure version matrix in profiles below
 
   :pedantic? ~(if (and (System/getenv "CI")
                        (not (-> ".no-pedantic" java.io.File. .exists)))
