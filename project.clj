@@ -7,21 +7,21 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl "1.0.0"]
+  :dependencies [[nrepl "1.1.1"]
                  [cider/orchard "0.23.3"]
                  ^:inline-dep [mx.cider/haystack "0.3.3" :exclusions [cider/orchard]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.5.2"]
+                 ^:inline-dep [compliment "0.5.3"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
                  ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
                     ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
                     {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
-                 ^:inline-dep [io.github.tonsky/clj-reload "0.4.1"]
-                 ^:inline-dep [org.clojure/tools.trace "0.7.11"]
-                 ^:inline-dep [org.clojure/tools.reader "1.3.6"]
+                 ^:inline-dep [io.github.tonsky/clj-reload "0.4.3"]
+                 ^:inline-dep [org.clojure/tools.trace "0.8.0"]
+                 ^:inline-dep [org.clojure/tools.reader "1.4.1"]
                  [mx.cider/logjam "0.3.0"]]
   :exclusions [org.clojure/clojure] ; see Clojure version matrix in profiles below
 
@@ -80,13 +80,13 @@
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
                                        [org.clojure/clojurescript "1.11.60" :scope "provided"]
                                        [com.cognitect/transit-clj "1.0.333"]
-                                       [com.fasterxml.jackson.core/jackson-core "2.15.2"]
-                                       [commons-codec "1.15"]
+                                       [com.fasterxml.jackson.core/jackson-core "2.17.0"]
+                                       [commons-codec "1.16.1"]
                                        [com.cognitect/transit-java "1.0.371"]
-                                       [com.google.errorprone/error_prone_annotations "2.11.0"]
+                                       [com.google.errorprone/error_prone_annotations "2.26.1"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
-             :1.9 {:dependencies [[commons-logging/commons-logging "1.3.0"]
+             :1.9 {:dependencies [[commons-logging/commons-logging "1.3.1"]
                                   [org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                    ;; TODO: Merge the tests in this dir in to test/clj
@@ -102,7 +102,7 @@
                                      [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "1.0.214"]]}
+                     :dependencies [[org.clojure/tools.cli "1.1.230"]]}
 
              :test {:global-vars {*assert* true}
                     :source-paths ["test/src"]
@@ -111,22 +111,22 @@
                                "-Dcider.internal.testing=true"]
                     :resource-paths ["test/resources"]
                     :dependencies [[boot/base "2.8.3"]
-                                   [boot/core "2.8.3"]
+                                   [boot/core "2.8.3" :exclusions [org.tcrawley/dynapath]]
                                    ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                                    [ch.qos.logback/logback-classic "1.3.7"]
                                    [org.clojure/test.check "1.1.1"]
-                                   [org.apache.httpcomponents/httpclient "4.5.13" :exclusions [commons-logging]]
-                                   [leiningen-core "2.9.10" :exclusions [org.clojure/clojure
+                                   [org.apache.httpcomponents/httpclient "4.5.14" :exclusions [commons-logging]]
+                                   [leiningen-core "2.11.2" :exclusions [org.clojure/clojure
                                                                          commons-codec
                                                                          com.google.code.findbugs/jsr305]]
                                    [cider/piggieback "0.5.3"]
-                                   [nubank/matcher-combinators "3.8.8"]]}
+                                   [nubank/matcher-combinators "3.9.1"]]}
 
              ;; Running the tests with enrich-classpath doing its thing isn't compatible with `lein test`
              ;; (because there's no such thing as "run `lein test` using this specific classpath"),
              ;; So we use cognitect.test-runner instead.
-             :cognitest {:dependencies [[org.clojure/tools.namespace "1.4.4"]
-                                        [org.clojure/tools.cli "1.0.214"]]
+             :cognitest {:dependencies [[org.clojure/tools.namespace "1.5.0"]
+                                        [org.clojure/tools.cli "1.1.230"]]
                          :source-paths ["test-runner/src"]
                          ;; This piece of middleware dynamically adds the test paths to a cognitect.test-runner main invocation.
                          :middleware [~(do
