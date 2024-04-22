@@ -55,6 +55,7 @@
 * Bump `suitable` to [0.6.2](https://github.com/clojure-emacs/clj-suitable/blob/v0.6.2/CHANGELOG.md#062-2033-01-14).
 * Bump `compliment` to [0.5.1](https://github.com/alexander-yakushev/compliment/blob/6119d8/CHANGELOG.md#051-2023-11-30).
 * [#842](https://github.com/clojure-emacs/cider-nrepl/issues/842): Initial cache warmup: ensure that no classes' static initializers are run.
+* [#840](https://github.com/clojure-emacs/cider-nrepl/pull/840): Drop support for Clojure 1.8.
 * Forcibly exit the JVM on older (unsupported) Clojure versions.
   * This can help users and maintainers alike diagnose issues more quickly, avoiding problematic code paths in our middleware, and clients like cider.el.
 
