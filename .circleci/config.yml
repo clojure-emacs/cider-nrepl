@@ -194,8 +194,8 @@ jobs:
 # The ci-test-matrix does the following:
 #
 # - run tests against the target matrix
-#   - Java 8/11/16/...
-#   - Clojure 1.9, 1.10, 1.11, master
+#   - Java 8/11/17/21/22
+#   - Clojure 1.10, 1.11, master
 # - linter, eastwood and cljfmt
 
 workflows:
@@ -206,8 +206,7 @@ workflows:
           matrix:
             alias: "test_code_jdk8"
             parameters:
-              # Clojure 1.9 is tested only against JDK8.
-              clojure_version: ["1.9", "1.10", "1.11", "master"]
+              clojure_version: ["1.10", "1.11", "master"]
               jdk_version: [openjdk8]
               # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
               # (given that JDK8 is explicitly excluded by those parsers)

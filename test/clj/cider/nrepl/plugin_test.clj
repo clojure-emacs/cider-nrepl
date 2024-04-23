@@ -15,5 +15,5 @@
     (is (= expected-output
            (middleware {:dependencies [['org.clojure/clojure]]}))))
   (testing "defined versions also work"
-    (is (= (update-in expected-output [:dependencies 0] conj "1.10.0")
-           (middleware {:dependencies [['org.clojure/clojure "1.10.0"]]})))))
+    (is (= (update-in expected-output [:dependencies 0] conj "1.10.3")
+           (middleware {:dependencies [['org.clojure/clojure "1.10.3"]]})))))

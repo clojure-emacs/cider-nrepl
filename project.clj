@@ -87,11 +87,6 @@
                                        [com.google.errorprone/error_prone_annotations "2.26.1"]
                                        [com.google.code.findbugs/jsr305 "3.0.2"]]
                         :test-paths ["test/spec"]}
-             :1.9 {:dependencies [[commons-logging/commons-logging "1.3.1"]
-                                  [org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.10.520" :scope "provided"]]
-                   ;; TODO: Merge the tests in this dir in to test/clj
-                   :test-paths ["test/spec"]}
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
