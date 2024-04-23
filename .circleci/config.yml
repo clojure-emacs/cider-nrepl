@@ -223,7 +223,8 @@ workflows:
             parameters:
               clojure_version: ["1.10", "1.11", "master"]
               jdk_version: [openjdk11, openjdk17, openjdk21, openjdk22]
-              parser_target: ["parser-next", "parser", "legacy-parser"]
+              # Don't test legacy parser on JDK11+ since it is never invoked there.
+              parser_target: ["parser-next", "parser"]
               test_command: ["test", "smoketest"]
           filters:
             branches:
