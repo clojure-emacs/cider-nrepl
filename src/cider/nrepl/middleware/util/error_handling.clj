@@ -14,15 +14,11 @@
 
 (def ^:private print-cause-trace
   (delay
-    (do
-      (require 'clojure.stacktrace)
-      (resolve 'clojure.stacktrace/print-cause-trace))))
+    (requiring-resolve 'clojure.stacktrace/print-cause-trace)))
 
 (def ^:private analyze-causes
   (delay
-    (do
-      (require 'haystack.analyzer)
-      (resolve 'haystack.analyzer/analyze))))
+    (requiring-resolve 'haystack.analyzer/analyze)))
 
 ;;; UTILITY FUNCTIONS
 

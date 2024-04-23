@@ -14,8 +14,7 @@
 
 ;; see cider-nrepl issue #447
 (defn nrepl-handler []
-  (require 'cider.nrepl)
-  (ns-resolve 'cider.nrepl 'cider-nrepl-handler))
+  (requiring-resolve 'cider.nrepl/cider-nrepl-handler))
 
 (defn nrepl-server-fixture
   "Derived from the cider-nrepl test fixture.  Launch the nrepl server,
