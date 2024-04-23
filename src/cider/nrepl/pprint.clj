@@ -47,10 +47,7 @@
    (apply pp/write value (mapcat identity (assoc options :stream writer)))))
 
 (def ^:private fipp-printer
-  (delay
-    (do
-      (require 'fipp.edn)
-      (resolve 'fipp.edn/pprint))))
+  (delay (requiring-resolve 'fipp.edn/pprint)))
 
 (defn fipp-pprint
   ([value writer]
@@ -60,10 +57,7 @@
      (@fipp-printer value options))))
 
 (def ^:private puget-printer
-  (delay
-    (do
-      (require 'puget.printer)
-      (resolve 'puget.printer/pprint))))
+  (delay (requiring-resolve 'puget.printer/pprint)))
 
 (defn puget-pprint
   ([value writer]
@@ -73,10 +67,7 @@
      (@puget-printer value options))))
 
 (def ^:private zprint-printer
-  (delay
-    (do
-      (require 'zprint.core)
-      (resolve 'zprint.core/zprint))))
+  (delay (requiring-resolve 'zprint.core/zprint)))
 
 (defn zprint-pprint
   ([value writer]

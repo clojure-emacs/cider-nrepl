@@ -19,8 +19,7 @@
 
 (def suitable-complete-for-nrepl
   (when suitable-enabled?
-    (require 'suitable.complete-for-nrepl)
-    @(resolve 'suitable.complete-for-nrepl/complete-for-nrepl)))
+    (requiring-resolve 'suitable.complete-for-nrepl/complete-for-nrepl)))
 
 (def clj-sources
   "A list of Clojure completion sources for compliment."
