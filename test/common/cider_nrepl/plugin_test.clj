@@ -17,7 +17,7 @@
   (binding [lein/*info* false]
     (with-redefs [lein/leiningen-version (constantly (plugin/minimum-versions :lein))]
       (testing "Valid Lein version; valid Clojure version"
-        (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.9.0"]]})]
+        (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.10.3"]]})]
           (is (contains-cider-nrepl-dep? project))
           (is (contains-cider-nrepl-middleware? project))))
 
@@ -39,7 +39,7 @@
 
     (with-redefs [lein/leiningen-version (constantly "2.5.1")]
       (testing "Invalid Lein version; valid Clojure version"
-        (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.9.0"]]})]
+        (let [project (plugin/middleware '{:dependencies [[org.clojure/clojure "1.10.3"]]})]
           (is (not (contains-cider-nrepl-dep? project)))
           (is (not (contains-cider-nrepl-middleware? project)))))
 

@@ -8,7 +8,7 @@
 
 (use-fixtures :each session/session-fixture)
 
-(deftest ^{:min-clj-version "1.9.0"} spec-list-integration-test
+(deftest spec-list-integration-test
   (let [filter-regex "clojure"
         filtered-spec-list (:spec-list (session/message {:op "spec-list"
                                                          :filter-regex filter-regex}))]
