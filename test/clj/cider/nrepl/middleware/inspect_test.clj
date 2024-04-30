@@ -6,6 +6,7 @@
    [clojure.edn :as edn]
    [clojure.string :as string]
    [clojure.test :refer :all]
+   [orchard.inspect]
    [orchard.info :as info]))
 
 ;; for `match?`
@@ -57,6 +58,8 @@
     "  " "0" ". " (:value "true" 12) (:newline)))
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
+
+(def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
 
 (def inspect-result
   '("Class"
@@ -485,6 +488,28 @@
                                 extract-text)
                             (x-pattern 20 "..."))))))
 
+(deftest max-value-length-integration-test
+  (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)
+        extract-text #(-> % :value first)]
+
+    ;; TODO: reduce leeway once orchard.print truncation is fixed
+    (testing "max value length can be set for the eval op"
+      (is (< (- max-len 10)
+             (-> (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    infinite-map-code})
+                 extract-text
+                 count)
+             (+ max-len 2000)))
+      (is (< 490
+             (-> (session/message {:op               "eval"
+                                   :inspect          "true"
+                                   :code             infinite-map-code
+                                   :max-value-length 500})
+                 extract-text
+                 count)
+             800)))))
+
 (deftest max-coll-size-integration-test
   (let [size-limit (:max-coll-size @#'orchard.inspect/default-inspector-config)
         big-size (* 2 size-limit) ;; 10
@@ -534,6 +559,35 @@
                      (extract-text smaller-coll-size)))
         (is (re-find (coll-pattern size-limit :truncate)
                      (extract-text unchanged-default-coll-size)))))))
+
+(deftest max-nested-depth-integration-test
+  (let [nested-coll "'([[[[[[[[[[1]]]]]]]]]])"
+        extract-text #(-> % :value first)]
+
+    (testing "max nested depth can be set for the eval op"
+      (let [default (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    nested-coll})
+            limited (session/message {:op               "eval"
+                                      :inspect          "true"
+                                      :code             nested-coll
+                                      :max-nested-depth 5})]
+        (is (string/includes? (extract-text default)
+                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+        (is (string/includes? (extract-text limited)
+                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))
+
+    (testing "max nested depth can be changed without re-eval'ing last form"
+      (session/message {:op "inspect-clear"})
+      (let [default (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    nested-coll})
+            limited (session/message {:op            "inspect-set-max-nested-depth"
+                                      :max-nested-depth 5})]
+        (is (string/includes? (extract-text default)
+                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+        (is (string/includes? (extract-text limited)
+                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"

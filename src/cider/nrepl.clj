@@ -364,6 +364,11 @@ if applicable, and re-render the updated value."
                :requires {"max-coll-size" "New collection size."
                           "session" "The current session"}
                :returns inspector-returns}
+              "inspect-set-max-nested-depth"
+              {:doc "Set the maximum nested levels to display before truncating."
+               :requires {"max-nested-depth" "New nested depth."
+                          "session" "The current session"}
+               :returns inspector-returns}
               "inspect-clear"
               {:doc "Clears the state state of the inspector."
                :requires {"session" "The current session"}

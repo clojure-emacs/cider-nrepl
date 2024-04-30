@@ -63,7 +63,8 @@
 
 (defn inspect-reply*
   [msg value]
-  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size])
+  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
+                                 :max-value-length :max-nested-depth])
         inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
     (warmup-javadoc-cache (class (:value inspector)))
     (inspector-response msg inspector {})))
@@ -144,6 +145,10 @@
   (inspector-response msg (swap-inspector! msg inspect/set-max-coll-size
                                            (:max-coll-size msg))))
 
+(defn set-max-nested-depth-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/set-max-nested-depth
+                                           (:max-nested-depth msg))))
+
 (defn clear-reply [msg]
   (inspector-response msg (swap-inspector! msg (constantly (inspect/start nil)))))
 
@@ -172,6 +177,7 @@
       "inspect-set-page-size" set-page-size-reply
       "inspect-set-max-atom-length" set-max-atom-length-reply
       "inspect-set-max-coll-size" set-max-coll-size-reply
+      "inspect-set-max-nested-depth" set-max-nested-depth-reply
       "inspect-clear" clear-reply
       "inspect-def-current-value" def-current-value
       "inspect-tap-current-value" tap-current-value
