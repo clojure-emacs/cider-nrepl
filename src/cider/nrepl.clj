@@ -302,7 +302,8 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
                :returns {"status" "done"}}}}))
 
 (def inspector-returns (merge {"status" "\"done\""
-                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."}
+                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."
+                               "path" "Printed representation of current inspector path."}
                               fragments-doc))
 
 (def-wrapper wrap-inspect cider.nrepl.middleware.inspect/handle-inspect
@@ -335,10 +336,6 @@ if applicable, and re-render the updated value."
                :returns inspector-returns}
               "inspect-refresh"
               {:doc "Re-renders the currently inspected value."
-               :requires {"session" "The current session"}
-               :returns inspector-returns}
-              "inspect-get-path"
-              {:doc "Returns the path to the current position in the inspected value."
                :requires {"session" "The current session"}
                :returns inspector-returns}
               "inspect-next-page"

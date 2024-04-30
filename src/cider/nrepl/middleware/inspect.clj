@@ -28,7 +28,7 @@
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
 
-  ([msg {:keys [rendered value]} resp]
+  ([msg {:keys [rendered value path]} resp]
    (let [class-sym (when (class? value)
                      (-> ^Class value .getCanonicalName symbol))
          method-sym (when (instance? java.lang.reflect.Method value)
@@ -45,8 +45,9 @@
                                                   [:doc-fragments
                                                    :doc-first-sentence-fragments
                                                    :doc-block-tags-fragments]))
-                                   {:value (binding [*print-length* nil]
-                                             (pr-str rendered))})))))
+                                   (binding [*print-length* nil]
+                                     {:value (pr-str (seq rendered))
+                                      :path (pr-str (seq path))}))))))
 
 (defn- warmup-javadoc-cache [^Class clazz]
   (when-let [class-sym (some-> clazz .getCanonicalName symbol)]
@@ -125,9 +126,6 @@
 (defn refresh-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/inspect-render)))
 
-(defn get-path-reply [{:keys [session]}]
-  (get-in (meta session) [::inspector :path]))
-
 (defn next-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/next-page)))
 
@@ -171,7 +169,6 @@
       "inspect-next-sibling" next-sibling-reply
       "inspect-previous-sibling" previous-sibling-reply
       "inspect-refresh" refresh-reply
-      "inspect-get-path" get-path-reply
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-set-page-size" set-page-size-reply
