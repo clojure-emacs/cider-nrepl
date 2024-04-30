@@ -16,23 +16,15 @@
 (defn set-inspect-tap-current-value-test-atom-fn [x]
   (reset! inspect-tap-current-value-test-atom x))
 
-(def tap?
-  (resolve 'add-tap))
-
 (defn inspect-tap-current-value-test-fixture [f]
-  (when tap?
-    ((resolve 'add-tap) set-inspect-tap-current-value-test-atom-fn))
+  (add-tap set-inspect-tap-current-value-test-atom-fn)
   (try
     (f)
     (finally
       (reset! inspect-tap-current-value-test-atom nil)
-      (when tap?
-        ((resolve 'remove-tap) set-inspect-tap-current-value-test-atom-fn)))))
+      (remove-tap set-inspect-tap-current-value-test-atom-fn))))
 
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
-
-(def datafy?
-  (some? (resolve 'clojure.core.protocols/datafy)))
 
 (def nil-result
   '["nil" (:newline)])
@@ -40,30 +32,29 @@
 (def any-var true)
 
 (def var-result
-  (cond-> '("Class"
-            ": "
-            (:value "clojure.lang.Var" 0)
-            (:newline)
-            "Value: "
-            (:value "true" 1)
-            (:newline)
-            (:newline)
-            "--- Meta Information:"
-            (:newline)
-            "  "
-            (:value ":line" 2) " = " (:value "40" 3) (:newline)
-            "  "
-            (:value ":column" 4) " = " (:value "1" 5) (:newline)
-            "  "
-            (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
-            "  "
-            (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
-            "  "
-            (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline))
-    datafy? (concat '((:newline)
-                      "--- Datafy:"
-                      (:newline)
-                      "  " "0" ". " (:value "true" 12) (:newline)))))
+  '("Class"
+    ": "
+    (:value "clojure.lang.Var" 0)
+    (:newline)
+    "Value: "
+    (:value "true" 1)
+    (:newline)
+    (:newline)
+    "--- Meta Information:"
+    (:newline)
+    "  "
+    (:value ":line" 2) " = " (:value "40" 3) (:newline)
+    "  "
+    (:value ":column" 4) " = " (:value "1" 5) (:newline)
+    "  "
+    (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
+    "  "
+    (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
+    "  "
+    (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline)
+    (:newline)
+    "--- Datafy:" (:newline)
+    "  " "0" ". " (:value "true" 12) (:newline)))
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
@@ -564,28 +555,27 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-(when tap?
-  (deftest inspect-tap-current-value-test
-    (testing "inspect-tap-current-value taps the current inspector value"
-      (session/message {:op   "eval"
-                        :code "(def x (+ 3 4)))"})
-      (session/message {:op "eval"
-                        :inspect "true"
-                        :code    "x"})
-      (session/message {:op  "inspect-push"
-                        :idx 1})
-      (session/message {:op  "inspect-tap-current-value"})
+(deftest inspect-tap-current-value-test
+  (testing "inspect-tap-current-value taps the current inspector value"
+    (session/message {:op   "eval"
+                      :code "(def x (+ 3 4)))"})
+    (session/message {:op "eval"
+                      :inspect "true"
+                      :code    "x"})
+    (session/message {:op  "inspect-push"
+                      :idx 1})
+    (session/message {:op  "inspect-tap-current-value"})
 
-      (let [max-time 10000
-            ms 50
-            iterations (long (/ max-time ms))]
-        (loop [i 0]
-          (when (and (not= 7 @inspect-tap-current-value-test-atom)
-                     (< i iterations))
-            (Thread/sleep ms)
-            (recur (inc i)))))
+    (let [max-time 10000
+          ms 50
+          iterations (long (/ max-time ms))]
+      (loop [i 0]
+        (when (and (not= 7 @inspect-tap-current-value-test-atom)
+                   (< i iterations))
+          (Thread/sleep ms)
+          (recur (inc i)))))
 
-      (is (= 7 @inspect-tap-current-value-test-atom)))))
+    (is (= 7 @inspect-tap-current-value-test-atom))))
 
 (deftest doc-fragments-test
   (when (contains? (info/info 'user `Thread/sleep)
