@@ -14,9 +14,11 @@
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
-   [orchard.meta :as m])
+   [orchard.meta :as m]
+   [orchard.print])
   (:import
-   [clojure.lang Compiler$LocalBinding]))
+   [clojure.lang Compiler$LocalBinding]
+   [java.util UUID]))
 
 ;;;; # The Debugger
 ;;;
@@ -61,13 +63,9 @@
   (atom nil))
 
 (defn- random-uuid-str
-  "Clojure(Script) UUID generator."
+  "UUID generator."
   []
-  (letfn [(hex [] (format "%x" (rand-int 15)))
-          (nhex [n] (apply str (repeatedly n hex)))]
-    (let [rhex (format "%x" (bit-or 0x8 (bit-and 0x3 ^int (rand-int 14))))]
-      (str (nhex 8) "-" (nhex 4) "-4" (nhex 3)
-           "-" rhex (nhex 3) "-" (nhex 12)))))
+  (str (UUID/randomUUID)))
 
 (defn- seq=
   "To deal with, eg: (= () nil) => true"
@@ -183,14 +181,19 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (binding [*print-length* (or (:length @print-options)
                                *print-length*)
             *print-level*  (or (:level @print-options)
-                               *print-level*)]
+                               *print-level*)
+            orchard.print/*max-atom-length* 500
+            ;; CIDER overlay currently truncates values at (* 3 (window-width)).
+            ;; Total length of 2000 is enough to never produce less than that.
+            orchard.print/*max-total-length* 2000
+            orchard.print/*spacious* false]
     ;; TODO: Make it possible to use a random print function here
-    (pr-str x)))
+    (orchard.print/print-str x)))
 
 (defn- locals-for-message
   "Prepare a map of local variables for sending through the repl."
   [locals]
-  (map (partial map pr-short) locals))
+  (mapv (partial mapv pr-short) locals))
 
 (defn debugger-send
   "Send a response through debugger-message."
@@ -276,11 +279,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defn- debug-inspect
   "Inspect `inspect-value`."
-  [page-size inspect-value]
+  [inspect-value]
   (binding [*print-length* nil
             *print-level* nil]
-    (->> #(inspect/start (assoc % :page-size page-size) inspect-value)
-         (swap-inspector! @debugger-message)
+    (->> (swap-inspector! @debugger-message inspect/start inspect-value)
          :rendered pr-str)))
 
 (defn- debug-stacktrace
@@ -351,10 +353,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
           response-raw (read-debug-input dbg-state commands nil)
           dbg-state    (dissoc dbg-state :inspect)
 
-          {:keys [code coord response page-size force?]
-           :or   {page-size 32}} (if (map? response-raw)
-                                   response-raw
-                                   {:response response-raw})]
+          {:keys [code coord response force?]} (if (map? response-raw)
+                                                 response-raw
+                                                 {:response response-raw})]
       (reset! step-in-to-next? false)
       (case response
         :next       value
@@ -372,14 +373,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                         (recur value dbg-state))
         :trace      (do (skip-breaks! :trace)
                         value)
-        :locals     (->> (debug-inspect page-size (:locals dbg-state))
+        :locals     (->> (debug-inspect (:locals dbg-state))
                          (assoc dbg-state :inspect)
                          (recur value))
-        :inspect    (->> (debug-inspect page-size value)
+        :inspect    (->> (debug-inspect value)
                          (assoc dbg-state :inspect)
                          (recur value))
         :inspect-prompt #_:clj-kondo/ignore (try-if-let [val (read-eval-expression "Inspect value: " dbg-state code)]
-                                              (->> (debug-inspect page-size val)
+                                              (->> (debug-inspect val)
                                                    (assoc dbg-state :inspect)
                                                    (recur value))
                                               (recur value dbg-state))
