@@ -53,18 +53,10 @@
     (instance? Throwable exception)
     (update :exception select-exception)))
 
-;; TODO: Double check this! Sometimes inspecting a log event works only after
-;; inspecting something else with the Cider inspector.
 (defn- inspect-value
   "Show `value` in the Cider inspector"
-  [{:keys [page-size max-atom-length max-coll-size] :as msg} value]
-  (let [inspector (middleware.inspect/swap-inspector!
-                   msg #(-> (assoc % :page-size (or page-size 32)
-                                   :indentation 0
-                                   :max-atom-length max-atom-length
-                                   :max-coll-size max-coll-size)
-                            (orchard.inspect/start value)))]
-    (#'middleware.inspect/inspector-response msg inspector)))
+  [msg value]
+  (middleware.inspect/inspect-reply* msg value))
 
 (defn- framework
   "Lookup the framework from the :framework key of the nREPL message."

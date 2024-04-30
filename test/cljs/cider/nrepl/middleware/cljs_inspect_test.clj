@@ -27,6 +27,9 @@
   '("Class"
     ": " (:value "clojure.lang.PersistentArrayMap" 0)
     (:newline)
+    "Count: "
+    "4"
+    (:newline)
     (:newline)
     "--- Contents:"
     (:newline)
@@ -43,6 +46,8 @@
   '("Class"
     ": " (:value "clojure.lang.PersistentArrayMap" 0)
     (:newline)
+    "Count: " "1"
+    (:newline)
     (:newline)
     "--- Contents:"
     (:newline)
@@ -56,6 +61,8 @@
 (def next-page-result
   '("Class"
     ": " (:value "clojure.lang.PersistentList" 0)
+    (:newline)
+    "Count: " "35"
     (:newline)
     (:newline)
     "--- Contents:"
@@ -71,11 +78,14 @@
     (:newline)
     "--- Page Info:"
     (:newline)
-    "  " "Page size: 32, showing page: 2 of 2"))
+    "  " "Page size: 32, showing page: 2 of 2"
+    (:newline)))
 
 (def first-page-result
   '("Class"
     ": " (:value "clojure.lang.PersistentList" 0)
+    (:newline)
+    "Count: " "35"
     (:newline)
     (:newline)
     "--- Contents:"
@@ -95,7 +105,8 @@
     (:newline)
     "--- Page Info:"
     (:newline)
-    "  " "Page size: 5, showing page: 1 of 7"))
+    "  " "Page size: 5, showing page: 1 of 7"
+    (:newline)))
 
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))
@@ -336,6 +347,7 @@
                    (extract-text small-page-2)))))
 
   (testing "page size can be changed via the inspect-set-page-size op"
+    (session/message {:op "inspect-clear"})
     (let [normal-page-size (session/message {:op "eval"
                                              :inspect "true"
                                              :code "(range 100)"})
