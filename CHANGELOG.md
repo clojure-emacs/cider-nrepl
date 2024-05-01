@@ -11,6 +11,11 @@
 * Bump `clj-reload` to [0.4.3](https://github.com/tonsky/clj-reload/blob/main/CHANGELOG.md#043---mar-21-2024).
 * Bump `tools.trace` to 0.8.0 (no changes in source code).
 * Bump `tools.reader` to [1.4.1](https://github.com/clojure/tools.reader/blob/master/CHANGELOG.md).
+* Bump `orchard` to [0.24.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0240-2024-04-30).
+  * Bring many improvements to CIDER Inspector (see Orchard CHANGELOG).
+* Add `inspect-set-max-nested-depth` op that customizes how many nested levels the Inspector will print before abridging.
+* [#826](https://github.com/clojure-emacs/cider-nrepl/pull/826): Remove broken `inspect-get-path` middleware op, return path in every inspector middleware op instead.
+* Reduce the print length of values that CIDER debugger produces for overlay.
 
 ## 0.47.1 (2024-03-24)
 

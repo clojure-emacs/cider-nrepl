@@ -194,7 +194,9 @@
   (is (< (count (d/pr-short [[[1 2 3 4]]]))
          (count (pr-str [[[1 2 3 4]]]))))
   (is (= (d/pr-short [1 2 3 4])
-         (pr-str [1 2 3 4]))))
+         (pr-str [1 2 3 4])))
+  (reset! d/print-options {})
+  (is (= 2003 (count (d/pr-short (range))))))
 
 (deftest breakpoint
   ;; Map merging

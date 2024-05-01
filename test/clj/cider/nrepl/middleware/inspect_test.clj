@@ -6,6 +6,7 @@
    [clojure.edn :as edn]
    [clojure.string :as string]
    [clojure.test :refer :all]
+   [orchard.inspect]
    [orchard.info :as info]))
 
 ;; for `match?`
@@ -16,23 +17,15 @@
 (defn set-inspect-tap-current-value-test-atom-fn [x]
   (reset! inspect-tap-current-value-test-atom x))
 
-(def tap?
-  (resolve 'add-tap))
-
 (defn inspect-tap-current-value-test-fixture [f]
-  (when tap?
-    ((resolve 'add-tap) set-inspect-tap-current-value-test-atom-fn))
+  (add-tap set-inspect-tap-current-value-test-atom-fn)
   (try
     (f)
     (finally
       (reset! inspect-tap-current-value-test-atom nil)
-      (when tap?
-        ((resolve 'remove-tap) set-inspect-tap-current-value-test-atom-fn)))))
+      (remove-tap set-inspect-tap-current-value-test-atom-fn))))
 
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
-
-(def datafy?
-  (some? (resolve 'clojure.core.protocols/datafy)))
 
 (def nil-result
   '["nil" (:newline)])
@@ -40,36 +33,40 @@
 (def any-var true)
 
 (def var-result
-  (cond-> '("Class"
-            ": "
-            (:value "clojure.lang.Var" 0)
-            (:newline)
-            "Value: "
-            (:value "true" 1)
-            (:newline)
-            (:newline)
-            "--- Meta Information:"
-            (:newline)
-            "  "
-            (:value ":line" 2) " = " (:value "40" 3) (:newline)
-            "  "
-            (:value ":column" 4) " = " (:value "1" 5) (:newline)
-            "  "
-            (:value ":file" 6) " = " (:value "\"cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
-            "  "
-            (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
-            "  "
-            (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline))
-    datafy? (concat '((:newline)
-                      "--- Datafy:"
-                      (:newline)
-                      "  " "0" ". " (:value "true" 12) (:newline)))))
+  '("Class"
+    ": "
+    (:value "clojure.lang.Var" 0)
+    (:newline)
+    "Value: "
+    (:value "true" 1)
+    (:newline)
+    (:newline)
+    "--- Meta Information:"
+    (:newline)
+    "  "
+    (:value ":line" 2) " = " (:value #"\d+" 3) (:newline)
+    "  "
+    (:value ":column" 4) " = " (:value #"\d+" 5) (:newline)
+    "  "
+    (:value ":file" 6) " = " (:value #"\".*cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
+    "  "
+    (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
+    "  "
+    (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline)
+    (:newline)
+    "--- Datafy:" (:newline)
+    "  " "0" ". " (:value "true" 12) (:newline)))
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
+
+(def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
 
 (def inspect-result
   '("Class"
     ": " (:value "clojure.lang.PersistentTreeMap" 0)
+    (:newline)
+    "Count: "
+    "4"
     (:newline)
     (:newline)
     "--- Contents:"
@@ -86,6 +83,9 @@
 (def push-result
   '("Class"
     ": " (:value "clojure.lang.PersistentArrayMap" 0)
+    (:newline)
+    "Count: "
+    "1"
     (:newline)
     (:newline)
     "--- Contents:"
@@ -115,7 +115,8 @@
     (:newline)
     "--- Page Info:"
     (:newline)
-    "  " "Page size: 32, showing page: 2 of 2"))
+    "  " "Page size: 32, showing page: 2 of 2"
+    (:newline)))
 
 (def first-page-result
   '("Class"
@@ -139,7 +140,8 @@
     (:newline)
     "--- Page Info:"
     (:newline)
-    "  " "Page size: 5, showing page: 1 of ?"))
+    "  " "Page size: 5, showing page: 1 of ?"
+    (:newline)))
 
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))
@@ -271,10 +273,10 @@
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"
-    (is (= var-result
-           (value (session/message {:op      "eval"
-                                    :inspect "true"
-                                    :code    "#'cider.nrepl.middleware.inspect-test/any-var"}))))))
+    (is (match? var-result
+                (value (session/message {:op      "eval"
+                                         :inspect "true"
+                                         :code    "#'cider.nrepl.middleware.inspect-test/any-var"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
@@ -367,7 +369,7 @@
                       :idx 1})
     (let [before "111"
           after  "112"]
-      (is (match? (matchers/embeds ["Value" ": " (list :value before 2) '(:newline)])
+      (is (match? (matchers/embeds [(list :value before 2)])
                   (-> {:op "inspect-refresh"}
                       session/message
                       inspector-response)))
@@ -375,7 +377,7 @@
         (session/message {:op      "eval"
                           :code    "(swap! X inc)"})
         (testing "Refreshing it shows its newest value"
-          (is (match? (matchers/embeds ["Value" ": " (list :value after 2) '(:newline)])
+          (is (match? (matchers/embeds [(list :value after 2)])
                       (-> {:op "inspect-refresh"}
                           session/message
                           inspector-response))))))))
@@ -416,6 +418,7 @@
                    (extract-text small-page-2)))))
 
   (testing "page size can be changed via the inspect-set-page-size op"
+    (session/message {:op "inspect-clear"})
     (let [normal-page-size (session/message {:op      "eval"
                                              :inspect "true"
                                              :code    "(range 100)"})
@@ -434,65 +437,81 @@
       (is (re-find #"Page size: 32, showing page: 2 of 4"
                    (extract-text normal-page-2)))
       (is (re-find #"Page size: 5, showing page: 2 of 20"
-                   (extract-text small-page-2))))))
+                   (extract-text small-page-2)))
+
+      (testing "page size config is retained after inspecting new values"
+        (is (re-find #"Page size: 5, showing page: 1 of 200"
+                     (-> (session/message {:op      "eval"
+                                           :inspect "true"
+                                           :code    "(range 1000)"})
+                         extract-text)))))))
 
 (deftest max-atom-length-integration-test
-  ;; Default max length is 150, so 150 - 3 = 147 chars is too long because we
-  ;; need to leave room for an opening quote and trailing ellipsis "xxxxxxxx...
-  ;; NOTE: We'd prefer to use `orchard.inspect/*max-atom-length*` vs.
-  ;; hard-coding `max-len` to 150 in case the default ever changes, but test
-  ;; code isn't processed by mranderson and so can't refer to inlined deps
-  ;; including orchard.
-  ;; See also https://github.com/benedekfazekas/mranderson/issues/5
-  (let [max-len 150 #_(var-get #'orchard.inspect/*max-atom-length*)
-        _ (assert (> max-len 3) "inspect/*max-atom-length* is too short for this test.")
-        too-long (pr-str [(string/join (repeat (- max-len 3) "x"))]) ;; 147
-        trunc-len (- max-len 4) ;; 146
-        x-pattern #(re-pattern (format "\"\\\\\"%s...\"" (string/join (repeat % "x"))))
+  (let [max-len (:max-atom-length @#'orchard.inspect/default-inspector-config)
+        xs #(string/join (repeat % "x"))
+        fits (pr-str [(xs (- max-len 10))]) ;; 140
+        too-long (pr-str [(xs (* max-len 2))]) ;; 300
+        x-pattern #(str "\"" (xs %1) %2 "\\\"")
         extract-text #(-> % :value first)]
 
     (testing "max atom length can be set for the eval op"
-      (let [default-atom-length (session/message {:op      "eval"
+      (is (string/includes? (-> (session/message {:op      "eval"
+                                                  :inspect "true"
+                                                  :code    fits})
+                                extract-text)
+                            (x-pattern (- max-len 10) "")))
+      (is (string/includes? (-> (session/message {:op      "eval"
                                                   :inspect "true"
                                                   :code    too-long})
-            short-atom-length (session/message {:op              "eval"
-                                                :inspect         "true"
-                                                :code            too-long
-                                                :max-atom-length 10})
-            unchanged-default-atom-length (session/message {:op      "eval"
-                                                            :inspect "true"
-                                                            :code    too-long})]
-        (is (re-find (x-pattern trunc-len)
-                     (extract-text default-atom-length)))
-        (is (re-find (x-pattern 6)
-                     (extract-text short-atom-length)))
-        (is (re-find (x-pattern trunc-len)
-                     (extract-text unchanged-default-atom-length)))))
+                                extract-text)
+                            (x-pattern max-len "...")))
+      (is (string/includes? (-> (session/message {:op              "eval"
+                                                  :inspect         "true"
+                                                  :code            too-long
+                                                  :max-atom-length 10})
+                                extract-text)
+                            (x-pattern 10 "..."))))
 
     (testing "max atom length can be changed without re-eval'ing last form"
-      (let [default-atom-length (session/message {:op      "eval"
+      (session/message {:op "inspect-clear"})
+      (is (string/includes? (-> (session/message {:op      "eval"
                                                   :inspect "true"
                                                   :code    too-long})
-            shorten-atom-length (session/message {:op              "inspect-set-max-atom-length"
+                                extract-text)
+                            (x-pattern max-len "...")))
+      (is (string/includes? (-> (session/message {:op              "inspect-set-max-atom-length"
                                                   :max-atom-length 10})
-            longer-atom-length (session/message {:op              "inspect-set-max-atom-length"
-                                                 :max-atom-length 20})
-            unchanged-default-atom-length (session/message {:op      "eval"
-                                                            :inspect "true"
-                                                            :code    too-long})]
-        (is (re-find (x-pattern trunc-len)
-                     (extract-text default-atom-length)))
-        (is (re-find (x-pattern 6)
-                     (extract-text shorten-atom-length)))
-        (is (re-find (x-pattern 16)
-                     (extract-text longer-atom-length)))
-        (is (re-find (x-pattern trunc-len)
-                     (extract-text unchanged-default-atom-length)))))))
+                                extract-text)
+                            (x-pattern 10 "...")))
+      (is (string/includes? (-> (session/message {:op              "inspect-set-max-atom-length"
+                                                  :max-atom-length 20})
+                                extract-text)
+                            (x-pattern 20 "..."))))))
+
+(deftest max-value-length-integration-test
+  (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)
+        extract-text #(-> % :value first)]
+
+    ;; TODO: reduce leeway once orchard.print truncation is fixed
+    (testing "max value length can be set for the eval op"
+      (is (< (- max-len 10)
+             (-> (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    infinite-map-code})
+                 extract-text
+                 count)
+             (+ max-len 2000)))
+      (is (< 490
+             (-> (session/message {:op               "eval"
+                                   :inspect          "true"
+                                   :code             infinite-map-code
+                                   :max-value-length 500})
+                 extract-text
+                 count)
+             800)))))
 
 (deftest max-coll-size-integration-test
-  ;; See NOTE in `max-atom-length-integration-test` about hard-coding
-  ;; `size-limit` here.
-  (let [size-limit 5 #_(var-get #'orchard.inspect/*max-coll-size*)
+  (let [size-limit (:max-coll-size @#'orchard.inspect/default-inspector-config)
         big-size (* 2 size-limit) ;; 10
         big-coll (format "[(range %d)]" big-size)
         coll-pattern (fn [len & [truncate]]
@@ -509,9 +528,10 @@
                                               :inspect       "true"
                                               :code          big-coll
                                               :max-coll-size big-size})
-            unchanged-default-coll-size (session/message {:op      "eval"
-                                                          :inspect "true"
-                                                          :code    big-coll})]
+            unchanged-default-coll-size (do (session/message {:op "inspect-clear"})
+                                            (session/message {:op      "eval"
+                                                              :inspect "true"
+                                                              :code    big-coll}))]
         (is (re-find (coll-pattern size-limit :truncate) ;; #"\( 0 1 2 3 4 ... \)"
                      (extract-text default-coll-size)))
         (is (re-find (coll-pattern big-size)             ;; #"\( 0 1 2 3 4 5 6 7 8 9 \)"
@@ -527,9 +547,10 @@
                                               :max-coll-size big-size})
             smaller-coll-size (session/message {:op            "inspect-set-max-coll-size"
                                                 :max-coll-size (dec big-size)})
-            unchanged-default-coll-size (session/message {:op      "eval"
-                                                          :inspect "true"
-                                                          :code    big-coll})]
+            unchanged-default-coll-size (do (session/message {:op "inspect-clear"})
+                                            (session/message {:op      "eval"
+                                                              :inspect "true"
+                                                              :code    big-coll}))]
         (is (re-find (coll-pattern size-limit :truncate)
                      (extract-text default-coll-size)))
         (is (re-find (coll-pattern big-size)
@@ -538,6 +559,35 @@
                      (extract-text smaller-coll-size)))
         (is (re-find (coll-pattern size-limit :truncate)
                      (extract-text unchanged-default-coll-size)))))))
+
+(deftest max-nested-depth-integration-test
+  (let [nested-coll "'([[[[[[[[[[1]]]]]]]]]])"
+        extract-text #(-> % :value first)]
+
+    (testing "max nested depth can be set for the eval op"
+      (let [default (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    nested-coll})
+            limited (session/message {:op               "eval"
+                                      :inspect          "true"
+                                      :code             nested-coll
+                                      :max-nested-depth 5})]
+        (is (string/includes? (extract-text default)
+                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+        (is (string/includes? (extract-text limited)
+                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))
+
+    (testing "max nested depth can be changed without re-eval'ing last form"
+      (session/message {:op "inspect-clear"})
+      (let [default (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    nested-coll})
+            limited (session/message {:op            "inspect-set-max-nested-depth"
+                                      :max-nested-depth 5})]
+        (is (string/includes? (extract-text default)
+                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+        (is (string/includes? (extract-text limited)
+                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
@@ -564,28 +614,27 @@
                             (session/message {:op   "eval"
                                               :code "sub-map"}))))))))
 
-(when tap?
-  (deftest inspect-tap-current-value-test
-    (testing "inspect-tap-current-value taps the current inspector value"
-      (session/message {:op   "eval"
-                        :code "(def x (+ 3 4)))"})
-      (session/message {:op "eval"
-                        :inspect "true"
-                        :code    "x"})
-      (session/message {:op  "inspect-push"
-                        :idx 1})
-      (session/message {:op  "inspect-tap-current-value"})
+(deftest inspect-tap-current-value-test
+  (testing "inspect-tap-current-value taps the current inspector value"
+    (session/message {:op   "eval"
+                      :code "(def x (+ 3 4)))"})
+    (session/message {:op "eval"
+                      :inspect "true"
+                      :code    "x"})
+    (session/message {:op  "inspect-push"
+                      :idx 1})
+    (session/message {:op  "inspect-tap-current-value"})
 
-      (let [max-time 10000
-            ms 50
-            iterations (long (/ max-time ms))]
-        (loop [i 0]
-          (when (and (not= 7 @inspect-tap-current-value-test-atom)
-                     (< i iterations))
-            (Thread/sleep ms)
-            (recur (inc i)))))
+    (let [max-time 10000
+          ms 50
+          iterations (long (/ max-time ms))]
+      (loop [i 0]
+        (when (and (not= 7 @inspect-tap-current-value-test-atom)
+                   (< i iterations))
+          (Thread/sleep ms)
+          (recur (inc i)))))
 
-      (is (= 7 @inspect-tap-current-value-test-atom)))))
+    (is (= 7 @inspect-tap-current-value-test-atom))))
 
 (deftest doc-fragments-test
   (when (contains? (info/info 'user `Thread/sleep)

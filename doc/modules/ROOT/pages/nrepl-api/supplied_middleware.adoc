@@ -54,7 +54,7 @@
 | `wrap-inspect`
 | -
 | No
-| `inspect-(start/refresh/pop/push/reset/get-path)`
+| `inspect-(start/refresh/pop/push)`
 | Inspect a Clojure expression.
 
 | `wrap-log`

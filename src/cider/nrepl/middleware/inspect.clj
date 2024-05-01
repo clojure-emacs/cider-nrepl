@@ -11,17 +11,24 @@
   (:import
    (nrepl.transport Transport)))
 
+(defn- update-inspector [inspector f & args]
+  ;; Ensure that there is valid inspector value before passing it to
+  ;; orchard.inspect functions.
+  (let [inspector (if (map? inspector)
+                    inspector (inspect/start nil))]
+    (apply f inspector args)))
+
 (defn swap-inspector!
   [{:keys [session]} f & args]
   (-> session
-      (alter-meta! update ::inspector #(apply f % args))
+      (alter-meta! update ::inspector #(apply update-inspector % f args))
       (get ::inspector)))
 
 (defn- inspector-response
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
 
-  ([msg {:keys [rendered value]} resp]
+  ([msg {:keys [rendered value path]} resp]
    (let [class-sym (when (class? value)
                      (-> ^Class value .getCanonicalName symbol))
          method-sym (when (instance? java.lang.reflect.Method value)
@@ -38,31 +45,29 @@
                                                   [:doc-fragments
                                                    :doc-first-sentence-fragments
                                                    :doc-block-tags-fragments]))
-                                   {:value (binding [*print-length* nil]
-                                             (pr-str rendered))})))))
+                                   (binding [*print-length* nil]
+                                     {:value (pr-str (seq rendered))
+                                      :path (pr-str (seq path))}))))))
+
+(defn- warmup-javadoc-cache [^Class clazz]
+  (when-let [class-sym (some-> clazz .getCanonicalName symbol)]
+    ;; Don't spawn a `future` for already-computed caches:
+    (when-not (get orchard.java/cache class-sym)
+      (future
+        ;; Warmup the Orchard cache for the class of the currently inspected
+        ;; value. This way, if the user inspects this class next, the underlying
+        ;; inspect request will complete quickly.
+        (info/info 'user class-sym)
+        ;; Same for its implemented interfaces:
+        (doseq [^Class interface (.getInterfaces clazz)]
+          (info/info 'user (-> interface .getCanonicalName symbol)))))))
 
 (defn inspect-reply*
-  [{:keys [page-size max-atom-length max-coll-size] :as msg} value]
-  (let [page-size (or page-size 32)
-        {inspector-value :value
-         :as inspector} (swap-inspector! msg #(-> %
-                                                  (assoc :page-size page-size
-                                                         :max-atom-length max-atom-length
-                                                         :max-coll-size max-coll-size)
-                                                  (inspect/start value)))]
-    (when-let [^Class inspector-value-class (class inspector-value)]
-      ;; Don't spawn a `future` for already-computed caches:
-      (when-not (get orchard.java/cache (-> inspector-value-class .getCanonicalName symbol))
-        (future
-          ;; Warmup the Orchard cache for the class of the currently inspected value.
-          ;; This way, if the user inspects this class next,
-          ;; the underlying inspect request will complete quickly.
-          (info/info 'user
-                     (-> inspector-value-class .getCanonicalName symbol))
-          ;; Same for its implemented interfaces:
-          (doseq [^Class interface (.getInterfaces inspector-value-class)]
-            (info/info 'user
-                       (-> interface .getCanonicalName symbol))))))
+  [msg value]
+  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
+                                 :max-value-length :max-nested-depth])
+        inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
+    (warmup-javadoc-cache (class (:value inspector)))
     (inspector-response msg inspector {})))
 
 (defn inspect-reply
@@ -119,12 +124,7 @@
   (inspector-response msg (swap-inspector! msg inspect/previous-sibling)))
 
 (defn refresh-reply [msg]
-  (inspector-response msg (swap-inspector! msg #(or (some-> %
-                                                            inspect/inspect-render)
-                                                    (inspect/fresh)))))
-
-(defn get-path-reply [{:keys [session]}]
-  (get-in (meta session) [::inspector :path]))
+  (inspector-response msg (swap-inspector! msg inspect/inspect-render)))
 
 (defn next-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/next-page)))
@@ -143,8 +143,12 @@
   (inspector-response msg (swap-inspector! msg inspect/set-max-coll-size
                                            (:max-coll-size msg))))
 
+(defn set-max-nested-depth-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/set-max-nested-depth
+                                           (:max-nested-depth msg))))
+
 (defn clear-reply [msg]
-  (inspector-response msg (swap-inspector! msg (constantly (inspect/fresh)))))
+  (inspector-response msg (swap-inspector! msg (constantly (inspect/start nil)))))
 
 (defn def-current-value [msg]
   (inspector-response msg (swap-inspector! msg inspect/def-current-value (symbol (:ns msg)) (:var-name msg))))
@@ -165,12 +169,12 @@
       "inspect-next-sibling" next-sibling-reply
       "inspect-previous-sibling" previous-sibling-reply
       "inspect-refresh" refresh-reply
-      "inspect-get-path" get-path-reply
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-set-page-size" set-page-size-reply
       "inspect-set-max-atom-length" set-max-atom-length-reply
       "inspect-set-max-coll-size" set-max-coll-size-reply
+      "inspect-set-max-nested-depth" set-max-nested-depth-reply
       "inspect-clear" clear-reply
       "inspect-def-current-value" def-current-value
       "inspect-tap-current-value" tap-current-value

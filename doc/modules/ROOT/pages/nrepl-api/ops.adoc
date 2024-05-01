@@ -497,6 +497,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -519,26 +520,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
-* `:status` "done"
-* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
-
-
-
-=== `inspect-get-path`
-
-Returns the path to the current position in the inspected value.
-
-Required parameters::
-* `:session` The current session
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
-* `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
-* `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -577,6 +559,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -598,6 +581,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -618,6 +602,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -638,6 +623,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -659,6 +645,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -680,6 +667,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -700,6 +688,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -721,6 +710,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -742,6 +732,29 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `inspect-set-max-nested-depth`
+
+Set the maximum nested levels to display before truncating.
+
+Required parameters::
+* `:max-nested-depth` New nested depth.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -763,6 +776,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -783,6 +797,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
@@ -804,6 +819,7 @@ Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 

@@ -302,7 +302,8 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
                :returns {"status" "done"}}}}))
 
 (def inspector-returns (merge {"status" "\"done\""
-                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."}
+                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."
+                               "path" "Printed representation of current inspector path."}
                               fragments-doc))
 
 (def-wrapper wrap-inspect cider.nrepl.middleware.inspect/handle-inspect
@@ -337,10 +338,6 @@ if applicable, and re-render the updated value."
               {:doc "Re-renders the currently inspected value."
                :requires {"session" "The current session"}
                :returns inspector-returns}
-              "inspect-get-path"
-              {:doc "Returns the path to the current position in the inspected value."
-               :requires {"session" "The current session"}
-               :returns inspector-returns}
               "inspect-next-page"
               {:doc "Jumps to the next page in paginated collection view."
                :requires {"session" "The current session"}
@@ -362,6 +359,11 @@ if applicable, and re-render the updated value."
               "inspect-set-max-coll-size"
               {:doc "Set the number of nested collection members to display before truncating."
                :requires {"max-coll-size" "New collection size."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "inspect-set-max-nested-depth"
+              {:doc "Set the maximum nested levels to display before truncating."
+               :requires {"max-nested-depth" "New nested depth."
                           "session" "The current session"}
                :returns inspector-returns}
               "inspect-clear"
