@@ -96,6 +96,26 @@
     (:newline)
     "  " ":a"))
 
+(def sibling-result
+  '("Class"
+    ": "
+    (:value "java.lang.String" 0)
+    (:newline)
+    "Value: "
+    "\"c\""
+    (:newline)
+    (:newline)
+    "--- Print:"
+    (:newline)
+    "  "
+    "c"
+    (:newline)
+    (:newline)
+    "--- Path:"
+    (:newline)
+    "  "
+    "(nth 2)"))
+
 (def next-page-result
   '("Class: "
     (:value "clojure.lang.LazySeq" 0)
@@ -230,6 +250,22 @@
         (is (-> response ^String (:err) (.startsWith "java.lang.Exception: refresh exception")))
         (is (:pp-stacktrace response)))))
 
+  (testing "inspect-next-sibling error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-sibling exception")))]
+      (let [response (session/message {:op "inspect-next-sibling"})]
+        (is (= (:status response) #{"inspect-next-sibling-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: next-sibling exception")))
+        (is (:pp-stacktrace response)))))
+
+  (testing "inspect-previous-sibling error handling"
+    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "previous-sibling exception")))]
+      (let [response (session/message {:op "inspect-previous-sibling"})]
+        (is (= (:status response) #{"inspect-previous-sibling-error" "done"}))
+        (is (= (:ex response) "class java.lang.Exception"))
+        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: previous-sibling exception")))
+        (is (:pp-stacktrace response)))))
+
   (testing "inspect-next-page error handling"
     (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-page exception")))]
       (let [response (session/message {:op "inspect-next-page"})]
@@ -293,6 +329,28 @@
                                       :code    code})
                     (session/message {:op  "inspect-push"
                                       :idx 2})))))))
+
+(deftest next-sibling-integration-test
+  (testing "jumping to next sibling in a rendered expr inspector"
+    (is (= sibling-result
+           (value (do
+                    (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
+                    (session/message {:op  "inspect-push"
+                                      :idx 2})
+                    (session/message {:op  "inspect-next-sibling"})))))))
+
+(deftest previous-sibling-integration-test
+  (testing "jumping to previous sibling in a rendered expr inspector"
+    (is (= sibling-result
+           (value (do
+                    (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
+                    (session/message {:op  "inspect-push"
+                                      :idx 4})
+                    (session/message {:op  "inspect-previous-sibling"})))))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
