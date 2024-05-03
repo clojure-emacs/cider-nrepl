@@ -8,7 +8,7 @@
 * Refine `ops-that-can-eval` internals, adapting them to the new `cider.nrepl.middleware.reload` ops.
 * Bump `nrepl` to [1.1.1](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#111-2024-02-20).
 * Bump `compliment` to [0.5.3](https://github.com/alexander-yakushev/compliment/blob/14329344/CHANGELOG.md#053-2024-04-11).
-* Bump `clj-reload` to [0.4.3](https://github.com/tonsky/clj-reload/blob/main/CHANGELOG.md#043---mar-21-2024).
+* Bump `clj-reload` to [0.6.0](https://github.com/tonsky/clj-reload/blob/0.6.0/CHANGELOG.md#060---may-3-2024).
 * Bump `tools.trace` to 0.8.0 (no changes in source code).
 * Bump `tools.reader` to [1.4.1](https://github.com/clojure/tools.reader/blob/master/CHANGELOG.md).
 * Bump `orchard` to [0.25.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0250-2024-05-03).
