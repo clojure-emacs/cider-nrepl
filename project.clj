@@ -20,7 +20,7 @@
                  ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
                     ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
                     {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
-                 ^:inline-dep [io.github.tonsky/clj-reload "0.4.3" :exclusions [org.clojure/clojure]]
+                 ^:inline-dep [io.github.tonsky/clj-reload "0.6.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [org.clojure/tools.trace "0.8.0"]
                  ^:inline-dep [org.clojure/tools.reader "1.4.1"]
                  [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
