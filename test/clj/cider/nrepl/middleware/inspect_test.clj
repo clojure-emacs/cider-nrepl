@@ -97,8 +97,7 @@
     "  " ":a"))
 
 (def sibling-result
-  '("Class"
-    ": "
+  '("Class: "
     (:value "java.lang.String" 0)
     (:newline)
     "Value: "
