@@ -10,8 +10,8 @@
   '["nil" (:newline)])
 
 (def var-result
-  '("Class"
-    ": " (:value "clojure.lang.Cons" 0)
+  '("Class: "
+    (:value "clojure.lang.Cons" 0)
     (:newline)
     (:newline)
     "--- Contents:"
@@ -24,8 +24,8 @@
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
 (def inspect-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentArrayMap" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentArrayMap" 0)
     (:newline)
     "Count: "
     "4"
@@ -43,8 +43,8 @@
     (:newline)))
 
 (def push-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentArrayMap" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentArrayMap" 0)
     (:newline)
     "Count: " "1"
     (:newline)
@@ -59,8 +59,8 @@
     "  " ":a"))
 
 (def next-page-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentList" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentList" 0)
     (:newline)
     "Count: " "35"
     (:newline)
@@ -82,8 +82,8 @@
     (:newline)))
 
 (def first-page-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentList" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentList" 0)
     (:newline)
     "Count: " "35"
     (:newline)
