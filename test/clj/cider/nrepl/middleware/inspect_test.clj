@@ -33,8 +33,7 @@
 (def any-var true)
 
 (def var-result
-  '("Class"
-    ": "
+  '("Class: "
     (:value "clojure.lang.Var" 0)
     (:newline)
     "Value: "
@@ -62,8 +61,8 @@
 (def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
 
 (def inspect-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentTreeMap" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentTreeMap" 0)
     (:newline)
     "Count: "
     "4"
@@ -81,8 +80,8 @@
     (:newline)))
 
 (def push-result
-  '("Class"
-    ": " (:value "clojure.lang.PersistentArrayMap" 0)
+  '("Class: "
+    (:value "clojure.lang.PersistentArrayMap" 0)
     (:newline)
     "Count: "
     "1"
@@ -98,8 +97,8 @@
     "  " ":a"))
 
 (def next-page-result
-  '("Class"
-    ": " (:value "clojure.lang.LazySeq" 0)
+  '("Class: "
+    (:value "clojure.lang.LazySeq" 0)
     (:newline)
     (:newline)
     "--- Contents:"
@@ -119,8 +118,8 @@
     (:newline)))
 
 (def first-page-result
-  '("Class"
-    ": " (:value "clojure.lang.LazySeq" 0)
+  '("Class: "
+    (:value "clojure.lang.LazySeq" 0)
     (:newline)
     (:newline)
     "--- Contents:"
