@@ -588,6 +588,23 @@
         (is (string/includes? (extract-text limited)
                               "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))))
 
+(deftest no-spacious-integration-test
+  (let [nested-coll "'([[[[[[[[[[1]]]]]]]]]])"
+        extract-text #(-> % :value first)]
+
+    (testing "spacious can be disabled for tighter rendering"
+      (let [default (session/message {:op      "eval"
+                                      :inspect "true"
+                                      :code    nested-coll})
+            tight (session/message {:op       "eval"
+                                    :inspect  "true"
+                                    :code     nested-coll
+                                    :spacious "false"})]
+        (is (string/includes? (extract-text default)
+                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+        (is (string/includes? (extract-text tight)
+                              "\"[[[[[[[[[[1]]]]]]]]]]\""))))))
+
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
     (is (re-find #"showing page: \d+ of \d+"

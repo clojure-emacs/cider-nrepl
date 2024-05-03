@@ -65,7 +65,12 @@
 (defn inspect-reply*
   [msg value]
   (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
-                                 :max-value-length :max-nested-depth])
+                                 :max-value-length :max-nested-depth :spacious])
+        config (if (contains? config :spacious)
+                 (update config :spacious #(case %
+                                             ("false" "nil") false
+                                             true))
+                 config)
         inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
     (warmup-javadoc-cache (class (:value inspector)))
     (inspector-response msg inspector {})))
