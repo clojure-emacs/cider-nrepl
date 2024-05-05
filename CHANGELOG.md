@@ -16,6 +16,7 @@
 * Add `inspect-set-max-nested-depth` op that customizes how many nested levels the Inspector will print before abridging.
 * [#826](https://github.com/clojure-emacs/cider-nrepl/pull/826): Remove broken `inspect-get-path` middleware op, return path in every inspector middleware op instead.
 * Reduce the print length of values that CIDER debugger produces for overlay.
+* [cider#3652](https://github.com/clojure-emacs/cider/issues/3652) `middleware.refresh`: elide a lock for the `"refresh-clear"` op.
 
 ## 0.47.1 (2024-03-24)
 
