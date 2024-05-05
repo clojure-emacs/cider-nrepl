@@ -76,12 +76,18 @@
    msg]
   (reload-utils/after-reply error msg))
 
+(def ^{:added "0.48.0"} user-indicated-clear?
+  "Whether the user indicated that a `clear` is desired."
+  (atom false))
+
 (defn- refresh-reply
   [{:keys [dirs transport session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
             (locking refresh-tracker
+              (when @user-indicated-clear?
+                (vreset! refresh-tracker (track/tracker)))
               (vswap! refresh-tracker
                       (fn [tracker]
                         (try
@@ -98,7 +104,10 @@
 
                           (catch Throwable e
                             (reload-utils/error-reply {:error e} msg)
-                            tracker))))))
+                            tracker)
+
+                          (finally
+                            (reset! user-indicated-clear? false)))))))
           (fn []
             (transport/send transport (response-for msg {:status :done}))))))
 
@@ -107,8 +116,10 @@
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
-            (locking refresh-tracker
-              (vreset! refresh-tracker (track/tracker))))
+            ;; This used to be a `locking`-based call to our `clear` implementation
+            ;; Now it merely "enqueues" a clearing, because the "refresh-clear" op is called synchronously by CIDER,
+            ;; so the `locking` could cause timeouts (https://github.com/clojure-emacs/cider/issues/3652 )
+            (reset! user-indicated-clear? true))
           (fn []
             (transport/send transport (response-for msg {:status :done}))))))
 
