@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.48.0 (2024-05-13)
+
 ### Changes
 
 * [#868](https://github.com/clojure-emacs/cider-nrepl/pull/868): Drop support for Clojure 1.9.
