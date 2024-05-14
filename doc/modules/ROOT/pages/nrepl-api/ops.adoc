@@ -675,14 +675,18 @@ Returns::
 
 === `inspect-refresh`
 
-Re-renders the currently inspected value.
+Updates inspector with the provided config and re-renders the current value.
 
 Required parameters::
 * `:session` The current session
 
 
 Optional parameters::
-{blank}
+* `:max-atom-length` New max length of single rendered value
+* `:max-coll-size` New max size of rendered collection
+* `:max-nested-depth` New max nested depth of rendered collection
+* `:page-size` New page size
+
 
 Returns::
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
@@ -696,7 +700,7 @@ Returns::
 
 === `inspect-set-max-atom-length`
 
-Set the max length of nested atoms to specified value.
+[DEPRECATED - use ``inspect-refresh`` instead] Set the max length of nested atoms to specified value.
 
 Required parameters::
 * `:max-atom-length` New max length.
@@ -718,7 +722,7 @@ Returns::
 
 === `inspect-set-max-coll-size`
 
-Set the number of nested collection members to display before truncating.
+[DEPRECATED - use ``inspect-refresh`` instead] Set the number of nested collection members to display before truncating.
 
 Required parameters::
 * `:max-coll-size` New collection size.
@@ -740,7 +744,7 @@ Returns::
 
 === `inspect-set-max-nested-depth`
 
-Set the maximum nested levels to display before truncating.
+[DEPRECATED - use ``inspect-refresh`` instead] Set the maximum nested levels to display before truncating.
 
 Required parameters::
 * `:max-nested-depth` New nested depth.
@@ -762,7 +766,7 @@ Returns::
 
 === `inspect-set-page-size`
 
-Sets the page size in paginated view to specified value.
+[DEPRECATED - use ``inspect-refresh`` instead] Sets the page size in paginated view to specified value.
 
 Required parameters::
 * `:page-size` New page size.
@@ -1147,7 +1151,7 @@ Returns::
 
 === `retest`
 
-[DEPRECATED - ``use test-var-query`` instead] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+[DEPRECATED - use ``test-var-query`` instead] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -1281,7 +1285,7 @@ Returns::
 
 === `test`
 
-[DEPRECATED - ``use test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+[DEPRECATED - use ``test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
