@@ -62,15 +62,18 @@
         (doseq [^Class interface (.getInterfaces clazz)]
           (info/info 'user (-> interface .getCanonicalName symbol)))))))
 
+(defn- msg->inspector-config [msg]
+  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
+                                 :max-value-length :max-nested-depth :spacious])]
+    (if (contains? config :spacious)
+      (update config :spacious #(case %
+                                  ("false" "nil") false
+                                  true))
+      config)))
+
 (defn inspect-reply*
   [msg value]
-  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
-                                 :max-value-length :max-nested-depth :spacious])
-        config (if (contains? config :spacious)
-                 (update config :spacious #(case %
-                                             ("false" "nil") false
-                                             true))
-                 config)
+  (let [config (msg->inspector-config msg)
         inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
     (warmup-javadoc-cache (class (:value inspector)))
     (inspector-response msg inspector {})))
@@ -128,29 +131,20 @@
 (defn previous-sibling-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/previous-sibling)))
 
-(defn refresh-reply [msg]
-  (inspector-response msg (swap-inspector! msg inspect/inspect-render)))
-
 (defn next-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/next-page)))
 
 (defn prev-page-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/prev-page)))
 
-(defn set-page-size-reply [msg]
-  (inspector-response msg (swap-inspector! msg inspect/set-page-size (:page-size msg))))
+(defn refresh-reply [msg]
+  (let [overrides (msg->inspector-config msg)]
+    (inspector-response msg (swap-inspector! msg #(inspect/refresh % overrides)))))
 
-(defn set-max-atom-length-reply [msg]
-  (inspector-response msg (swap-inspector! msg inspect/set-max-atom-length
-                                           (:max-atom-length msg))))
-
-(defn set-max-coll-size-reply [msg]
-  (inspector-response msg (swap-inspector! msg inspect/set-max-coll-size
-                                           (:max-coll-size msg))))
-
-(defn set-max-nested-depth-reply [msg]
-  (inspector-response msg (swap-inspector! msg inspect/set-max-nested-depth
-                                           (:max-nested-depth msg))))
+(defn ^:deprecated set-page-size-reply [msg] (refresh-reply msg))
+(defn ^:deprecated set-max-atom-length-reply [msg] (refresh-reply msg))
+(defn ^:deprecated set-max-coll-size-reply [msg] (refresh-reply msg))
+(defn ^:deprecated set-max-nested-depth-reply [msg] (refresh-reply msg))
 
 (defn clear-reply [msg]
   (inspector-response msg (swap-inspector! msg (constantly (inspect/start nil)))))
@@ -173,13 +167,13 @@
       "inspect-push" push-reply
       "inspect-next-sibling" next-sibling-reply
       "inspect-previous-sibling" previous-sibling-reply
-      "inspect-refresh" refresh-reply
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
-      "inspect-set-page-size" set-page-size-reply
-      "inspect-set-max-atom-length" set-max-atom-length-reply
-      "inspect-set-max-coll-size" set-max-coll-size-reply
-      "inspect-set-max-nested-depth" set-max-nested-depth-reply
+      "inspect-refresh" refresh-reply
+      "inspect-set-page-size" refresh-reply
+      "inspect-set-max-atom-length" refresh-reply
+      "inspect-set-max-coll-size" refresh-reply
+      "inspect-set-max-nested-depth" refresh-reply
       "inspect-clear" clear-reply
       "inspect-def-current-value" def-current-value
       "inspect-tap-current-value" tap-current-value
