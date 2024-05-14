@@ -335,8 +335,12 @@ if applicable, and re-render the updated value."
                :requires {"session" "The current session"}
                :returns inspector-returns}
               "inspect-refresh"
-              {:doc "Re-renders the currently inspected value."
+              {:doc "Updates inspector with the provided config and re-renders the current value."
                :requires {"session" "The current session"}
+               :optional {"page-size" "New page size"
+                          "max-atom-length" "New max length of single rendered value"
+                          "max-coll-size" "New max size of rendered collection"
+                          "max-nested-depth" "New max nested depth of rendered collection"}
                :returns inspector-returns}
               "inspect-next-page"
               {:doc "Jumps to the next page in paginated collection view."
@@ -347,22 +351,22 @@ if applicable, and re-render the updated value."
                :requires {"session" "The current session"}
                :returns inspector-returns}
               "inspect-set-page-size"
-              {:doc "Sets the page size in paginated view to specified value."
+              {:doc "[DEPRECATED - use `inspect-refresh` instead] Sets the page size in paginated view to specified value."
                :requires {"page-size" "New page size."
                           "session" "The current session"}
                :returns inspector-returns}
               "inspect-set-max-atom-length"
-              {:doc "Set the max length of nested atoms to specified value."
+              {:doc "[DEPRECATED - use `inspect-refresh` instead] Set the max length of nested atoms to specified value."
                :requires {"max-atom-length" "New max length."
                           "session" "The current session"}
                :returns inspector-returns}
               "inspect-set-max-coll-size"
-              {:doc "Set the number of nested collection members to display before truncating."
+              {:doc "[DEPRECATED - use `inspect-refresh` instead] Set the number of nested collection members to display before truncating."
                :requires {"max-coll-size" "New collection size."
                           "session" "The current session"}
                :returns inspector-returns}
               "inspect-set-max-nested-depth"
-              {:doc "Set the maximum nested levels to display before truncating."
+              {:doc "[DEPRECATED - use `inspect-refresh` instead] Set the maximum nested levels to display before truncating."
                :requires {"max-nested-depth" "New nested depth."
                           "session" "The current session"}
                :returns inspector-returns}
@@ -757,7 +761,7 @@ stack frame of the most recent exception. This op is deprecated, please use the
               :optional (merge wrap-print-optional-arguments)
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "test"
-             {:doc "[DEPRECATED - `use test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "[DEPRECATED - use `test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "test-all"
@@ -768,7 +772,7 @@ stack frame of the most recent exception. This op is deprecated, please use the
              {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments}
              "retest"
-             {:doc "[DEPRECATED - `use test-var-query` instead] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "[DEPRECATED - use `test-var-query` instead] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}}})
 
