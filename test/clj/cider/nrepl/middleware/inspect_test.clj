@@ -282,28 +282,43 @@
         (is (:pp-stacktrace response)))))
 
   (testing "inspect-set-page-size error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "page-size exception")))]
-      (let [response (session/message {:op "inspect-set-page-size" :page-size 10})]
-        (is (= (:status response) #{"inspect-set-page-size-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: page-size exception")))
-        (is (:pp-stacktrace response)))))
+    (let [response (session/message {:op "inspect-set-page-size" :page-size 0})]
+      (is (= #{"inspect-set-page-size-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? page-size\).*" (:err response)))
+      (is (:pp-stacktrace response)))
+
+    (let [response (session/message {:op "inspect-refresh" :page-size 0})]
+      (is (= #{"inspect-refresh-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? page-size\).*" (:err response)))
+      (is (:pp-stacktrace response))))
 
   (testing "inspect-set-max-atom-length error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "max-atom-length exception")))]
-      (let [response (session/message {:op "inspect-set-max-atom-length" :max-atom-length 10})]
-        (is (= (:status response) #{"inspect-set-max-atom-length-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: max-atom-length exception")))
-        (is (:pp-stacktrace response)))))
+    (let [response (session/message {:op "inspect-set-max-atom-length" :max-atom-length 0})]
+      (is (= #{"inspect-set-max-atom-length-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response)))
+      (is (:pp-stacktrace response)))
+
+    (let [response (session/message {:op "inspect-refresh" :max-atom-length 0})]
+      (is (= #{"inspect-refresh-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response)))
+      (is (:pp-stacktrace response))))
 
   (testing "inspect-set-max-coll-size error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "max-coll-size exception")))]
-      (let [response (session/message {:op "inspect-set-max-coll-size" :max-coll-size 10})]
-        (is (= (:status response) #{"inspect-set-max-coll-size-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: max-coll-size exception")))
-        (is (:pp-stacktrace response))))))
+    (let [response (session/message {:op "inspect-set-max-coll-size" :max-coll-size 0})]
+      (is (= #{"inspect-set-max-coll-size-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response)))
+      (is (:pp-stacktrace response)))
+
+    (let [response (session/message {:op "inspect-refresh" :max-coll-size 0})]
+      (is (= #{"inspect-refresh-error" "done"} (:status response)))
+      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
+      (is (match? #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response)))
+      (is (:pp-stacktrace response)))))
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"
@@ -367,7 +382,7 @@
                     (session/message {:op      "eval"
                                       :inspect "true"
                                       :code    "(map identity (range 35))"})
-                    (session/message {:op        "inspect-set-page-size"
+                    (session/message {:op        "inspect-refresh"
                                       :page-size 5})
                     (session/message {:op "inspect-next-page"})
                     (session/message {:op "inspect-prev-page"})))))))
@@ -473,14 +488,14 @@
       (is (re-find #"Page size: 5, showing page: 2 of 20"
                    (extract-text small-page-2)))))
 
-  (testing "page size can be changed via the inspect-set-page-size op"
+  (testing "page size can be changed via the inspect-refresh op"
     (session/message {:op "inspect-clear"})
     (let [normal-page-size (session/message {:op      "eval"
                                              :inspect "true"
                                              :code    "(range 100)"})
           normal-page-2    (session/message {:op "inspect-next-page"})
 
-          small-page-size  (session/message {:op        "inspect-set-page-size"
+          small-page-size  (session/message {:op        "inspect-refresh"
                                              :page-size 5})
           small-page-2     (session/message {:op "inspect-next-page"})
 
@@ -535,11 +550,11 @@
                                                   :code    too-long})
                                 extract-text)
                             (x-pattern max-len "...")))
-      (is (string/includes? (-> (session/message {:op              "inspect-set-max-atom-length"
+      (is (string/includes? (-> (session/message {:op              "inspect-refresh"
                                                   :max-atom-length 10})
                                 extract-text)
                             (x-pattern 10 "...")))
-      (is (string/includes? (-> (session/message {:op              "inspect-set-max-atom-length"
+      (is (string/includes? (-> (session/message {:op              "inspect-refresh"
                                                   :max-atom-length 20})
                                 extract-text)
                             (x-pattern 20 "..."))))))
@@ -548,16 +563,15 @@
   (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)
         extract-text #(-> % :value first)]
 
-    ;; TODO: reduce leeway once orchard.print truncation is fixed
     (testing "max value length can be set for the eval op"
-      (is (< (- max-len 10)
+      (is (< max-len
              (-> (session/message {:op      "eval"
                                    :inspect "true"
                                    :code    infinite-map-code})
                  extract-text
                  count)
-             (+ max-len 2000)))
-      (is (< 490
+             (+ max-len 300)))
+      (is (< 500
              (-> (session/message {:op               "eval"
                                    :inspect          "true"
                                    :code             infinite-map-code
@@ -599,9 +613,9 @@
       (let [default-coll-size (session/message {:op      "eval"
                                                 :inspect "true"
                                                 :code    big-coll})
-            large-coll-size (session/message {:op            "inspect-set-max-coll-size"
+            large-coll-size (session/message {:op            "inspect-refresh"
                                               :max-coll-size big-size})
-            smaller-coll-size (session/message {:op            "inspect-set-max-coll-size"
+            smaller-coll-size (session/message {:op            "inspect-refresh"
                                                 :max-coll-size (dec big-size)})
             unchanged-default-coll-size (do (session/message {:op "inspect-clear"})
                                             (session/message {:op      "eval"
@@ -638,7 +652,7 @@
       (let [default (session/message {:op      "eval"
                                       :inspect "true"
                                       :code    nested-coll})
-            limited (session/message {:op            "inspect-set-max-nested-depth"
+            limited (session/message {:op            "inspect-refresh"
                                       :max-nested-depth 5})]
         (is (string/includes? (extract-text default)
                               "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
