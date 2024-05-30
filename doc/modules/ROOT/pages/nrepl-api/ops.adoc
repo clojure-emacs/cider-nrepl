@@ -686,6 +686,7 @@ Optional parameters::
 * `:max-coll-size` New max size of rendered collection
 * `:max-nested-depth` New max nested depth of rendered collection
 * `:page-size` New page size
+* `:view-mode` Mode of viewing the value - either ``:normal`` or ``:object``
 
 
 Returns::
@@ -813,6 +814,27 @@ Send the currently inspected sub-value at ``idx`` to the Clojure tap>.
 
 Required parameters::
 * `:idx` Index of the internal value to be tapped
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `inspect-toggle-view-mode`
+
+Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. ``:normal`` is the default. When view mode is ``:object``, any value will be rendered as a Java object (fields shown as is).
+
+Required parameters::
 * `:session` The current session
 
 
