@@ -340,7 +340,12 @@ if applicable, and re-render the updated value."
                :optional {"page-size" "New page size"
                           "max-atom-length" "New max length of single rendered value"
                           "max-coll-size" "New max size of rendered collection"
-                          "max-nested-depth" "New max nested depth of rendered collection"}
+                          "max-nested-depth" "New max nested depth of rendered collection"
+                          "view-mode" "Mode of viewing the value - either `:normal` or `:object`"}
+               :returns inspector-returns}
+              "inspect-toggle-view-mode"
+              {:doc "Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:object`, any value will be rendered as a Java object (fields shown as is)."
+               :requires {"session" "The current session"}
                :returns inspector-returns}
               "inspect-next-page"
               {:doc "Jumps to the next page in paginated collection view."
