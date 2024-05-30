@@ -62,14 +62,20 @@
         (doseq [^Class interface (.getInterfaces clazz)]
           (info/info 'user (-> interface .getCanonicalName symbol)))))))
 
+(defn- update-if-present [m k update-fn & args]
+  (if (contains? m k)
+    (apply update m k update-fn args)
+    m))
+
 (defn- msg->inspector-config [msg]
   (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
-                                 :max-value-length :max-nested-depth :spacious])]
-    (if (contains? config :spacious)
-      (update config :spacious #(case %
-                                  ("false" "nil") false
-                                  true))
-      config)))
+                                 :max-value-length :max-nested-depth :spacious
+                                 :view-mode])]
+    (-> config
+        (update-if-present :spacious #(case %
+                                        ("false" "nil") false
+                                        true))
+        (update-if-present :view-mode keyword))))
 
 (defn inspect-reply*
   [msg value]
@@ -141,6 +147,14 @@
   (let [overrides (msg->inspector-config msg)]
     (inspector-response msg (swap-inspector! msg #(inspect/refresh % overrides)))))
 
+(defn- toggle-view-mode [{:keys [view-mode] :as inspector}]
+  (let [toggle-order {:normal :object, :object :normal}
+        next-view-mode (toggle-order view-mode :normal)]
+    (inspect/refresh inspector {:view-mode next-view-mode})))
+
+(defn toggle-view-mode-reply [msg]
+  (inspector-response msg (swap-inspector! msg toggle-view-mode)))
+
 (defn ^:deprecated set-page-size-reply [msg] (refresh-reply msg))
 (defn ^:deprecated set-max-atom-length-reply [msg] (refresh-reply msg))
 (defn ^:deprecated set-max-coll-size-reply [msg] (refresh-reply msg))
@@ -170,6 +184,7 @@
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-refresh" refresh-reply
+      "inspect-toggle-view-mode" toggle-view-mode-reply
       "inspect-set-page-size" refresh-reply
       "inspect-set-max-atom-length" refresh-reply
       "inspect-set-max-coll-size" refresh-reply

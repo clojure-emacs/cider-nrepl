@@ -164,6 +164,9 @@
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))
 
+(defn value-skip-header [resp]
+  (drop 7 (value resp)))
+
 ;; integration tests
 
 (deftest nil-integration-test
@@ -675,6 +678,64 @@
                               "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
         (is (string/includes? (extract-text tight)
                               "\"[[[[[[[[[[1]]]]]]]]]]\""))))))
+
+(def normal-mode-prefix
+  ["--- Contents:"
+   [:newline]
+   "  " "0" ". " [:value "1" number?]
+   [:newline]
+   "  " "1" ". " [:value "2" number?]
+   [:newline]
+   "  " "2" ". " [:value "3" number?]])
+
+(def object-mode-prefix
+  ["--- Instance fields:"
+   [:newline]
+   "  " [:value "_count" number?] " = " [:value "3" number?]
+   [:newline]
+   "  " [:value "_first" number?] " = " [:value "1" number?]
+   [:newline]
+   "  " [:value "_hash" number?] " = " [:value "0" number?]
+   [:newline]
+   "  " [:value "_hasheq" number?] " = " [:value "0" number?]
+   [:newline]
+   "  " [:value "_meta" number?] " = " [:value "nil" number?]
+   [:newline]
+   "  " [:value "_rest" number?] " = " [:value "( 2 3 )" number?]
+   [:newline]])
+
+(deftest object-view-mode-integration-test
+  (testing "object view can be enabled to render the value as POJO"
+    (is (match? (matchers/prefix object-mode-prefix)
+                (value-skip-header (session/message {:op        "eval"
+                                                     :inspect   "true"
+                                                     :view-mode "object"
+                                                     :code      "(list 1 2 3)"})))))
+
+  (testing "object view can be enabled with refresh op"
+    (session/message {:op "inspect-clear"})
+    (session/message {:op      "eval"
+                      :inspect "true"
+                      :code    "(list 1 2 3)"})
+    (is (match? (matchers/prefix object-mode-prefix)
+                (value-skip-header (session/message {:op        "inspect-refresh"
+                                                     :view-mode "object"}))))
+
+    (testing "goes back to normal when :normal view-mode is passed"
+      (is (match? (matchers/prefix normal-mode-prefix)
+                  (value-skip-header (session/message {:op        "inspect-refresh"
+                                                       :view-mode "normal"}))))))
+
+  (testing "view-mode can be toggled with inspect-toggle-view-mode op"
+    (session/message {:op "inspect-clear"})
+    (is (match? (matchers/prefix normal-mode-prefix)
+                (value-skip-header (session/message {:op      "eval"
+                                                     :inspect "true"
+                                                     :code    "(list 1 2 3)"}))))
+    (is (match? (matchers/prefix object-mode-prefix)
+                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
+    (is (match? (matchers/prefix normal-mode-prefix)
+                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
