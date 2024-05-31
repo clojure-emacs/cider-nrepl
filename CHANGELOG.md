@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### New features
+
+* Observe `cider-doc.edn` Java resource files for user-extensible documentation. 
+
 ### Changes
 
 * [#877](https://github.com/clojure-emacs/cider-nrepl/pull/877): `inspect-refresh` middleware is now capable of setting all config options that `orchard.inspect` supports.

@@ -1,11 +1,12 @@
 (ns cider.nrepl.middleware.info
   (:require
-   [compliment.context]
-   [compliment.sources.class-members]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [clojure.edn :as edn]
    [clojure.string :as str]
+   [compliment.context]
+   [compliment.sources.class-members]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
    [orchard.meta :as meta]
@@ -78,9 +79,51 @@
 (def var-meta-allowlist-set
   (set meta/var-meta-allowlist))
 
+(def DSLable?
+  (some-fn simple-symbol? ;; don't allow ns-qualified things, since the Clojure var system takes precedence over DSLs
+           simple-keyword?
+           string?))
+
+(defn cider-doc-edn-configs []
+  (let [resources (-> (Thread/currentThread)
+                      (.getContextClassLoader)
+                      (.getResources "cider-doc.edn")
+                      (enumeration-seq)
+                      (distinct))]
+    (into {}
+          (keep (fn [resource]
+                  (try
+                    (let [m (into {}
+                                  (keep (fn [[k v]]
+                                          (let [symbols (into #{}
+                                                              (filter DSLable?)
+                                                              k)
+                                                resolved (into {}
+                                                               (map (fn [[kk vv]]
+                                                                      [kk (or (misc/require-and-resolve vv)
+                                                                              (throw (ex-info "Discard" {})))]))
+                                                               v)]
+                                            (when (and (contains? resolved :info-provider)
+                                                       (contains? resolved :if)
+                                                       (seq symbols))
+                                              [symbols
+                                               resolved]))))
+                                  (edn/read-string (slurp resource)))]
+                      (when (seq m)
+                        ;; We don't merge all configs into a single object, because that risks data loss
+                        ;; (e.g. if we merge {[foo] ,,,} with {[foo] ,,,}), one [foo] ,,, entry would be lost.
+                        ;; Which is why we use `(str resource)` to keep an extra level of nesting.
+                        [(str resource)
+                         m]))
+                    (catch Exception e ;; discard unparseable/unloadable user input
+                      nil))))
+          resources)))
+
 (defn info
-  [{:keys [ns sym class member context var-meta-allowlist]
+  [{:keys [ns sym class member context var-meta-allowlist file]
+    symbol-type :type ;; one of: "symbol", "keyword", "string". Represents whether the queried token is a symbol/keyword/string.
     legacy-sym :symbol
+    :or {symbol-type "symbol"}
     :as msg}]
   (let [sym (or (not-empty legacy-sym)
                 (not-empty sym))
@@ -116,11 +159,33 @@
                            (when var-meta-allowlist
                              {:var-meta-allowlist (into meta/var-meta-allowlist
                                                         (remove var-meta-allowlist-set)
-                                                        var-meta-allowlist)}))]
+                                                        var-meta-allowlist)}))
+        match-from-configs (when (and (not java?) ;; We don't encourage users to create ambiguity over Java interop syntax
+                                      ;; We don't encourage users to create ambiguity over Clojure var syntax,
+                                      ;; so ns-qualified symbols are disregarded:
+                                      (DSLable? sym))
+                             (some (fn [[_resource config]]
+                                     (some (fn [[symbols rules]]
+                                             (and (contains? symbols sym)
+                                                  ((:if rules) context)
+                                                  ((:info-provider rules) {:symbol (cond
+                                                                                     (= symbol-type "symbol")
+                                                                                     (symbol sym)
+
+                                                                                     (= symbol-type "keyword")
+                                                                                     (keyword sym)
+
+                                                                                     :else sym)
+                                                                           :ns ns
+                                                                           :file file
+                                                                           :context context})))
+                                           config))
+                                   (cider-doc-edn-configs)))]
     (cond
-      java? (info/info-java class (or member sym))
-      (and ns sym) (info/info* info-params)
-      :else nil)))
+      java?              (info/info-java class (or member sym))
+      match-from-configs match-from-configs
+      (and ns sym)       (info/info* info-params)
+      :else               nil)))
 
 (defn info-reply
   [msg]

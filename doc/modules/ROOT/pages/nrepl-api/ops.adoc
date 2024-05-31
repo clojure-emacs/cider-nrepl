@@ -316,7 +316,8 @@ For Java interop queries, it helps inferring the precise type of the object the 
 making the results more accurate (and less numerous).
 * `:member` A Java class member.
 * `:ns` The current namespace
-* `:sym` The symbol to lookup
+* `:sym` The symbol to lookup. Must be a string. If it represents a keyword, please express so via the ``:symbol-type`` param.
+* `:symbol-type` The type of object of ``:sym`` as seen by the user. One of: "symbol" (default), "keyword", "string".
 * `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
 Defaults to the value of ``orchard.meta/var-meta-allowlist``.
 If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
@@ -453,7 +454,8 @@ For Java interop queries, it helps inferring the precise type of the object the 
 making the results more accurate (and less numerous).
 * `:member` A Java class member.
 * `:ns` The current namespace
-* `:sym` The symbol to lookup
+* `:sym` The symbol to lookup. Must be a string. If it represents a keyword, please express so via the ``:symbol-type`` param.
+* `:symbol-type` The type of object of ``:sym`` as seen by the user. One of: "symbol" (default), "keyword", "string".
 * `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
 Defaults to the value of ``orchard.meta/var-meta-allowlist``.
 If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
