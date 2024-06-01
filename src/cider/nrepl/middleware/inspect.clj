@@ -150,7 +150,7 @@
 (defn- toggle-view-mode [{:keys [view-mode] :as inspector}]
   (let [toggle-order {:normal :object, :object :normal}
         next-view-mode (toggle-order view-mode :normal)]
-    (inspect/refresh inspector {:view-mode next-view-mode})))
+    (inspect/set-view-mode inspector next-view-mode)))
 
 (defn toggle-view-mode-reply [msg]
   (inspector-response msg (swap-inspector! msg toggle-view-mode)))

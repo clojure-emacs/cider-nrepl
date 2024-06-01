@@ -165,7 +165,8 @@
   (edn/read-string (first value)))
 
 (defn value-skip-header [resp]
-  (drop 7 (value resp)))
+  (drop-while #(not (and (string? %) (.startsWith ^String % "---")))
+              (value resp)))
 
 ;; integration tests
 
@@ -705,27 +706,6 @@
    [:newline]])
 
 (deftest object-view-mode-integration-test
-  (testing "object view can be enabled to render the value as POJO"
-    (is (match? (matchers/prefix object-mode-prefix)
-                (value-skip-header (session/message {:op        "eval"
-                                                     :inspect   "true"
-                                                     :view-mode "object"
-                                                     :code      "(list 1 2 3)"})))))
-
-  (testing "object view can be enabled with refresh op"
-    (session/message {:op "inspect-clear"})
-    (session/message {:op      "eval"
-                      :inspect "true"
-                      :code    "(list 1 2 3)"})
-    (is (match? (matchers/prefix object-mode-prefix)
-                (value-skip-header (session/message {:op        "inspect-refresh"
-                                                     :view-mode "object"}))))
-
-    (testing "goes back to normal when :normal view-mode is passed"
-      (is (match? (matchers/prefix normal-mode-prefix)
-                  (value-skip-header (session/message {:op        "inspect-refresh"
-                                                       :view-mode "normal"}))))))
-
   (testing "view-mode can be toggled with inspect-toggle-view-mode op"
     (session/message {:op "inspect-clear"})
     (is (match? (matchers/prefix normal-mode-prefix)
@@ -735,7 +715,19 @@
     (is (match? (matchers/prefix object-mode-prefix)
                 (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
     (is (match? (matchers/prefix normal-mode-prefix)
-                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))))
+                (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))))
+
+  (testing "view-mode is automatically reset after navigating down"
+    (session/message {:op "inspect-clear"})
+    (session/message {:op      "eval"
+                      :inspect "true"
+                      :code    "(list 1 2 3)"})
+    (is (match? (matchers/prefix object-mode-prefix)
+                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
+    (is (match? (matchers/prefix ["--- Contents:" [:newline]
+                                  "  " "0" ". " [:value "2" number?] [:newline]
+                                  "  " "1" ". " [:value "3" number?] [:newline]])
+                (value-skip-header (session/message {:op "inspect-push" :idx 13}))))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
