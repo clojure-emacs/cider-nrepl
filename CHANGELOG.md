@@ -6,8 +6,8 @@
 
 * [#877](https://github.com/clojure-emacs/cider-nrepl/pull/877): `inspect-refresh` middleware is now capable of setting all config options that `orchard.inspect` supports.
 * [#877](https://github.com/clojure-emacs/cider-nrepl/pull/877): Deprecate all `inspect-set-*` middleware ops.
-* [#879](https://github.com/clojure-emacs/cider-nrepl/pull/879): Add support for `:view-mode` inspector config and `inspect-toggle-view-mode` op.
-* Bump `orchard` to [0.26.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0260-2024-06-30).
+* [#879](https://github.com/clojure-emacs/cider-nrepl/pull/879), [#880](https://github.com/clojure-emacs/cider-nrepl/pull/880): Add `inspect-toggle-view-mode` op.
+* Bump `orchard` to [0.26.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0261-2024-06-02)
 
 ## 0.48.0 (2024-05-13)
 
