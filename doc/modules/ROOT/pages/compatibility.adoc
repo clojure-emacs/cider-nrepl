@@ -2,10 +2,9 @@
 
 == Java
 
-`cider-nrepl` officially targets Java 8, Java 11 and the most recent rapid
-release version (e.g. Java 13).  More generally speaking - we aim
-to support all Java releases that are currently officially supported
-by Oracle.
+`cider-nrepl` officially targets Java 8, 11, 17, 21, and the most recent rapid
+release version (e.g. Java 22). More generally speaking - we aim to support all
+Java releases that are currently officially supported by Oracle.
 
 == Clojure
 
@@ -85,12 +84,12 @@ requirements were bumped to nREPL 0.6 in recent versions.
 | 1.9
 | 1.0.0
 
-| 0.48.0
+| 0.47.0
 | 8
 | 1.9
 | 1.0.0
 
-| 0.48.0
+| 0.49.0
 | 8
 | 1.10
 | 1.0.0
