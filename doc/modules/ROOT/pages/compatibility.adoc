@@ -31,14 +31,15 @@ Currently `cider-nrepl` requires Piggieback 0.4+ to work properly.
 
 `cider-nrepl` supports nREPL 0.6+.
 
-NOTE: We pay special attention to supporting whatever nREPL is bundled with the current stable Leiningen
-and Boot releases.
+NOTE: We pay special attention to supporting whatever nREPL is bundled with the
+current stable Leiningen release.
 
 == Compatibility Matrix
 
-Below you can find the official compatibility matrix for `cider-nrepl`. For a
-very long time the project targeted nREPL 0.2.x, but the
-requirements were bumped to nREPL 0.6 in recent versions.
+Below you can find the official compatibility matrix for `cider-nrepl`.
+
+NOTE: The matrix lists only the last versions of `cider-nrepl` that supports the
+given compatibility tuple.
 
 .Compatibility Matrix
 |===
@@ -53,26 +54,6 @@ requirements were bumped to nREPL 0.6 in recent versions.
 | 8
 | 1.8
 | 0.4.x
-
-| 0.21
-| 8
-| 1.8
-| 0.6
-
-| 0.22
-| 8
-| 1.8
-| 0.6
-
-| 0.23
-| 8
-| 1.8
-| 0.6
-
-| 0.24
-| 8
-| 1.8
-| 0.6
 
 | 0.25
 | 8

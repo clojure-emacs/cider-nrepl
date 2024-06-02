@@ -58,36 +58,6 @@ under `:repl-options`.
                   cider.nrepl/wrap-xref]}
 ----
 
-=== Via Boot
-
-Boot users can configure the injected middleware by either specifying
-it on the command line through the `cider.tasks/add-middleware` task
-(the lengthy command below will include the `apropos` and `version`
-functionality):
-
-----
-boot -d nrepl:1.0.0 -d cider/cider-nrepl:0.49.0 -i "(require 'cider.tasks)" cider.tasks/add-middleware -m cider.nrepl.middleware.apropos/wrap-apropos -m cider.nrepl.middleware.version/wrap-version repl --server wait
-----
-
-Or for all of their projects by adding a `~/.boot/profile.boot` file like so:
-
-[source,clojure]
-----
-(set-env! :dependencies '[[nrepl "1.0.0"]
-                          [cider/cider-nrepl "0.49.0"]])
-
-(require '[cider.tasks :refer [add-middleware]])
-
-(task-options! add-middleware {:middleware '[cider.nrepl.middleware.apropos/wrap-apropos
-                                             cider.nrepl.middleware.version/wrap-version]})
-----
-
-And then launching `boot add-middleware repl --server wait`.
-
-Note that this is not necessary when using the standard `cider-jack-in`.
-
-For more information visit https://github.com/boot-clj/boot/wiki/Cider-REPL[boot-clj wiki].
-
 == Via clj
 
 You can easily boot an nREPL server with the CIDER middleware loaded
@@ -103,11 +73,11 @@ There are also two convenient aliases you can employ:
 ----
 {...
  :aliases
- {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
+ {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
                            cider/cider-nrepl {:mvn/version "0.49.0"}}
               :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
 
-  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
+  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
                             org.clojure/clojurescript {:mvn/version "1.10.339"}
                             cider/cider-nrepl {:mvn/version "0.49.0"}
                             cider/piggieback {:mvn/version "0.5.2"}}
