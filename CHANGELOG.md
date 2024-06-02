@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.49.0 (2024-06-02)
+
 ### Changes
 
 * [#877](https://github.com/clojure-emacs/cider-nrepl/pull/877): `inspect-refresh` middleware is now capable of setting all config options that `orchard.inspect` supports.
