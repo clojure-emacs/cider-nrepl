@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## Bugs fixed
+
+* [CIDER#3684](https://github.com/clojure-emacs/cider/issues/3684): Don't apply indentation inference for `:style/indent nil` metadata.
+
 ## 0.49.0 (2024-06-02)
 
 ### Changes
