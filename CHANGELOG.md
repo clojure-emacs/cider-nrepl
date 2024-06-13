@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* [#883](https://github.com/clojure-emacs/cider-nrepl/pull/883): Reduce minimal Clojure requirement to 1.10.0.
+
 ## Bugs fixed
 
 * [CIDER#3684](https://github.com/clojure-emacs/cider/issues/3684): Don't apply indentation inference for `:style/indent nil` metadata.
