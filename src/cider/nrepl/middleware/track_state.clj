@@ -31,8 +31,8 @@
   [m]
   (and (:macro m)
        (:arglists m)
-       (not (:style/indent m))
-       (not (:indent m))
+       (not (contains? m :style/indent))
+       (not (contains? m :indent))
        (if-let [namespace-name (some-> (cond
                                          (instance? Namespace (:ns m)) ;; JVM clojure
                                          (-> m :ns ns-name)
