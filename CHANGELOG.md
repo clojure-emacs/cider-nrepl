@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+### Changes
+
+* [#883](https://github.com/clojure-emacs/cider-nrepl/pull/883): Reduce minimal Clojure requirement to 1.10.0.
+
 ## 0.49.0 (2024-06-02)
 
 ### Changes
