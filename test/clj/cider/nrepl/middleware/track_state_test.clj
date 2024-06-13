@@ -208,6 +208,7 @@
 (defmacro macro-without-style-indent-1 [opts & body])
 (defmacro macro-without-style-indent-2 [opts body])
 (defmacro macro-without-style-indent-3 [opts baddy])
+(defmacro macro-with-explicitly-nil-style-indent {:style/indent nil} [opts & body])
 
 (def mock-msg (reify nrepl.transport/Transport
                 (recv [this])
@@ -226,7 +227,9 @@
       (is (= "1"
              (-> interns (get 'macro-without-style-indent-2) :style/indent)))
       (is (= nil
-             (-> interns (get 'macro-without-style-indent-3) :style/indent))))))
+             (-> interns (get 'macro-without-style-indent-3) :style/indent)))
+      (is (= nil
+             (-> interns (get 'macro-with-explicitly-nil-style-indent) :style/indent))))))
 
 (deftest inferrable-indent?-test
   (testing "clojure.* macros are not inferrable"
