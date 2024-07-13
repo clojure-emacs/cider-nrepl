@@ -121,7 +121,8 @@
                     @clojure.lang.Compiler/LOADER)}
     (->> (let [expander-fn (resolve-expander-clj expander)]
            (binding [*ns* (find-ns ns)]
-             (expander-fn (read-string code))))
+             ;; Ensure that lazy seqs are evaluated with correct dynamic bindings
+             (doall (expander-fn (read-string code)))))
          (walk/prewalk (post-expansion-walker-clj msg)))))
 
 ;; ClojureScript impl
@@ -211,7 +212,7 @@
     (walk/prewalk (post-expansion-walker-cljs msg)
                   (cljs/with-cljs-env msg
                     (cljs/with-cljs-ns ns
-                      (expander-fn code))))))
+                      (doall (expander-fn code)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
