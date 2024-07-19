@@ -185,8 +185,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
             orchard.print/*max-atom-length* 500
             ;; CIDER overlay currently truncates values at (* 3 (window-width)).
             ;; Total length of 2000 is enough to never produce less than that.
-            orchard.print/*max-total-length* 2000
-            orchard.print/*spacious* false]
+            orchard.print/*max-total-length* 2000]
     ;; TODO: Make it possible to use a random print function here
     (orchard.print/print-str x)))
 

@@ -70,13 +70,13 @@
     (:newline)
     "--- Contents:"
     (:newline)
-    "  " (:value ":a" 1) " = " (:value "{ :b 1 }" 2)
+    "  " (:value ":a" 1) " = " (:value "{:b 1}" 2)
     (:newline)
     "  " (:value ":c" 3) " = " (:value "\"a\"" 4)
     (:newline)
     "  " (:value ":d" 5) " = " (:value "e" 6)
     (:newline)
-    "  " (:value ":f" 7) " = " (:value "[ 2 3 ]" 8)
+    "  " (:value ":f" 7) " = " (:value "[2 3]" 8)
     (:newline)))
 
 (def push-result
@@ -589,7 +589,7 @@
         big-size (* 2 size-limit) ;; 10
         big-coll (format "[(range %d)]" big-size)
         coll-pattern (fn [len & [truncate]]
-                       (re-pattern (format "\\( %s%s \\)"
+                       (re-pattern (format "\\(%s%s\\)"
                                            (string/join " " (range len))
                                            (if truncate " ..." ""))))
         extract-text #(-> % :value first)]
@@ -606,9 +606,9 @@
                                             (session/message {:op      "eval"
                                                               :inspect "true"
                                                               :code    big-coll}))]
-        (is (re-find (coll-pattern size-limit :truncate) ;; #"\( 0 1 2 3 4 ... \)"
+        (is (re-find (coll-pattern size-limit :truncate) ;; #"\(0 1 2 3 4 ...\)"
                      (extract-text default-coll-size)))
-        (is (re-find (coll-pattern big-size)             ;; #"\( 0 1 2 3 4 5 6 7 8 9 \)"
+        (is (re-find (coll-pattern big-size)             ;; #"\(0 1 2 3 4 5 6 7 8 9\)"
                      (extract-text large-coll-size)))
         (is (re-find (coll-pattern size-limit :truncate)
                      (extract-text unchanged-default-coll-size)))))
@@ -647,9 +647,9 @@
                                       :code             nested-coll
                                       :max-nested-depth 5})]
         (is (string/includes? (extract-text default)
-                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+                              "\"[[[[[[[[[[1]]]]]]]]]]\""))
         (is (string/includes? (extract-text limited)
-                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))
+                              "\"[[[[[[...]]]]]]\""))))
 
     (testing "max nested depth can be changed without re-eval'ing last form"
       (session/message {:op "inspect-clear"})
@@ -659,26 +659,9 @@
             limited (session/message {:op            "inspect-refresh"
                                       :max-nested-depth 5})]
         (is (string/includes? (extract-text default)
-                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
+                              "\"[[[[[[[[[[1]]]]]]]]]]\""))
         (is (string/includes? (extract-text limited)
-                              "\"[ [ [ [ [ [ ... ] ] ] ] ] ]\""))))))
-
-(deftest no-spacious-integration-test
-  (let [nested-coll "'([[[[[[[[[[1]]]]]]]]]])"
-        extract-text #(-> % :value first)]
-
-    (testing "spacious can be disabled for tighter rendering"
-      (let [default (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    nested-coll})
-            tight (session/message {:op       "eval"
-                                    :inspect  "true"
-                                    :code     nested-coll
-                                    :spacious "false"})]
-        (is (string/includes? (extract-text default)
-                              "\"[ [ [ [ [ [ [ [ [ [ 1 ] ] ] ] ] ] ] ] ] ]\""))
-        (is (string/includes? (extract-text tight)
-                              "\"[[[[[[[[[[1]]]]]]]]]]\""))))))
+                              "\"[[[[[[...]]]]]]\""))))))
 
 (def normal-mode-prefix
   ["--- Contents:"
@@ -702,7 +685,7 @@
    [:newline]
    "  " [:value "_meta" number?] " = " [:value "nil" number?]
    [:newline]
-   "  " [:value "_rest" number?] " = " [:value "( 2 3 )" number?]
+   "  " [:value "_rest" number?] " = " [:value "(2 3)" number?]
    [:newline]])
 
 (deftest object-view-mode-integration-test

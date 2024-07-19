@@ -69,13 +69,8 @@
 
 (defn- msg->inspector-config [msg]
   (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
-                                 :max-value-length :max-nested-depth :spacious
-                                 :view-mode])]
-    (-> config
-        (update-if-present :spacious #(case %
-                                        ("false" "nil") false
-                                        true))
-        (update-if-present :view-mode keyword))))
+                                 :max-value-length :max-nested-depth])]
+    config))
 
 (defn inspect-reply*
   [msg value]

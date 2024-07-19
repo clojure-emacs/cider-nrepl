@@ -33,13 +33,13 @@
     (:newline)
     "--- Contents:"
     (:newline)
-    "  " (:value ":a" 1) " = " (:value "{ :b 1 }" 2)
+    "  " (:value ":a" 1) " = " (:value "{:b 1}" 2)
     (:newline)
     "  " (:value ":c" 3) " = " (:value "\"a\"" 4)
     (:newline)
     "  " (:value ":d" 5) " = " (:value "e" 6)
     (:newline)
-    "  " (:value ":f" 7) " = " (:value "[ 2 3 ]" 8)
+    "  " (:value ":f" 7) " = " (:value "[2 3]" 8)
     (:newline)))
 
 (def push-result
