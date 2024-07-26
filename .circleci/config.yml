@@ -27,38 +27,38 @@ executors:
   # Parallelism is disabled, at least for now (https://github.com/benedekfazekas/mranderson/issues/56)
   openjdk8_deploy:
     docker:
-      - image: clojure:temurin-8-lein-2.11.2-jammy
+      - image: clojure:temurin-8-lein-2.11.2-noble
     <<: *defaults
     environment:
       LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
       <<: *env_defaults
   openjdk8:
     docker:
-      - image: clojure:temurin-8-lein-2.11.2-jammy
+      - image: clojure:temurin-8-lein-2.11.2-noble
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk11:
     docker:
-      - image: clojure:temurin-11-lein-2.11.2-jammy
+      - image: clojure:temurin-11-lein-2.11.2-noble
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk17:
     docker:
-      - image: clojure:temurin-17-lein-2.11.2-jammy
+      - image: clojure:temurin-17-lein-2.11.2-noble
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk21:
     docker:
-      - image: clojure:temurin-21-lein-2.11.2-jammy
+      - image: clojure:temurin-21-lein-2.11.2-noble
     <<: *defaults
     environment:
       <<: *env_defaults
   openjdk22:
     docker:
-      - image: clojure:temurin-21-lein-2.11.2-jammy
+      - image: clojure:temurin-21-lein-2.11.2-noble
     <<: *defaults
     environment:
       <<: *env_defaults
