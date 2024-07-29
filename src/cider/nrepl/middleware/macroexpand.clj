@@ -108,6 +108,13 @@
     "tidy" (tidy-walker-clj msg)
     (throw (IllegalArgumentException. (format "Unrecognized value for display-namespaces: %s" display-namespaces)))))
 
+(defn- doall-seq
+  "Ensure that macroexpansions containing lazy seqs are fully evaluated."
+  [expansion]
+  (if (seqable? expansion)
+    (doall expansion)
+    expansion))
+
 (defn- expand-clj
   "Returns the macroexpansion of the given Clojure form :code, performed in the
   context of the given :ns, using the provided :expander and :display-namespaces
@@ -121,7 +128,8 @@
                     @clojure.lang.Compiler/LOADER)}
     (->> (let [expander-fn (resolve-expander-clj expander)]
            (binding [*ns* (find-ns ns)]
-             (expander-fn (read-string code))))
+             ;; Ensure that lazy seqs are evaluated with correct dynamic bindings
+             (doall-seq (expander-fn (read-string code)))))
          (walk/prewalk (post-expansion-walker-clj msg)))))
 
 ;; ClojureScript impl
@@ -211,7 +219,7 @@
     (walk/prewalk (post-expansion-walker-cljs msg)
                   (cljs/with-cljs-env msg
                     (cljs/with-cljs-ns ns
-                      (expander-fn code))))))
+                      (doall-seq (expander-fn code)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

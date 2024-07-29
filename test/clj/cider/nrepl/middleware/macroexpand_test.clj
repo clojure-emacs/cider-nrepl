@@ -76,6 +76,21 @@
       (is (= #{"done" "macroexpand-error"} status))
       (is pp-stacktrace))))
 
+(defmacro ^:private lazy-test-macro []
+  `(list ~@(lazy-seq [(ns-name *ns*)])))
+
+(deftest dynamic-binding-test
+  (testing "macroexpansion uses correct *ns* binding"
+    (let [{:keys [expansion status]}
+          (session/message {:op "macroexpand"
+                            :expander "macroexpand"
+                            :ns "cider.nrepl.middleware.macroexpand-test"
+                            :code "(lazy-test-macro)"
+                            :display-namespaces "none"})]
+      (is (= "(list cider.nrepl.middleware.macroexpand-test)"
+             expansion))
+      (is (= #{"done"} status)))))
+
 ;; Tests for the three possible values of the display-namespaces option:
 ;; "qualified", "none" and "tidy"
 
