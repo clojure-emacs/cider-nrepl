@@ -39,6 +39,8 @@ dump-version:
 .inline-deps: project.clj clean
 	rm -f .no-mranderson
 	lein with-profile -user,-dev inline-deps
+# Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
+	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
 	touch $@
 
 test_impl: $(TEST_RUNNER_SOURCE_DIR) test/resources/cider/nrepl/clojuredocs/export.edn

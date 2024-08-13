@@ -16,7 +16,8 @@
                  ^:inline-dep [compliment "0.6.0"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                                       org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript]]
+                 ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
+                                                           org.clojure/tools.cli]]
                  ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
                     ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
                     {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
