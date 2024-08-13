@@ -55,7 +55,16 @@
                                      :extra-metadata ["arglists" "doc"]})
           candidate (first (:completions response))]
       (is (= '("[name & opts+sigs]") (:arglists candidate)))
-      (is (string? (:doc candidate))))))
+      (is (string? (:doc candidate)))))
+
+  (testing "Clojure 1.12 qualified methods"
+    (when (or (> (:major *clojure-version*) 1)
+              (>= (:minor *clojure-version*) 12))
+      (let [response (session/message {:op "complete"
+                                       :ns "user"
+                                       :prefix "Thread/.int"})]
+        (is (= {:candidate "Thread/.interrupt", :type "method"}
+               (first (:completions response))))))))
 
 (deftest complete-doc-test
   (testing "blank"
