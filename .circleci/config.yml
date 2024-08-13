@@ -1,72 +1,42 @@
 version: 2.1
 
-######################################################################
-#
-# Start of general purpose config. These can plausibly go into orbs
-#
-######################################################################
-
 # Default settings for executors
-
-env_defaults: &env_defaults
-  LEIN_ROOT: "true"   # we intended to run lein as root
-  # JVM_OPTS:
-  # - limit the maximum heap size to prevent out of memory errors
-  # - print stacktraces to console
-  JVM_OPTS: >
-    -Xmx3200m
-    -Dclojure.main.report=stderr
 
 defaults: &defaults
   working_directory: ~/repo
+  environment:
+    # - limit the maximum heap size to prevent out of memory errors
+    # - print stacktraces to console
+    JVM_OPTS: >
+      -Xmx3200m
+      -Dclojure.main.report=stderr
 
 # Runners for various OpenJDKs versions.
 
 executors:
-  # JDK 8 is preferred for deployments (https://github.com/benedekfazekas/mranderson/issues/57)
-  # Parallelism is disabled, at least for now (https://github.com/benedekfazekas/mranderson/issues/56)
-  openjdk8_deploy:
+  jdk8:
     docker:
       - image: clojure:temurin-8-lein-2.11.2-noble
     <<: *defaults
-    environment:
-      LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
-      <<: *env_defaults
-  openjdk8:
-    docker:
-      - image: clojure:temurin-8-lein-2.11.2-noble
-    <<: *defaults
-    environment:
-      <<: *env_defaults
-  openjdk11:
+  jdk11:
     docker:
       - image: clojure:temurin-11-lein-2.11.2-noble
     <<: *defaults
-    environment:
-      <<: *env_defaults
-  openjdk17:
+  jdk17:
     docker:
       - image: clojure:temurin-17-lein-2.11.2-noble
     <<: *defaults
-    environment:
-      <<: *env_defaults
-  openjdk21:
+  jdk21:
     docker:
       - image: clojure:temurin-21-lein-2.11.2-noble
     <<: *defaults
-    environment:
-      <<: *env_defaults
-  openjdk22:
+  jdk22:
     docker:
-      - image: clojure:temurin-21-lein-2.11.2-noble
+      - image: clojure:temurin-22-lein-2.11.2-noble
     <<: *defaults
-    environment:
-      <<: *env_defaults
 
 # Runs a given set of steps, with some standard pre- and post-
 # steps, including restoring of cache, saving of cache.
-#
-# we also install `make` here.
 #
 # Adapted from https://github.com/lambdaisland/meta/blob/master/circleci/clojure_orb.yml
 
@@ -121,21 +91,25 @@ jobs:
   util_job:
     description: |
       Running utility commands/checks (linter etc.)
-      Always uses Java11 and Clojure 1.10
     parameters:
       steps:
         type: steps
-    executor: openjdk11
+    executor: jdk11
     environment:
-      CLOJURE_VERSION: "1.10"
+      CLOJURE_VERSION: "1.11.4"
     steps:
       - checkout
       - with_cache:
-          cache_version: "1.10"
+          cache_version: "util_v1_1.11.4"
           steps: << parameters.steps >>
 
   deploy:
-    executor: openjdk8_deploy
+    # JDK 8 is preferred for deployments (https://github.com/benedekfazekas/mranderson/issues/57)
+    executor: jdk8
+    environment:
+      # Parallelism is disabled, at least for now
+      # (https://github.com/benedekfazekas/mranderson/issues/56)
+      LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
     steps:
       - checkout
       - run:
@@ -166,7 +140,7 @@ jobs:
     steps:
       - checkout
       - with_cache:
-          cache_version: << parameters.clojure_version >>|<< parameters.jdk_version >>
+          cache_version: "test_code_v1_<< parameters.clojure_version >>"
           steps:
             - run:
                 name: Running tests with inlined deps
@@ -184,19 +158,14 @@ jobs:
                 name: Running tests specific to tools.deps
                 command: make tools-deps-test
 
-######################################################################
-#
-# End general purpose configs
-#
-######################################################################
-
-
 # The ci-test-matrix does the following:
 #
 # - run tests against the target matrix
-#   - Java 8/11/17/21/22
-#   - Clojure 1.10, 1.11, master
 # - linter, eastwood and cljfmt
+
+tags_filter: &tags_filter
+  tags:
+    only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
 
 workflows:
   version: 2.1
@@ -206,8 +175,8 @@ workflows:
           matrix:
             alias: "test_code_jdk8"
             parameters:
-              clojure_version: ["1.10", "1.11", "master"]
-              jdk_version: [openjdk8]
+              clojure_version: ["1.10", "1.11", "1.12"]
+              jdk_version: [jdk8]
               # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
               # (given that JDK8 is explicitly excluded by those parsers)
               parser_target: ["legacy-parser"]
@@ -215,29 +184,26 @@ workflows:
           filters:
             branches:
               only: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+            <<: *tags_filter
       - test_code:
           matrix:
             alias: "test_code"
             parameters:
-              clojure_version: ["1.10", "1.11", "master"]
-              jdk_version: [openjdk11, openjdk17, openjdk21, openjdk22]
+              clojure_version: ["1.10", "1.11", "1.12"]
+              jdk_version: [jdk11, jdk17, jdk21, jdk22]
               # Don't test legacy parser on JDK11+ since it is never invoked there.
               parser_target: ["parser-next", "parser"]
               test_command: ["test", "smoketest"]
           filters:
             branches:
               only: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+            <<: *tags_filter
       - util_job:
           name: Code Linting
           filters:
             branches:
               only: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+            <<: *tags_filter
           steps:
             - run:
                 name: Running cljfmt
@@ -260,5 +226,4 @@ workflows:
           filters:
             branches:
               ignore: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+            <<: *tags_filter
