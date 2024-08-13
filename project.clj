@@ -90,12 +90,11 @@
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]
                     :test-paths ["test/spec"]}
-             :1.11 {:dependencies [[org.clojure/clojure "1.11.2"]
+             :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]
                     :test-paths ["test/spec"]}
-             :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots"]]
-                      :dependencies [[org.clojure/clojure "1.12.0-master-SNAPSHOT"]
-                                     [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
+             :1.12 {:dependencies [[org.clojure/clojure "1.12.0-rc1"]
+                                   [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.1.230"]]}
