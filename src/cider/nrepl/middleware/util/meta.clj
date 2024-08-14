@@ -8,7 +8,7 @@
   This is used so that we don't crowd the ns cache with useless or
   redudant information, such as :name and :ns."
   [:indent :deprecated :macro :arglists :test :doc :fn
-   :cider/instrumented :style/indent :clojure.tools.trace/traced])
+   :cider/instrumented :style/indent :orchard.trace/traced])
 
 (defn relevant-meta
   "Filter the entries in map m by `relevant-meta-keys` and non-nil values."
