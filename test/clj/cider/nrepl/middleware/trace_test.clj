@@ -26,9 +26,9 @@
 (deftest toggle-trace-ns-test
   (testing "toggling"
     (is (= {:ns-status "traced"}
-           (toggle-trace-ns {:ns "clojure.core"})))
+           (toggle-trace-ns {:ns "orchard.inspect"})))
     (is (= {:ns-status "untraced"}
-           (toggle-trace-ns {:ns "clojure.core"}))))
+           (toggle-trace-ns {:ns "orchard.inspect"}))))
 
   (testing "toggle-trace-ns-op missing ns should return `not-found`"
     (is (= {:ns-status "not-found"}

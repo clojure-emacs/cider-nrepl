@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.trace
   (:require
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [clojure.tools.trace :as trace]))
+   [orchard.trace :as trace]))
 
 (defn toggle-trace-var
   [{:keys [ns sym]}]
@@ -20,12 +20,10 @@
 (defn toggle-trace-ns
   [{:keys [ns]}]
   (if-let [ns (find-ns (symbol ns))]
-    (if (contains? @traced-ns ns)
-      (do (trace/untrace-ns ns)
-          (swap! traced-ns disj ns)
+    (if (contains? @@#'trace/traced-nses ns)
+      (do (trace/untrace-ns* ns)
           {:ns-status "untraced"})
-      (do (trace/trace-ns ns)
-          (swap! traced-ns conj ns)
+      (do (trace/trace-ns* ns)
           {:ns-status "traced"}))
     {:ns-status "not-found"}))
 
