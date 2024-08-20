@@ -5,12 +5,14 @@
   (:require
    [clojure.set :as set]
    [clojure.walk :as walk]
+   [nrepl.middleware.caught :as caught]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport])
   (:import
    java.io.InputStream
-   clojure.lang.RT))
+   clojure.lang.RT
+   (nrepl.transport Transport)))
 
 (def ^:private print-cause-trace
   (delay
@@ -186,3 +188,31 @@
          (try (transport/send transport# (op-handler op-action# msg#))
               (catch Exception e# (transport/send transport# (error-handler err-action# msg# e#)))))
        (~handler msg#))))
+
+(defn eval-interceptor-transport
+  "Return a transport that wraps the transport in `msg` and intercepts the
+  `:value` coming out of it as well as any raised exceptions. Exceptions are
+  propagated as errors in the inspector middleware (specified by
+  `error-statuses`), so that the client CIDER code properly renders them instead
+  of silently ignoring. `reply-fn` is invoked on the message and the `:value`
+  when it arrives."
+  [{:keys [^Transport transport] :as msg} reply-fn & error-statuses]
+  (reify Transport
+    (recv [_this]
+      (.recv transport))
+
+    (recv [_this timeout]
+      (.recv transport timeout))
+
+    (send [this response]
+      (cond (contains? response :value)
+            (reply-fn msg response)
+
+            (and (contains? (:status response) :eval-error)
+                 (contains? response ::caught/throwable))
+            (let [e (::caught/throwable response)
+                  resp (apply base-error-response msg e :done error-statuses)]
+              (.send transport resp))
+
+            :else (.send transport response))
+      this)))

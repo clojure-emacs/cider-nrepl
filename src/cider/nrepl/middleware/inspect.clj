@@ -1,15 +1,13 @@
 (ns cider.nrepl.middleware.inspect
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [base-error-response with-safe-transport]]
-   [nrepl.middleware.caught :as caught]
+   [cider.nrepl.middleware.util.error-handling
+    :refer [eval-interceptor-transport with-safe-transport]]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
-   [orchard.java])
-  (:import
-   (nrepl.transport Transport)))
+   [orchard.java]))
 
 (defn- update-inspector [inspector f & args]
   ;; Ensure that there is valid inspector value before passing it to
@@ -24,36 +22,43 @@
       (alter-meta! update ::inspector #(apply update-inspector % f args))
       (get ::inspector)))
 
+(defn- extract-doc-fragments
+  "If `value` is either a class, a method, or a field, try to calculate doc
+  fragments from it and return as a map."
+  [value]
+  (let [class-sym (when (class? value)
+                    (-> ^Class value .getCanonicalName symbol))
+        method-sym (when (instance? java.lang.reflect.Method value)
+                     (symbol (str (-> ^java.lang.reflect.Method value .getDeclaringClass .getCanonicalName)
+                                  "/"
+                                  (-> ^java.lang.reflect.Method value .getName))))
+        field-sym (when (instance? java.lang.reflect.Field value)
+                    (symbol (str (-> ^java.lang.reflect.Field value .getDeclaringClass .getCanonicalName)
+                                 "/"
+                                 (-> ^java.lang.reflect.Field value .getName))))
+        fragments-sym (or method-sym field-sym class-sym)]
+    (if fragments-sym
+      (select-keys (info/info 'user fragments-sym)
+                   [:doc-fragments
+                    :doc-first-sentence-fragments
+                    :doc-block-tags-fragments])
+      {})))
+
 (defn- inspector-response
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
 
-  ([msg {:keys [rendered value path]} resp]
-   (let [class-sym (when (class? value)
-                     (-> ^Class value .getCanonicalName symbol))
-         method-sym (when (instance? java.lang.reflect.Method value)
-                      (symbol (str (-> ^java.lang.reflect.Method value .getDeclaringClass .getCanonicalName)
-                                   "/"
-                                   (-> ^java.lang.reflect.Method value .getName))))
-         field-sym (when (instance? java.lang.reflect.Field value)
-                     (symbol (str (-> ^java.lang.reflect.Field value .getDeclaringClass .getCanonicalName)
-                                  "/"
-                                  (-> ^java.lang.reflect.Field value .getName))))
-         fragments-sym (or method-sym field-sym class-sym)]
-     (response-for msg resp (merge (when fragments-sym
-                                     (select-keys (info/info 'user fragments-sym)
-                                                  [:doc-fragments
-                                                   :doc-first-sentence-fragments
-                                                   :doc-block-tags-fragments]))
-                                   (binding [*print-length* nil]
-                                     {:value (pr-str (seq rendered))
-                                      :path (pr-str (seq path))}))))))
+  ([msg {:keys [rendered value path]} extra-response-data]
+   (let [data (binding [*print-length* nil]
+                {:value (pr-str (seq rendered))
+                 :path (pr-str (seq path))})]
+     (response-for msg extra-response-data data (extract-doc-fragments value)))))
 
 (defn- warmup-javadoc-cache [^Class clazz]
   (when-let [class-sym (some-> clazz .getCanonicalName symbol)]
     ;; Don't spawn a `future` for already-computed caches:
     (when-not (get orchard.java/cache class-sym)
-      (future
+      (future ;; TODO: replace future with controlled threadpool.
         ;; Warmup the Orchard cache for the class of the currently inspected
         ;; value. This way, if the user inspects this class next, the underlying
         ;; inspect request will complete quickly.
@@ -62,21 +67,18 @@
         (doseq [^Class interface (.getInterfaces clazz)]
           (info/info 'user (-> interface .getCanonicalName symbol)))))))
 
-(defn- update-if-present [m k update-fn & args]
-  (if (contains? m k)
-    (apply update m k update-fn args)
-    m))
-
 (defn- msg->inspector-config [msg]
-  (let [config (select-keys msg [:page-size :max-atom-length :max-coll-size
-                                 :max-value-length :max-nested-depth])]
-    config))
+  (select-keys msg [:page-size :max-atom-length :max-coll-size
+                    :max-value-length :max-nested-depth]))
 
 (defn inspect-reply*
   [msg value]
   (let [config (msg->inspector-config msg)
         inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
     (warmup-javadoc-cache (class (:value inspector)))
+    ;; By using 3-arity `inspector-response` we ensure that the default
+    ;; `{:status :done}` is not sent with this message, as the underlying
+    ;; eval will send it on its own.
     (inspector-response msg inspector {})))
 
 (defn inspect-reply
@@ -85,40 +87,10 @@
     (transport/send (:transport msg)
                     (inspect-reply* msg value))))
 
-(defn inspector-transport
-  [{:keys [^Transport transport] :as msg}]
-  (reify Transport
-    (recv [_this]
-      (.recv transport))
-
-    (recv [_this timeout]
-      (.recv transport timeout))
-
-    (send [this response]
-      (cond (contains? response :value)
-            (inspect-reply msg response)
-
-            ;; If the eval errored, propagate the exception as error in the
-            ;; inspector middleware, so that the client CIDER code properly
-            ;; renders it instead of silently ignoring it.
-            (and (contains? (:status response) :eval-error)
-                 (contains? response ::caught/throwable))
-            (let [e (::caught/throwable response)
-                  resp (base-error-response msg e :inspect-eval-error :done)]
-              (.send transport resp))
-
-            :else (.send transport response))
-      this)))
-
-(defn eval-msg
-  [{:keys [inspect] :as msg}]
-  (if inspect
-    (assoc msg :transport (inspector-transport msg))
-    msg))
-
-(defn eval-reply
-  [handler msg]
-  (handler (eval-msg msg)))
+(defn handle-eval-inspect [handler msg]
+  ;; Let eval command be executed but intercept its :value with `inspect-reply`.
+  (handler (assoc msg :transport (eval-interceptor-transport
+                                  msg inspect-reply :inspect-eval-error))))
 
 (defn pop-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/up)))
@@ -167,9 +139,9 @@
 (defn tap-indexed [msg]
   (inspector-response msg (swap-inspector! msg inspect/tap-indexed (:idx msg))))
 
-(defn handle-inspect [handler msg]
-  (if (= (:op msg) "eval")
-    (eval-reply handler msg)
+(defn handle-inspect [handler {:keys [op inspect] :as msg}]
+  (if (and (= op "eval") inspect)
+    (handle-eval-inspect handler msg)
 
     (with-safe-transport handler msg
       "inspect-pop" pop-reply
