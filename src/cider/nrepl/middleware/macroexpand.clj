@@ -3,8 +3,11 @@
   {:author "Bozhidar Batsov"}
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling
+    :refer [base-error-response eval-interceptor-transport with-safe-transport]]
    [orchard.cljs.analysis :as cljs-ana]
+   [nrepl.misc :refer [response-for]]
+   [nrepl.transport :as transport]
    [clojure.pprint :as pp]
    [clojure.tools.reader :as reader]
    [clojure.walk :as walk]
@@ -12,26 +15,28 @@
   (:import
    [clojure.lang Var]))
 
+;; Macroexpansion for CLJ and CLJS follow two separate paths. In CLJ, a special
+;; macroexpanding code is formatted and passed down as `eval` message, then the
+;; result is intercepted, processed, and returned. In CLJS, the middleware
+;; itself performs the expansion as there is no way to macroexpand the
+;; expression with the evaluating part of CLJS.
+
 ;; Common helpers
 
 (defn- var->namespace-qualified-name [^Var v]
   (symbol (str (.name (.ns v)))
           (str (.sym v))))
 
-(defn- expandable?
-  "Return true if form is macro-expandable."
-  [form]
-  (not= (macroexpand-1 form) form))
-
 (defn macroexpand-step
   "Walk form, expanding the next subform."
   [form]
   (let [expanded? (atom false)]
     (walk/prewalk (fn [x]
-                    (if (and (not @expanded?)
-                             (expandable? x))
-                      (do (reset! expanded? true)
-                          (macroexpand-1 x))
+                    (if-not @expanded?
+                      (let [x' (macroexpand-1 x)]
+                        (when (not= x x')
+                          (reset! expanded? true))
+                        x')
                       x))
                   form)))
 
@@ -68,17 +73,24 @@
       (and (symbol? x) (namespace x))
       (tidy-namespaced-sym ns aliases refers))))
 
+(defn- macroexpansion-response-map
+  [{:keys [print-meta] :as msg} expanded-form]
+  (let [expansion (with-out-str
+                    (binding [*print-meta* (boolean print-meta)]
+                      (pp/write expanded-form :dispatch pp/code-dispatch)))]
+    {:expansion expansion}))
+
 ;; Clojure impl
 
 (defn- resolve-expander-clj
-  "Returns the macroexpansion fn for macroexpanding Clojure code, corresponding
-  to the given value of the :expander option."
+  "Returns the qualified macroexpansion fn symbol for macroexpanding Clojure code,
+  corresponding to the given value of the :expander option."
   [expander]
   (case expander
-    "macroexpand-1" macroexpand-1
-    "macroexpand" macroexpand
-    "macroexpand-all" walk/macroexpand-all
-    "macroexpand-step" macroexpand-step
+    "macroexpand-1" `macroexpand-1
+    "macroexpand" `macroexpand
+    "macroexpand-all" `walk/macroexpand-all
+    "macroexpand-step" `macroexpand-step
     (throw (IllegalArgumentException. (format "Unrecognized expander: %s" expander)))))
 
 (defn- tidy-walker-clj
@@ -108,21 +120,44 @@
     "tidy" (tidy-walker-clj msg)
     (throw (IllegalArgumentException. (format "Unrecognized value for display-namespaces: %s" display-namespaces)))))
 
-(defn- expand-clj
-  "Returns the macroexpansion of the given Clojure form :code, performed in the
-  context of the given :ns, using the provided :expander and :display-namespaces
-  options."
-  [{:keys [code expander ns] :as msg}]
-  ;; Bind LOADER, which can be unbound under certain code paths, particularly when using tools.deps:
-  (with-bindings {clojure.lang.Compiler/LOADER
-                  (if (instance? clojure.lang.Var$Unbound
-                                 @clojure.lang.Compiler/LOADER)
-                    (clojure.lang.DynamicClassLoader. (clojure.lang.RT/baseLoader))
-                    @clojure.lang.Compiler/LOADER)}
-    (->> (let [expander-fn (resolve-expander-clj expander)]
-           (binding [*ns* (find-ns ns)]
-             (expander-fn (read-string code))))
-         (walk/prewalk (post-expansion-walker-clj msg)))))
+(defn- send-middleware-error [msg ex]
+  (transport/send (:transport msg)
+                  (base-error-response msg ex :done :macroexpand-error)))
+
+(defn macroexpansion-reply-clj [{:keys [transport] :as msg}
+                                {:keys [value] :as resp}]
+  (try (let [msg (update msg :ns #(or (misc/as-sym %) 'user))
+             expansion (walk/prewalk (post-expansion-walker-clj msg) value)
+             response-map (macroexpansion-response-map msg expansion)]
+         (transport/send transport (response-for msg response-map)))
+       (catch Exception ex
+         (send-middleware-error msg ex))))
+
+(defn handle-macroexpand-clj
+  "Substitute the incoming `macroexpand` message with an `eval` message that will
+  perform the expansion for us, intercept the result with
+  `eval-interceptor-transport`, post-process it and return back to the client.
+
+  Delegating the actual expansion (and even reading the code string) to `eval`
+  op is preferable because it ensures that the context (state of dynamic
+  variables) for macroexpansion is identical to if the user called `(macroexpand
+  ...)` manually at the REPL."
+  [handler {:keys [code expander ns] :as msg}]
+  ;; `try` is not around the handler but only around constructing the msg
+  ;; because we don't want to catch an error from some underlying middleware.
+  (let [msg
+        (try (let [expander-fn (resolve-expander-clj expander)
+                   ;; Glueing strings may seem ugly, but this is the most
+                   ;; reliable way to ensure the macroexpansion fully happens in
+                   ;; a correct context.
+                   expander-code (format "(%s '%s)" expander-fn code)
+                   transport (eval-interceptor-transport
+                              msg macroexpansion-reply-clj :macroexpand-error)]
+               (assoc msg :op "eval", :code expander-code, :transport transport))
+             (catch Exception ex
+               (send-middleware-error msg ex)
+               nil))]
+    (some-> msg handler)))
 
 ;; ClojureScript impl
 
@@ -213,20 +248,20 @@
                     (cljs/with-cljs-ns ns
                       (expander-fn code))))))
 
+(defn macroexpansion-reply-cljs [msg]
+  (let [msg (update msg :ns #(or (misc/as-sym %) 'cljs.user))]
+    (macroexpansion-response-map msg (expand-cljs msg))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn macroexpansion [{:keys [print-meta ns] :as msg}]
-  (let [msg (merge {:expander "macroexpand" :display-namespaces "qualified"} msg)
-        expansion (if (cljs/grab-cljs-env msg)
-                    (expand-cljs (assoc msg :ns (or (misc/as-sym ns) 'cljs.user)))
-                    (expand-clj (assoc msg :ns (or (misc/as-sym ns) 'user))))]
-    (with-out-str
-      (binding [*print-meta* (boolean print-meta)]
-        (pp/write expansion :dispatch pp/code-dispatch)))))
-
-(defn macroexpansion-reply [msg]
-  {:expansion (macroexpansion msg)})
+(defn- handle-macroexpand* [handler msg]
+  (let [msg (merge {:expander "macroexpand" :display-namespaces "qualified"} msg)]
+    (if (cljs/grab-cljs-env msg)
+      (with-safe-transport handler msg
+        "macroexpand" [macroexpansion-reply-cljs :macroexpand-error])
+      (handle-macroexpand-clj handler msg))))
 
 (defn handle-macroexpand [handler msg]
-  (with-safe-transport handler msg
-    "macroexpand" [macroexpansion-reply :macroexpand-error]))
+  (if (= (:op msg) "macroexpand")
+    (handle-macroexpand* handler msg)
+    (handler msg)))

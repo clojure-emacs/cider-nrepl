@@ -529,11 +529,12 @@ if applicable, and re-render the updated value."
   (cljs/requires-piggieback
    {:doc "Macroexpansion middleware."
     :requires #{#'session}
+    :expects #{"eval"}
     :handles {"macroexpand"
               {:doc "Produces macroexpansion of some form using the given expander."
                :requires {"code" "The form to macroexpand."}
                :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
-                          "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
+                          "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", \"macroexpand-step\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
                           "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
                           "print-meta" "If truthy, also print metadata of forms."}
                :returns {"expansion" "The macroexpanded form."}}}}))
