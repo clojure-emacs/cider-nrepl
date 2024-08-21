@@ -75,9 +75,6 @@ quick-test: clean test_impl
 
 fast-test: quick-test
 
-tools-deps-test: clean install
-	cd tools-deps-testing; clojure -M:test
-
 eastwood:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+deploy,+eastwood eastwood
 
