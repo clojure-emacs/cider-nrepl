@@ -87,4 +87,5 @@
     (when-not (every? identity results)
       (println "smoketest: FAIL")
       (System/exit 1)))
-  (println "smoketest: OK"))
+  (println "smoketest: OK")
+  (System/exit 0))
