@@ -138,17 +138,25 @@
 (deftest handling-of-tests-with-throwing-fixtures
   (require 'cider.nrepl.middleware.test-with-throwing-fixtures)
   (testing "If a given deftest's fixture throw an exception, those are gracefully handled"
-    (let [{{{[{:keys [error]}] :cider.nrepl.middleware.test/unknown} :cider.nrepl.middleware.test-with-throwing-fixtures} :results
-           :keys [summary status]
-           :as test-result}
-          (session/message {:op "test"
-                            :ns "cider.nrepl.middleware.test-with-throwing-fixtures"})]
-      (testing (pr-str test-result)
-        (is (= error
-               "clojure.lang.ExceptionInfo: I'm an exception inside a fixture! {:data 42}"))
-        (is (= summary
-               {:error 1, :fail 0, :ns 1, :pass 0, :test 0, :var 0}))
-        (is (= status #{"done"}))))))
+    (let [orig-fn cider.nrepl.middleware.test/report-fixture-error]
+      (with-redefs [cider.nrepl.middleware.test/report-fixture-error
+                    (fn [ns ^Throwable e]
+                      (when-not (= (:data (ex-data e)) 42)
+                        ;; Caught wrong exception here, print stacktrace to
+                        ;; assist in debugging this.
+                        (.printStackTrace e))
+                      (orig-fn ns e))]
+        (let [{{{[{:keys [error]}] :cider.nrepl.middleware.test/unknown} :cider.nrepl.middleware.test-with-throwing-fixtures} :results
+               :keys [summary status]
+               :as test-result}
+              (session/message {:op "test"
+                                :ns "cider.nrepl.middleware.test-with-throwing-fixtures"})]
+          (testing (pr-str test-result)
+            (is (= "clojure.lang.ExceptionInfo: I'm an exception inside a fixture! {:data 42}"
+                   error))
+            (is (= {:error 1, :fail 0, :ns 1, :pass 0, :test 0, :var 0}
+                   summary))
+            (is (= #{"done"} status))))))))
 
 (deftest run-test-with-map-as-documentation-message
   (testing "documentation message map is returned as string"

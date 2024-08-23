@@ -341,10 +341,6 @@
                   nil
                   vars)))
        (catch Throwable e
-         (when (System/getProperty "cider.internal.testing")
-           ;; print stacktrace, in case it didn't have anything to do with fixtures
-           ;; (in which case, things would become very confusing)
-           (.printStackTrace e))
          (report-fixture-error ns e))))))
 
 (defn test-ns
