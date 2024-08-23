@@ -329,18 +329,14 @@
         (is (= "#{:public}" (:modifiers individual)))))
 
     (testing "Boot support"
-      (try
-        (System/setProperty "fake.class.path" (System/getProperty "java.class.path"))
-        (let [response (session/message {:op "info" :sym "as->" :ns "user"})]
-          (is (= #{"done"} (:status response))
-              (pr-str response))
-          (is (= "clojure.core" (:ns response)))
-          (is (= "as->" (:name response)))
-          (is (= "[expr name & forms]" (:arglists-str response)))
-          (is (= "true" (:macro response)))
-          (is (-> response ^String (:doc) (.startsWith "Binds name to expr, evaluates"))))
-        (finally
-          (System/clearProperty "fake.class.path"))))
+      (let [response (session/message {:op "info" :sym "as->" :ns "user"})]
+        (is (= #{"done"} (:status response))
+            (pr-str response))
+        (is (= "clojure.core" (:ns response)))
+        (is (= "as->" (:name response)))
+        (is (= "[expr name & forms]" (:arglists-str response)))
+        (is (= "true" (:macro response)))
+        (is (-> response ^String (:doc) (.startsWith "Binds name to expr, evaluates")))))
 
     (testing "get protocol info"
       (let [reply       (session/message {:op "info"

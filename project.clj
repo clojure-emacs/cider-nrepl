@@ -105,9 +105,7 @@
                     :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"
                                "-Dcider.internal.testing=true"]
                     :resource-paths ["test/resources"]
-                    :dependencies [[boot/base "2.8.3"]
-                                   [boot/core "2.8.3" :exclusions [org.tcrawley/dynapath]]
-                                   ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
+                    :dependencies [;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                                    [ch.qos.logback/logback-classic "1.3.7"]
                                    [org.clojure/test.check "1.1.1"]
                                    [org.apache.httpcomponents/httpclient "4.5.14" :exclusions [commons-logging]]
@@ -179,7 +177,7 @@
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
-                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]
+                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]
                                     :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
                                                      :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]
 

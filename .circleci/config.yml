@@ -55,7 +55,7 @@ commands:
       files:
         description: Files to consider when creating the cache key
         type: string
-        default: "deps.edn project.clj build.boot"
+        default: "deps.edn project.clj"
       cache_version:
         type: string
         description: "Change this value to force a cache update"
