@@ -3,9 +3,11 @@
    [matcher-combinators.matchers :as matchers]
    [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.test-session :as session]
+   [cider.nrepl.middleware.info-test :as info-test]
    [clojure.edn :as edn]
    [clojure.string :as string]
    [clojure.test :refer :all]
+   [orchard.java]
    [orchard.inspect]
    [orchard.info :as info]))
 
@@ -760,8 +762,8 @@
     (is (= 7 @inspect-tap-current-value-test-atom))))
 
 (deftest doc-fragments-test
-  (when (contains? (info/info 'user `Thread/sleep)
-                   :doc-fragments) ;; this test is only runnable with enrich-classpath active
+  ;; This test is only runnable when JDK sources are present and with parser-next.
+  (when (and info-test/jdk-sources-present? @@orchard.java/parser-next-available?)
     (testing "Responses for classes, methods and fields contain `:doc-fragments` attributes"
       (doseq [code ["java.lang.Thread"
                     "(-> java.lang.Thread .getMethods first)"

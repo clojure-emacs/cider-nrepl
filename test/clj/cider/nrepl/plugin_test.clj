@@ -10,7 +10,7 @@
                   ['cider/cider-nrepl version-string]]
    :repl-options {:nrepl-middleware mw/cider-middleware}})
 
-(deftest ^:cognitest-exclude version-checks
+(deftest version-checks
   (testing "undefined versions work"
     (is (= expected-output
            (middleware {:dependencies [['org.clojure/clojure]]}))))
