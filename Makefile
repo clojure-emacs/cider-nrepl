@@ -1,4 +1,4 @@
-.PHONY: test quick-test fast-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
+.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
 .DEFAULT_GOAL := quick-test
 
 CLOJURE_VERSION ?= 1.11
@@ -17,18 +17,19 @@ ENRICH_CLASSPATH_VERSION="1.18.2"
 
 # Set bash instead of sh for the @if [[ conditions,
 # and use the usual safety flags:
-SHELL = /bin/bash -Eeu
+SHELL = /bin/bash -Ee
 
-ifeq ($(OS),Darwin) # macOS
-	SED_INPLACE = -i ''
-else
-	SED_INPLACE = -i
-endif
-
-TEST_RUNNER_SOURCE_DIR = test-runner
-
-$(TEST_RUNNER_SOURCE_DIR):
-	@if [ ! -d "$(TEST_RUNNER_SOURCE_DIR)" ]; then git clone https://github.com/cognitect-labs/test-runner.git $(TEST_RUNNER_SOURCE_DIR) --depth=1; fi
+# We need Java sources to test Java parsing functionality, but the Docker images
+# we use on CircleCI doesn't include src.zip. So we have to download them from
+# Github and repackage in a form that is resemblant to src.zip from normal
+# distributions.
+base-src.zip:
+	wget https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.5+3.zip -O full-src.zip
+	unzip -q full-src.zip
+	cp -r jdk21u-*/src/java.base/share/classes java.base
+	cp -r jdk21u-*/src/java.desktop/share/classes java.desktop
+	zip -qr base-src.zip java.base java.desktop
+	rm -rf java.base java.desktop jdk21u-* full-src.zip
 
 test/resources/cider/nrepl/clojuredocs/export.edn:
 	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
@@ -36,44 +37,22 @@ test/resources/cider/nrepl/clojuredocs/export.edn:
 dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
-.inline-deps: project.clj clean
-	rm -f .no-mranderson
+target/srcdeps: project.clj
 	lein with-profile -user,-dev inline-deps
 # Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
 	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
-	touch $@
 
-test_impl: $(TEST_RUNNER_SOURCE_DIR) test/resources/cider/nrepl/clojuredocs/export.edn
-	rm -f .no-mranderson
+test_impl: test/resources/cider/nrepl/clojuredocs/export.edn base-src.zip
 	@if [[ "$$PARSER_TARGET" == "parser-next" ]] ; then \
-		export SKIP_INLINING_TEST_DEPS=true; \
-		bash 'lein' 'update-in' ':plugins' 'conj' "[mx.cider/lein-enrich-classpath \"$(ENRICH_CLASSPATH_VERSION)\"]" '--' 'with-profile' $(TEST_PROFILES),+cognitest,+$(CLOJURE_VERSION) 'update-in' ':middleware' 'conj' 'cider.enrich-classpath.plugin-v2/middleware' '--' 'repl' | grep " -cp " > .test-classpath; \
-		cat .test-classpath; \
-		eval "$$(cat .test-classpath)"; \
-		rm .test-classpath; \
-	elif [[ "$$PARSER_TARGET" == "parser" ]] ; then \
-		export SKIP_INLINING_TEST_DEPS=true; \
-		bash 'lein' 'update-in' ':plugins' 'conj' "[mx.cider/lein-enrich-classpath \"$(ENRICH_CLASSPATH_VERSION)\"]" '--' 'with-profile' $(TEST_PROFILES),+cognitest,+$(CLOJURE_VERSION) 'update-in' ':middleware' 'conj' 'cider.enrich-classpath.plugin-v2/middleware' '--' 'repl' | grep " -cp " > .test-classpath; \
-		cat .test-classpath; \
-		sed $(SED_INPLACE) 's/--add-opens=jdk.compiler\/com.sun.tools.javac.code=ALL-UNNAMED//g' .test-classpath; \
-		sed $(SED_INPLACE) 's/--add-opens=jdk.compiler\/com.sun.tools.javac.tree=ALL-UNNAMED//g' .test-classpath; \
-		cat .test-classpath; \
-		eval "$$(cat .test-classpath)"; \
-		rm .test-classpath; \
-	elif [[ "$$PARSER_TARGET" == "legacy-parser" ]] ; then \
-		export SKIP_INLINING_TEST_DEPS=true; \
-		lein with-profile +$(CLOJURE_VERSION),$(TEST_PROFILES) test; \
+		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION),+parser-next test; \
 	else \
-		echo "PARSER_TARGET unset!"; \
-		exit 1; \
+		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION) test; \
 	fi
 
-test: clean .inline-deps
+test: target/srcdeps
 	@make test_impl TEST_PROFILES="$(TEST_PROFILES),+plugin.mranderson/config"
 
-quick-test: clean test_impl
-
-fast-test: quick-test
+quick-test: test_impl
 
 eastwood:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+deploy,+eastwood eastwood
@@ -85,47 +64,28 @@ cljfmt-fix:
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt fix
 
 .make_kondo_prep: project.clj .clj-kondo/config.edn
-	touch .no-pedantic
-	touch .no-mranderson
-	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
-	rm -f .no-pedantic
-	rm -f .no-mranderson
+	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
 
 kondo: .make_kondo_prep clean
-	touch .no-pedantic
-	touch .no-mranderson
-	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
-	rm -f .no-pedantic
-	rm -f .no-mranderson
+	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
 
 # A variation that does not analyze the classpath, as it OOMs otherwise on CircleCI.
 light-kondo: clean
-	touch .no-pedantic
-	touch .no-mranderson
-	lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
-	rm -f .no-pedantic
-	rm -f .no-mranderson
+	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
 
 lint: kondo cljfmt eastwood
 
-# PROJECT_VERSION=0.49.3 make install
-install: dump-version check-install-env .inline-deps
-	rm -f .no-mranderson
-	touch .no-pedantic
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
-	touch .no-pedantic
-	make clean
+# PROJECT_VERSION=x.y.z make install
+install: dump-version check-install-env target/srcdeps
+	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
 	git checkout resources/cider/nrepl/version.edn
 
-# PROJECT_VERSION=0.49.3 make fast-install
+# PROJECT_VERSION=x.y.z make fast-install
 fast-install: dump-version check-install-env
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
-	make clean
 	git checkout resources/cider/nrepl/version.edn
 
-smoketest:
-	export SKIP_INLINING_TEST_DEPS=true
-	make install
+smoketest: install
 	cd test/smoketest && \
         lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
@@ -138,7 +98,7 @@ detect_timeout:
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
-deploy: check-env .inline-deps
+deploy: check-env target/srcdeps
 	rm -f .no-mranderson
 	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
@@ -161,7 +121,6 @@ endif
 clean:
 	lein with-profile -user clean
 	cd test/smoketest && lein with-profile -user clean
-	rm -f .inline-deps
 
 # Create and cache a `java` command. project.clj is mandatory; the others are optional but are taken into account for cache recomputation.
 # It's important not to silence with step with @ syntax, so that Enrich progress can be seen as it resolves dependencies.

@@ -76,7 +76,7 @@ make repl
 PARSER_TARGET=parser-next make test
 
 # Run tests, without using mranderson (considerably faster)
-PARSER_TARGET=parser-next make fast-test
+PARSER_TARGET=parser-next make quick-test
 
 # Install the project in your local ~/.m2 directory, using mranderson (recommended)
 # The JVM flag is a temporary workaround.

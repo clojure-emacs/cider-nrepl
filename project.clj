@@ -1,4 +1,47 @@
 (def fipp-version "0.6.26")
+(def jdk8? (= (System/getProperty "java.specification.version") "1.8"))
+(def jdk21? (= (System/getProperty "java.specification.version") "21"))
+
+;; Needed to be added onto classpath to test Java parser functionality.
+(def jdk-21-sources-archive
+  (delay
+    (let [src-zip (clojure.java.io/file "base-src.zip")]
+      (if (.exists src-zip)
+        (do (println "Found JDK sources:" src-zip)
+            [src-zip])
+        (do (println "base-src.zip not found. Run `make base-src.zip` to properly run all the tests.")
+            nil)))))
+
+;; Needed to run tests on JDK8.
+(def tools-jar
+  (delay
+    (let [java-home (System/getProperty "java.home")
+          tools-jar-paths [(clojure.java.io/file java-home "tools.jar")
+                           (clojure.java.io/file java-home "lib" "tools.jar")
+                           (clojure.java.io/file java-home ".." "tools.jar")
+                           (clojure.java.io/file java-home ".." "lib" "tools.jar")]
+          tools-jar (some #(when (.exists %) %) tools-jar-paths)]
+      (assert tools-jar (str "tools.jar was not found in " java-home))
+      (println "Found tools.jar:" tools-jar)
+      (str tools-jar))))
+
+(def dev-test-common-profile
+  {:dependencies '[[org.clojure/clojurescript "1.11.60" :scope "provided"]
+                   ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
+                   [ch.qos.logback/logback-classic "1.3.7"]
+                   [org.clojure/test.check "1.1.1"]
+                   [cider/piggieback "0.5.3"]
+                   [nubank/matcher-combinators "3.9.1"]]
+   :source-paths (cond-> ["test/src"]
+                   ;; We only include sources with JDK21 because we only
+                   ;; repackage sources for that JDK. Sources from one JDK are
+                   ;; not compatible with other JDK for our test purposes.
+                   jdk21? (into @jdk-21-sources-archive)
+                   jdk8? (conj @tools-jar))
+   :global-vars {'*assert* true}
+   :java-source-paths ["test/java"]
+   :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]
+   :resource-paths ["test/java" "test/resources"]})
 
 (defproject cider/cider-nrepl (or (not-empty (System/getenv "PROJECT_VERSION"))
                                   "0.0.0")
@@ -18,23 +61,22 @@
                                                                       org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
                                                            org.clojure/tools.cli]]
-                 ~(with-meta '[org.clojure/tools.namespace "1.3.0"]
-                    ;; :cognitest uses tools.namespace, so we cannot inline it while running tests.
-                    {:inline-dep (not= "true" (System/getenv "SKIP_INLINING_TEST_DEPS"))})
+                 ^:inline-dep [org.clojure/tools.namespace "1.3.0" :exclusions [org.clojure/clojurescript
+                                                                                org.clojure/tools.cli]]
                  ^:inline-dep [io.github.tonsky/clj-reload "0.6.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [org.clojure/tools.reader "1.4.1"]
                  [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
-   ; see Clojure version matrix in profiles below
+                                        ; see Clojure version matrix in profiles below
 
   :pedantic? ~(if (and (System/getenv "CI")
-                       (not (-> ".no-pedantic" java.io.File. .exists)))
+                       (not (System/getenv "CIDER_NO_PEDANTIC")))
                 :abort
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
 
   ;; mranderson cannot be put in a profile (as the other plugins),
   ;; so we conditionally disable it, because otherwise clj-kondo cannot run.
-  :plugins ~(if (-> ".no-mranderson" java.io.File. .exists)
+  :plugins ~(if (System/getenv "CIDER_NO_MRANDERSON")
               []
               '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
 
@@ -78,62 +120,28 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.3"]
-                                       [org.clojure/clojurescript "1.11.60" :scope "provided"]
-                                       [com.cognitect/transit-clj "1.0.333"]
-                                       [com.fasterxml.jackson.core/jackson-core "2.17.0"]
-                                       [commons-codec "1.16.1"]
-                                       [com.cognitect/transit-java "1.0.371"]
-                                       [com.google.errorprone/error_prone_annotations "2.26.1"]
-                                       [com.google.code.findbugs/jsr305 "3.0.2"]]
-                        :test-paths ["test/spec"]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.11.4"]]}
+
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
-                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]]
-                    :test-paths ["test/spec"]}
+                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
-                                   [org.clojure/clojurescript "1.11.60" :scope "provided"]]
-                    :test-paths ["test/spec"]}
+                                   [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
              :1.12 {:dependencies [[org.clojure/clojure "1.12.0-rc1"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.1.230"]]}
 
-             :test {:global-vars {*assert* true}
-                    :source-paths ["test/src"]
-                    :java-source-paths ["test/java"]
-                    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"
-                               "-Dcider.internal.testing=true"]
-                    :resource-paths ["test/resources"]
-                    :dependencies [;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
-                                   [ch.qos.logback/logback-classic "1.3.7"]
-                                   [org.clojure/test.check "1.1.1"]
-                                   [org.apache.httpcomponents/httpclient "4.5.14" :exclusions [commons-logging]]
-                                   [leiningen-core "2.11.2" :exclusions [org.clojure/clojure
-                                                                         commons-codec
-                                                                         com.google.code.findbugs/jsr305]]
-                                   [cider/piggieback "0.5.3"]
-                                   [nubank/matcher-combinators "3.9.1"]]}
+             :dev ~dev-test-common-profile
 
-             ;; Running the tests with enrich-classpath doing its thing isn't compatible with `lein test`
-             ;; (because there's no such thing as "run `lein test` using this specific classpath"),
-             ;; So we use cognitect.test-runner instead.
-             :cognitest {:dependencies [[org.clojure/tools.namespace "1.5.0"]
-                                        [org.clojure/tools.cli "1.1.230"]]
-                         :source-paths ["test-runner/src"]
-                         ;; This piece of middleware dynamically adds the test paths to a cognitect.test-runner main invocation.
-                         :middleware [~(do
-                                         (defn add-cognitest [{:keys [test-paths] :as project}]
-                                           (assert (seq test-paths))
-                                           (let [cmd (reduce into [["cognitect.test-runner"]
-                                                                   (vec
-                                                                    (interleave (take (count test-paths)
-                                                                                      (repeat "--dir"))
-                                                                                test-paths))
-                                                                   ["--namespace-regex" (pr-str ".*")]
-                                                                   ["--exclude" "cognitest-exclude"]])]
-                                             (assoc-in project [:enrich-classpath :main] (clojure.string/join " " cmd))))
-                                         `add-cognitest)]}
+             :test ~(-> dev-test-common-profile
+                        (update :dependencies conj '[leiningen-core "2.11.2"
+                                                     :exclusions [org.clojure/clojure
+                                                                  commons-codec
+                                                                  com.google.code.findbugs/jsr305]]))
+
+             :parser-next {:jvm-opts ["--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"
+                                      "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
