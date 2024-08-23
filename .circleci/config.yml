@@ -62,9 +62,9 @@ commands:
         default: "1"
     steps:
       - run:
-          name: Install node
+          name: Install packages
           command: |
-            apt-get update && apt-get install -y nodejs
+            apt-get update && apt-get install -y wget nodejs unzip zip
       - run:
           name: Generate Cache Checksum
           command: |
@@ -79,6 +79,7 @@ commands:
           paths:
             - ~/.m2
             - .cpcache
+            - base-src.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 # The jobs are relatively simple. One runs utility commands against
@@ -98,7 +99,7 @@ jobs:
     steps:
       - checkout
       - with_cache:
-          cache_version: "util_v1_1.11.4"
+          cache_version: "util_v3_1.11.4"
           steps: << parameters.steps >>
 
   deploy:
@@ -115,7 +116,7 @@ jobs:
          command: |
            lein with-profile -user,+deploy run -m deploy-release make deploy
 
-  test_code:
+  test:
     description: |
       Run tests against given version of JDK and Clojure
     parameters:
@@ -128,21 +129,23 @@ jobs:
       parser_target:
         description: The Orchard Java parser to be exercised
         type: string
-      test_command:
-        description: The command to run
-        type: string
+        default: parser
     executor: << parameters.jdk_version >>
     environment:
       CLOJURE_VERSION: << parameters.clojure_version >>
+      PARSER_TARGET: << parameters.parser_target >>
       PROJECT_VERSION: 999.99.9
     steps:
       - checkout
       - with_cache:
-          cache_version: "test_code_v1_<< parameters.clojure_version >>"
+          cache_version: "test_code_v3_<< parameters.clojure_version >>"
           steps:
             - run:
                 name: Running tests with inlined deps
-                command: PARSER_TARGET=<< parameters.parser_target >> make --debug << parameters.test_command >>
+                command: make --debug test
+            - run:
+                name: Running smoketest
+                command: make --debug smoketest
 
 # The ci-test-matrix does the following:
 #
@@ -157,29 +160,28 @@ workflows:
   version: 2.1
   ci-test-matrix:
     jobs:
-      - test_code:
+      - test:
+          # Regular tests for all Clojure and JDK versions (except JDK21, see
+          # below). This matrix doesn't perform parser tests because we don't
+          # have JDK sources here.
           matrix:
-            alias: "test_code_jdk8"
+            alias: "test"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk8]
-              # It doesn't make sense to exercise the newer Orchard Java parsers against JDK8
-              # (given that JDK8 is explicitly excluded by those parsers)
-              parser_target: ["legacy-parser"]
-              test_command: ["test", "smoketest"]
+              jdk_version: [jdk8, jdk11, jdk17, jdk22]
           filters:
             branches:
               only: /.*/
             <<: *tags_filter
-      - test_code:
+      - test:
+          # We have source for JDK21, so with this JDK version we also perform
+          # Java parser tests (for both regular parser and parser-next).
           matrix:
-            alias: "test_code"
+            alias: "test_with_sources"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk11, jdk17, jdk21, jdk22]
-              # Don't test legacy parser on JDK11+ since it is never invoked there.
-              parser_target: ["parser-next", "parser"]
-              test_command: ["test", "smoketest"]
+              jdk_version: [jdk21]
+              parser_target: ["parser", "parser-next"]
           filters:
             branches:
               only: /.*/
@@ -206,8 +208,8 @@ workflows:
                   make eastwood
       - deploy:
           requires:
-            - "test_code"
-            - "test_code_jdk8"
+            - "test"
+            - "test_with_sources"
             - "Code Linting"
           filters:
             branches:
