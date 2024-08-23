@@ -4,7 +4,8 @@
 
 * [#893](https://github.com/clojure-emacs/cider-nrepl/pull/893): Replace `clojure.tools.trace` with `orchard.trace`.
 * [#894](https://github.com/clojure-emacs/cider-nrepl/pull/894): Delegate actual macroexpansion to "eval" command in middleware.macroexpand.
-* Bump `orchard` to [0.26.3](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0263-2024-08-14).
+* Bump `orchard` to [0.27.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0270-2024-08-21).
+  - BREAKING: Remove special handling of Boot classpath.
 
 ## 0.49.3 (2024-08-13)
 
