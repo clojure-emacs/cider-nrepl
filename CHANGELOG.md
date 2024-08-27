@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.50.0 (2024-08-28)
+
 * [#893](https://github.com/clojure-emacs/cider-nrepl/pull/893): Replace `clojure.tools.trace` with `orchard.trace`.
 * [#894](https://github.com/clojure-emacs/cider-nrepl/pull/894): Delegate actual macroexpansion to "eval" command in middleware.macroexpand.
 * Bump `orchard` to [0.27.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0271-2024-08-27).

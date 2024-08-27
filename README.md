@@ -73,21 +73,21 @@ These are its main tasks for local development:
 make repl
 
 # Run tests, using mranderson (slower but more realistic)
-PARSER_TARGET=parser-next make test
+make test
 
 # Run tests, without using mranderson (considerably faster)
-PARSER_TARGET=parser-next make quick-test
+make quick-test
 
 # Install the project in your local ~/.m2 directory, using mranderson (recommended)
 # The JVM flag is a temporary workaround.
 export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
-PROJECT_VERSION=0.49.3 make install
+PROJECT_VERSION=X.Y.Z make install
 
 # Install the project in your local ~/.m2 directory, without using mranderson
 # (it's faster, but please only use when you repeatedly need to install cider-nrepl)
 # The JVM flag is a temporary workaround.
 export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
-PROJECT_VERSION=0.49.3 make fast-install
+PROJECT_VERSION=X.Y.Z make fast-install
 
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
 # Please try to run this before pushing commits.
@@ -107,7 +107,7 @@ before cutting a new release.
 Release to [clojars](https://clojars.org/) by tagging a new release:
 
 ```
-git tag -a v0.49.3 -m "Release 0.49.3"
+git tag -a vX.Y.Z -m "Release X.Y.Z"
 git push --tags
 ```
 
