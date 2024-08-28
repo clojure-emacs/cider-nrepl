@@ -31,9 +31,6 @@ base-src.zip:
 	zip -qr base-src.zip java.base java.desktop
 	rm -rf java.base java.desktop jdk21u-* full-src.zip
 
-test/resources/cider/nrepl/clojuredocs/export.edn:
-	curl -o $@ https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn
-
 dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
@@ -42,7 +39,7 @@ target/srcdeps: project.clj
 # Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
 	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
 
-test_impl: test/resources/cider/nrepl/clojuredocs/export.edn base-src.zip
+test_impl: base-src.zip
 	@if [[ "$$PARSER_TARGET" == "parser-next" ]] ; then \
 		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION),+parser-next test; \
 	else \
