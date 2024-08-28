@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+## 0.50.1 (2024-08-28)
+
+* Bump `orchard` to [0.27.2](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0272-2024-08-28).
+
 ## 0.50.0 (2024-08-28)
 
 * [#893](https://github.com/clojure-emacs/cider-nrepl/pull/893): Replace `clojure.tools.trace` with `orchard.trace`.
