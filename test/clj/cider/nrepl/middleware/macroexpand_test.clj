@@ -1,10 +1,14 @@
 (ns cider.nrepl.middleware.macroexpand-test
   (:refer-clojure :exclude [zero? zipmap])
   (:require
+   [cider.nrepl]
    [cider.nrepl.test-session :as session]
    [clojure.set :as set]
    [clojure.string]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [nrepl.middleware.interruptible-eval]
+   [nrepl.middleware.print]
+   [nrepl.middleware.session]))
 
 (use-fixtures :once session/session-fixture)
 
@@ -166,3 +170,25 @@
                                                        :print-meta "true"})]
       (is (= "(def ^{:arglists (quote ([]))} x (fn ([] nil)))" expansion))
       (is (= #{"done"} status)))))
+
+(deftest print-mw-before-macroexpand-mw-test
+  (testing "if print middleware ends up before macroexpand mw on the way up,
+it doesn't mess up macroexpansion output"
+    ;; Start a custom server
+    (binding [session/*handler* (cider.nrepl/wrap-macroexpand
+                                 (nrepl.middleware.session/session
+                                  (nrepl.middleware.print/wrap-print
+                                   (nrepl.middleware.interruptible-eval/interruptible-eval nil))))]
+      (session/session-fixture
+       (fn []
+         (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+                                                            :expander "macroexpand-1"
+                                                            :code (:expr code)
+                                                            :display-namespaces "none"})]
+           (is (= (:expanded-1 code) expansion)))
+
+         (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+                                                            :expander "macroexpand"
+                                                            :code (:expr code)
+                                                            :display-namespaces "none"})]
+           (is (= (:expanded code) expansion))))))))

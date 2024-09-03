@@ -153,7 +153,13 @@
                    expander-code (format "(%s '%s)" expander-fn code)
                    transport (eval-interceptor-transport
                               msg macroexpansion-reply-clj :macroexpand-error)]
-               (assoc msg :op "eval", :code expander-code, :transport transport))
+               (assoc msg
+                      :op "eval"
+                      :code expander-code
+                      :transport transport
+                      ;; Make sure nrepl.middleware.print or alternatives don't
+                      ;; stringify our value before it gets back to us.
+                      :nrepl.middleware.print/keys []))
              (catch Exception ex
                (send-middleware-error msg ex)
                nil))]
