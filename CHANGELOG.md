@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.50.2 (2024-09-03)
+
 * [#900](https://github.com/clojure-emacs/cider-nrepl/pull/900): Fix print middleware interfering with macroexpansion.
 
 ## 0.50.1 (2024-08-28)
