@@ -126,8 +126,8 @@
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
-             :1.12 {:dependencies [[org.clojure/clojure "1.12.0-rc1"]
-                                   [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
+             :1.12 {:dependencies [[org.clojure/clojure "1.12.0"]
+                                   [org.clojure/clojurescript "1.11.132" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.1.230"]]}
