@@ -469,7 +469,7 @@ Returns::
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:file` Either a URI or a relative path where the symbol is defined.
 * `:line` The line number the symbol is defined.
-* `:name` The unqualitfied name of the symbol.
+* `:name` The unqualified name of the symbol.
 * `:ns` The namespace the symbol belongs to.
 * `:status` done
 
