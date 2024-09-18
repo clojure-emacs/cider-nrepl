@@ -288,9 +288,18 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
   (cljs/requires-piggieback
    {:requires #{#'session}
     :handles {"info"
-              {:doc "Return a map of information about the specified symbol."
+              {:doc "Return a map of information about the specified symbol.
+
+Note: Documentation may be incomplete; not all return keys are described."
                :optional info-params
-               :returns (merge {"status" "done"} fragments-doc)}
+               :returns (merge {"arglists-str" "The arguments list(s) accepted by the symbol, as a string, if applicable."
+                                "column"       "The column number where the symbol is defined."
+                                "file"         "Either a URI or a relative path where the symbol is defined."
+                                "line"         "The line number the symbol is defined."
+                                "name"         "The unqualitfied name of the symbol."
+                                "ns"           "The namespace the symbol belongs to."
+                                "status"       "done"}
+                               fragments-doc)}
               "eldoc"
               {:doc "Return a map of information about the specified symbol."
                :optional info-params
