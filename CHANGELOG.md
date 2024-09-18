@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+[#885 (partial)](https://github.com/clojure-emacs/cider-nrepl/issues/885): Limited update to `info` op doc (`arglists-str`, `file`, `line`, `column`, `name` and `ns` return keys).
+
 ## 0.50.2 (2024-09-03)
 
 * [#900](https://github.com/clojure-emacs/cider-nrepl/pull/900): Fix print middleware interfering with macroexpansion.

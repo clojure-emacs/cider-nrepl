@@ -442,6 +442,8 @@ Returns::
 
 Return a map of information about the specified symbol.
 
+Note: Documentation may be incomplete; not all return keys are described.
+
 Required parameters::
 {blank}
 
@@ -460,9 +462,15 @@ If specified, the value will be concatenated to that of ``orchard.meta/var-meta-
 
 
 Returns::
+* `:arglists-str` The arguments list(s) accepted by the symbol, as a string, if applicable.
+* `:column` The column number where the symbol is defined.
 * `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:file` Either a URI or a relative path where the symbol is defined.
+* `:line` The line number the symbol is defined.
+* `:name` The unqualitfied name of the symbol.
+* `:ns` The namespace the symbol belongs to.
 * `:status` done
 
 
@@ -879,7 +887,7 @@ Required parameters::
 
 Optional parameters::
 * `:display-namespaces` How to print namespace-qualified symbols in the result. Possible values are "qualified" to leave all namespaces qualified, "none" to elide all namespaces, or "tidy" to replace namespaces with their aliases in the given namespace. Defaults to "qualified".
-* `:expander` The macroexpansion function to use. Possible values are "macroexpand-1", "macroexpand", or "macroexpand-all". Defaults to "macroexpand".
+* `:expander` The macroexpansion function to use. Possible values are "macroexpand-1", "macroexpand", "macroexpand-step", or "macroexpand-all". Defaults to "macroexpand".
 * `:ns` The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript.
 * `:print-meta` If truthy, also print metadata of forms.
 
