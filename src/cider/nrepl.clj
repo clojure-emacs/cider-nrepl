@@ -296,7 +296,7 @@ Note: Documentation may be incomplete; not all return keys are described."
                                 "column"       "The column number where the symbol is defined."
                                 "file"         "Either a URI or a relative path where the symbol is defined."
                                 "line"         "The line number the symbol is defined."
-                                "name"         "The unqualitfied name of the symbol."
+                                "name"         "The unqualified name of the symbol."
                                 "ns"           "The namespace the symbol belongs to."
                                 "status"       "done"}
                                fragments-doc)}
