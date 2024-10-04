@@ -30,9 +30,9 @@ executors:
     docker:
       - image: clojure:temurin-21-lein-2.11.2-noble
     <<: *defaults
-  jdk22:
+  jdk23:
     docker:
-      - image: clojure:temurin-22-lein-2.11.2-noble
+      - image: clojure:temurin-23-lein-2.11.2-noble
     <<: *defaults
 
 # Runs a given set of steps, with some standard pre- and post-
@@ -168,7 +168,7 @@ workflows:
             alias: "test"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk8, jdk11, jdk17, jdk22]
+              jdk_version: [jdk8, jdk11, jdk17, jdk23]
           filters:
             branches:
               only: /.*/
