@@ -175,13 +175,12 @@ workflows:
             <<: *tags_filter
       - test:
           # We have source for JDK21, so with this JDK version we also perform
-          # Java parser tests (for both regular parser and parser-next).
+          # Java parser tests.
           matrix:
             alias: "test_with_sources"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
               jdk_version: [jdk21]
-              parser_target: ["parser", "parser-next"]
           filters:
             branches:
               only: /.*/

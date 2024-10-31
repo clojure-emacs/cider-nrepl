@@ -13,6 +13,8 @@
   '("Class: "
     (:value "clojure.lang.Cons" 0)
     (:newline)
+    "Count: " "2"
+    (:newline)
     (:newline)
     "--- Contents:"
     (:newline)

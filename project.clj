@@ -51,7 +51,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl "1.1.1" :exclusions [org.clojure/clojure]]
-                 [cider/orchard "0.27.2" :exclusions [org.clojure/clojure]]
+                 [cider/orchard "0.28.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [mx.cider/haystack "0.3.3" :exclusions [cider/orchard]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
@@ -139,9 +139,6 @@
                                                      :exclusions [org.clojure/clojure
                                                                   commons-codec
                                                                   com.google.code.findbugs/jsr305]]))
-
-             :parser-next {:jvm-opts ["--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"
-                                      "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"]}
 
              ;; Need ^:repl because of: https://github.com/technomancy/leiningen/issues/2132
              :repl ^:repl [:test
