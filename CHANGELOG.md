@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.28.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0280-2024-10-31).
 * [#885 (partial)](https://github.com/clojure-emacs/cider-nrepl/issues/885): Limited update to `info` op doc (`arglists-str`, `file`, `line`, `column`, `name` and `ns` return keys).
 
 ## 0.50.2 (2024-09-03)

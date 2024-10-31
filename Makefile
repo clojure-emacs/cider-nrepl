@@ -40,11 +40,7 @@ target/srcdeps: project.clj
 	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
 
 test_impl: base-src.zip
-	@if [[ "$$PARSER_TARGET" == "parser-next" ]] ; then \
-		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION),+parser-next test; \
-	else \
-		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION) test; \
-	fi
+		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION) test
 
 test: target/srcdeps
 	@make test_impl TEST_PROFILES="$(TEST_PROFILES),+plugin.mranderson/config"

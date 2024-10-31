@@ -166,7 +166,7 @@
         (is (= "a macro for testing" (:doc response)))
         (is (nil? (:spec response)))))
 
-    (when (and jdk-sources-present? @@orchard.java/parser-next-available?)
+    (when jdk-sources-present?
       (testing "'fragments' attributes are returned"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}
@@ -412,7 +412,7 @@
             (is (not (contains? response :ns)))
             (is (= "function" (:type response)))))))
 
-    (when @@orchard.java/parser-next-available?
+    (when jdk-sources-present?
       (testing "Fragments for java interop method with single class"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}

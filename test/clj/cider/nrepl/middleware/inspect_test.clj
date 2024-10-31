@@ -762,8 +762,8 @@
     (is (= 7 @inspect-tap-current-value-test-atom))))
 
 (deftest doc-fragments-test
-  ;; This test is only runnable when JDK sources are present and with parser-next.
-  (when (and info-test/jdk-sources-present? @@orchard.java/parser-next-available?)
+  ;; This test is only runnable when JDK sources are present.
+  (when info-test/jdk-sources-present?
     (testing "Responses for classes, methods and fields contain `:doc-fragments` attributes"
       (doseq [code ["java.lang.Thread"
                     "(-> java.lang.Thread .getMethods first)"

@@ -47,7 +47,7 @@
 ;; Perform the underlying dynamic `require`s asap, and also not within a separate thread
 ;; (note the `future` used in `#'initializer`),
 ;; since `require` is not thread-safe:
-@@orchard.java/parser-next-available?
+(orchard.java/source-info `String)
 @analyzer/spec-abbrev
 
 (defn warmup-orchard-caches!
