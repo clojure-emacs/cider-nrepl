@@ -30,7 +30,7 @@
                    ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                    [ch.qos.logback/logback-classic "1.3.7"]
                    [org.clojure/test.check "1.1.1"]
-                   [cider/piggieback "0.5.3"]
+                   [cider/piggieback "0.6.0"]
                    [nubank/matcher-combinators "3.9.1"]]
    :source-paths (cond-> ["test/src"]
                    ;; We only include sources with JDK21 because we only
@@ -50,7 +50,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl "1.1.1" :exclusions [org.clojure/clojure]]
+  :dependencies [[nrepl/nrepl "1.3.1" :exclusions [org.clojure/clojure]]
                  [cider/orchard "0.28.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [mx.cider/haystack "0.3.3" :exclusions [cider/orchard]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
@@ -120,7 +120,7 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.11.4"]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.0"]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
