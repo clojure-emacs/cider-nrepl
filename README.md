@@ -136,7 +136,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
 ## License
 
-Copyright © 2013-2024 Bozhidar Batsov
+Copyright © 2013-2025 Bozhidar Batsov
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
