@@ -1,29 +1,4 @@
 (def fipp-version "0.6.26")
-(def jdk8? (= (System/getProperty "java.specification.version") "1.8"))
-(def jdk21? (= (System/getProperty "java.specification.version") "21"))
-
-;; Needed to be added onto classpath to test Java parser functionality.
-(def jdk-21-sources-archive
-  (delay
-    (let [src-zip (clojure.java.io/file "base-src.zip")]
-      (if (.exists src-zip)
-        (do (println "Found JDK sources:" src-zip)
-            [src-zip])
-        (do (println "base-src.zip not found. Run `make base-src.zip` to properly run all the tests.")
-            nil)))))
-
-;; Needed to run tests on JDK8.
-(def tools-jar
-  (delay
-    (let [java-home (System/getProperty "java.home")
-          tools-jar-paths [(clojure.java.io/file java-home "tools.jar")
-                           (clojure.java.io/file java-home "lib" "tools.jar")
-                           (clojure.java.io/file java-home ".." "tools.jar")
-                           (clojure.java.io/file java-home ".." "lib" "tools.jar")]
-          tools-jar (some #(when (.exists %) %) tools-jar-paths)]
-      (assert tools-jar (str "tools.jar was not found in " java-home))
-      (println "Found tools.jar:" tools-jar)
-      (str tools-jar))))
 
 (def dev-test-common-profile
   {:dependencies '[[org.clojure/clojurescript "1.11.60" :scope "provided"]
@@ -32,12 +7,7 @@
                    [org.clojure/test.check "1.1.1"]
                    [cider/piggieback "0.6.0"]
                    [nubank/matcher-combinators "3.9.1"]]
-   :source-paths (cond-> ["test/src"]
-                   ;; We only include sources with JDK21 because we only
-                   ;; repackage sources for that JDK. Sources from one JDK are
-                   ;; not compatible with other JDK for our test purposes.
-                   jdk21? (into @jdk-21-sources-archive)
-                   jdk8? (conj @tools-jar))
+   :source-paths ["test/src"]
    :global-vars {'*assert* true}
    :java-source-paths ["test/java"]
    :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"]

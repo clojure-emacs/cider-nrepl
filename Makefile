@@ -1,35 +1,35 @@
-.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lein-repl repl lint light-kondo docs test_impl
+.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lint light-kondo docs test_impl
 .DEFAULT_GOAL := quick-test
-
-CLOJURE_VERSION ?= 1.11
-
-# The Lein profiles that will be selected for `lein-repl`.
-# Feel free to upgrade this, or to override it with an env var named LEIN_PROFILES.
-# Expected format: "+dev,+test"
-# Don't use spaces here.
-LEIN_PROFILES ?= "+dev,+test"
-
-TEST_PROFILES ?= "-user,-dev,+test"
-
-# The enrich-classpath version to be injected.
-# Feel free to upgrade this.
-ENRICH_CLASSPATH_VERSION="1.18.2"
 
 # Set bash instead of sh for the @if [[ conditions,
 # and use the usual safety flags:
 SHELL = /bin/bash -Ee
 
+CLOJURE_VERSION ?= 1.12
+TEST_PROFILES ?= "-user,-dev,+test"
+
 # We need Java sources to test Java parsing functionality, but the Docker images
 # we use on CircleCI doesn't include src.zip. So we have to download them from
 # Github and repackage in a form that is resemblant to src.zip from normal
 # distributions.
-base-src.zip:
-	wget https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.5+3.zip -O full-src.zip
-	unzip -q full-src.zip
-	cp -r jdk21u-*/src/java.base/share/classes java.base
-	cp -r jdk21u-*/src/java.desktop/share/classes java.desktop
-	zip -qr base-src.zip java.base java.desktop
-	rm -rf java.base java.desktop jdk21u-* full-src.zip
+base-src-jdk8.zip:
+	# echo 'Placeholder. We dont parse sources on JDK8.'
+	touch $@
+
+base-src-jdk11.zip:
+	bash download-jdk-sources.sh https://github.com/adoptium/jdk11u/archive/refs/tags/jdk-11.0.25+9.zip jdk11 $@
+
+base-src-jdk17.zip:
+	bash download-jdk-sources.sh https://github.com/adoptium/jdk17u/archive/refs/tags/jdk-17.0.13+11.zip jdk17 $@
+
+base-src-jdk21.zip:
+	bash download-jdk-sources.sh https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.5+3.zip jdk21 $@
+
+base-src-jdk23.zip:
+	bash download-jdk-sources.sh https://github.com/adoptium/jdk23u/archive/refs/tags/jdk-23.0.1+11.zip jdk23 $@
+
+copy-sources-to-jdk: base-src-$(JDK_SRC_VERSION).zip
+	mkdir -p $(JAVA_HOME)/lib && cp base-src-$(JDK_SRC_VERSION).zip $(JAVA_HOME)/lib/src.zip
 
 dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
@@ -39,7 +39,7 @@ target/srcdeps: project.clj
 # Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
 	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
 
-test_impl: base-src.zip
+test_impl: copy-sources-to-jdk
 		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION) test
 
 test: target/srcdeps
@@ -114,23 +114,6 @@ endif
 clean:
 	lein with-profile -user clean
 	cd test/smoketest && lein with-profile -user clean
-
-# Create and cache a `java` command. project.clj is mandatory; the others are optional but are taken into account for cache recomputation.
-# It's important not to silence with step with @ syntax, so that Enrich progress can be seen as it resolves dependencies.
-.enrich-classpath-lein-repl: Makefile project.clj $(wildcard checkouts/*/project.clj) $(wildcard deps.edn) $(wildcard $(HOME)/.clojure/deps.edn) $(wildcard profiles.clj) $(wildcard $(HOME)/.lein/profiles.clj) $(wildcard $(HOME)/.lein/profiles.d) $(wildcard /etc/leiningen/profiles.clj)
-	bash 'lein' 'update-in' ':plugins' 'conj' "[mx.cider/lein-enrich-classpath \"$(ENRICH_CLASSPATH_VERSION)\"]" '--' 'with-profile' $(LEIN_PROFILES) 'update-in' ':middleware' 'conj' 'cider.enrich-classpath.plugin-v2/middleware' '--' 'repl' | grep " -cp " > $@
-
-# Launches a repl, falling back to vanilla lein repl if something went wrong during classpath calculation.
-lein-repl: .enrich-classpath-lein-repl
-	@if grep --silent " -cp " .enrich-classpath-lein-repl; then \
-		export YOURKIT_SESSION_NAME="$(basename $(PWD))"; \
-		eval "$$(cat .enrich-classpath-lein-repl) --interactive"; \
-	else \
-		echo "Falling back to lein repl... (you can avoid further falling back by removing .enrich-classpath-lein-repl)"; \
-		lein with-profiles $(LEIN_PROFILES) repl; \
-	fi
-
-repl: lein-repl
 
 docs:
 	lein docs

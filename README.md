@@ -62,15 +62,12 @@ guidelines](.github/CONTRIBUTING.md).
 
 ### Local development
 
-Local development tasks, like firing up a repl, running the tests or locally installing cider-nrepl are offered by our Makefile.
+Local development tasks, like running the tests or locally installing cider-nrepl are offered by our Makefile.
 We recommend using it, since some aspects can be intricate to newcomers.
 
 These are its main tasks for local development:
 
 ```
-# Fire up a repl and nrepl server you can cider-connect to:
-make repl
-
 # Run tests, using mranderson (slower but more realistic)
 make test
 

@@ -24,4 +24,4 @@
            :type-mismatch         {:level :off}
            :unresolved-namespace  {:exclude [clojure.main nrepl.transport js]}}
  :output  {:progress      true
-           :exclude-files ["data_readers" "tasks" "base-src.zip"]}}
+           :exclude-files ["data_readers" "tasks"]}}
