@@ -79,7 +79,10 @@ commands:
           paths:
             - ~/.m2
             - .cpcache
-            - base-src.zip
+            - base-src-jdk11.zip
+            - base-src-jdk17.zip
+            - base-src-jdk21.zip
+            - base-src-jdk23.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 # The jobs are relatively simple. One runs utility commands against
@@ -87,19 +90,19 @@ commands:
 
 jobs:
 
-  util_job:
+  lint:
     description: |
-      Running utility commands/checks (linter etc.)
+      Running linters
     parameters:
       steps:
         type: steps
-    executor: jdk11
+    executor: jdk21
     environment:
-      CLOJURE_VERSION: "1.11.4"
+      CLOJURE_VERSION: "1.12"
     steps:
       - checkout
       - with_cache:
-          cache_version: "util_v3_1.11.4"
+          cache_version: "lint_v3_1.12"
           steps: << parameters.steps >>
 
   deploy:
@@ -126,19 +129,15 @@ jobs:
       clojure_version:
         description: Version of Clojure to test against
         type: string
-      parser_target:
-        description: The Orchard Java parser to be exercised
-        type: string
-        default: parser
     executor: << parameters.jdk_version >>
     environment:
       CLOJURE_VERSION: << parameters.clojure_version >>
-      PARSER_TARGET: << parameters.parser_target >>
+      JDK_SRC_VERSION: << parameters.jdk_version >>
       PROJECT_VERSION: 999.99.9
     steps:
       - checkout
       - with_cache:
-          cache_version: "test_code_v3_<< parameters.clojure_version >>"
+          cache_version: "test_code_v4_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
           steps:
             - run:
                 name: Running tests with inlined deps
@@ -152,9 +151,12 @@ jobs:
 # - run tests against the target matrix
 # - linter, eastwood and cljfmt
 
-tags_filter: &tags_filter
-  tags:
-    only: /^v\d+\.\d+\.\d+(-alpha\d*)?(-beta\d*)?$/
+run_always: &run_always
+  filters:
+    branches:
+      only: /.*/
+    tags:
+      only: /.*/
 
 workflows:
   version: 2.1
@@ -168,29 +170,9 @@ workflows:
             alias: "test"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk8, jdk11, jdk17, jdk23]
-          filters:
-            branches:
-              only: /.*/
-            <<: *tags_filter
-      - test:
-          # We have source for JDK21, so with this JDK version we also perform
-          # Java parser tests.
-          matrix:
-            alias: "test_with_sources"
-            parameters:
-              clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk21]
-          filters:
-            branches:
-              only: /.*/
-            <<: *tags_filter
-      - util_job:
-          name: Code Linting
-          filters:
-            branches:
-              only: /.*/
-            <<: *tags_filter
+              jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk23]
+          <<: *run_always
+      - lint:
           steps:
             - run:
                 name: Running cljfmt
@@ -205,12 +187,13 @@ workflows:
                 name: Running Eastwood
                 command: |
                   make eastwood
+          <<: *run_always
       - deploy:
           requires:
-            - "test"
-            - "test_with_sources"
-            - "Code Linting"
+            - test
+            - lint
           filters:
             branches:
               ignore: /.*/
-            <<: *tags_filter
+            tags:
+              only: /^v\d+\.\d+\.\d+(-alpha\d+)?$/
