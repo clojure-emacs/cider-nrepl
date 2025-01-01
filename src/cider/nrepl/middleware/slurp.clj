@@ -12,7 +12,7 @@
    [nrepl.transport :as transport])
   (:import
    (java.io ByteArrayOutputStream FileNotFoundException InputStream)
-   (java.net MalformedURLException URL URLConnection)
+   (java.net MalformedURLException URI URL URLConnection)
    (java.nio.file Files Path Paths)
    (java.util Base64)))
 
@@ -82,7 +82,7 @@
 (defn slurp-url-to-content+body
   "Attempts to parse and then to slurp a URL, producing a content-typed response."
   [url-str]
-  (when-let [^URL url (try (URL. url-str)
+  (when-let [^URL url (try (.toURL (URI. url-str))
                            (catch MalformedURLException _e nil))]
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))

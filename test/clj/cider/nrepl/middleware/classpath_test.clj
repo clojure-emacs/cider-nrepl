@@ -24,4 +24,4 @@
 
 (deftest file-url?-test
   (is (file-url? (.toURL (.toURI (java.io.File. "")))))
-  (is (not (file-url? (java.net.URL. "jar:file:/tmp/test.jar!/BOOT-INF/classes")))))
+  (is (not (file-url? (.toURL (java.net.URI. "jar:file:/tmp/test.jar!/BOOT-INF/classes"))))))
