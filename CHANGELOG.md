@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.29.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0290-2024-12-31).
+  - **BREAKING**: Drop support for Java sources parsing on JDK8.
+  - Rework Java sources discovery.
+
 ## 0.50.3 (2024-12-02)
 
 * Bump `orchard` to [0.28.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0280-2024-10-31).

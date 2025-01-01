@@ -217,7 +217,9 @@
             (pr-str response))
         (is (= "cider.nrepl.test.TestClass" (:class response)))
         (is (= "doSomething" (:member response)))
-        (is (= "[a b c]" (:arglists-str response)))
+        (when (SystemUtils/IS_JAVA_9)
+          ;; Java source parsing is only supported in JDK11+.
+          (is (= "[a b c]" (:arglists-str response))))
         (is (= ["int" "int" "java.lang.String"]
                (:argtypes response)))
         (is (= "void" (:returns response)))
@@ -432,14 +434,16 @@
         (is (not (contains? response :ns)))
         (is (= "function" (:type response)))))
 
-    (testing "java method eldoc lookup, internal testing methods"
-      (let [response (session/message {:op "eldoc" :sym "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
-        (is (= #{["this"]
-                 ["a" "b" "c"]
-                 ["this" "prim" "things" "generic"]}
-               (set (:eldoc response)))
-            (pr-str response))
-        (is (= "function" (:type response)))))))
+    (when (SystemUtils/IS_JAVA_9)
+      ;; Java source parsing is only supported in JDK11+.
+      (testing "java method eldoc lookup, internal testing methods"
+        (let [response (session/message {:op "eldoc" :sym "fnWithSameName" :ns "cider.nrepl.middleware.info-test"})]
+          (is (= #{["this"]
+                   ["a" "b" "c"]
+                   ["this" "prim" "things" "generic"]}
+                 (set (:eldoc response)))
+              (pr-str response))
+          (is (= "function" (:type response))))))))
 
 (deftest missing-info-test
   (testing "ensure info returns a no-info packet if symbol not found"
