@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.29.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0291-2025-01-03).
+* [#910](https://github.com/clojure-emacs/cider-nrepl/pull/910): Protect Orchard Java machinery initialization with a try/catch.
+
 ## 0.51.0 (2025-01-01)
 
 * Bump `orchard` to [0.29.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0290-2024-12-31).

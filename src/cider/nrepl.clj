@@ -44,10 +44,12 @@
     (finally
       (System/exit 1))))
 
-;; Perform the underlying dynamic `require`s asap, and also not within a separate thread
-;; (note the `future` used in `#'initializer`),
-;; since `require` is not thread-safe:
-(orchard.java/source-info `String)
+;; Perform the underlying dynamic `require`s asap, and also not within a
+;; separate thread (note the `future` used in `#'initializer`), since `require`
+;; is not thread-safe. We try it on LruMap which we know to be on the classpath,
+;; shipped with Orchard.
+(try (orchard.java/source-info 'mx.cider.orchard.LruMap)
+     (catch Exception _))
 @analyzer/spec-abbrev
 
 (defn warmup-orchard-caches!
