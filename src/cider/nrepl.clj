@@ -27,7 +27,7 @@
   Having an enforced minimum version can help users and maintainers alike diagnose issues more quickly,
   avoiding problematic code paths in our middleware, and in clients like cider.el."
   {:major 1
-   :minor 9})
+   :minor 10})
 
 ;; Make sure we're running a supported Clojure version
 (when (or (< (-> *clojure-version* :major long)
@@ -37,12 +37,11 @@
                   (-> min-clojure-verion :major long))
                (< (-> *clojure-version* :minor long)
                   (-> min-clojure-verion :minor long))))
-  (try
-    (.println System/err (format "cider-nrepl requires a newer Clojure version (found: %s, minimum required: %s). Exiting."
-                                 *clojure-version*
-                                 min-clojure-verion))
-    (finally
-      (System/exit 1))))
+  (let [msg (format "cider-nrepl requires a newer Clojure version (found: %s, minimum required: %s)."
+                    *clojure-version* min-clojure-verion)]
+    (try
+      (.println System/err msg)
+      (finally (throw (ex-info msg {}))))))
 
 ;; Perform the underlying dynamic `require`s asap, and also not within a
 ;; separate thread (note the `future` used in `#'initializer`), since `require`
