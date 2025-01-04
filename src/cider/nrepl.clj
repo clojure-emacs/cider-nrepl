@@ -57,11 +57,9 @@
   then had to be disabled for test suite reasons in Orchard 0.15.0 to 0.17.0 / cider-nrepl 0.38.0 to 0.41.0, and now it's restored again)
   Note that this can only be done cider-nrepl side, unlike before when it was done in Orchard itself."
   []
-  ;; 1.- Warmup the overall cache for core Java and Clojure stuff
-  @orchard.java/cache-initializer
-  ;; 2.- Also cache classes that are `:import`ed throughout the project.
-  ;;     The class list is obtained through `ns` form analysis,
-  ;;      so that we don't depend on whether the namespaces have been loaded yet:
+  ;; Cache classes that are `:import`ed throughout the project. The class list
+  ;; is obtained through `ns` form analysis, so that we don't depend on whether
+  ;; the namespaces have been loaded yet:
   (doseq [ns-form (vals (orchard.namespace/project-ns-forms))
           class-sym (orchard.namespace/ns-form-imports ns-form)
           :when (try
