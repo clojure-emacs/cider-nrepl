@@ -19,7 +19,8 @@
     {:name (meta/var-name v)
      :doc (meta/var-doc 1 v)
      :file (:file var-meta)
-     :file-url (some-> var-meta :file filename-as-url)
+     :file-url (or (:file-url var-meta)
+                   (some-> var-meta :file filename-as-url))
      :line (:line var-meta)
      :column (:column var-meta)}))
 

@@ -6,10 +6,15 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.string :as str]
+   [nrepl.transport :as transport]
+   [nrepl.misc :refer [response-for]]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
+   [orchard.java.source-files :as src-files]
    [orchard.meta :as meta]
-   [orchard.misc :as misc]))
+   [orchard.misc :as misc])
+  (:import
+   (java.util.concurrent ConcurrentHashMap)))
 
 (declare format-response)
 
@@ -52,7 +57,7 @@
                  (when-let [forms (:forms info)]
                    {:forms-str (forms-join forms)})
                  (when-let [file (:file info)]
-                   (info/file-info file))
+                   (info/file-info (str file)))
                  (when-let [path (:javadoc info)]
                    (info/javadoc-info path)))
           dissoc-nil-keys
@@ -78,8 +83,24 @@
 (def var-meta-allowlist-set
   (set meta/var-meta-allowlist))
 
+(def ^:private ^ConcurrentHashMap attempted-to-download-coords
+  "Map that keeps all Maven artifact coordinates that we already attempted to
+  download once (doesn't matter the result). We don't want to repeatedly try to
+  download an artifact that doesn't exist or can't be found."
+  (ConcurrentHashMap.))
+
+(defn- download-sources-jar-for-class
+  [klass {:keys [transport] :as msg}]
+  (when-let [coords (src-files/infer-maven-coordinates-for-class klass)]
+    (when (nil? (.putIfAbsent attempted-to-download-coords coords true))
+      ;; Tell the client we are going to download an artifict so it can notify
+      ;; the user. It may take a few seconds.
+      (transport/send transport (response-for msg {:status :download-sources-jar
+                                                   :coords coords}))
+      (src-files/download-sources-jar-for-coordinates coords))))
+
 (defn info
-  [{:keys [ns sym class member context var-meta-allowlist]
+  [{:keys [ns sym class member context var-meta-allowlist download-sources-jar]
     legacy-sym :symbol
     :as msg}]
   (let [sym (or (not-empty legacy-sym)
@@ -117,10 +138,15 @@
                              {:var-meta-allowlist (into meta/var-meta-allowlist
                                                         (remove var-meta-allowlist-set)
                                                         var-meta-allowlist)}))]
-    (cond
-      java? (info/info-java class (or member sym))
-      (and ns sym) (info/info* info-params)
-      :else nil)))
+    ;; If the client requested sources jar to be downloaded in case it is
+    ;; missing, try to download it once using `orchard.java.src-files`.
+    (binding [src-files/*download-sources-jar-fn*
+              (when download-sources-jar
+                #(download-sources-jar-for-class % msg))]
+      (cond
+        java? (info/info-java class (or member sym))
+        (and ns sym) (info/info* info-params)
+        :else nil))))
 
 (defn info-reply
   [msg]
