@@ -162,9 +162,11 @@
 (def clojure-core-map
   (when clojure-core
     {:aliases {}
-     :interns (->> (ns-map clojure-core)
-                   (filter #(var? (second %)))
-                   (misc/update-vals #(um/relevant-meta (enriched-meta %))))}))
+     :interns (into {}
+                    (keep (fn [[k v]]
+                            (when (var? v)
+                              [k (um/relevant-meta (enriched-meta v))])))
+                    (ns-map clojure-core))}))
 
 (defn calculate-changed-ns-map
   "Return a map of namespaces that changed between new-map and old-map.

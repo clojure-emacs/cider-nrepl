@@ -13,6 +13,6 @@
 (defn relevant-meta
   "Filter the entries in map m by `relevant-meta-keys` and non-nil values."
   [m]
-  (->> (select-keys m relevant-meta-keys)
-       (filter second)
-       (misc/update-vals pr-str)))
+  (into {}
+        (keep #(when-let [v (get m %)] [% (pr-str v)]))
+        relevant-meta-keys))
