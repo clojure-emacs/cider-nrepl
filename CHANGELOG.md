@@ -2,6 +2,11 @@
 
 ## master (unreleased)
 
+## 0.52.0 (2025-01-10)
+
+* Bump `orchard` to [0.30.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0300-2025-01-10).
+* * [#911](https://github.com/clojure-emacs/cider-nrepl/pull/911): Add support for automatically downloading sources JARs in `info` op.
+
 ## 0.51.1 (2025-01-03)
 
 * Bump `orchard` to [0.29.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0291-2025-01-03).
