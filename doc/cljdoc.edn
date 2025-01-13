@@ -1,0 +1,17 @@
+{:cljdoc.doc/tree
+ [["Readme" {:file "README.md"}]
+  ["Changelog" {:file "CHANGELOG.md"}]
+  ["Home" {:file "doc/modules/ROOT/pages/index.adoc"}]
+  ["Usage" {:file "doc/modules/ROOT/pages/usage.adoc"}]
+  ["Understanding the Internals" {:file "doc/modules/ROOT/pages/internals.adoc"}]
+  ["nREPL API" {}
+   ["Supplied Middleware" {:file "doc/modules/ROOT/pages/nrepl-api/supplied_middleware.adoc"}]
+   ["Supplied Ops" {:file "doc/modules/ROOT/pages/nrepl-api/ops.adoc"}]]
+  ["Hacking on CIDER nREPL" {:file "doc/modules/ROOT/pages/hacking.adoc"}]
+  ["Compatibility" {:file "doc/modules/ROOT/pages/compatibility.adoc"}]
+  ["Release Policy" {:file "doc/modules/ROOT/pages/release_policy.adoc"}]
+  ["FAQ" {:file "doc/modules/ROOT/pages/faq.adoc"}]
+  ["About" {}
+   ["History" {:file "doc/modules/ROOT/pages/about/history.adoc"}]
+   ["Changelog" {:file "doc/modules/ROOT/pages/about/changelog.adoc"}]
+   ["License" {:file "doc/modules/ROOT/pages/about/license.adoc"}]]]}
