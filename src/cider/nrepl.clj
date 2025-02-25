@@ -300,10 +300,10 @@ Note: Documentation may be incomplete; not all return keys are described."
                           "ns" "The current namespace"}
                :returns {"status" "done"}}}}))
 
-(def inspector-returns (merge {"status" "\"done\""
-                               "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."
-                               "path" "Printed representation of current inspector path."}
-                              fragments-doc))
+(def inspector-returns
+  {"status" "\"done\""
+   "value" "The inspector result. Contains a specially-formatted string that can be `read` and then rendered client-side."
+   "path" "Printed representation of current inspector path."})
 
 (def-wrapper wrap-inspect cider.nrepl.middleware.inspect/handle-inspect
   #{"eval"}
