@@ -11,6 +11,7 @@
    [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
+   [compliment.core :as compliment]
    [haystack.analyzer :as analyzer]
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
@@ -51,29 +52,19 @@
      (catch Exception _))
 @analyzer/spec-abbrev
 
-(defn warmup-orchard-caches!
-  "Warms up `orchard.java/cache`, drastically improving the completion and info UX performance for first hits.
-  (This was our behavior for many years,
-  then had to be disabled for test suite reasons in Orchard 0.15.0 to 0.17.0 / cider-nrepl 0.38.0 to 0.41.0, and now it's restored again)
-  Note that this can only be done cider-nrepl side, unlike before when it was done in Orchard itself."
+(defn warmup-caches!
+  "Warm up some of the dependency caches to improve UX performance for first hits.
+  The warmups should be non-invasive (avoid unpredictable side-effects like e.g.
+  loading classes). Currently only warms up Compliment, others are TBD."
   []
-  ;; Cache classes that are `:import`ed throughout the project. The class list
-  ;; is obtained through `ns` form analysis, so that we don't depend on whether
-  ;; the namespaces have been loaded yet:
-  (doseq [ns-form (vals (orchard.namespace/project-ns-forms))
-          class-sym (orchard.namespace/ns-form-imports ns-form)
-          :when (try
-                  (Class/forName (str class-sym)
-                                 false ;; Don't initialize this class, avoiding side-effects (including static class initializers; with the exception of static fields with an initial value)
-                                 (.getContextClassLoader (Thread/currentThread)))
-                  (catch Throwable _))]
-    (orchard.java/class-info class-sym))
-  ;; 3.- Leave an indicator that can help up assess the cache size in a future:
-  (-> orchard.java/cache .keySet .size))
+  (try
+    ;; This call removes the delay from the next `.prefix` completion.
+    (compliment/completions ".sub")
+    (catch Throwable t
+      (println "Error during" `warmup-caches! ":" (str t)))))
 
-(def initializer
-  (future
-    (warmup-orchard-caches!)))
+(defonce ^:private warmup-once
+  (.start (Thread. ^Runnable warmup-caches!)))
 
 ;;; Functionality for deferred middleware loading
 ;;

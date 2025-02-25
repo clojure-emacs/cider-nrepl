@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Disable background warmup of `orchard.java` cache.
+* [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Enable background warmup of Compliment cache.
+
 ## 0.52.1 (2025-02-24)
 
 * Bump `orchard` to [0.30.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0301-2025-02-24).
