@@ -5,9 +5,7 @@
     :refer [eval-interceptor-transport with-safe-transport]]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.info :as info]
-   [orchard.inspect :as inspect]
-   [orchard.java]))
+   [orchard.inspect :as inspect]))
 
 (defn- update-inspector [inspector f & args]
   ;; Ensure that there is valid inspector value before passing it to
@@ -22,50 +20,15 @@
       (alter-meta! update ::inspector #(apply update-inspector % f args))
       (get ::inspector)))
 
-(defn- extract-doc-fragments
-  "If `value` is either a class, a method, or a field, try to calculate doc
-  fragments from it and return as a map."
-  [value]
-  (let [class-sym (when (class? value)
-                    (-> ^Class value .getCanonicalName symbol))
-        method-sym (when (instance? java.lang.reflect.Method value)
-                     (symbol (str (-> ^java.lang.reflect.Method value .getDeclaringClass .getCanonicalName)
-                                  "/"
-                                  (-> ^java.lang.reflect.Method value .getName))))
-        field-sym (when (instance? java.lang.reflect.Field value)
-                    (symbol (str (-> ^java.lang.reflect.Field value .getDeclaringClass .getCanonicalName)
-                                 "/"
-                                 (-> ^java.lang.reflect.Field value .getName))))
-        fragments-sym (or method-sym field-sym class-sym)]
-    (if fragments-sym
-      (select-keys (info/info 'user fragments-sym)
-                   [:doc-fragments
-                    :doc-first-sentence-fragments
-                    :doc-block-tags-fragments])
-      {})))
-
 (defn- inspector-response
   ([msg inspector]
    (inspector-response msg inspector {:status :done}))
 
-  ([msg {:keys [rendered value path]} extra-response-data]
-   (let [data (binding [*print-length* nil]
-                {:value (pr-str (seq rendered))
-                 :path (pr-str (seq path))})]
-     (response-for msg extra-response-data data (extract-doc-fragments value)))))
-
-(defn- warmup-javadoc-cache [^Class clazz]
-  (when-let [class-sym (some-> clazz .getCanonicalName symbol)]
-    ;; Don't spawn a `future` for already-computed caches:
-    (when-not (get orchard.java/cache class-sym)
-      (future ;; TODO: replace future with controlled threadpool.
-        ;; Warmup the Orchard cache for the class of the currently inspected
-        ;; value. This way, if the user inspects this class next, the underlying
-        ;; inspect request will complete quickly.
-        (info/info 'user class-sym)
-        ;; Same for its implemented interfaces:
-        (doseq [^Class interface (.getInterfaces clazz)]
-          (info/info 'user (-> interface .getCanonicalName symbol)))))))
+  ([msg inspector extra-response-data]
+   (let [data (binding [*print-length* nil, *print-level* nil]
+                {:value (pr-str (seq (:rendered inspector)))
+                 :path (pr-str (seq (:path inspector)))})]
+     (response-for msg data extra-response-data))))
 
 (defn- msg->inspector-config [msg]
   (select-keys msg [:page-size :max-atom-length :max-coll-size
@@ -75,7 +38,6 @@
   [msg value]
   (let [config (msg->inspector-config msg)
         inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
-    (warmup-javadoc-cache (class (:value inspector)))
     ;; By using 3-arity `inspector-response` we ensure that the default
     ;; `{:status :done}` is not sent with this message, as the underlying
     ;; eval will send it on its own.

@@ -4,6 +4,7 @@
 
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Disable background warmup of `orchard.java` cache.
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Enable background warmup of Compliment cache.
+* [#914](https://github.com/clojure-emacs/cider-nrepl/pull/914): Remove javadoc section from the inspector output.
 
 ## 0.52.1 (2025-02-24)
 
