@@ -171,19 +171,26 @@
   [_m]
   (swap! current-report update-in [:summary :var] inc))
 
+(defn- in-checking-block?
+  "Determine whether the report being generated is for a test.chuck `checking` block."
+  [m]
+  (boolean (:com.gfredericks.test.chuck.clojure-test/testing-contexts m)))
+
 (defn- report-final-status
   [{:keys [type] :as m}]
   (let [ns (ns-name (get m :ns (:testing-ns @current-report)))
-        v (last test/*testing-vars*)]
+        v (last test/*testing-vars*)
+        gen-input (when (in-checking-block? m)
+                    (:gen-input @current-report))]
     (swap! current-report
            #(-> %
                 (update-in [:summary :test] inc)
                 (update-in [:summary type] (fnil inc 0))
+                (assoc :gen-input gen-input)
                 (update-in [:results ns (or (:name (meta v))
                                             fallback-var-name)]
                            (fnil conj [])
-                           (test-result ns v m))
-                (assoc :gen-input nil)))))
+                           (test-result ns v m))))))
 
 (defmethod report :end-test-var
   [{:keys [var-elapsed-time]
