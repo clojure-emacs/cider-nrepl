@@ -8,6 +8,7 @@
    [clojure.string :as str]
    [clojure.test :refer :all]
    [orchard.java]
+   [orchard.java.source-files]
    [orchard.misc :as misc])
   (:import
    (cider.nrepl.test AnotherTestClass TestClass YetAnotherTest)
@@ -19,8 +20,7 @@
 
 (def jdk-sources-present?
   "Is Java sources files available on the classpath?"
-  (boolean (or (io/resource "java/lang/Thread.java")
-               (io/resource "java.base/java/lang/Thread.java"))))
+  (boolean (orchard.java.source-files/class->source-file-url Thread)))
 
 (deftest format-response-test
   (is (re-find #"^(https?|file|jar|zip):" ; resolved either locally or online
