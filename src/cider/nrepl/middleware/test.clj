@@ -101,6 +101,7 @@
         print-fn (if matcher-combinators-result?
                    println
                    pp/pprint)
+        ;; The output will contain sorted maps for better readability and diff comparisons.
         result (with-out-str (print-fn (deep-sorted-maps object)))]
     ;; Replace extra newlines at the end, as sometimes returned by matchers-combinators:
     (str/replace result #"\n\n+$" "\n")))
