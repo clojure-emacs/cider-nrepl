@@ -80,7 +80,6 @@
                 (str/starts-with? frame-cname class-name))))
           first))))
 
-
 (defn deep-sorted-maps
   "Recursively converts all nested maps to sorted maps."
   [m]
@@ -93,7 +92,6 @@
      m)
     (catch Exception _
       m)))
-
 
 (defn- print-object
   "Print `object` using println for matcher-combinators results and pprint
