@@ -80,6 +80,21 @@
                 (str/starts-with? frame-cname class-name))))
           first))))
 
+
+(defn deep-sorted-maps
+  "Recursively converts all nested maps to sorted maps."
+  [m]
+  (try
+    (walk/postwalk
+     (fn [x]
+       (if (map? x)
+         (with-meta (into (sorted-map) x) (meta x))
+         x))
+     m)
+    (catch Exception _
+      m)))
+
+
 (defn- print-object
   "Print `object` using println for matcher-combinators results and pprint
    otherwise. The matcher-combinators library uses a custom print-method
@@ -91,7 +106,7 @@
         print-fn (if matcher-combinators-result?
                    println
                    pp/pprint)
-        result (with-out-str (print-fn object))]
+        result (with-out-str (print-fn (deep-sorted-maps object)))]
     ;; Replace extra newlines at the end, as sometimes returned by matchers-combinators:
     (str/replace result #"\n\n+$" "\n")))
 
