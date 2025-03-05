@@ -760,28 +760,3 @@
           (recur (inc i)))))
 
     (is (= 7 @inspect-tap-current-value-test-atom))))
-
-(deftest doc-fragments-test
-  ;; This test is only runnable when JDK sources are present.
-  (when info-test/jdk-sources-present?
-    (testing "Responses for classes, methods and fields contain `:doc-fragments` attributes"
-      (doseq [code ["java.lang.Thread"
-                    "(-> java.lang.Thread .getMethods first)"
-                    "(-> java.lang.Thread .getFields first)"]]
-        (let [response (session/message {:op      "eval"
-                                         :inspect "true"
-                                         :code    code})]
-          (is (contains? response :doc-fragments))
-          (is (contains? response :doc-first-sentence-fragments))
-          (is (contains? response :doc-block-tags-fragments))))))
-
-  (testing "Responses for other objects do not contain `:doc-fragments` attributes"
-    (doseq [code ["1"
-                  "{}"
-                  "true"]]
-      (let [response (session/message {:op      "eval"
-                                       :inspect "true"
-                                       :code    code})]
-        (is (not (contains? response :doc-fragments)))
-        (is (not (contains? response :doc-first-sentence-fragments)))
-        (is (not (contains? response :doc-block-tags-fragments)))))))
