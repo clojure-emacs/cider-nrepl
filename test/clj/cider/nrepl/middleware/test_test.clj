@@ -285,7 +285,6 @@ The `988` value reflects that it times things correctly for a slow test.")
     (is (= "{:a 1, :b 2, :c 3, :d {x 1, y 2, z 3}}\n"
            (#'test/print-object {:b 2 :c 3 :a 1 :d {'z 3 'y 2 'x 1}})))))
 
-
 (deftest test-result-test
   (testing "It passes `:error`s to `test/*test-error-handler*`"
     (let [proof (atom [])
