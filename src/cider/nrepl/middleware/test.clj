@@ -83,15 +83,12 @@
 (defn deep-sorted-maps
   "Recursively converts all nested maps to sorted maps."
   [m]
-  (try
-    (walk/postwalk
-     (fn [x]
-       (if (map? x)
-         (with-meta (into (sorted-map) x) (meta x))
-         x))
-     m)
-    (catch Exception _
-      m)))
+  (walk/postwalk
+   (fn [x]
+     (if (map? x)
+       (with-meta (into (sorted-map) x) (meta x))
+       x))
+   m))
 
 (defn- print-object
   "Print `object` using println for matcher-combinators results and pprint
