@@ -4,14 +4,11 @@
    :added "0.32.0"}
   (:require [cider.nrepl.middleware.inspect :as middleware.inspect]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-            [haystack.analyzer :as analyzer]
-            [haystack.parser.clojure.throwable :as throwable]
             [logjam.event :as event]
             [logjam.framework :as framework]
             [nrepl.middleware.print :as print]
             [nrepl.misc :refer [response-for]]
-            [nrepl.transport :as transport]
-            [orchard.inspect :as orchard.inspect])
+            [nrepl.transport :as transport])
   (:import (java.io StringWriter)
            (java.util UUID)))
 
@@ -38,7 +35,7 @@
 (defn- select-exception
   "Return the `exception` in a Bencode compatible format."
   [exception]
-  (let [exception-map (throwable/Throwable->map exception)
+  (let [exception-map (Throwable->map exception)
         strip-cause #(dissoc % :data :trace)]
     (cond-> (strip-cause exception-map)
       (seq (:via exception-map))
@@ -167,16 +164,6 @@
          (deref)
          (select-appender))}))
 
-(defn analyze-stacktrace-reply
-  "Show the stacktrace of a log event in the debugger."
-  [{:keys [transport ::print/print-fn] :as msg}]
-  (let [event (event msg)]
-    (if-let [exception (:exception event)]
-      (do (doseq [cause (analyzer/analyze exception print-fn)]
-            (transport/send transport (response-for msg cause)))
-          (transport/send transport (response-for msg :status :done)))
-      (transport/send transport (response-for msg :status :no-error)))))
-
 (defn exceptions-reply
   "Return the exceptions and their frequencies for the given framework and appender."
   [msg]
@@ -272,7 +259,6 @@
   (with-safe-transport handler msg
     "cider/log-add-appender" add-appender-reply
     "cider/log-add-consumer" add-consumer-reply
-    "cider/log-analyze-stacktrace" analyze-stacktrace-reply
     "cider/log-clear-appender" clear-appender-reply
     "cider/log-exceptions" exceptions-reply
     "cider/log-format-event" format-event-reply
