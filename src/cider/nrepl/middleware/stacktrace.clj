@@ -5,7 +5,6 @@
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [clojure.string :as str]
    [haystack.analyzer :as analyzer]
-   [haystack.parser :as parser]
    [nrepl.middleware.print :as print]
    [cider.nrepl.middleware.inspect :as middleware.inspect]
    [nrepl.misc :refer [response-for]]
@@ -46,23 +45,6 @@
     (no-error msg))
   (done msg))
 
-;; Analyze stacktrace
-
-(defn- analyze-stacktrace
-  "Parse and analyze the `stacktrace`."
-  [{:keys [stacktrace] :as msg}]
-  (if-let [analysis (some-> stacktrace parser/parse analyzer/analyze)]
-    (send-analysis msg analysis)
-    (no-error msg)))
-
-(defn- handle-analyze-stacktrace-op
-  "Handle the analyze stacktrace op."
-  [{:keys [stacktrace] :as msg}]
-  (if (not (str/blank? stacktrace))
-    (analyze-stacktrace msg)
-    (no-error msg))
-  (done msg))
-
 ;; Stacktrace
 
 (defn- handle-stacktrace-op
@@ -93,5 +75,4 @@
   (case op
     "analyze-last-stacktrace" (handle-analyze-last-stacktrace-op msg)
     "inspect-last-exception"  (handle-inspect-last-exception-op msg)
-    "analyze-stacktrace"      (handle-analyze-stacktrace-op msg)
     "stacktrace"              (handle-stacktrace-op msg)))

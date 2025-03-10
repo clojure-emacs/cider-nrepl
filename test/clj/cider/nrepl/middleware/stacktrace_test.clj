@@ -63,21 +63,3 @@
     (let [response (session/message {:op "analyze-last-stacktrace"})]
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))
-
-;; Analyze stacktrace op
-
-(deftest analyze-stacktrace-test
-  (testing "stacktrace op with stacktrace parameter"
-    (let [response (session/message {:op "analyze-stacktrace" "stacktrace" (pr-str (ex-info "BOOM" {:boom :data}))})]
-      (testing "returns the exception class"
-        (is (= "clojure.lang.ExceptionInfo" (:class response))))
-      (testing "returns the exception message"
-        (is (= "BOOM" (:message response))))
-      (testing "returns done status"
-        (is (= #{"done"} (:status response)))))))
-
-(deftest analyze-stacktrace-invalid-test
-  (testing "stacktrace op with invalid stacktrace parameter"
-    (let [response (session/message {:op "analyze-stacktrace" "stacktrace" "invalid"})]
-      (testing "returns done and no-error status"
-        (is (= #{"done" "no-error"} (:status response)))))))

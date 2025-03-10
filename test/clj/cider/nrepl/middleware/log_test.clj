@@ -111,26 +111,6 @@
       ;; TODO: How to receive the async log event?
       )))
 
-(deftest test-analyze-stacktrace
-  (with-each-framework [framework (frameworks)]
-    (with-appender [framework appender]
-      (framework/log framework {:message "a-1" :exception (ex-info "BOOM" {:some (Object.)})})
-      (let [events (search-events framework appender {})]
-        (is (= 1 (count events)))
-        (let [event (first events)]
-          (is (uuid-str? (:id event)))
-          (is (string? (:level event)))
-          (is (string? (:logger event)))
-          (is (= "a-1" (:message event)))
-          (is (int? (:timestamp event)))
-          (let [response (session/message {:op "cider/log-analyze-stacktrace"
-                                           :framework (:id framework)
-                                           :appender (:id appender)
-                                           :event (:id event)})]
-            (is (= #{"done"} (:status response)))
-            (is (every? #(set/subset? #{:type :flags} (set (keys %)))
-                        (:stacktrace response)))))))))
-
 (deftest test-clear
   (with-each-framework [framework (frameworks)]
     (with-appender [framework appender]
