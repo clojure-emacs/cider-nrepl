@@ -3,12 +3,12 @@
   {:added "0.47.0"}
   (:require
    [clojure.main :refer [repl-caught]]
-   [haystack.analyzer :as stacktrace.analyzer]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
-   [orchard.misc :as misc]))
+   [orchard.misc :as misc]
+   [orchard.stacktrace :as stacktrace]))
 
 (defn error-reply
   [{:keys [error error-ns]}
@@ -17,7 +17,7 @@
   (transport/send
    transport
    (response-for msg (cond-> {:status :error}
-                       error (assoc :error (stacktrace.analyzer/analyze error print-fn))
+                       error (assoc :error (stacktrace/analyze error print-fn))
                        error-ns (assoc :error-ns error-ns))))
 
   (binding [*msg* msg

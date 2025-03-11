@@ -12,7 +12,6 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.print-method] ;; we load this namespace, so it's directly available to clients
    [compliment.core :as compliment]
-   [haystack.analyzer :as analyzer]
    [nrepl.middleware :refer [set-descriptor!]]
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
@@ -50,7 +49,6 @@
 ;; shipped with Orchard.
 (try (orchard.java/source-info 'mx.cider.orchard.LruMap)
      (catch Exception _))
-@analyzer/spec-abbrev
 
 (defn warmup-caches!
   "Warm up some of the dependency caches to improve UX performance for first hits.

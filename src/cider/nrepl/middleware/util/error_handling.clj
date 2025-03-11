@@ -20,7 +20,7 @@
 
 (def ^:private analyze-causes
   (delay
-    (requiring-resolve 'haystack.analyzer/analyze)))
+    (requiring-resolve 'orchard.stacktrace/analyze)))
 
 ;;; UTILITY FUNCTIONS
 
