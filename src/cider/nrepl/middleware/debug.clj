@@ -7,7 +7,6 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
-   [haystack.analyzer :as stacktrace.analyzer]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
@@ -15,7 +14,8 @@
    [orchard.info :as info]
    [orchard.inspect :as inspect]
    [orchard.meta :as m]
-   [orchard.print])
+   [orchard.print]
+   [orchard.stacktrace :as stacktrace])
   (:import
    [clojure.lang Compiler$LocalBinding]
    [java.util UUID]))
@@ -219,7 +219,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
                        {:status :eval-error
-                        :causes [(let [causes# (stacktrace.analyzer/analyze e# (::print/print-fn *msg*))]
+                        :causes [(let [causes# (stacktrace/analyze e# (::print/print-fn *msg*))]
                                    (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)
@@ -291,11 +291,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (debugger-send
    {:status :stack
     :causes (if (instance? Throwable value)
-              (stacktrace.analyzer/analyze value (::print/print-fn *msg*))
+              (stacktrace/analyze value (::print/print-fn *msg*))
               [{:class      "StackTrace"
                 :message    "Harmless user-requested stacktrace"
                 :stacktrace (-> (Exception. "Dummy")
-                                (stacktrace.analyzer/analyze (::print/print-fn *msg*))
+                                (stacktrace/analyze (::print/print-fn *msg*))
                                 last :stacktrace)}])}))
 
 (def debug-commands

@@ -2,13 +2,12 @@
   "Cause and stacktrace analysis for exceptions"
   {:author "Jeff Valk"}
   (:require
-   [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
-   [clojure.string :as str]
-   [haystack.analyzer :as analyzer]
-   [nrepl.middleware.print :as print]
    [cider.nrepl.middleware.inspect :as middleware.inspect]
+   [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as t]))
+   [nrepl.transport :as t]
+   [orchard.stacktrace :as stacktrace]))
 
 (defn- done
   "Send the done response to the client."
@@ -35,12 +34,12 @@
   [{:keys [session ::print/print-fn] :as msg}]
   (let [last-exception (@session #'*e)]
     (swap! session assoc #'*last-exception* last-exception) ;; note that *e can change later, so this entry isn't redundant
-    (send-analysis msg (analyzer/analyze last-exception print-fn))))
+    (send-analysis msg (stacktrace/analyze last-exception print-fn))))
 
 (defn- handle-analyze-last-stacktrace-op
   "Handle the analyze last stacktrace op."
   [{:keys [session] :as msg}]
-  (if (and session (@session #'*e))
+  (if (@session #'*e)
     (analyze-last-stacktrace msg)
     (no-error msg))
   (done msg))
@@ -53,17 +52,12 @@
   (handle-analyze-last-stacktrace-op msg)
   (notify-client msg "The `stacktrace` op is deprecated, please use `analyze-last-stacktrace` instead." :warning))
 
-(defn handle-inspect-last-exception-op [{:keys [index transport] :as msg}]
-  (let [le (when index
-             (some-> msg :session deref (get #'*last-exception*)))
-        cause (when le
-                (loop [n 0
-                       cause le]
-                  (if (= n index)
-                    cause
-                    (when cause
-                      (recur (inc n)
-                             (some-> ^Throwable cause .getCause))))))]
+(defn handle-inspect-last-exception-op [{:keys [session index transport] :as msg}]
+  (let [last-exception (@session #'*last-exception*)
+        causes (->> (iterate #(.getCause ^Throwable %) last-exception)
+                    (take-while some?))
+        cause (when index
+                (nth causes index nil))]
     (if cause
       (t/send transport (middleware.inspect/inspect-reply* msg cause))
       (no-error msg))

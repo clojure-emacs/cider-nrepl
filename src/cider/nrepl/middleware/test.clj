@@ -9,14 +9,13 @@
    [clojure.string :as str]
    [clojure.test :as test]
    [clojure.walk :as walk]
-   [haystack.analyzer :as stacktrace.analyzer]
-   [haystack.parser.clojure.throwable :as throwable]
    [nrepl.middleware.interruptible-eval :as ie]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.misc :as misc]
-   [orchard.query :as query]))
+   [orchard.query :as query]
+   [orchard.stacktrace :as stacktrace]))
 
 ;;; ## Overview
 ;;
@@ -66,19 +65,14 @@
 (defn stack-frame
   "Search the stacktrace of exception `e` for the function `f` and return info
   describing the stack frame, including var, class, and line."
-  ([^Exception e f]
-   (stack-frame (stacktrace.analyzer/directory-namespaces) e f))
-  ([namespaces ^Exception e f]
-   (when-let [class-name (some-> f class .getName)]
-     (->> e
-          .getStackTrace
-          (map throwable/StackTraceElement->vec)
-          (map (partial stacktrace.analyzer/analyze-frame namespaces))
-          (filter
-           #(when-let [frame-cname (:class %)]
-              (when (string? frame-cname)
-                (str/starts-with? frame-cname class-name))))
-          first))))
+  [^Exception e f]
+  (when-let [class-name (some-> f class .getName)]
+    (when-let [analyzed-trace (:stacktrace (first (stacktrace/analyze e)))]
+      (some #(when-let [frame-cname (:class %)]
+               (when (and (string? frame-cname)
+                          (str/starts-with? frame-cname class-name))
+                 %))
+            analyzed-trace))))
 
 (defn- print-object
   "Print `object` using println for matcher-combinators results and pprint
@@ -260,11 +254,9 @@
   finds the erring test fixture in the stacktrace and binds it as the current
   test var. Test count is decremented to indicate that no tests were run."
   [ns e]
-  (let [namespaces (stacktrace.analyzer/directory-namespaces)
-        frame (->> (concat (:clojure.test/once-fixtures (meta ns))
+  (let [frame (->> (concat (:clojure.test/once-fixtures (meta ns))
                            (:clojure.test/each-fixtures (meta ns)))
-                   (map (partial stack-frame namespaces e))
-                   (filter identity)
+                   (keep #(stack-frame e %))
                    (first))
         fixture (resolve (symbol (:var frame)))]
     (swap! current-report update-in [:summary :test] dec)
@@ -491,7 +483,7 @@
             (with-bindings (assoc @session #'ie/*msg* msg)
               (let [[ns var] (map misc/as-sym [ns var])]
                 (if-let [e (get-in @results [ns var index :error])]
-                  (doseq [cause (stacktrace.analyzer/analyze e print-fn)]
+                  (doseq [cause (stacktrace/analyze e print-fn)]
                     (t/send transport (response-for msg cause)))
                   (t/send transport (response-for msg :status :no-error))))))
           (fn []

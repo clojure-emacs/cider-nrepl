@@ -7,11 +7,11 @@
    [clj-reload.core :as reload]
    [clojure.main :refer [repl-caught]]
    [clojure.string :as str]
-   [haystack.analyzer :as analyzer]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]))
+   [nrepl.transport :as transport]
+   [orchard.stacktrace :as stacktrace]))
 
 (defn- user-reload
   "Resolve clj-reload.core/<sym> from the user project or return fallback."
@@ -56,7 +56,7 @@
                 (respond msg {:status :ok}))
               (catch Throwable error
                 (respond msg {:status :error
-                              :error  (analyzer/analyze error print-fn)})
+                              :error  (stacktrace/analyze error print-fn)})
                 (binding [*msg* msg
                           *err* (print/replying-PrintWriter :err msg {})]
                   (repl-caught error)))))
