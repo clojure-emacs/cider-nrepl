@@ -21,6 +21,7 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
           name: cider-nrepl ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
           generateReleaseNotes: true  # Auto-generate release notes based on PRs and commits
           # TODO: Use bodyFile to get the contents from changelog
           token: ${{ secrets.GITHUB_TOKEN }}
