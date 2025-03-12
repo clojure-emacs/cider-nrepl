@@ -91,6 +91,11 @@
          x))
      m)
     (catch Exception _
+      ;; Maps with non-comparable keys aren't sortable, so they should be returned as-is.
+      ;; Examples:
+      ;;   {{} 1}
+      ;;   {1 1 :a 1}
+      ;;   {"a" 1 :a 1}
       m)))
 
 (defn- print-object
