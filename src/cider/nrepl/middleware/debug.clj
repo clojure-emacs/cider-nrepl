@@ -3,22 +3,20 @@
   {:author "Artur Malabarba"}
   (:require
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
-   [cider.nrepl.middleware.util :as util]
+   [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
    [orchard.meta :as m]
    [orchard.print]
    [orchard.stacktrace :as stacktrace])
   (:import
-   [clojure.lang Compiler$LocalBinding]
-   [java.util UUID]))
+   (clojure.lang Compiler$LocalBinding)
+   (java.util UUID)))
 
 ;;;; # The Debugger
 ;;;
@@ -135,7 +133,7 @@
   []
   (if (map? *msg*)
     (do
-      (transport/send (:transport *msg*) (response-for *msg* :value 'QUIT))
+      (respond-to *msg* :value 'QUIT)
       (.stop ^Thread (:thread (meta (:session *msg*)))))
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
@@ -200,8 +198,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (when (not @debugger-message)
     (throw (Exception. "Debugger not initialized!")))
   (try
-    (transport/send (:transport @debugger-message)
-                    (apply response-for @debugger-message r))
+    (apply respond-to @debugger-message r)
     (catch java.net.SocketException _
       (reset! debugger-message nil))))
 
@@ -710,12 +707,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 (defn- instrumented-defs-reply
   "Reply to `msg` with an alist of instrumented defs on the \"list\" entry."
   [msg]
-  (->> (all-ns)
-       (map #(cons (ns-name %) (ins/list-instrumented-defs %)))
-       (filter second)
-       (util/transform-value)
-       (response-for msg :status :done :list)
-       (transport/send (:transport msg))))
+  (let [defs (->> (all-ns)
+                  (map #(cons (ns-name %) (ins/list-instrumented-defs %)))
+                  (filter second))]
+    (respond-to msg :status :done, :list (util/transform-value defs))))
 
 (defn handle-debug
   [handler {:keys [op input session] :as msg}]

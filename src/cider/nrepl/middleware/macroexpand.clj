@@ -2,11 +2,11 @@
   "Macroexpansion middleware."
   {:author "Bozhidar Batsov"}
   (:require
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling
     :refer [base-error-response eval-interceptor-transport with-safe-transport]]
    [orchard.cljs.analysis :as cljs-ana]
-   [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [clojure.pprint :as pp]
    [clojure.tools.reader :as reader]
@@ -124,12 +124,11 @@
   (transport/send (:transport msg)
                   (base-error-response msg ex :done :macroexpand-error)))
 
-(defn macroexpansion-reply-clj [{:keys [transport] :as msg}
-                                {:keys [value] :as resp}]
+(defn macroexpansion-reply-clj [msg {:keys [value] :as resp}]
   (try (let [msg (update msg :ns #(or (misc/as-sym %) 'user))
              expansion (walk/prewalk (post-expansion-walker-clj msg) value)
              response-map (macroexpansion-response-map msg expansion)]
-         (transport/send transport (response-for msg response-map)))
+         (respond-to msg response-map))
        (catch Exception ex
          (send-middleware-error msg ex))))
 

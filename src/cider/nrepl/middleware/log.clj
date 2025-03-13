@@ -3,12 +3,11 @@
   {:author "r0man"
    :added "0.32.0"}
   (:require [cider.nrepl.middleware.inspect :as middleware.inspect]
+            [cider.nrepl.middleware.util :refer [respond-to]]
             [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
             [logjam.event :as event]
             [logjam.framework :as framework]
-            [nrepl.middleware.print :as print]
-            [nrepl.misc :refer [response-for]]
-            [nrepl.transport :as transport])
+            [nrepl.middleware.print :as print])
   (:import (java.io StringWriter)
            (java.util UUID)))
 
@@ -139,16 +138,15 @@
 
 (defn add-consumer-reply
   "Add a consumer to an appender of a log framework."
-  [{:keys [consumer filters transport] :as msg}]
+  [{:keys [consumer filters] :as msg}]
   (let [appender (appender msg)
         consumer {:id (or consumer (str (UUID/randomUUID)))
                   :filters (or filters {})
                   :callback (fn [consumer event]
-                              (->> (response-for msg
-                                                 :cider/log-consumer (str (:id consumer))
-                                                 :cider/log-event (select-event event)
-                                                 :status :cider/log-event)
-                                   (transport/send transport)))}]
+                              (respond-to msg
+                                          :cider/log-consumer (str (:id consumer))
+                                          :cider/log-event (select-event event)
+                                          :status :cider/log-event))}]
     {:cider/log-add-consumer
      (-> (swap-framework! msg framework/add-consumer appender consumer)
          (framework/consumer appender consumer)

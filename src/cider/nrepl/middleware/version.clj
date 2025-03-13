@@ -2,13 +2,9 @@
   "Return version info of the CIDER-nREPL middleware itself."
   (:require
    [cider.nrepl.version :as version]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]))
+   [cider.nrepl.middleware.util :refer [respond-to]]))
 
 (defn handle-version [handler msg]
   (if (= (:op msg) "cider-version")
-    (->> {:cider-version version/version}
-         (merge {:status #{"done"}})
-         (response-for msg)
-         (transport/send (:transport msg)))
+    (respond-to msg {:status :done, :cider-version version/version})
     (handler msg)))

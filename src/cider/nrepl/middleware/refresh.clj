@@ -5,14 +5,13 @@
   ;; when developing cider-nrepl itself, or when cider-nrepl is used as a
   ;; checkout dependency - tools.namespace doesn't reload source in JARs.
   (:require
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.reload :as reload-utils]
    [clojure.main :refer [repl-caught]]
    [clojure.tools.namespace.dir :as dir]
    [clojure.tools.namespace.find :as find]
    [clojure.tools.namespace.reload :as reload]
-   [clojure.tools.namespace.track :as track]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]))
+   [clojure.tools.namespace.track :as track]))
 
 (defonce ^:private refresh-tracker (volatile! (track/tracker)))
 
@@ -55,21 +54,17 @@
 
 (defn- reloading-reply
   [{reloading ::track/load}
-   {:keys [transport] :as msg}]
-  (transport/send
-   transport
-   (response-for msg {:reloading reloading})))
+   msg]
+  (respond-to msg :reloading reloading))
 
 (defn- result-reply
   [{error ::reload/error
     error-ns ::reload/error-ns}
-   {:keys [transport] :as msg}]
+   msg]
 
   (if error
     (reload-utils/error-reply {:error error :error-ns error-ns} msg)
-    (transport/send
-     transport
-     (response-for msg {:status :ok}))))
+    (respond-to msg :status :ok)))
 
 (defn after-reply
   [{error ::reload/error}
@@ -81,7 +76,7 @@
   (atom false))
 
 (defn- refresh-reply
-  [{:keys [dirs transport session id] :as msg}]
+  [{:keys [dirs session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -109,10 +104,10 @@
                           (finally
                             (reset! client-requested-clear? false)))))))
           (fn []
-            (transport/send transport (response-for msg {:status :done}))))))
+            (respond-to msg :status :done)))))
 
 (defn- clear-reply
-  [{:keys [transport session id] :as msg}]
+  [{:keys [session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -121,7 +116,7 @@
             ;; because that `locking` could cause unnecessary nREPL timeouts (https://github.com/clojure-emacs/cider/issues/3652 ).
             (reset! client-requested-clear? true))
           (fn []
-            (transport/send transport (response-for msg {:status :done}))))))
+            (respond-to msg :status :done)))))
 
 (defn handle-refresh [handler msg]
   (case (:op msg)
