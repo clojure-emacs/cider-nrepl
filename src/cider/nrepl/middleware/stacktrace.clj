@@ -3,27 +3,17 @@
   {:author "Jeff Valk"}
   (:require
    [cider.nrepl.middleware.inspect :as middleware.inspect]
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.print :as print]
-   [nrepl.misc :refer [response-for]]
    [nrepl.transport :as t]
    [orchard.stacktrace :as stacktrace]))
 
-(defn- done
-  "Send the done response to the client."
-  [{:keys [transport] :as msg}]
-  (t/send transport (response-for msg :status :done)))
-
-(defn- no-error
-  "Send the no error response to the client."
-  [{:keys [transport] :as msg}]
-  (t/send transport (response-for msg :status :no-error)))
-
 (defn- send-analysis
   "Send the stacktrace analysis response to the client."
-  [{:keys [transport] :as msg} analysis]
+  [msg analysis]
   (doseq [cause analysis]
-    (t/send transport (response-for msg cause))))
+    (respond-to msg cause)))
 
 ;; Analyze the last stacktrace
 
@@ -41,8 +31,8 @@
   [{:keys [session] :as msg}]
   (if (@session #'*e)
     (analyze-last-stacktrace msg)
-    (no-error msg))
-  (done msg))
+    (respond-to msg :status :no-error))
+  (respond-to msg :status :done))
 
 ;; Stacktrace
 
@@ -60,8 +50,8 @@
                 (nth causes index nil))]
     (if cause
       (t/send transport (middleware.inspect/inspect-reply* msg cause))
-      (no-error msg))
-    (done msg)))
+      (respond-to msg :status :no-error))
+    (respond-to msg :status :done)))
 
 (defn handle-stacktrace
   "Handle stacktrace ops."

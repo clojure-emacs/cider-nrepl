@@ -1,5 +1,7 @@
 (ns cider.nrepl.middleware.util
-  "Utility functions that might be useful in middleware.")
+  "Utility functions that might be useful in middleware."
+  (:require [nrepl.transport :as transport]
+            [nrepl.misc :refer [response-for]]))
 
 (defmulti transform-value "Transform a value for output" type)
 
@@ -42,3 +44,8 @@
 
 ;; handles vectors
 (prefer-method transform-value clojure.lang.Sequential clojure.lang.Associative)
+
+(defn respond-to
+  "Send a response for `msg` with `response-data` using message's transport."
+  [msg & response-data]
+  (transport/send (:transport msg) (apply response-for msg response-data)))

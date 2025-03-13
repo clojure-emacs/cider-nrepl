@@ -15,30 +15,25 @@
   maintained anymore."
   {:author "Edwin Watkeys"}
   (:require
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as t]
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [profile.core :as p]))
 
-(defn send-exception
-  [_e msg transport]
-  (t/send transport (response-for msg :status :done :value "exception")))
+(defn- send-exception
+  [_e msg]
+  (respond-to msg :status :done :value "exception"))
 
 (defn toggle-profile
   [{:keys [ns sym transport] :as msg}]
   (try
     (if-let [v (ns-resolve (symbol ns) (symbol sym))]
       (let [profiled? (p/toggle-profile-var* v)]
-        (t/send transport
-                (response-for
-                 msg
-                 :status :done
-                 :value (if profiled? "profiled" "unprofiled"))))
-      (t/send transport
-              (response-for
-               msg
-               :status #{:toggle-profile-not-such-var :done}
-               :value "unbound")))
-    (catch Exception e (send-exception e msg transport))))
+        (respond-to msg
+                    :status :done
+                    :value (if profiled? "profiled" "unprofiled")))
+      (respond-to msg
+                  :status #{:toggle-profile-not-such-var :done}
+                  :value "unbound"))
+    (catch Exception e (send-exception e msg))))
 
 (defn profile-var-summary
   [{:keys [ns sym transport] :as msg}]
@@ -46,69 +41,58 @@
     (if-let [v (ns-resolve (symbol ns) (symbol sym))]
       (if-let [table (with-out-str (binding [*err* *out*]
                                      (p/print-entry-summary v)))]
-        (t/send transport
-                (response-for msg
-                              :status :done
-                              :err table))
-        (t/send transport
-                (response-for msg
-                              :status :done
-                              :err (format "No profile data for %s." v))))
-      (t/send transport
-              (response-for msg
-                            :status :done
-                            :value (format "Var %s/%s is not bound." ns sym))))
-    (catch Exception e (prn :e e) (send-exception e msg transport))))
+        (respond-to msg
+                    :status :done
+                    :err table)
+        (respond-to msg
+                    :status :done
+                    :err (format "No profile data for %s." v)))
+      (respond-to msg
+                  :status :done
+                  :value (format "Var %s/%s is not bound." ns sym)))
+    (catch Exception e (prn :e e) (send-exception e msg))))
 
 (defn profile-summary
   [{:keys [transport] :as msg}]
   (try
-    (t/send transport
-            (response-for msg
-                          :status :done
-                          :err (with-out-str
-                                 (binding [*err* *out*] (p/print-summary)))))
-    (catch Exception e (send-exception e msg transport))))
+    (respond-to msg
+                :status :done
+                :err (with-out-str
+                       (binding [*err* *out*] (p/print-summary))))
+    (catch Exception e (send-exception e msg))))
 
 (defn clear-profile
   [{:keys [transport] :as msg}]
   (try
     (p/clear-profile-data)
-    (t/send transport
-            (response-for msg
-                          :status :done
-                          :value "cleared"))
-    (catch Exception e (send-exception e msg transport))))
+    (respond-to msg
+                :status :done
+                :value "cleared")
+    (catch Exception e (send-exception e msg))))
 
 (defn toggle-profile-ns
   [{:keys [ns transport] :as msg}]
   (try (let [profiled? (p/toggle-profile-ns (symbol ns))]
-         (t/send transport
-                 (response-for
-                  msg
-                  :status :done
-                  :value (if profiled? "profiled" "unprofiled"))))
-       (catch Exception e (send-exception e msg transport))))
+         (respond-to msg
+                     :status :done
+                     :value (if profiled? "profiled" "unprofiled")))
+       (catch Exception e (send-exception e msg))))
 
 (defn is-var-profiled
   [{:keys [ns sym transport] :as msg}]
   (try (let [var (ns-resolve (symbol ns) (symbol sym))
              profiled? (p/profiled? @var)]
-         (t/send transport
-                 (response-for
-                  msg
-                  :status :done
-                  :value (if profiled? "profiled" "unprofiled"))))
-       (catch Exception e (send-exception e msg transport))))
+         (respond-to msg
+                     :status :done
+                     :value (if profiled? "profiled" "unprofiled")))
+       (catch Exception e (send-exception e msg))))
 
 (defn get-max-samples
   [{:keys [transport] :as msg}]
-  (try (t/send transport
-               (response-for
-                msg
-                :status :done
-                :value (str (p/max-sample-count))))
-       (catch Exception e (send-exception e msg transport))))
+  (try (respond-to msg
+                   :status :done
+                   :value (str (p/max-sample-count)))
+       (catch Exception e (send-exception e msg))))
 
 (defn normalize-max-samples [n]
   (cond (and (sequential? n) (empty? n)) nil
@@ -119,12 +103,10 @@
   [{:keys [max-samples transport] :as msg}]
   (try (let [max-samples (normalize-max-samples max-samples)]
          (p/set-max-sample-count max-samples)
-         (t/send transport
-                 (response-for
-                  msg
-                  :status :done
-                  :value (str (p/max-sample-count)))))
-       (catch Exception e  (send-exception e msg transport))))
+         (respond-to msg
+                     :status :done
+                     :value (str (p/max-sample-count))))
+       (catch Exception e  (send-exception e msg))))
 
 (defn handle-profile
   [handler msg]

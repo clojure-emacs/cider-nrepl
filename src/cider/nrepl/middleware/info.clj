@@ -2,12 +2,10 @@
   (:require
    [compliment.context]
    [compliment.sources.class-members]
-   [cider.nrepl.middleware.util :as util]
+   [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.string :as str]
-   [nrepl.transport :as transport]
-   [nrepl.misc :refer [response-for]]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
    [orchard.java.source-files :as src-files]
@@ -89,14 +87,13 @@
   download an artifact that doesn't exist or can't be found."
   (ConcurrentHashMap.))
 
-(defn- download-sources-jar-for-class
-  [klass {:keys [transport] :as msg}]
+(defn- download-sources-jar-for-class [klass msg]
   (when-let [coords (src-files/infer-maven-coordinates-for-class klass)]
     (when (nil? (.putIfAbsent attempted-to-download-coords coords true))
       ;; Tell the client we are going to download an artifict so it can notify
       ;; the user. It may take a few seconds.
-      (transport/send transport (response-for msg {:status :download-sources-jar
-                                                   :coords coords}))
+      (respond-to msg {:status :download-sources-jar
+                       :coords coords})
       (src-files/download-sources-jar-for-coordinates coords))))
 
 (defn info

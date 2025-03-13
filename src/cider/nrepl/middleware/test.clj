@@ -3,7 +3,7 @@
   {:author "Jeff Valk"}
   (:require
    [cider.nrepl.middleware.test.extensions :as extensions]
-   [cider.nrepl.middleware.util :as util]
+   [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [clojure.pprint :as pp]
    [clojure.string :as str]
@@ -11,8 +11,6 @@
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
    [nrepl.middleware.print :as print]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as t]
    [orchard.misc :as misc]
    [orchard.query :as query]
    [orchard.stacktrace :as stacktrace]))
@@ -409,7 +407,7 @@
   (atom {}))
 
 (defn handle-test-var-query-op
-  [{:keys [fail-fast var-query transport session id] :as msg}]
+  [{:keys [fail-fast var-query session id] :as msg}]
   (let [fail-fast? (= "true" fail-fast)
         {:keys [exec]} (meta session)]
     (exec id
@@ -429,15 +427,15 @@
                                  (test-var-query fail-fast?)
                                  stringify-msg)]
                   (reset! results (:results report))
-                  (t/send transport (response-for msg (util/transform-value report))))
+                  (respond-to msg (util/transform-value report)))
                 (catch clojure.lang.ExceptionInfo e
                   (let [d (ex-data e)]
                     (if (::util.coerce/id d)
                       (case (::util.coerce/id d)
-                        :namespace-not-found (t/send transport (response-for msg :status :namespace-not-found)))
+                        :namespace-not-found (respond-to msg :status :namespace-not-found))
                       (throw e)))))))
           (fn []
-            (t/send transport (response-for msg {:status :done}))))))
+            (respond-to msg :status :done)))))
 
 (defn handle-test-op
   [{:keys [ns tests include exclude] :as msg}]
@@ -456,7 +454,7 @@
                            :exclude-meta-key exclude}})))
 
 (defn handle-retest-op
-  [{:keys [transport session id fail-fast] :as msg}]
+  [{:keys [session id fail-fast] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -471,12 +469,12 @@
                                 {} @results)
                     report (test-nss nss (= "true" fail-fast))]
                 (reset! results (:results report))
-                (t/send transport (response-for msg (util/transform-value report))))))
+                (respond-to msg (util/transform-value report)))))
           (fn []
-            (t/send transport (response-for msg :status :done))))))
+            (respond-to msg :status :done)))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index transport session id ::print/print-fn] :as msg}]
+  [{:keys [ns var index session id ::print/print-fn] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -484,10 +482,10 @@
               (let [[ns var] (map misc/as-sym [ns var])]
                 (if-let [e (get-in @results [ns var index :error])]
                   (doseq [cause (stacktrace/analyze e print-fn)]
-                    (t/send transport (response-for msg cause)))
-                  (t/send transport (response-for msg :status :no-error))))))
+                    (respond-to msg cause))
+                  (respond-to msg :status :no-error)))))
           (fn []
-            (t/send transport (response-for msg :status :done))))))
+            (respond-to msg :status :done)))))
 
 (defn handle-test [handler msg & _configuration]
   (case (:op msg)

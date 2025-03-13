@@ -4,13 +4,12 @@
   of tools.namespace."
   (:require
    [cider.nrepl.middleware.util.reload :as reload-utils]
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [clj-reload.core :as reload]
    [clojure.main :refer [repl-caught]]
    [clojure.string :as str]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport]
    [orchard.stacktrace :as stacktrace]))
 
 (defn- user-reload
@@ -26,14 +25,10 @@
   [dirs]
   (reload/init {:dirs dirs}))
 
-(defn respond
-  [{:keys [transport] :as msg} response]
-  (transport/send transport (response-for msg response)))
-
 (defn operation
   [msg]
   (let [opts   {:log-fn (fn [& args]
-                          (respond msg {:progress (str/join " " args)}))
+                          (respond-to msg {:progress (str/join " " args)}))
                 :throw false} ;; mimic the tools.namespace behavior so that we can use `reload-utils/after-reply` uniformly
         reload (user-reload 'reload reload/reload)
         unload (user-reload 'unload reload/unload)]
@@ -53,15 +48,15 @@
                 (reload-utils/after-reply exception msg)
                 (when exception
                   (throw exception))
-                (respond msg {:status :ok}))
+                (respond-to msg {:status :ok}))
               (catch Throwable error
-                (respond msg {:status :error
-                              :error  (stacktrace/analyze error print-fn)})
+                (respond-to msg {:status :error
+                                 :error  (stacktrace/analyze error print-fn)})
                 (binding [*msg* msg
                           *err* (print/replying-PrintWriter :err msg {})]
                   (repl-caught error)))))
 
-          (fn [] (respond msg {:status :done})))))
+          (fn [] (respond-to msg {:status :done})))))
 
 (defn handle-reload [handler msg]
   (case (:op msg)

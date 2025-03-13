@@ -5,11 +5,10 @@
   convert URLs to values which can be handled nicely."
   {:authors ["Reid 'arrdem' McKenzie <me@arrdem.com>"]}
   (:require
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
-   [clojure.string :as str]
-   [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport])
+   [clojure.string :as str])
   (:import
    (java.io ByteArrayOutputStream FileNotFoundException InputStream)
    (java.net MalformedURLException URI URL URLConnection)
@@ -120,8 +119,6 @@
   [handler msg]
   (let [{:keys [op url transport]} msg]
     (if (and (= "slurp" op) url)
-      (do (transport/send transport
-                          (response-for msg (slurp-url-to-content+body url)))
-          (transport/send transport
-                          (response-for msg {:status ["done"]})))
+      (do (respond-to msg (slurp-url-to-content+body url))
+          (respond-to msg :status :done))
       (handler msg))))
