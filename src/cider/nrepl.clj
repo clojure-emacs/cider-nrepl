@@ -415,13 +415,6 @@ if applicable, and re-render the updated value."
      :returns {"status" "done"
                "cider/log-add-consumer" "The consumer that was added."}}
 
-    "cider/log-analyze-stacktrace"
-    {:doc "Analyze the stacktrace of a log event."
-     :requires {"framework" "The id of the log framework."
-                "appender" "The name of the appender."
-                "event" "The id of the event to inspect."}
-     :returns {"status" "done"}}
-
     "cider/log-clear-appender"
     {:doc "Clear all events of a log appender."
      :requires {"framework" "The id of the log framework."
@@ -708,39 +701,6 @@ Assumes that `analyze-last-stacktrace` has been called first, returning \"no-err
                                         :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
                                         :returns {"status" "\"done\", or \"no-error\" if `analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
                                                   "value" "A value, as produced by the Inspector middleware."}}
-              "analyze-stacktrace" {:doc "Parse and analyze the `:stacktrace`
-parameter and return messages describing each cause and stack frame. The
-stacktrace must be a string formatted in one of the following formats:
-
-* `:aviso` Stacktraces printed with the
-  https://ioavisopretty.readthedocs.io/en/latest/exceptions.html[write-exception]
-  function of the https://github.com/AvisoNovate/pretty[Aviso] library.
-
-* `:clojure.tagged-literal` Stacktraces printed as a tagged literal, like a
-  https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html[java.lang.Throwable]
-  printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.core-api.html#clojure.core/pr[pr]
-  function.
-
-* `:clojure.stacktrace` Stacktraces printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.stacktrace-api.html#clojure.stacktrace/print-cause-trace[print-cause-trace]
-  function of the
-  https://clojure.github.io/clojure/branch-master/clojure.stacktrace-api.html[clojure.stacktrace]
-  namespace.
-
-* `:clojure.repl` Stacktraces printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.repl-api.html#clojure.repl/pst[pst]
-  function of the
-  https://clojure.github.io/clojure/branch-master/clojure.repl-api.html[clojure.repl]
-  namespace.
-
-* `:java` Stacktraces printed with the
-  link:++https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#printStackTrace--++[printStackTrace]
-  method of
-  https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html[java.lang.Throwable]."
-                                    :requires {"stacktrace" "The stacktrace to be parsed and analyzed as a string."}
-                                    :optional wrap-print-optional-arguments
-                                    :returns {"status" "\"done\", or \"no-error\" if `stracktrace` is not recognized"}}
               "stacktrace" {:doc "Return messages describing each cause and
 stack frame of the most recent exception. This op is deprecated, please use the
 `analyze-last-stacktrace` op instead."
