@@ -29,57 +29,6 @@ Returns::
 
 
 
-=== `analyze-stacktrace`
-
-Parse and analyze the ``:stacktrace``
-parameter and return messages describing each cause and stack frame. The
-stacktrace must be a string formatted in one of the following formats:
-
-* ``:aviso`` Stacktraces printed with the
-  https://ioavisopretty.readthedocs.io/en/latest/exceptions.html[write-exception]
-  function of the https://github.com/AvisoNovate/pretty[Aviso] library.
-
-* ``:clojure.tagged-literal`` Stacktraces printed as a tagged literal, like a
-  https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html[java.lang.Throwable]
-  printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.core-api.html#clojure.core/pr[pr]
-  function.
-
-* ``:clojure.stacktrace`` Stacktraces printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.stacktrace-api.html#clojure.stacktrace/print-cause-trace[print-cause-trace]
-  function of the
-  https://clojure.github.io/clojure/branch-master/clojure.stacktrace-api.html[clojure.stacktrace]
-  namespace.
-
-* ``:clojure.repl`` Stacktraces printed with the
-  https://clojure.github.io/clojure/branch-master/clojure.repl-api.html#clojure.repl/pst[pst]
-  function of the
-  https://clojure.github.io/clojure/branch-master/clojure.repl-api.html[clojure.repl]
-  namespace.
-
-* ``:java`` Stacktraces printed with the
-  link:++https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html#printStackTrace--++[printStackTrace]
-  method of
-  https://docs.oracle.com/javase/8/docs/api/java/lang/Throwable.html[java.lang.Throwable].
-
-Required parameters::
-* `:stacktrace` The stacktrace to be parsed and analyzed as a string.
-
-
-Optional parameters::
-* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
-* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
-* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
-* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
-* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
-* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
-
-
-Returns::
-* `:status` "done", or "no-error" if ``stracktrace`` is not recognized
-
-
-
 === `apropos`
 
 Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring.
@@ -1518,24 +1467,6 @@ Optional parameters::
 Returns::
 * `:status` done
 * `:cider/log-add-consumer` The consumer that was added.
-
-
-
-=== `cider/log-analyze-stacktrace`
-
-Analyze the stacktrace of a log event.
-
-Required parameters::
-* `:appender` The name of the appender.
-* `:event` The id of the event to inspect.
-* `:framework` The id of the log framework.
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` done
 
 
 

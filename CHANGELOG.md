@@ -2,6 +2,12 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.31.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0310-2025-03-14).
+  - Info: recognize printed Java classes/methods and munged Clojure functions in stacktrace outputs.
+  - Add dedicated renderers for exceptions in inspector and debugger.
+* [#919](https://github.com/clojure-emacs/cider-nrepl/pull/919): Move exception analysis to Orchard.
+  - **BREAKING**: Remove `analyze-stacktrace` and `cider/log-analyze-stacktrace` ops.
+  - Stop vendoring Haystack dependency.
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Disable background warmup of `orchard.java` cache.
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Enable background warmup of Compliment cache.
 * [#914](https://github.com/clojure-emacs/cider-nrepl/pull/914): Remove javadoc section from the inspector output.
