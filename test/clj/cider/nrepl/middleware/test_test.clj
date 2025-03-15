@@ -209,7 +209,10 @@
         "pprint is chosen, as indicated by quoted strings and newlines")
     (is (= "{:a \"b\", :c \"42\"}\n"
            (#'test/print-object (with-meta {:a "b" :c "42"} {:type ::mismatch})))
-        "pprint is chosen, because :type does not match matchers-combinators keyword")))
+        "pprint is chosen, because :type does not match matchers-combinators keyword"))
+  (testing "maps are printed with sorted keys"
+    (is (= "{:a 1, :b 2, :c 3, :d {x 1, y 2, z 3}}\n"
+           (#'test/print-object {:b 2 :c 3 :a 1 :d {'z 3 'y 2 'x 1}})))))
 
 (deftest test-result-test
   (testing "It passes `:error`s to `test/*test-error-handler*`"
