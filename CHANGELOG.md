@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.53.0 (2025-03-19)
+
 * Bump `orchard` to [0.31.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0311-2025-03-19).
   - Info: recognize printed Java classes/methods and munged Clojure functions in stacktrace outputs.
   - Add dedicated renderers for exceptions in inspector and debugger.
