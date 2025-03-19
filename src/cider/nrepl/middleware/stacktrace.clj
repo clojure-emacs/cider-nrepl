@@ -21,10 +21,10 @@
 
 (defn- analyze-last-stacktrace
   "Analyze the last exception."
-  [{:keys [session ::print/print-fn] :as msg}]
+  [{:keys [session] :as msg}]
   (let [last-exception (@session #'*e)]
     (swap! session assoc #'*last-exception* last-exception) ;; note that *e can change later, so this entry isn't redundant
-    (send-analysis msg (stacktrace/analyze last-exception print-fn))))
+    (send-analysis msg (stacktrace/analyze last-exception))))
 
 (defn- handle-analyze-last-stacktrace-op
   "Handle the analyze last stacktrace op."

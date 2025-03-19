@@ -38,7 +38,7 @@
       :else        (reload opts))))
 
 (defn- reload-reply
-  [{:keys [::print/print-fn transport session id] :as msg}]
+  [{:keys [session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -51,7 +51,7 @@
                 (respond-to msg {:status :ok}))
               (catch Throwable error
                 (respond-to msg {:status :error
-                                 :error  (stacktrace/analyze error print-fn)})
+                                 :error  (stacktrace/analyze error)})
                 (binding [*msg* msg
                           *err* (print/replying-PrintWriter :err msg {})]
                   (repl-caught error)))))
