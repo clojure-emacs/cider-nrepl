@@ -216,7 +216,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                     (when-not (instance? ThreadDeath root-ex#)
                       (debugger-send
                        {:status :eval-error
-                        :causes [(let [causes# (stacktrace/analyze e# (::print/print-fn *msg*))]
+                        :causes [(let [causes# (stacktrace/analyze e#)]
                                    (when (coll? causes#) (last causes#)))]})))
                   error#))]
      (if (= error# ~sym)
@@ -288,11 +288,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (debugger-send
    {:status :stack
     :causes (if (instance? Throwable value)
-              (stacktrace/analyze value (::print/print-fn *msg*))
+              (stacktrace/analyze value)
               [{:class      "StackTrace"
                 :message    "Harmless user-requested stacktrace"
                 :stacktrace (-> (Exception. "Dummy")
-                                (stacktrace/analyze (::print/print-fn *msg*))
+                                stacktrace/analyze
                                 last :stacktrace)}])}))
 
 (def debug-commands

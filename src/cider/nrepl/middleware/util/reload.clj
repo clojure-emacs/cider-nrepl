@@ -9,12 +9,9 @@
    [orchard.misc :as misc]
    [orchard.stacktrace :as stacktrace]))
 
-(defn error-reply
-  [{:keys [error error-ns]}
-   {:keys [::print/print-fn] :as msg}]
-
+(defn error-reply [{:keys [error error-ns]} msg]
   (respond-to msg (cond-> {:status :error}
-                    error (assoc :error (stacktrace/analyze error print-fn))
+                    error (assoc :error (stacktrace/analyze error))
                     error-ns (assoc :error-ns error-ns)))
 
   (binding [*msg* msg

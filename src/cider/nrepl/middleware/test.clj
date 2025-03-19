@@ -474,14 +474,14 @@
             (respond-to msg :status :done)))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index session id ::print/print-fn] :as msg}]
+  [{:keys [ns var index session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
             (with-bindings (assoc @session #'ie/*msg* msg)
               (let [[ns var] (map misc/as-sym [ns var])]
                 (if-let [e (get-in @results [ns var index :error])]
-                  (doseq [cause (stacktrace/analyze e print-fn)]
+                  (doseq [cause (stacktrace/analyze e)]
                     (respond-to msg cause))
                   (respond-to msg :status :no-error)))))
           (fn []

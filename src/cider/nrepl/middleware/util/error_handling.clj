@@ -3,43 +3,21 @@
   errors/exceptions that might arise from doing so."
   (:refer-clojure :exclude [error-handler])
   (:require
+   [clojure.main]
    [clojure.set :as set]
+   [clojure.stacktrace]
    [clojure.walk :as walk]
    [nrepl.middleware.caught :as caught]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
-   [nrepl.transport :as transport])
+   [nrepl.transport :as transport]
+   [orchard.stacktrace :as stacktrace])
   (:import
    java.io.InputStream
    clojure.lang.RT
    (nrepl.transport Transport)))
 
-(def ^:private print-cause-trace
-  (delay
-    (requiring-resolve 'clojure.stacktrace/print-cause-trace)))
-
-(def ^:private analyze-causes
-  (delay
-    (requiring-resolve 'orchard.stacktrace/analyze)))
-
 ;;; UTILITY FUNCTIONS
-
-(defn error-summary
-  "Takes a `java.lang.Exception` as `ex` and returns a map summarizing
-  the exception. If present, the varargs are converted to a set and
-  used as the value for the :status key."
-  [ex & statuses]
-  (merge {:ex (str (class ex))
-          :err (with-out-str (@print-cause-trace ex))
-          :root-ex (-> (#'clojure.main/root-cause ex) class str)}
-         (when statuses {:status (set statuses)})))
-
-(defn pp-stacktrace
-  "Takes a `java.lang.Exception` as `ex` and a pretty-print function
-  as `print-fn`, then returns a pretty-printed version of the
-  exception that can be rendered by CIDER's stacktrace viewer."
-  [ex print-fn]
-  {:pp-stacktrace (@analyze-causes ex print-fn)})
 
 (defn base-error-response
   "Takes a CIDER-nREPL message as `msg`, an Exception `ex`, and a
@@ -48,8 +26,12 @@
   CIDER's stacktrace viewer. N.B., statuses such as `:done` and
   `:<op-name>-error` are NOT automatically added"
   [msg ex & statuses]
-  (response-for msg (merge (apply error-summary ex statuses)
-                           (pp-stacktrace ex (::print/print-fn msg)))))
+  (response-for
+   msg (merge {:ex (str (class ex))
+               :err (with-out-str (clojure.stacktrace/print-cause-trace ex))
+               :root-ex (str (class (clojure.main/root-cause ex)))
+               :pp-stacktrace (stacktrace/analyze ex)}
+              (when statuses {:status (set statuses)}))))
 
 (defn- normalize-status
   "Accepts various representations of an nREPL reply message's status

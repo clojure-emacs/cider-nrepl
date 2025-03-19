@@ -2,7 +2,7 @@
 
 ## master (unreleased)
 
-* Bump `orchard` to [0.31.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0310-2025-03-14).
+* Bump `orchard` to [0.31.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0311-2025-03-19).
   - Info: recognize printed Java classes/methods and munged Clojure functions in stacktrace outputs.
   - Add dedicated renderers for exceptions in inspector and debugger.
 * [#919](https://github.com/clojure-emacs/cider-nrepl/pull/919): Move exception analysis to Orchard.
