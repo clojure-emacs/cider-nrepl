@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* Bump `compliment` to [0.7.0](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#070-2025-03-25).
+
 ## 0.53.0 (2025-03-19)
 
 * Bump `orchard` to [0.31.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0311-2025-03-19).

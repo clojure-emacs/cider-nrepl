@@ -25,7 +25,7 @@
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
-                 ^:inline-dep [compliment "0.6.0"]
+                 ^:inline-dep [compliment "0.7.0"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                                       org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
