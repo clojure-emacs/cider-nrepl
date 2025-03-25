@@ -4,15 +4,13 @@
    [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.test-session :as session]
    [cider.nrepl.middleware.info-test :as info-test]
+   [cider.test-helpers :refer :all]
    [clojure.edn :as edn]
    [clojure.string :as string]
    [clojure.test :refer :all]
    [orchard.java]
    [orchard.inspect]
    [orchard.info :as info]))
-
-;; for `match?`
-(require 'matcher-combinators.test)
 
 (def inspect-tap-current-value-test-atom (atom nil))
 
@@ -291,47 +289,47 @@
     (let [response (session/message {:op "inspect-set-page-size" :page-size 0})]
       (is (= #{"inspect-set-page-size-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? page-size\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? page-size\).*" (:err response))
       (is (:pp-stacktrace response)))
 
     (let [response (session/message {:op "inspect-refresh" :page-size 0})]
       (is (= #{"inspect-refresh-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? page-size\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? page-size\).*" (:err response))
       (is (:pp-stacktrace response))))
 
   (testing "inspect-set-max-atom-length error handling"
     (let [response (session/message {:op "inspect-set-max-atom-length" :max-atom-length 0})]
       (is (= #{"inspect-set-max-atom-length-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response))
       (is (:pp-stacktrace response)))
 
     (let [response (session/message {:op "inspect-refresh" :max-atom-length 0})]
       (is (= #{"inspect-refresh-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response))
       (is (:pp-stacktrace response))))
 
   (testing "inspect-set-max-coll-size error handling"
     (let [response (session/message {:op "inspect-set-max-coll-size" :max-coll-size 0})]
       (is (= #{"inspect-set-max-coll-size-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response))
       (is (:pp-stacktrace response)))
 
     (let [response (session/message {:op "inspect-refresh" :max-coll-size 0})]
       (is (= #{"inspect-refresh-error" "done"} (:status response)))
       (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is (match? #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response)))
+      (is+ #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response))
       (is (:pp-stacktrace response)))))
 
 (deftest inspect-var-integration-test
   (testing "rendering a var"
-    (is (match? var-result
-                (value (session/message {:op      "eval"
-                                         :inspect "true"
-                                         :code    "#'cider.nrepl.middleware.inspect-test/any-var"}))))))
+    (is+ var-result
+         (value (session/message {:op      "eval"
+                                  :inspect "true"
+                                  :code    "#'cider.nrepl.middleware.inspect-test/any-var"})))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
@@ -446,18 +444,18 @@
                       :idx 1})
     (let [before "111"
           after  "112"]
-      (is (match? (matchers/embeds [(list :value before 2)])
-                  (-> {:op "inspect-refresh"}
-                      session/message
-                      inspector-response)))
+      (is+ (matchers/embeds [(list :value before 2)])
+           (-> {:op "inspect-refresh"}
+               session/message
+               inspector-response))
       (testing "After modifying an atom"
         (session/message {:op      "eval"
                           :code    "(swap! X inc)"})
         (testing "Refreshing it shows its newest value"
-          (is (match? (matchers/embeds [(list :value after 2)])
-                      (-> {:op "inspect-refresh"}
-                          session/message
-                          inspector-response))))))))
+          (is+ (matchers/embeds [(list :value after 2)])
+               (-> {:op "inspect-refresh"}
+                   session/message
+                   inspector-response)))))))
 
 (deftest session-binding-integration-test
   (testing "session bindings can be inspected"
@@ -693,26 +691,26 @@
 (deftest object-view-mode-integration-test
   (testing "view-mode can be toggled with inspect-toggle-view-mode op"
     (session/message {:op "inspect-clear"})
-    (is (match? (matchers/prefix normal-mode-prefix)
-                (value-skip-header (session/message {:op      "eval"
-                                                     :inspect "true"
-                                                     :code    "(list 1 2 3)"}))))
-    (is (match? (matchers/prefix object-mode-prefix)
-                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
-    (is (match? (matchers/prefix normal-mode-prefix)
-                (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))))
+    (is+ (matchers/prefix normal-mode-prefix)
+         (value-skip-header (session/message {:op      "eval"
+                                              :inspect "true"
+                                              :code    "(list 1 2 3)"})))
+    (is+ (matchers/prefix object-mode-prefix)
+         (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))
+    (is+ (matchers/prefix normal-mode-prefix)
+         (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
 
   (testing "view-mode is automatically reset after navigating down"
     (session/message {:op "inspect-clear"})
     (session/message {:op      "eval"
                       :inspect "true"
                       :code    "(list 1 2 3)"})
-    (is (match? (matchers/prefix object-mode-prefix)
-                (value-skip-header (session/message {:op "inspect-toggle-view-mode"}))))
-    (is (match? (matchers/prefix ["--- Contents:" [:newline]
-                                  "  " "0" ". " [:value "2" number?] [:newline]
-                                  "  " "1" ". " [:value "3" number?] [:newline]])
-                (value-skip-header (session/message {:op "inspect-push" :idx 13}))))))
+    (is+ (matchers/prefix object-mode-prefix)
+         (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))
+    (is+ (matchers/prefix ["--- Contents:" [:newline]
+                           "  " "0" ". " [:value "2" number?] [:newline]
+                           "  " "1" ". " [:value "3" number?] [:newline]])
+         (value-skip-header (session/message {:op "inspect-push" :idx 13})))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
