@@ -2,80 +2,70 @@
   (:require
    [cider.nrepl.middleware.complete :as c]
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all]))
+   [cider.test-helpers :refer :all]
+   [clojure.test :refer :all]
+   [matcher-combinators.matchers :as matchers]))
 
 (use-fixtures :each session/session-fixture)
 
 (deftest complete
   (testing "blank"
-    (let [response (session/message {:op "complete"
-                                     :ns "user"
-                                     :prefix ""})]
-      (is (= #{"done"} (:status response)))
-      (is (sequential? (:completions response)))
-      (is (every? map? (:completions response)))))
+    (is+ {:status #{"done"}
+          :completions (matchers/seq-of map?)}
+         (session/message {:op "complete"
+                           :ns "user"
+                           :prefix ""})))
 
   (testing "basic usage"
-    (let [response (session/message {:op "complete"
-                                     :ns "user"
-                                     :prefix "filt"})]
-      (is (= #{"filter" "filterv"} (->> response
-                                        :completions
-                                        (map :candidate)
-                                        set)))
-
-      (is (= #{"clojure.core"} (->> response
-                                    :completions
-                                    (map :ns)
-                                    set)))
-
-      (is (= #{"done"} (:status response)))))
+    (is+ {:status #{"done"}
+          :completions [{:candidate "filter" :ns "clojure.core" :priority 31}
+                        {:candidate "filterv" :ns "clojure.core" :priority 31}]}
+         (session/message {:op "complete"
+                           :ns "user"
+                           :prefix "filt"})))
 
   (testing "function arglists"
-    (let [response (session/message {:op "complete"
-                                     :ns "user"
-                                     :prefix "unchecked-a"
-                                     :extra-metadata ["arglists"]})]
-      (is (= {:arglists '("[x y]") :ns "clojure.core", :candidate "unchecked-add", :type "function"}
-             (first (:completions response))))))
+    (is+ {:arglists '("[x y]") :ns "clojure.core", :candidate "unchecked-add", :type "function"}
+         (-> (session/message {:op "complete"
+                               :ns "user"
+                               :prefix "unchecked-a"
+                               :extra-metadata ["arglists"]})
+             :completions first)))
 
   (testing "function metadata"
-    (let [response (session/message {:op "complete"
-                                     :ns "user"
-                                     :prefix "assoc"
-                                     :extra-metadata ["arglists" "doc"]})
-          candidate (first (:completions response))]
-      (is (= '("[map key val]" "[map key val & kvs]") (:arglists candidate)))
-      (is (string? (:doc candidate)))))
+    (is+ {:arglists ["[map key val]" "[map key val & kvs]"]
+          :doc string?}
+         (first (:completions (session/message {:op "complete"
+                                                :ns "user"
+                                                :prefix "assoc"
+                                                :extra-metadata ["arglists" "doc"]})))))
 
   (testing "macro metadata"
-    (let [response (session/message {:op "complete"
-                                     :ns "user"
-                                     :prefix "defprot"
-                                     :extra-metadata ["arglists" "doc"]})
-          candidate (first (:completions response))]
-      (is (= '("[name & opts+sigs]") (:arglists candidate)))
-      (is (string? (:doc candidate)))))
+    (is+ {:arglists ["[name & opts+sigs]"]
+          :doc string?}
+         (first (:completions (session/message {:op "complete"
+                                                :ns "user"
+                                                :prefix "defprot"
+                                                :extra-metadata ["arglists" "doc"]})))))
 
   (testing "Clojure 1.12 qualified methods"
     (when (or (> (:major *clojure-version*) 1)
               (>= (:minor *clojure-version*) 12))
-      (let [response (session/message {:op "complete"
-                                       :ns "user"
-                                       :prefix "Thread/.int"})]
-        (is (= {:candidate "Thread/.interrupt", :type "method"}
-               (first (:completions response))))))))
+      (is+ {:candidate "Thread/.interrupt", :type "method"}
+           (first (:completions (session/message {:op "complete"
+                                                  :ns "user"
+                                                  :prefix "Thread/.int"})))))))
 
 (deftest complete-doc-test
   (testing "blank"
-    (let [response (session/message {:op "complete-doc" :sym ""})]
-      (is (= #{"done"} (:status response)))
-      (is (empty? (:completion-doc response)))))
+    (is+ {:status #{"done"}
+          :completion-doc empty?}
+         (session/message {:op "complete-doc" :sym ""})))
 
   (testing "basic usage"
-    (let [response (session/message {:op "complete-doc" :sym "true?"})]
-      (is (= (:status response) #{"done"}))
-      (is (-> response ^String (:completion-doc) (.startsWith "clojure.core/true?\n([x"))))))
+    (is+ {:status #{"done"}
+          :completion-doc #"^clojure.core/true\?"}
+         (session/message {:op "complete-doc" :sym "true?"}))))
 
 (deftest complete-flush-caches-test
   (testing "basic usage"
@@ -85,16 +75,16 @@
 (deftest error-handling-test
   (testing "complete op error handling"
     (with-redefs [c/complete (fn [& _] (throw (Exception. "complete-exc")))]
-      (let [response (session/message {:op "complete" :ns "doesn't matter" :prefix "fake"})]
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"complete-error" "done"}))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: complete-exc")))
-        (is (:pp-stacktrace response)))))
+      (is+ {:ex "class java.lang.Exception"
+            :status #{"complete-error" "done"}
+            :err #"^java.lang.Exception: complete-exc"
+            :pp-stacktrace some?}
+           (session/message {:op "complete" :ns "doesn't matter" :prefix "fake"}))))
 
   (testing "complete-doc op error handling"
     (with-redefs [c/completion-doc (fn [& _] (throw (Exception. "complete-doc-exc")))]
-      (let [response (session/message {:op "complete-doc" :sym "doesn't matter"})]
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (= (:status response) #{"complete-doc-error" "done"}))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: complete-doc-exc")))
-        (is (:pp-stacktrace response))))))
+      (is+ {:ex "class java.lang.Exception"
+            :status #{"complete-doc-error" "done"}
+            :err #"^java.lang.Exception: complete-doc-exc"
+            :pp-stacktrace some?}
+           (session/message {:op "complete-doc" :sym "doesn't matter"})))))
