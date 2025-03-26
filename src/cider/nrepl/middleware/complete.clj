@@ -45,11 +45,13 @@
    :compliment.sources.local-bindings/local-bindings])
 
 (defn complete
-  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion?] :as msg}]
+  [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion? sort-order]
+    :as msg}]
   ;; TODO: Drop legacy symbol param in version 1.0
   (let [prefix (str (or prefix symbol))
         completion-opts {:ns             (misc/as-sym ns)
                          :context        context
+                         :sort-order     (or (some-> sort-order keyword) :by-length)
                          :extra-metadata (set (map keyword extra-metadata))}]
     (if-let [cljs-env (cljs/grab-cljs-env msg)]
       ;; ClojureScript completion

@@ -139,6 +139,7 @@ Required parameters::
 Optional parameters::
 * `:context` Completion context for compliment.
 * `:extra-metadata` List of extra-metadata fields. Possible values: arglists, doc.
+* `:sort-order` Sorting order of candidates. Possible values: by-name, by-length.
 
 
 Returns::

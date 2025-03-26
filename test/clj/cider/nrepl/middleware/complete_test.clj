@@ -40,6 +40,25 @@
                                                 :prefix "assoc"
                                                 :extra-metadata ["arglists" "doc"]})))))
 
+  (testing "default sorting"
+    (is+ (matchers/prefix [{:candidate "map"}
+                           {:candidate "map?"}
+                           {:candidate "mapv"}
+                           {:candidate "mapcat"}])
+         (:completions (session/message {:op "complete"
+                                         :ns "user"
+                                         :prefix "map"}))))
+
+  (testing "by-name sorting"
+    (is+ (matchers/prefix [{:candidate "map"}
+                           {:candidate "map-entry?"}
+                           {:candidate "map-indexed"}
+                           {:candidate "map?"}])
+         (:completions (session/message {:op "complete"
+                                         :ns "user"
+                                         :prefix "map"
+                                         :sort-order "by-name"}))))
+
   (testing "macro metadata"
     (is+ {:arglists ["[name & opts+sigs]"]
           :doc string?}

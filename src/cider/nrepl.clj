@@ -196,6 +196,7 @@ Depending on the type of the return value of the evaluation this middleware may 
                           "prefix" "The prefix for completion candidates"
                           "session" "The current session"}
                :optional {"context" "Completion context for compliment."
+                          "sort-order" "Sorting order of candidates. Possible values: by-name, by-length."
                           "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
                :returns {"completions" "A list of possible completions"}}
               "complete-doc"
