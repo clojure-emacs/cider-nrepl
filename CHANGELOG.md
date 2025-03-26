@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* [#923](https://github.com/clojure-emacs/cider-nrepl/pull/923): Complete: make sorting order customizable.
+
 ## 0.53.1 (2025-03-26)
 
 * Bump `compliment` to [0.7.0](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#070-2025-03-25).
