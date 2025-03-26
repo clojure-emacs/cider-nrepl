@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.53.2 (2025-03-26)
+
 * [#923](https://github.com/clojure-emacs/cider-nrepl/pull/923): Complete: make sorting order customizable.
 
 ## 0.53.1 (2025-03-26)

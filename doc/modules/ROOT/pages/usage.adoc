@@ -14,14 +14,14 @@ Use the convenient plugin for defaults, either in your project's
 
 [source,clojure]
 ----
-:plugins [[cider/cider-nrepl "0.53.1"]]
+:plugins [[cider/cider-nrepl "0.53.2"]]
 ----
 
 A minimal `profiles.clj` for CIDER would be:
 
 [source,clojure]
 ----
-{:user {:plugins [[cider/cider-nrepl "0.53.1"]]}}
+{:user {:plugins [[cider/cider-nrepl "0.53.2"]]}}
 ----
 
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev
@@ -30,7 +30,7 @@ under `:repl-options`.
 
 [source,clojure]
 ----
-:dependencies [[cider/cider-nrepl "0.53.1"]]
+:dependencies [[cider/cider-nrepl "0.53.2"]]
 :repl-options {:nrepl-middleware
                  [cider.nrepl/wrap-apropos
                   cider.nrepl/wrap-classpath
@@ -63,7 +63,7 @@ You can easily boot an nREPL server with the CIDER middleware loaded
 with the following "magic" incantation:
 
 ----
-clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.53.1"} }}' -M -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
+clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.53.2"} }}' -M -m nrepl.cmdline --middleware "[cider.nrepl/cider-middleware]"
 ----
 
 There are also two convenient aliases you can employ:
@@ -73,12 +73,12 @@ There are also two convenient aliases you can employ:
 {...
  :aliases
  {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
-                           cider/cider-nrepl {:mvn/version "0.53.1"}}
+                           cider/cider-nrepl {:mvn/version "0.53.2"}}
               :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
 
   :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
                             org.clojure/clojurescript {:mvn/version "1.10.339"}
-                            cider/cider-nrepl {:mvn/version "0.53.1"}
+                            cider/cider-nrepl {:mvn/version "0.53.2"}
                             cider/piggieback {:mvn/version "0.5.2"}}
                :main-opts ["-m" "nrepl.cmdline" "--middleware"
                            "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
