@@ -25,7 +25,7 @@ base-src-jdk17.zip:
 base-src-jdk21.zip:
 	bash download-jdk-sources.sh https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.5+3.zip jdk21 $@
 
-base-src-jdk23.zip:
+base-src-jdk24.zip: # TODO: uses sources from jdk23 until jdk24 sources are out
 	bash download-jdk-sources.sh https://github.com/adoptium/jdk23u/archive/refs/tags/jdk-23.0.1+11.zip jdk23 $@
 
 copy-sources-to-jdk: base-src-$(JDK_SRC_VERSION).zip

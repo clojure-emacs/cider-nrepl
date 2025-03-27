@@ -30,9 +30,9 @@ executors:
     docker:
       - image: clojure:temurin-21-lein-2.11.2-noble
     <<: *defaults
-  jdk23:
+  jdk24:
     docker:
-      - image: clojure:temurin-23-lein-2.11.2-noble
+      - image: clojure:temurin-24-lein-2.11.2-noble
     <<: *defaults
 
 # Runs a given set of steps, with some standard pre- and post-
@@ -82,7 +82,7 @@ commands:
             - base-src-jdk11.zip
             - base-src-jdk17.zip
             - base-src-jdk21.zip
-            - base-src-jdk23.zip
+            - base-src-jdk24.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 # The jobs are relatively simple. One runs utility commands against
@@ -170,7 +170,7 @@ workflows:
             alias: "test"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk23]
+              jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk24]
           <<: *run_always
       - lint:
           steps:
