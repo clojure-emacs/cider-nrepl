@@ -78,11 +78,14 @@
      (pprint value writer options))))
 
 (def ^:private zprint-printer
-  (delay (requiring-resolve 'zprint.core/zprint)))
+  (delay (try-resolve 'zprint.core/zprint "zprint")))
 
 (defn zprint-pprint
   ([value writer]
    (zprint-pprint value writer {}))
   ([value writer options]
-   (binding [*out* writer]
-     (@zprint-printer value options))))
+   (if-some [zprint @zprint-printer]
+     (binding [*out* writer]
+       (zprint value options))
+     ;; Default ot clojure.pprint/pprint if Zprint could not be loaded.
+     (pprint value writer options))))
