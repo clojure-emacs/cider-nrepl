@@ -78,7 +78,7 @@
   (try
     (walk/postwalk
      (fn [x]
-       (if (map? x)
+       (if (and (map? x) (not (record? x))) ;; Prevent records turning into maps
          (with-meta (into (sorted-map) x) (meta x))
          x))
      m)

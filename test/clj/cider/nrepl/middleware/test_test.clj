@@ -6,7 +6,8 @@
    [clojure.string :as string]
    [clojure.test :refer :all]
    [matcher-combinators.clj-test]
-   [matcher-combinators.matchers :as matchers])
+   [matcher-combinators.matchers :as matchers]
+   [matcher-combinators.model])
   (:import
    (clojure.lang ExceptionInfo)))
 
@@ -199,10 +200,10 @@
 
 (deftest print-object-test
   (testing "uses println for matcher-combinators results, otherwise invokes pprint"
-    (is (= "{no quotes}\n"
+    (is (= "(mismatch (expected [33m1[0m) (actual [31m2[0m))\n"
            (#'test/print-object (matcher-combinators.clj-test/tagged-for-pretty-printing
                                  '(not (match? 1 2))
-                                 {:matcher-combinators.result/value {"no" "quotes"}})))
+                                 {:matcher-combinators.result/value (matcher-combinators.model/->Mismatch "1" "2")})))
         "println is chosen, as indicated by strings printed without quotes")
     (is (= "{:a\n (\"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\")}\n"
            (#'test/print-object {:a (repeat 3 "a-sufficiently-long-string")}))
