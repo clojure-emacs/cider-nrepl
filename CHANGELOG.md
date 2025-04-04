@@ -2,10 +2,11 @@
 
 ## master (unreleased)
 
-* Bump `orchard` to [0.32.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0320-2025-04-05).
+* Bump `orchard` to [0.32.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0320-2025-04-05).
 * [#925](https://github.com/clojure-emacs/cider-nrepl/pull/9250): Stop vendoring Puget dependency.
 * [#917](https://github.com/clojure-emacs/cider-nrepl/pull/917): Sort printed maps in test output.
 * [#927](https://github.com/clojure-emacs/cider-nrepl/pull/927): Add `inspect-display-analytics` op.
+* [#928](https://github.com/clojure-emacs/cider-nrepl/pull/922): Add support for `:table` view-mode in inspector.
 
 ## 0.53.2 (2025-03-26)
 

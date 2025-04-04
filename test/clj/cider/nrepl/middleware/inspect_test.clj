@@ -630,6 +630,15 @@
    "  " [:value "_rest" number?] " = " [:value "(2 3)" number?]
    [:newline]])
 
+(def table-mode-prefix
+  ["--- Contents:" [:newline]
+   [:newline]
+   "  |  " [:value "#" pos?] " | " [:value ":a" pos?] " | " [:newline]
+   "  |----+----|" [:newline]
+   "  |  " [:value "0" pos?] " |  " [:value "1" pos?] " | " [:newline]
+   "  |  " [:value "1" pos?] " |  " [:value "1" pos?] " | " [:newline]
+   "  |  " [:value "2" pos?] " |  " [:value "1" pos?] " | " [:newline]])
+
 (deftest object-view-mode-integration-test
   (testing "view-mode can be toggled with inspect-toggle-view-mode op"
     (session/message {:op "inspect-clear"})
@@ -672,6 +681,15 @@
                                               :inspect "true"
                                               :code    "(range 100)"
                                               :display-analytics-hint "true"})))))
+
+(deftest table-view-mode-integration-test
+  (testing "table view-mode is supported for lists of maps"
+    (session/message {:op "inspect-clear"})
+    (session/message {:op      "eval"
+                      :inspect "true"
+                      :code    "(repeat 20 {:a 1})"})
+    (is+ (matchers/prefix table-mode-prefix)
+         (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
