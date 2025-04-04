@@ -345,6 +345,10 @@ if applicable, and re-render the updated value."
               {:doc "Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:object`, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values."
                :requires {"session" "The current session"}
                :returns inspector-returns}
+              "inspect-display-analytics"
+              {:doc "Calculate and render analytics section for the currently inspected object."
+               :requires {"session" "The current session"}
+               :returns inspector-returns}
               "inspect-next-page"
               {:doc "Jumps to the next page in paginated collection view."
                :requires {"session" "The current session"}
