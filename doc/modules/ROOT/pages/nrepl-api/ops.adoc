@@ -478,6 +478,24 @@ Returns::
 
 
 
+=== `inspect-display-analytics`
+
+Calculate and render analytics section for the currently inspected object.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
 === `inspect-last-exception`
 
 Returns an Inspector response for the last exception that has been processed through ``analyze-last-stacktrace`` for the current nrepl session.

@@ -32,7 +32,7 @@
 
 (defn- msg->inspector-config [msg]
   (select-keys msg [:page-size :max-atom-length :max-coll-size
-                    :max-value-length :max-nested-depth]))
+                    :max-value-length :max-nested-depth :display-analytics-hint]))
 
 (defn inspect-reply*
   [msg value]
@@ -84,6 +84,9 @@
 (defn toggle-view-mode-reply [msg]
   (inspector-response msg (swap-inspector! msg toggle-view-mode)))
 
+(defn- display-analytics-reply [msg]
+  (inspector-response msg (swap-inspector! msg inspect/display-analytics)))
+
 (defn ^:deprecated set-page-size-reply [msg] (refresh-reply msg))
 (defn ^:deprecated set-max-atom-length-reply [msg] (refresh-reply msg))
 (defn ^:deprecated set-max-coll-size-reply [msg] (refresh-reply msg))
@@ -114,6 +117,7 @@
       "inspect-prev-page" prev-page-reply
       "inspect-refresh" refresh-reply
       "inspect-toggle-view-mode" toggle-view-mode-reply
+      "inspect-display-analytics" display-analytics-reply
       "inspect-set-page-size" refresh-reply
       "inspect-set-max-atom-length" refresh-reply
       "inspect-set-max-coll-size" refresh-reply

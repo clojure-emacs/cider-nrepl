@@ -10,105 +10,62 @@
   '["nil" (:newline)])
 
 (def var-result
-  '("Class: "
-    (:value "clojure.lang.Cons" 0)
-    (:newline)
-    "Count: " "2"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " "0" ". " (:value "var" 1)
-    (:newline)
-    "  " "1" ". " (:value "cljs.core/*assert*" 2)
-    (:newline)))
+  ["Class: " [:value "clojure.lang.Cons" 0] [:newline]
+   "Count: 2" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  0. " [:value "var" 1] [:newline]
+   "  1. " [:value "cljs.core/*assert*" 2] [:newline]])
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
 (def inspect-result
-  '("Class: "
-    (:value "clojure.lang.PersistentArrayMap" 0)
-    (:newline)
-    "Count: "
-    "4"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " (:value ":a" 1) " = " (:value "{:b 1}" 2)
-    (:newline)
-    "  " (:value ":c" 3) " = " (:value "\"a\"" 4)
-    (:newline)
-    "  " (:value ":d" 5) " = " (:value "e" 6)
-    (:newline)
-    "  " (:value ":f" 7) " = " (:value "[2 3]" 8)
-    (:newline)))
+  ["Class: " [:value "clojure.lang.PersistentArrayMap" 0] [:newline]
+   "Count: 4" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  " [:value ":a" 1] " = " [:value "{:b 1}" 2] [:newline]
+   "  " [:value ":c" 3] " = " [:value "\"a\"" 4] [:newline]
+   "  " [:value ":d" 5] " = " [:value "e" 6] [:newline]
+   "  " [:value ":f" 7] " = " [:value "[2 3]" 8] [:newline]])
 
 (def push-result
-  '("Class: "
-    (:value "clojure.lang.PersistentArrayMap" 0)
-    (:newline)
-    "Count: " "1"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " (:value ":b" 1) " = " (:value "1" 2)
-    (:newline)
-    (:newline)
-    "--- Path:"
-    (:newline)
-    "  " ":a"))
+  ["Class: " [:value "clojure.lang.PersistentArrayMap" 0] [:newline]
+   "Count: 1" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  " [:value ":b" 1] " = " [:value "1" 2] [:newline]
+   [:newline]
+   "--- Path:" [:newline]
+   "  :a"])
 
 (def next-page-result
-  '("Class: "
-    (:value "clojure.lang.PersistentList" 0)
-    (:newline)
-    "Count: " "35"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " "..."
-    (:newline)
-    "  " "32" ". " (:value "32" 1)
-    (:newline)
-    "  " "33" ". " (:value "33" 2)
-    (:newline)
-    "  " "34" ". " (:value "34" 3)
-    (:newline)
-    (:newline)
-    "--- Page Info:"
-    (:newline)
-    "  " "Page size: 32, showing page: 2 of 2"
-    (:newline)))
+  ["Class: " [:value "clojure.lang.PersistentList" 0] [:newline]
+   "Count: 35" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  ..." [:newline]
+   "  32. " [:value "32" 1] [:newline]
+   "  33. " [:value "33" 2] [:newline]
+   "  34. " [:value "34" 3] [:newline]
+   [:newline]
+   "--- Page Info:" [:newline]
+   "  Page size: 32, showing page: 2 of 2" [:newline]])
 
 (def first-page-result
-  '("Class: "
-    (:value "clojure.lang.PersistentList" 0)
-    (:newline)
-    "Count: " "35"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " "0" ". " (:value "0" 1)
-    (:newline)
-    "  " "1" ". " (:value "1" 2)
-    (:newline)
-    "  " "2" ". " (:value "2" 3)
-    (:newline)
-    "  " "3" ". " (:value "3" 4)
-    (:newline)
-    "  " "4" ". " (:value "4" 5)
-    (:newline)
-    "  " "..."
-    (:newline)
-    (:newline)
-    "--- Page Info:"
-    (:newline)
-    "  " "Page size: 5, showing page: 1 of 7"
-    (:newline)))
+  ["Class: " [:value "clojure.lang.PersistentList" 0] [:newline]
+   "Count: 35" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  0. " [:value "0" 1] [:newline]
+   "  1. " [:value "1" 2] [:newline]
+   "  2. " [:value "2" 3] [:newline]
+   "  3. " [:value "3" 4] [:newline]
+   "  4. " [:value "4" 5] [:newline]
+   "  ..." [:newline]
+   [:newline]
+   "--- Page Info:" [:newline]
+   "  Page size: 5, showing page: 1 of 7" [:newline]])
 
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))

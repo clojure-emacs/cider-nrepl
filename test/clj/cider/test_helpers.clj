@@ -5,5 +5,7 @@
 
 (defmacro is+
   "Like `is` but wraps expected value in matcher-combinators's `match?`."
-  [expected actual & [message]]
-  `(is (~'match? ~expected ~actual) ~@(when message [message])))
+  ([expected actual]
+   `(is+ ~expected ~actual nil))
+  ([expected actual message]
+   `(is (~'match? ~expected ~actual) ~message)))

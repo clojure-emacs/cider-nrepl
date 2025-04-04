@@ -28,138 +28,83 @@
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
 
 (def nil-result
-  '["nil" (:newline)])
+  ["nil" [:newline]])
 
 (def any-var true)
 
 (def var-result
-  '("Class: "
-    (:value "clojure.lang.Var" 0)
-    (:newline)
-    "Value: "
-    (:value "true" 1)
-    (:newline)
-    (:newline)
-    "--- Meta Information:"
-    (:newline)
-    "  "
-    (:value ":line" 2) " = " (:value #"\d+" 3) (:newline)
-    "  "
-    (:value ":column" 4) " = " (:value #"\d+" 5) (:newline)
-    "  "
-    (:value ":file" 6) " = " (:value #"\".*cider/nrepl/middleware/inspect_test.clj\"" 7) (:newline)
-    "  "
-    (:value ":name" 8) " = " (:value "any-var" 9) (:newline)
-    "  "
-    (:value ":ns" 10) " = " (:value "cider.nrepl.middleware.inspect-test" 11) (:newline)
-    (:newline)
-    "--- Datafy:" (:newline)
-    "  " "0" ". " (:value "true" 12) (:newline)))
+  ["Class: " [:value "clojure.lang.Var" 0] [:newline]
+   "Value: " [:value "true" 1] [:newline]
+   [:newline]
+   "--- Meta Information:" [:newline]
+   "  " [:value ":line" 2] " = " [:value #"\d+" 3] [:newline]
+   "  " [:value ":column" 4] " = " [:value #"\d+" 5] [:newline]
+   "  " [:value ":file" 6] " = " [:value #"\".*cider/nrepl/middleware/inspect_test.clj\"" 7] [:newline]
+   "  " [:value ":name" 8] " = " [:value "any-var" 9] [:newline]
+   "  " [:value ":ns" 10] " = " [:value "cider.nrepl.middleware.inspect-test" 11] [:newline]
+   [:newline]
+   "--- Datafy:" [:newline]
+   "  0. " [:value "true" 12] [:newline]])
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
 (def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
 
 (def inspect-result
-  '("Class: "
-    (:value "clojure.lang.PersistentTreeMap" 0)
-    (:newline)
-    "Count: "
-    "4"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " (:value ":a" 1) " = " (:value "{:b 1}" 2)
-    (:newline)
-    "  " (:value ":c" 3) " = " (:value "\"a\"" 4)
-    (:newline)
-    "  " (:value ":d" 5) " = " (:value "e" 6)
-    (:newline)
-    "  " (:value ":f" 7) " = " (:value "[2 3]" 8)
-    (:newline)))
+  ["Class: " [:value "clojure.lang.PersistentTreeMap" 0] [:newline]
+   "Count: 4" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  " [:value ":a" 1] " = " [:value "{:b 1}" 2] [:newline]
+   "  " [:value ":c" 3] " = " [:value "\"a\"" 4] [:newline]
+   "  " [:value ":d" 5] " = " [:value "e" 6] [:newline]
+   "  " [:value ":f" 7] " = " [:value "[2 3]" 8] [:newline]])
 
 (def push-result
-  '("Class: "
-    (:value "clojure.lang.PersistentArrayMap" 0)
-    (:newline)
-    "Count: "
-    "1"
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " (:value ":b" 1) " = " (:value "1" 2)
-    (:newline)
-    (:newline)
-    "--- Path:"
-    (:newline)
-    "  " ":a"))
+  ["Class: " [:value "clojure.lang.PersistentArrayMap" 0] [:newline]
+   "Count: 1" [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  " [:value ":b" 1] " = " [:value "1" 2] [:newline]
+   [:newline]
+   "--- Path:" [:newline]
+   "  :a"])
 
 (def sibling-result
-  '("Class: "
-    (:value "java.lang.String" 0)
-    (:newline)
-    "Value: "
-    "\"c\""
-    (:newline)
-    (:newline)
-    "--- Print:"
-    (:newline)
-    "  "
-    "c"
-    (:newline)
-    (:newline)
-    "--- Path:"
-    (:newline)
-    "  "
-    "(nth 2)"))
+  ["Class: " [:value "java.lang.String" 0] [:newline]
+   "Value: \"c\"" [:newline]
+   [:newline]
+   "--- Print:" [:newline]
+   "  c" [:newline]
+   [:newline]
+   "--- Path:" [:newline]
+   "  (nth 2)"])
 
 (def next-page-result
-  '("Class: "
-    (:value "clojure.lang.LazySeq" 0)
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " "..."
-    (:newline)
-    "  " "32" ". " (:value "32" 1)
-    (:newline)
-    "  " "33" ". " (:value "33" 2)
-    (:newline)
-    "  " "34" ". " (:value "34" 3)
-    (:newline)
-    (:newline)
-    "--- Page Info:"
-    (:newline)
-    "  " "Page size: 32, showing page: 2 of 2"
-    (:newline)))
+  ["Class: " [:value "clojure.lang.LazySeq" 0] [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  ..." [:newline]
+   "  32. " [:value "32" 1] [:newline]
+   "  33. " [:value "33" 2] [:newline]
+   "  34. " [:value "34" 3] [:newline]
+   [:newline]
+   "--- Page Info:" [:newline]
+   "  Page size: 32, showing page: 2 of 2" [:newline]])
 
 (def first-page-result
-  '("Class: "
-    (:value "clojure.lang.LazySeq" 0)
-    (:newline)
-    (:newline)
-    "--- Contents:"
-    (:newline)
-    "  " "0" ". " (:value "0" 1)
-    (:newline)
-    "  " "1" ". " (:value "1" 2)
-    (:newline)
-    "  " "2" ". " (:value "2" 3)
-    (:newline)
-    "  " "3" ". " (:value "3" 4)
-    (:newline)
-    "  " "4" ". " (:value "4" 5)
-    (:newline)
-    "  " "..."
-    (:newline)
-    (:newline)
-    "--- Page Info:"
-    (:newline)
-    "  " "Page size: 5, showing page: 1 of ?"
-    (:newline)))
+  ["Class: " [:value "clojure.lang.LazySeq" 0] [:newline]
+   [:newline]
+   "--- Contents:" [:newline]
+   "  0. " [:value "0" 1] [:newline]
+   "  1. " [:value "1" 2] [:newline]
+   "  2. " [:value "2" 3] [:newline]
+   "  3. " [:value "3" 4] [:newline]
+   "  4. " [:value "4" 5] [:newline]
+   "  ..." [:newline]
+   [:newline]
+   "--- Page Info:" [:newline]
+   "  Page size: 5, showing page: 1 of ?" [:newline]])
 
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))
@@ -664,13 +609,10 @@
                               "\"[[[[[[...]]]]]]\""))))))
 
 (def normal-mode-prefix
-  ["--- Contents:"
-   [:newline]
-   "  " "0" ". " [:value "1" number?]
-   [:newline]
-   "  " "1" ". " [:value "2" number?]
-   [:newline]
-   "  " "2" ". " [:value "3" number?]])
+  ["--- Contents:" [:newline]
+   "  0. " [:value "1" number?] [:newline]
+   "  1. " [:value "2" number?] [:newline]
+   "  2. " [:value "3" number?]])
 
 (def object-mode-prefix
   ["--- Instance fields:"
@@ -708,9 +650,28 @@
     (is+ (matchers/prefix object-mode-prefix)
          (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))
     (is+ (matchers/prefix ["--- Contents:" [:newline]
-                           "  " "0" ". " [:value "2" number?] [:newline]
-                           "  " "1" ". " [:value "3" number?] [:newline]])
+                           "  0. " [:value "2" number?] [:newline]
+                           "  1. " [:value "3" number?] [:newline]])
          (value-skip-header (session/message {:op "inspect-push" :idx 13})))))
+
+(deftest display-analytics-integration-test
+  (testing "analytics can be displayed with inspect-display-analytics"
+    (session/message {:op "inspect-clear"})
+    (value-skip-header (session/message {:op      "eval"
+                                         :inspect "true"
+                                         :code    "(range 100)"}))
+    (is+ (matchers/prefix ["--- Analytics:" [:newline]
+                           "  " [:value ":count" pos?] " = " [:value "100" pos?] [:newline]
+                           "  " [:value ":types" pos?] " = " [:value "{java.lang.Long 100}" pos?] [:newline]])
+         (value-skip-header (session/message {:op "inspect-display-analytics"}))))
+
+  (testing "analytics hint is displayed when requested"
+    (session/message {:op "inspect-clear"})
+    (is+ (matchers/prefix ["--- Analytics:" [:newline] #"Press 'y' or M-x"])
+         (value-skip-header (session/message {:op      "eval"
+                                              :inspect "true"
+                                              :code    "(range 100)"
+                                              :display-analytics-hint "true"})))))
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"

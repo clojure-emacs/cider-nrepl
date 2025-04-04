@@ -22,7 +22,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl/nrepl "1.3.1" :exclusions [org.clojure/clojure]]
-                 [cider/orchard "0.31.1" :exclusions [org.clojure/clojure]]
+                 [cider/orchard "0.32.1" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.7.0"]
