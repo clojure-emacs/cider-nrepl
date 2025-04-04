@@ -4,6 +4,7 @@
   {:dependencies '[[org.clojure/clojurescript "1.11.60" :scope "provided"]
                    ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                    [ch.qos.logback/logback-classic "1.3.7"]
+                   [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
                    [org.clojure/test.check "1.1.1"]
                    [cider/piggieback "0.6.0"]
                    [nubank/matcher-combinators "3.9.1"]]
@@ -23,7 +24,6 @@
   :dependencies [[nrepl/nrepl "1.3.1" :exclusions [org.clojure/clojure]]
                  [cider/orchard "0.31.1" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [thunknyc/profile "0.5.2"]
-                 ^:inline-dep [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.7.0"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
@@ -50,8 +50,8 @@
               '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
 
   :mranderson {:project-prefix "cider.nrepl.inlined.deps"
-               :overrides       {[mvxcvi/puget fipp] [fipp ~fipp-version]} ; only takes effect in unresolved-tree mode
-               :expositions     [[mvxcvi/puget fipp]] ; only takes effect unresolved-tree mode
+               :overrides       {[fipp] [fipp ~fipp-version]} ; only takes effect in unresolved-tree mode
+               :expositions     [[fipp]] ; only takes effect unresolved-tree mode
                :unresolved-tree false}
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]

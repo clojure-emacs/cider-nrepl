@@ -5,7 +5,8 @@
   {:added "0.20"}
   (:refer-clojure :exclude [pr])
   (:require
-   [clojure.pprint :as pp]))
+   [clojure.pprint :as pp]
+   [orchard.misc :as misc]))
 
 (def ^:private pr-options
   [:print-dup
@@ -18,6 +19,13 @@
 (defn- option->var
   [option]
   (resolve (symbol "clojure.core" (str "*" (name option) "*"))))
+
+(defn- try-resolve [var-symbol pprinter-name]
+  (or (misc/require-and-resolve var-symbol)
+      (binding [*out* *err*]
+        (println (format "Could not load %s namespace. To use %s pretty-printing with CIDER, add it to dependencies explicitly."
+                         (namespace var-symbol) pprinter-name))
+        nil)))
 
 (defn- pr-bindings
   [options]
@@ -57,21 +65,27 @@
      (@fipp-printer value options))))
 
 (def ^:private puget-printer
-  (delay (requiring-resolve 'puget.printer/pprint)))
+  (delay (try-resolve 'puget.printer/pprint "Puget")))
 
 (defn puget-pprint
   ([value writer]
    (puget-pprint value writer {}))
   ([value writer options]
-   (binding [*out* writer]
-     (@puget-printer value options))))
+   (if-some [puget @puget-printer]
+     (binding [*out* writer]
+       (puget value options))
+     ;; Default ot clojure.pprint/pprint if Puget could not be loaded.
+     (pprint value writer options))))
 
 (def ^:private zprint-printer
-  (delay (requiring-resolve 'zprint.core/zprint)))
+  (delay (try-resolve 'zprint.core/zprint "zprint")))
 
 (defn zprint-pprint
   ([value writer]
    (zprint-pprint value writer {}))
   ([value writer options]
-   (binding [*out* writer]
-     (@zprint-printer value options))))
+   (if-some [zprint @zprint-printer]
+     (binding [*out* writer]
+       (zprint value options))
+     ;; Default ot clojure.pprint/pprint if Zprint could not be loaded.
+     (pprint value writer options))))

@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* [#925](https://github.com/clojure-emacs/cider-nrepl/pull/9250): Stop vendoring Puget dependency.
+* [#917](https://github.com/clojure-emacs/cider-nrepl/pull/917): Sort printed maps in test output.
+
 ## 0.53.2 (2025-03-26)
 
 * [#923](https://github.com/clojure-emacs/cider-nrepl/pull/923): Complete: make sorting order customizable.
@@ -21,7 +24,6 @@
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Disable background warmup of `orchard.java` cache.
 * [#913](https://github.com/clojure-emacs/cider-nrepl/pull/913): Enable background warmup of Compliment cache.
 * [#914](https://github.com/clojure-emacs/cider-nrepl/pull/914): Remove javadoc section from the inspector output.
-* [#917](https://github.com/clojure-emacs/cider-nrepl/pull/917): Sort printed maps in test output
 
 ## 0.52.1 (2025-02-24)
 
