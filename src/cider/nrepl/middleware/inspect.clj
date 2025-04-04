@@ -77,7 +77,10 @@
     (inspector-response msg (swap-inspector! msg #(inspect/refresh % overrides)))))
 
 (defn- toggle-view-mode [{:keys [view-mode] :as inspector}]
-  (let [toggle-order {:normal :object, :object :normal}
+  ;; The order in which view modes are cycled depends on the inspected object.
+  (let [toggle-order (if (inspect/supports-table-view-mode? inspector)
+                       {:normal :table, :table :object, :object :normal}
+                       {:normal :object, :object :normal})
         next-view-mode (toggle-order view-mode :normal)]
     (inspect/set-view-mode inspector next-view-mode)))
 
