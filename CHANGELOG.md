@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.54.0 (2025-04-05)
+
 * Bump `orchard` to [0.32.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0320-2025-04-05).
 * [#925](https://github.com/clojure-emacs/cider-nrepl/pull/9250): Stop vendoring Puget dependency.
 * [#917](https://github.com/clojure-emacs/cider-nrepl/pull/917): Sort printed maps in test output.
