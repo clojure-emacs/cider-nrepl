@@ -34,10 +34,11 @@
   (select-keys msg [:page-size :max-atom-length :max-coll-size
                     :max-value-length :max-nested-depth :display-analytics-hint]))
 
-(defn inspect-reply*
-  [msg value]
+(defn inspect-reply* [{:keys [view-mode] :as msg} value]
   (let [config (msg->inspector-config msg)
-        inspector (swap-inspector! msg #(inspect/start (merge % config) value))]
+        ;; Setting view mode from the start is only needed by cider-profile.
+        inspector (swap-inspector! msg #(cond-> (inspect/start (merge % config) value)
+                                          view-mode (inspect/set-view-mode view-mode)))]
     ;; By using 3-arity `inspector-response` we ensure that the default
     ;; `{:status :done}` is not sent with this message, as the underlying
     ;; eval will send it on its own.

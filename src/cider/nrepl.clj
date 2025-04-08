@@ -580,41 +580,23 @@ if applicable, and re-render the updated value."
               {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}}))
 
 (def-wrapper wrap-profile cider.nrepl.middleware.profile/handle-profile
-  {:doc     "Middleware that provides supports Profiling based on https://github.com/thunknyc/profile"
-   :handles {"toggle-profile-ns"   {:doc      "Toggle profiling of given namespace."
-                                    :requires {"ns" "The current namespace"}
-                                    :returns  {"status" "Done"
-                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
-             "is-var-profiled"     {:doc      "Reports whether symbol is currently profiled."
-                                    :requires {"sym" "The symbol to check"
-                                               "ns"  "The current namespace"}
-                                    :returns  {"status" "Done"
-                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
-             "get-max-samples"     {:doc      "Returns maximum number of samples to be collected for any var."
-                                    :requires {}
-                                    :returns  {"status" "Done"
-                                               "value"  "String representing number of max-sample-count"}}
-             "set-max-samples"     {:doc      "Sets maximum sample count. Returns new max-sample-count."
-                                    :requires {"max-samples" "Maximum samples to collect for any single var."}
-                                    :returns  {"status" "Done"
-                                               "value"  "String representing number of max-sample-count"}}
-             "toggle-profile"      {:doc      "Toggle profiling of a given var."
-                                    :requires {"sym" "The symbol to profile"
-                                               "ns"  "The current namespace"}
-                                    :returns  {"status" "Done"
-                                               "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled, 'unbound' if ns/sym not bound"}}
-             "profile-var-summary" {:doc      "Return profiling data summary for a single var."
-                                    :requires {"sym" "The symbol to profile"
-                                               "ns"  "The current namespace"}
-                                    :returns  {"status" "Done"
-                                               "err"    "Content of profile summary report"}}
-             "profile-summary"     {:doc      "Return profiling data summary."
-                                    :requires {}
-                                    :returns  {"status" "Done"
-                                               "err"    "Content of profile summary report"}}
-             "clear-profile"       {:doc      "Clears profile of samples."
-                                    :requires {}
-                                    :returns  {"status" "Done"}}}})
+  {:doc     "Middleware for manual profiling"
+   :handles {"cider/profile-toggle-var" {:doc      "Toggle profiling of a given var."
+                                         :requires {"sym" "The symbol to profile"
+                                                    "ns"  "The current namespace"}
+                                         :returns  {"status" "Done"
+                                                    "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
+             "cider/profile-toggle-ns"  {:doc      "Toggle profiling of given namespace."
+                                         :requires {"ns" "The current namespace"}
+                                         :returns  {"status" "Done"
+                                                    "value"  "'profiled' if profiling enabled, 'unprofiled' if disabled"}}
+             "cider/profile-summary"    {:doc      "Return profiling summary optimized for viewing through CIDER inspector."
+                                         :requires {}
+                                         :returns  {"status" "Done"
+                                                    "value"  "Profile summary as inspectable data structure."}}
+             "cider/profile-clear"      {:doc      "Clear profiling data."
+                                         :requires {}
+                                         :returns  {"status" "Done"}}}})
 
 (def code-reloading-before-after-opts
   {"before" "The namespace-qualified name of a zero-arity function to call before reloading."
