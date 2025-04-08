@@ -739,20 +739,13 @@ stack frame of the most recent exception. This op is deprecated, please use the
               :requires {"ns" "The namespace to trace"}
               :returns  {"ns-status" "The result of tracing operation"}}}})
 
-(def ops-that-can-eval
-  "Set of nREPL ops that can lead to code being evaluated."
-  #{"eval" "load-file"
-    "refresh" "refresh-all" "refresh-clear"
-    "cider.clj-reload/reload" "cider.clj-reload/reload-all" "cider.clj-reload/reload-clear"
-    "toggle-trace-var" "toggle-trace-ns" "undef" "undef-all"})
-
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
-  ops-that-can-eval
+  mw/ops-that-can-eval
   (cljs/expects-piggieback
    {:doc "Under its normal operation mode, enhances the `eval` op by notifying the client of the current REPL state.
 You can also request to compute the info directly by requesting the \"cider/get-state\" op."
     :requires #{#'session}
-    :expects ops-that-can-eval
+    :expects mw/ops-that-can-eval
     :handles {"cider/get-state" {}}
     :returns {"repl-type" "`:clj` or `:cljs`."
               "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}}))

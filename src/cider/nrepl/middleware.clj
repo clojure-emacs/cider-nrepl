@@ -33,3 +33,12 @@
     cider.nrepl/wrap-undef
     cider.nrepl/wrap-version
     cider.nrepl/wrap-xref])
+
+(def ops-that-can-eval
+  "Set of nREPL ops that can lead to code being evaluated."
+  #{"eval" "load-file"
+    "refresh" "refresh-all" "refresh-clear"
+    "cider.clj-reload/reload" "cider.clj-reload/reload-all" "cider.clj-reload/reload-clear"
+    "toggle-trace-var" "toggle-trace-ns"
+    "undef" "undef-all"
+    "cider/profile-toggle-var" "cider/profile-toggle-ns"})
