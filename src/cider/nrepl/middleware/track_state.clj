@@ -2,6 +2,7 @@
   "State tracker for client sessions."
   {:author "Artur Malabarba"}
   (:require
+   [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
@@ -334,17 +335,12 @@
         (send ns-cache update-in [session]
               update-and-send-cache msg)))))
 
-(def ops-that-can-eval
-  "Set of nREPL ops that can lead to code being evaluated."
-  #{"eval" "load-file" "refresh" "refresh-all" "refresh-clear"
-    "toggle-trace-var" "toggle-trace-ns" "undef"})
-
 (defn handle-tracker [handler {:keys [op session] :as msg}]
   (cond
     (= "cider/get-state" op)
     (send ns-cache update-in [session] update-and-send-cache msg)
 
-    (ops-that-can-eval op)
+    (mw/ops-that-can-eval op)
     (handler (assoc msg :transport (make-transport msg)))
 
     :else
