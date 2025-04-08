@@ -22,8 +22,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl/nrepl "1.3.1" :exclusions [org.clojure/clojure]]
-                 [cider/orchard "0.32.1" :exclusions [org.clojure/clojure]]
-                 ^:inline-dep [thunknyc/profile "0.5.2"]
+                 [cider/orchard "0.33.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [fipp ~fipp-version] ; can be removed in unresolved-tree mode
                  ^:inline-dep [compliment "0.7.0"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
@@ -151,8 +150,6 @@
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.0"]]
                          :eastwood {:config-files ["eastwood.clj"]
-                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]
-                                    :ignored-faults {:unused-ret-vals-in-try {cider.nrepl.middleware.profile-test [{:line 25}]}
-                                                     :suspicious-test {cider.nrepl.middleware.profile-test [{:line 25}]}}}}]
+                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]}}]
 
              :deploy {:source-paths [".circleci/deploy"]}})

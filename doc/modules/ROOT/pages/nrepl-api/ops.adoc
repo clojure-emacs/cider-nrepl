@@ -77,21 +77,6 @@ Returns::
 
 
 
-=== `clear-profile`
-
-Clears profile of samples.
-
-Required parameters::
-{blank}
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-
-
-
 === `clojuredocs-lookup`
 
 Return a map of information in ClojureDocs.
@@ -369,22 +354,6 @@ Optional parameters::
 
 Returns::
 * `:formatted-edn` The formatted data.
-
-
-
-=== `get-max-samples`
-
-Returns maximum number of samples to be collected for any var.
-
-Required parameters::
-{blank}
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-* `:value` String representing number of max-sample-count
 
 
 
@@ -779,24 +748,6 @@ Returns::
 
 
 
-=== `is-var-profiled`
-
-Reports whether symbol is currently profiled.
-
-Required parameters::
-* `:ns` The current namespace
-* `:sym` The symbol to check
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
-
-
-
 === `macroexpand`
 
 Produces macroexpansion of some form using the given expander.
@@ -966,40 +917,6 @@ Returns::
 {blank}
 
 
-=== `profile-summary`
-
-Return profiling data summary.
-
-Required parameters::
-{blank}
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:err` Content of profile summary report
-* `:status` Done
-
-
-
-=== `profile-var-summary`
-
-Return profiling data summary for a single var.
-
-Required parameters::
-* `:ns` The current namespace
-* `:sym` The symbol to profile
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:err` Content of profile summary report
-* `:status` Done
-
-
-
 === `refresh`
 
 Reloads all changed files in dependency order.
@@ -1122,23 +1039,6 @@ Returns::
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
-
-
-
-=== `set-max-samples`
-
-Sets maximum sample count. Returns new max-sample-count.
-
-Required parameters::
-* `:max-samples` Maximum samples to collect for any single var.
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-* `:value` String representing number of max-sample-count
 
 
 
@@ -1329,41 +1229,6 @@ Returns::
 * `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
 * `:status` Either done or indication of an error
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
-
-
-
-=== `toggle-profile`
-
-Toggle profiling of a given var.
-
-Required parameters::
-* `:ns` The current namespace
-* `:sym` The symbol to profile
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled, 'unbound' if ns/sym not bound
-
-
-
-=== `toggle-profile-ns`
-
-Toggle profiling of given namespace.
-
-Required parameters::
-* `:ns` The current namespace
-
-
-Optional parameters::
-{blank}
-
-Returns::
-* `:status` Done
-* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
 
 
 
@@ -1734,6 +1599,72 @@ Optional parameters::
 Returns::
 * `:status` done
 * `:cider/log-update-consumer` The consumer that was updated.
+
+
+
+=== `cider/profile-clear`
+
+Clear profiling data.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+
+
+
+=== `cider/profile-summary`
+
+Return profiling summary optimized for viewing through CIDER inspector.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` Profile summary as inspectable data structure.
+
+
+
+=== `cider/profile-toggle-ns`
+
+Toggle profiling of given namespace.
+
+Required parameters::
+* `:ns` The current namespace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
+
+
+
+=== `cider/profile-toggle-var`
+
+Toggle profiling of a given var.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to profile
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` Done
+* `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
 
 
 

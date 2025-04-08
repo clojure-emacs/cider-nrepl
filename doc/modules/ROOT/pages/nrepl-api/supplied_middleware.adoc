@@ -84,8 +84,8 @@
 | `wrap-profile`
 | -
 | No
-| `toggle-profile/toggle-profile-ns/is-var-profiled/profile-summary/profile-var-summary/clear-profile/get-max-samples/set-max-samples`
-| Provides profiling support based on the https://github.com/thunknyc/profile[profile] library.
+| `cider/profile-toggle-var`, `cider/profile-toggle-ns`, `cider/profile-summary`, `cider/profile-clear`
+| Middleware for manual profiling.
 
 | `wrap-refresh`
 | -
