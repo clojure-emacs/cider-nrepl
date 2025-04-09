@@ -17,13 +17,13 @@
 
 ;; Analyze the last stacktrace
 
-(def ^:dynamic *last-exception* nil)
-
 (defn- analyze-last-stacktrace
   "Analyze the last exception."
   [{:keys [session] :as msg}]
   (let [last-exception (@session #'*e)]
-    (swap! session assoc #'*last-exception* last-exception) ;; note that *e can change later, so this entry isn't redundant
+    ;; We need to remember the analyzed exception separately because we need to
+    ;; provide a way to inspect it while *e can change.
+    (alter-meta! session assoc ::analyzed-exception last-exception)
     (send-analysis msg (stacktrace/analyze last-exception))))
 
 (defn- handle-analyze-last-stacktrace-op
@@ -42,14 +42,22 @@
   (handle-analyze-last-stacktrace-op msg)
   (notify-client msg "The `stacktrace` op is deprecated, please use `analyze-last-stacktrace` instead." :warning))
 
+(defn- get-last-exception-cause [{:keys [session index] :as msg}]
+  (when index
+    (let [last-exception (::analyzed-exception (meta session))
+          causes (when last-exception
+                   (->> (iterate #(.getCause ^Throwable %) last-exception)
+                        (take-while some?)))]
+      (nth causes index nil))))
+
 (defn handle-inspect-last-exception-op [{:keys [session index transport] :as msg}]
-  (let [last-exception (@session #'*last-exception*)
-        causes (->> (iterate #(.getCause ^Throwable %) last-exception)
-                    (take-while some?))
-        cause (when index
-                (nth causes index nil))]
-    (if cause
-      (t/send transport (middleware.inspect/inspect-reply* msg cause))
+  (let [inspect-ex-data? (= (:ex-data msg) "true")
+        cause (get-last-exception-cause msg)
+        object (if inspect-ex-data?
+                 (ex-data cause)
+                 cause)]
+    (if object
+      (t/send transport (middleware.inspect/inspect-reply* msg object))
       (respond-to msg :status :no-error))
     (respond-to msg :status :done)))
 
