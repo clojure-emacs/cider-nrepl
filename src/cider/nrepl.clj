@@ -686,6 +686,7 @@ those configured directories will be honored."
               "inspect-last-exception" {:doc "Returns an Inspector response for the last exception that has been processed through `analyze-last-stacktrace` for the current nrepl session.
 Assumes that `analyze-last-stacktrace` has been called first, returning \"no-error\" otherwise."
                                         :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
+                                        :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
                                         :returns {"status" "\"done\", or \"no-error\" if `analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
                                                   "value" "A value, as produced by the Inspector middleware."}}
               "stacktrace" {:doc "Return messages describing each cause and

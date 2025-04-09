@@ -475,7 +475,8 @@ Required parameters::
 
 
 Optional parameters::
-{blank}
+* `:ex-data` When equal to "true", inspect ex-data of the exception instead of full exception.
+
 
 Returns::
 * `:status` "done", or "no-error" if ``analyze-last-stacktrace`` wasn't called beforehand (or the ``index`` was out of bounds).
