@@ -341,6 +341,10 @@ if applicable, and re-render the updated value."
                           "max-nested-depth" "New max nested depth of rendered collection"
                           "view-mode" "Mode of viewing the value - either `:normal` or `:object`"}
                :returns inspector-returns}
+              "inspect-toggle-pretty-print"
+              {:doc "Toggles the pretty printing of values in the inspector."
+               :requires {"session" "The current session"}
+               :returns inspector-returns}
               "inspect-toggle-view-mode"
               {:doc "Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:table`, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is `:object`, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values."
                :requires {"session" "The current session"}
