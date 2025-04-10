@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.55.0 (2025-04-10)
+
 * Bump `orchard` to [0.33.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0330-2025-04-08).
 * [#929](https://github.com/clojure-emacs/cider-nrepl/pull/929): Migrate profiling middleware to orchard.profile.
 * [#930](https://github.com/clojure-emacs/cider-nrepl/pull/930): Stacktrace: add support for directly inspecting ex-data
