@@ -691,6 +691,49 @@
     (is+ (matchers/prefix table-mode-prefix)
          (value-skip-header (session/message {:op "inspect-toggle-view-mode"})))))
 
+(deftest pretty-print-integration-test
+  (testing "renders an object with the pretty printer"
+    (session/message {:op "inspect-clear"})
+    (session/message {:op      "eval"
+                      :inspect "true"
+                      :code    "(repeat 5 {:a (repeat 5 {:b 2}) :c (repeat 5 {:d 2})})"})
+    (testing "toggle pretty printing and turn it on"
+      (is+ ["--- Contents:" [:newline]
+            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
+            [:newline]
+            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
+            [:newline]
+            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
+            [:newline]
+            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
+            [:newline]
+            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
+            [:newline]]
+           (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))
+    (testing "toggle pretty printing and turn it off"
+      (is+ ["--- Contents:" [:newline]
+            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
+            [:newline]
+            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
+            [:newline]
+            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
+            [:newline]
+            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
+            [:newline]
+            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
+            [:newline]]
+           (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))))
+
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
     (is (re-find #"showing page: \d+ of \d+"

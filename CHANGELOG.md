@@ -7,6 +7,7 @@
 ## 0.55.1 (2025-04-14)
 
 * [#931](https://github.com/clojure-emacs/cider-nrepl/pull/931): Redesign and optimize track-state middleware.
+* [#932](https://github.com/clojure-emacs/cider-nrepl/pull/932) Add support for pretty printing values in the inspector.
 
 ## 0.55.0 (2025-04-10)
 

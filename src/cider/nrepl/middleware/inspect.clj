@@ -31,8 +31,10 @@
      (response-for msg data extra-response-data))))
 
 (defn- msg->inspector-config [msg]
-  (select-keys msg [:page-size :max-atom-length :max-coll-size
-                    :max-value-length :max-nested-depth :display-analytics-hint]))
+  (-> (select-keys msg [:page-size :max-atom-length :max-coll-size
+                        :max-value-length :max-nested-depth :display-analytics-hint
+                        :pretty-print])
+      (update :pretty-print #(= "true" %))))
 
 (defn inspect-reply* [{:keys [view-mode] :as msg} value]
   (let [config (msg->inspector-config msg)
@@ -77,6 +79,9 @@
   (let [overrides (msg->inspector-config msg)]
     (inspector-response msg (swap-inspector! msg #(inspect/refresh % overrides)))))
 
+(defn toggle-pretty-print-reply [msg]
+  (inspector-response msg (swap-inspector! msg #(-> (update % :pretty-print not) (inspect/inspect-render)))))
+
 (defn- toggle-view-mode [{:keys [view-mode] :as inspector}]
   ;; The order in which view modes are cycled depends on the inspected object.
   (let [toggle-order (if (inspect/supports-table-view-mode? inspector)
@@ -120,6 +125,7 @@
       "inspect-next-page" next-page-reply
       "inspect-prev-page" prev-page-reply
       "inspect-refresh" refresh-reply
+      "inspect-toggle-pretty-print" toggle-pretty-print-reply
       "inspect-toggle-view-mode" toggle-view-mode-reply
       "inspect-display-analytics" display-analytics-reply
       "inspect-set-page-size" refresh-reply
