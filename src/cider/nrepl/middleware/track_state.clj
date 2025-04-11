@@ -1,13 +1,13 @@
 (ns cider.nrepl.middleware.track-state
   "State tracker for client sessions."
-  {:author "Artur Malabarba"}
+  {:author "Artur Malabarba, Oleksandr Yakushev"}
   (:require
    [cider.nrepl.middleware :as mw]
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.meta :as um]
    [clojure.java.io :as io]
-   [clojure.string :as string]
+   [clojure.string :as str]
    [clojure.tools.namespace.find :as ns-find]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
@@ -16,16 +16,13 @@
    [orchard.java.classpath :as cp]
    [orchard.misc :as misc])
   (:import
-   (clojure.lang MultiFn Namespace)
+   (clojure.lang MultiFn Namespace Var)
    (java.io File)
-   (java.net SocketException)
+   (java.util WeakHashMap)
    (java.util.jar JarFile)
    (nrepl.transport Transport)))
 
-(def clojure-core (try (find-ns 'clojure.core)
-                       (catch Exception _e nil)))
-
-;;; Auxiliary
+;;; Shared part
 
 (defn- inferrable-indent?
   "Does metadata map `m` lack, need a `:style/indent` value, and is a suitable candidate for it?"
@@ -52,34 +49,105 @@
          ;; * The `orchard.indent` logic is not meant to operate on clojure.core stuff,
          ;;   because it compares a given macro against a clojure.core counterpart
          ;;   (which doesn't make sense for a macro which already belongs to clojure.core)
-         (not (or (string/starts-with? namespace-name "clojure.")
-                  (string/starts-with? namespace-name "cljs.")))
+         (not (or (str/starts-with? namespace-name "clojure.")
+                  (str/starts-with? namespace-name "cljs.")))
          true)))
 
-(defn- enriched-meta
-  "Like `clojure.core/meta` but adds {:fn true} for functions, multimethods and macros,
-  and `:style/indent` when missing and inferrable.
+;;; Clojure part
 
-  Should only be used for vars."
-  [the-var]
-  (let [m (meta the-var)]
-    (cond-> m
-      (or (fn? @the-var)
-          (instance? MultiFn @the-var))
-      (assoc :fn true)
+(def ^:private clojure-core (try (find-ns 'clojure.core)
+                                 (catch Exception _e nil)))
 
-      (inferrable-indent? m)
-      indent/infer-style-indent)))
+;; A "real metadata cache" is a map {ns-symbol WHM{var-symbol meta}} of
+;; actual (not filtered) var metadata. We keep this to know when to recompute
+;; the filtered metadata for a var (if the real meta hasn't changed, no need to
+;; recompute). WHM is used to avoid unnecessarily holding onto the metadata if
+;; the Var has been removed somehow.
+(def ^:dynamic *real-metadata-cache* nil)
+(def ^:dynamic *old-project-state* nil)
 
-(defn filter-core-and-get-meta
-  "Remove keys whose values are vars in the core namespace."
-  [refers]
-  (->> refers
-       (into {} (keep (fn [[sym the-var]]
-                        (when (var? the-var)
-                          (let [{the-ns :ns :as the-meta} (enriched-meta the-var)]
-                            (when-not (identical? the-ns clojure-core)
-                              [sym (um/relevant-meta the-meta)]))))))))
+(defn- get-metadata-if-changed?
+  [^Var the-var, ^WeakHashMap real-metadata-ns-cache]
+  (let [var-name (.sym the-var)
+        ;; WHM is not thread-safe but we should only access this from a single
+        ;; (session) thread.
+        cached-meta (some-> real-metadata-ns-cache (.get var-name))
+        current-meta (meta the-var)]
+    (when-not (identical? cached-meta current-meta)
+      (some-> real-metadata-ns-cache (.put var-name current-meta))
+      current-meta)))
+
+;; Note that we aggressively cut down unnecessary keys in this mw as it triggers
+;; on EACH evaluation, and the middleware retains (caches) this data for ALL
+;; loaded project namespaces both on cider-nrepl and CIDER side. This list is
+;; smaller than the one used by `ns-*` middleware.
+
+(def ^:private relevant-meta-keys
+  [:deprecated :macro :test :indent :style/indent :cider/instrumented
+   :orchard.trace/traced :orchard.profile/profiled])
+
+(defn- compute-var-meta
+  "Return only metadata for a var that is relevant to track-state middleware. Add
+  `:fn true` for functions and multimethods. Infer `:style/indent` if missing.
+  This function accepts two caches - 'real' metadata WHM cache and the previous
+  computed ns-state. If the real metadata on a var hasn't changed, take the
+  computed metadata from the cache."
+  [^Var the-var, real-metadata-ns-cache old-ns-state]
+  (let [mta (get-metadata-if-changed? the-var real-metadata-ns-cache)
+        cached-computed-meta (when (nil? mta)
+                               (get old-ns-state (.sym the-var)))]
+    (or cached-computed-meta
+        (let [mta (cond-> (or mta (meta the-var))
+                    (inferrable-indent? mta) indent/infer-style-indent)
+              ;; Most vars in the namespace are functions with no other relevant
+              ;; metadata, so having {:fn "true"} as shared literal improves
+              ;; both the computation speed and the occupied memory.
+              obj (var-get the-var)
+              start (if (and (or (fn? obj) (instance? MultiFn obj))
+                             (not (:macro mta)))
+                      {:fn "true"} {})]
+          (reduce (fn [result k]
+                    (let [val (k mta)]
+                      (cond-> result val (assoc k (pr-str val)))))
+                  start relevant-meta-keys)))))
+
+(defn- compute-var-metas-for-namespace
+  "Compute relevant metadata for all vars in the namespace."
+  [the-ns]
+  (let [ns-sym (ns-name the-ns)
+        old-project-ns-map (:interns (get *old-project-state* ns-sym))
+        real-metadata-whm (when *real-metadata-cache*
+                            (or (@*real-metadata-cache* ns-sym)
+                                ((swap! *real-metadata-cache* assoc ns-sym
+                                        (WeakHashMap.)) ns-sym)))]
+    (reduce-kv (fn [acc sym the-var]
+                 (if (and (var? the-var)
+                          (not (identical? (.ns ^Var the-var)
+                                           clojure-core)))
+                   (let [old-meta (get old-project-ns-map sym)
+                         new-meta (compute-var-meta the-var real-metadata-whm
+                                                    old-project-ns-map)]
+                     (if (identical? old-meta new-meta)
+                       acc
+                       (assoc acc sym new-meta)))
+                   acc))
+               old-project-ns-map
+               (ns-map the-ns))))
+
+(def clojure-core-map
+  (when clojure-core
+    {:aliases {}
+     :interns (into {}
+                    (keep (fn [[k v]]
+                            (when (var? v)
+                              [k (compute-var-meta v nil {})])))
+                    (ns-map clojure-core))}))
+
+;;; Clojurescript part
+
+;; NB: must be bound for ClojureScript-related parts of the middleware to work!
+(def ^:dynamic *cljs* nil)
+(def ^:dynamic *all-cljs-namespaces* nil)
 
 (defn- cljs-meta-with-fn
   "Like (:meta m) but adds {:fn true} if (:fn-var m) is true, (:tag m) is
@@ -91,24 +159,21 @@
         (not (contains? m :tag)))
     (assoc :fn true)))
 
-;;; Namespaces
-
 (defn- remove-redundant-quote
   "Fixes double-quoted arglists coming from the ClojureScript analyzer."
   [{:keys [arglists] :as m}]
   (if (and (sequential? arglists)
-           (-> arglists first #{'quote}))
+           (= (first arglists) 'quote))
     (assoc m :arglists (second arglists))
     m))
 
 (defn- uses-metadata
-  "Creates a var->metadata map for all the `:uses` of a given cljs ns.
-
-  It accomplishes so by querying `all-cljs-namespaces`"
-  [all-cljs-namespaces uses]
+  "Creates a var->metadata map for all the `:uses` of a given cljs ns. It
+  accomplishes so by querying `*all-cljs-namespaces*`"
+  [uses]
   (into {}
         (map (fn [[var-name var-ns]]
-               (let [defs (some->> all-cljs-namespaces
+               (let [defs (some->> *all-cljs-namespaces*
                                    (filter (fn [x]
                                              (and (map? x)
                                                   (= (:name x)
@@ -133,12 +198,14 @@
                  [var-name {:arglists '([]) :macro true}])))
         use-macros))
 
-(defn ns-as-map [object all-objects]
+;;; Common part again
+
+(defn ns-state [object]
   (cond
     ;; Clojure Namespaces
     (instance? Namespace object)
     {:aliases (misc/update-vals ns-name (ns-aliases object))
-     :interns (filter-core-and-get-meta (ns-map object))}
+     :interns (compute-var-metas-for-namespace object)}
 
     ;; ClojureScript Namespaces
     (associative? object)
@@ -154,89 +221,17 @@
                                            result))]
       {:aliases (merge require-macros requires)
        :interns (merge (post-process (misc/update-vals cljs-meta-with-fn defs))
-                       (post-process (uses-metadata all-objects uses))
+                       (post-process (uses-metadata uses))
                        (post-process (use-macros-metadata use-macros))
                        (post-process macros))})
 
+    ;; Unresolved yet: resolve depending on the environment and recur.
+    (symbol? object)
+    (ns-state (if *cljs*
+                (cljs-ana/find-ns *cljs* object)
+                (find-ns object)))
+
     :else {}))
-
-(def clojure-core-map
-  (when clojure-core
-    {:aliases {}
-     :interns (into {}
-                    (keep (fn [[k v]]
-                            (when (var? v)
-                              [k (um/relevant-meta (enriched-meta v))])))
-                    (ns-map clojure-core))}))
-
-(defn calculate-changed-ns-map
-  "Return a map of namespaces that changed between new-map and old-map.
-  new-map and old-map are maps from namespace names to namespace data,
-  which is the same format of map returned by this function. old-map
-  can also be nil, which is the same as an empty map."
-  [new-map old-map]
-  (into {}
-        (keep (fn [[the-ns-name data]]
-                (when-not (= (get old-map the-ns-name) data)
-                  [the-ns-name data])))
-        new-map))
-
-;;; State management
-(defn merge-used-aliases
-  "Return new-ns-map merged with all of its direct dependencies.
-  val-fn a function that returns namespace objects when called with
-  namespace names."
-  [^clojure.lang.PersistentHashMap new-ns-map
-   ^clojure.lang.PersistentHashMap old-ns-map
-   val-fn
-   all-namespaces]
-  (->> (vals new-ns-map)
-       (map :aliases)
-       (mapcat vals)
-       (reduce (fn [acc name]
-                 (if (or (get acc name)
-                         (get old-ns-map name))
-                   acc
-                   (assoc acc name (ns-as-map (val-fn name)
-                                              all-namespaces))))
-               new-ns-map)))
-
-(def ns-cache
-  "Cache of the namespace info that has been sent to each session.
-  Each key is a session. Each value is a map from namespace names to
-  data (as returned by `ns-as-map`)."
-  (agent {}
-         :error-handler
-         (fn [_ e]
-           (println "Exception updating the ns-cache" e))))
-
-(defn fast-reduce
-  "Like (reduce f {} coll), but faster.
-  Inside f, use `assoc!` and `conj!` instead of `assoc` and `conj`."
-  [f coll]
-  (persistent! (reduce f (transient {}) coll)))
-
-(defn ensure-clojure-core-present
-  "Check if `old-ns-map` has clojure.core, else add it to
-  current-ns-map. If `cljs` we inject cljs.core instead. `cljs` is the
-  cljs environment grabbed from the message (if present)."
-  [old-ns-map project-ns-map cljs all-namespaces]
-  (cond
-    (and cljs (not (contains? old-ns-map 'cljs.core)))
-    (assoc project-ns-map 'cljs.core
-           (ns-as-map (cljs-ana/find-ns cljs 'cljs.core)
-                      all-namespaces))
-
-    ;; we have cljs and the cljs core, nothing to do
-    cljs
-    project-ns-map
-
-    ;; we've got core in old or new
-    (some #{clojure-core} (mapcat keys [old-ns-map project-ns-map]))
-    project-ns-map
-
-    :else
-    (assoc project-ns-map clojure-core clojure-core-map)))
 
 (def ^:private jar-namespaces*
   (future
@@ -252,70 +247,80 @@
 (defn jar-namespaces [x]
   (contains? @jar-namespaces* x))
 
-(defn update-and-send-cache
-  "Send a reply to msg with state information assoc'ed.
-  old-data is the ns-cache that needs to be updated (the one
-  associated with `msg`'s session). Return the updated value for it.
-  This function has side-effects (sending the message)!
+(defn- initial-project-state [all-namespaces]
+  (let [cljs *cljs*]
+    (persistent!
+     (reduce (fn [acc ns]
+               (let [name (if cljs (:name ns) (ns-name ns))]
+                 (if (jar-namespaces name)
+                   acc ;; Remove all jar namespaces.
+                   (assoc! acc name (ns-state ns)))))
+             (transient {})
+             all-namespaces))))
 
-  Two extra entries are sent in the reply. One is the `:repl-type`,
-  which is either `:clj` or `:cljs`.
+(defn- add-core-namespace-vars [project-state]
+  (if *cljs*
+    (assoc project-state 'cljs.core (ns-state 'cljs.core))
+    (assoc project-state 'clojure.core clojure-core-map)))
 
-  The other is `:changed-namespaces`, which is a map from namespace
-  names to namespace data (as returned by `ns-as-map`). This contains
-  only namespaces which have changed since we last notified the
-  client.
+(defn- merge-used-aliases
+  "Return project state merged with all of its direct dependencies."
+  [project-state]
+  (reduce-kv (fn [acc _ {:keys [aliases]}]
+               (reduce-kv (fn [acc _ ns-sym]
+                            (if (contains? acc ns-sym)
+                              acc
+                              (assoc acc ns-sym (ns-state ns-sym))))
+                          acc aliases))
+             project-state project-state))
 
-  The 2-arity call is the intended way to use this function.
+(defn calculate-changed-project-state
+  "Return a map of namespaces that changed between new-project-state and
+  old-project-state. New and old state maps from namespace symbols to namespace
+  state, which is the same format of map returned by this function."
+  [new-project-state old-project-state]
+  (reduce-kv (fn [acc ns-sym ns-state]
+               (if-not (= ns-state (get old-project-state ns-sym))
+                 (assoc acc ns-sym ns-state)
+                 acc))
+             {} new-project-state))
 
-  The 4-arity call is provided for testing under mranderson.
-  Allows substitution of supporting fns in the implementation that
-  don't need to exposed otherwise. Be aware when the implementation
-  details change because this arity (and the tests) will need to
-  change also."
-  ([old-data msg]
-   (update-and-send-cache old-data msg
-                          #'jar-namespaces
-                          #'transport/send))
-  ([old-data msg jar-ns-fn transport-send-fn]
-   (let [cljs           (cljs/grab-cljs-env msg)
-         find-ns-fn     (if cljs
-                          #(cljs-ana/find-ns cljs %)
-                          find-ns)
-         ;; See what has changed compared to the cache. If the cache
-         ;; was empty, everything is considered to have changed (and
-         ;; the cache will then be filled).
-         ns-name-fn     (if cljs :name ns-name)
-         all-namespaces (if cljs
-                          (vals (cljs-ana/all-ns cljs))
-                          (all-ns))
-         project-ns-map (fast-reduce (fn [acc ns]
-                                       (let [name (ns-name-fn ns)]
-                                         (if (jar-ns-fn name)
-                                           acc ;; Remove all jar namespaces.
-                                           (assoc! acc name (ns-as-map ns all-namespaces)))))
-                                     all-namespaces)
-         project-ns-map (ensure-clojure-core-present old-data
-                                                     project-ns-map
-                                                     cljs
-                                                     all-namespaces)
-         changed-ns-map (-> project-ns-map
-                            ;; Add back namespaces that the project depends on.
-                            (merge-used-aliases (or old-data {})
-                                                find-ns-fn
-                                                all-namespaces)
-                            (calculate-changed-ns-map old-data))]
-     (try
-       (->> (response-for
-             msg :status :state
-             :repl-type (if cljs :cljs :clj)
-             :changed-namespaces (util/transform-value changed-ns-map))
-            (transport-send-fn (:transport msg)))
-       ;; We run async, so the connection might have been closed in
-       ;; the mean time.
-       (catch SocketException _
-         nil))
-     (merge old-data changed-ns-map))))
+;;; State management
+
+(defn- transport-send [transport msg]
+  ;; Only exists to be rebindable during testing.
+  (transport/send transport msg))
+
+(defn calculate-changed-project-state-response
+  "Calculate changes in project state since we lasst notified the client. Response
+  is a map:
+  - `:repl-type` - either `:clj` or `:cljs`
+  - `:changed-namespaces` - a map of namespaces that have changed
+
+  The previous value of project-state is taken from the session metadata. Once
+  the new value is computed, it has to be written into the session metadata.
+  Also take 'real metadata cache' from the session metadata (it is mutable)."
+  [{:keys [session] :as msg}]
+  (let [old-project-state (::project-state (meta session))
+        real-metadata-cache (or (::metadata-cache (meta session))
+                                (::metadata-cache (alter-meta! session assoc ::metadata-cache (atom {}))))
+        cljs (cljs/grab-cljs-env msg)
+        all-namespaces (if cljs
+                         (vals (cljs-ana/all-ns cljs))
+                         (all-ns))]
+    (binding [*cljs* cljs
+              *all-cljs-namespaces* (when cljs all-namespaces)
+              *old-project-state* old-project-state
+              *real-metadata-cache* real-metadata-cache]
+      (let [project-state (-> (initial-project-state all-namespaces)
+                              add-core-namespace-vars
+                              merge-used-aliases)]
+        (alter-meta! session assoc ::project-state project-state)
+        (let [delta (calculate-changed-project-state project-state old-project-state)]
+          (response-for msg
+                        :status :state
+                        :repl-type (if cljs :cljs :clj)
+                        :changed-namespaces (util/transform-value delta)))))))
 
 ;;; Middleware
 (defn make-transport
@@ -332,13 +337,12 @@
     (send [_this {:keys [status] :as response}]
       (.send transport response)
       (when (contains? status :done)
-        (send ns-cache update-in [session]
-              update-and-send-cache msg)))))
+        (future
+          (transport-send transport (calculate-changed-project-state-response msg)))))))
 
 (defn handle-tracker [handler {:keys [op session] :as msg}]
   (cond
-    (= "cider/get-state" op)
-    (send ns-cache update-in [session] update-and-send-cache msg)
+    (= "cider/get-state" op) (calculate-changed-project-state-response msg)
 
     (mw/ops-that-can-eval op)
     (handler (assoc msg :transport (make-transport msg)))
