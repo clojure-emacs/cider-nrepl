@@ -313,7 +313,12 @@ Note: Documentation may be incomplete; not all return keys are described."
            inspector's state in the `:value` slot."
     :requires #{"clone" #'wrap-caught #'wrap-print}
     :expects #{"eval"}
-    :handles {"inspect-pop"
+    :handles {"inspect-print-current-value"
+              {:doc "Print the current value of the inspector."
+               :requires {"session" "The current session"}
+               :optional wrap-print-optional-arguments
+               :returns inspector-returns}
+              "inspect-pop"
               {:doc "Moves one level up in the inspector stack."
                :requires {"session" "The current session"}
                :returns inspector-returns}

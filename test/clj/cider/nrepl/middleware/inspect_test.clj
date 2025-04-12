@@ -745,6 +745,57 @@
                                                     :inspect "true"
                                                     :code    "(range 100)"}))))))))
 
+(deftest inspect-print-current-value-test
+  (testing "inspect-print-current-value returns the currently inspected value as a printed string"
+    (is (= [(str/join "\n" ["{:a -1,"
+                            " :bb \"111\","
+                            " :ccc (1),"
+                            " :d"
+                            " ({:a 0, :bb \"000\", :ccc ()}"
+                            "  {:a -1, :bb \"111\", :ccc (1)}"
+                            "  {:a -2, :bb \"222\", :ccc (2 1)}"
+                            "  {:a -3, :bb \"333\", :ccc (3 2 1)}"
+                            "  {:a -4, :bb \"444\", :ccc (4 3 2 1)})}"])]
+           (:value (do
+                     (session/message {:op "eval"
+                                       :code "(def test-val
+                                                (for [i (range 2)]
+                                                 {:a (- i)
+                                                  :bb (str i i i)
+                                                  :ccc (range i 0 -1)
+                                                  :d (for [i (range 5)]
+                                                       {:a (- i)
+                                                        :bb (str i i i)
+                                                        :ccc (range i 0 -1)})}))"})
+                     (session/message {:op "eval"
+                                       :inspect "true"
+                                       :code "test-val"})
+                     (session/message {:op "inspect-push"
+                                       :idx 2})
+                     (session/message {:op "inspect-print-current-value"
+                                       :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"})))))))
+
+(deftest inspect-print-current-value-no-value-test
+  (testing "inspect-print-current-value returns nil if nothing has been inspected yet"
+    (is (= ["nil"] (:value (session/message
+                            {:op "inspect-print-current-value"
+                             :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))))
+
+(deftest inspect-print-current-value-default-print-fn-test
+  (testing "inspect-print-current-value uses a default print fn when none is provided"
+    (is (= ["nil"] (:value (session/message {:op "inspect-print-current-value"}))))))
+
+(deftest inspect-print-current-value-infinite-seq-test
+  (testing "inspect-print-current-value works with infinite-seqs"
+    (is (str/starts-with? (first (:value (do (session/message {:op "eval"
+                                                               :code "(def test-val (repeat :x))"})
+                                             (session/message {:op "eval"
+                                                               :inspect "true"
+                                                               :code "test-val"})
+                                             (session/message {:op "inspect-print-current-value"
+                                                               :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))
+                          "(:x"))))
+
 (deftest inspect-def-current-value-test
   (testing "inspect-def-current-value defines a var with the current inspector value"
     (is (= "{3 4}"
