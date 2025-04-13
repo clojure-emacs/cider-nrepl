@@ -1,8 +1,12 @@
 (ns cider.nrepl.middleware.inspect
   (:require
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling
     :refer [eval-interceptor-transport with-safe-transport]]
+   [cider.nrepl.pprint :as pprint]
+   [clojure.string :as str]
+   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.inspect :as inspect]))
@@ -102,6 +106,15 @@
 (defn def-current-value [msg]
   (inspector-response msg (swap-inspector! msg inspect/def-current-value (symbol (:ns msg)) (:var-name msg))))
 
+(defn print-current-value-reply [{:keys [::print/print-fn session] :as msg}]
+  (let [inspector (-> session meta ::inspector)]
+    (with-open [writer (print/replying-PrintWriter :value msg msg)]
+      (binding [*print-length* (or *print-length* 100)
+                *print-level* (or *print-level* 20)]
+        ((or print-fn pprint/pprint) (:value inspector) writer))
+      (.flush writer))
+    (respond-to msg :status :done)))
+
 (defn tap-current-value [msg]
   (inspector-response msg (swap-inspector! msg inspect/tap-current-value)))
 
@@ -113,6 +126,7 @@
     (handle-eval-inspect handler msg)
 
     (with-safe-transport handler msg
+      "inspect-print-current-value" print-current-value-reply
       "inspect-pop" pop-reply
       "inspect-push" push-reply
       "inspect-next-sibling" next-sibling-reply

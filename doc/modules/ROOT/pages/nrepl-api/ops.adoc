@@ -445,7 +445,24 @@ Returns::
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
 
+=== `inspect-print-current-value`
 
+Print the current value of the inspector. The printed result may be
+delivered in multiple messages under their `:value` key. After
+printing the value a message with `:status` "done" is sent.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+
+Returns::
+* `:status` "done"
+* `:value` The print result chunk.
 
 === `inspect-display-analytics`
 
@@ -1102,7 +1119,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned
 
 
 Returns::
