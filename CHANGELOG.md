@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+- [#934](https://github.com/clojure-emacs/cider-nrepl/pull/934): **BREAKING** — Remove Boot support.
+
 ## 0.55.1 (2025-04-14)
 
 * [#931](https://github.com/clojure-emacs/cider-nrepl/pull/931): Redesign and optimize track-state middleware.
