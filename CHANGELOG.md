@@ -2,12 +2,15 @@
 
 ## master (unreleased)
 
-- [#934](https://github.com/clojure-emacs/cider-nrepl/pull/934): **BREAKING** — Remove Boot support.
+## 0.55.2 (2025-04-18)
+
+* Bump `orchard` to [0.34.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0340-2025-04-18).
+* [#934](https://github.com/clojure-emacs/cider-nrepl/pull/934): **BREAKING** — Remove Boot support.
+* [#932](https://github.com/clojure-emacs/cider-nrepl/pull/932): Inspector: add pretty-printing support.
 
 ## 0.55.1 (2025-04-14)
 
 * [#931](https://github.com/clojure-emacs/cider-nrepl/pull/931): Redesign and optimize track-state middleware.
-* [#932](https://github.com/clojure-emacs/cider-nrepl/pull/932) Add support for pretty printing values in the inspector.
 
 ## 0.55.0 (2025-04-10)
 
