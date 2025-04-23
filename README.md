@@ -64,7 +64,7 @@ We recommend using it, since some aspects can be intricate to newcomers.
 
 These are its main tasks for local development:
 
-```
+```shell
 # Run tests, using mranderson (slower but more realistic)
 make test
 
@@ -99,7 +99,7 @@ before cutting a new release.
 
 Release to [clojars](https://clojars.org/) by tagging a new release:
 
-```
+```shell
 git tag -a vX.Y.Z -m "Release X.Y.Z"
 git push --tags
 ```
@@ -124,12 +124,12 @@ who have helped so far.
 
 Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
-* [orchard][] - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
-* [compliment][] - for Clojure code completion
-* [clj-suitable][] - for ClojureScript code completion using runtime inspection
-* [tools.namespace][] - for namespace reloading
-* [clj-reload][] - for namespace reloading
-* [cljfmt][] - for code formatting
+- [orchard][] - extracted from `cider-nrepl`, so that non-nREPL clients can leverage the generic tooling functionality (like `inspect`, `apropos`, `var-info`, etc
+- [compliment][] - for Clojure code completion
+- [clj-suitable][] - for ClojureScript code completion using runtime inspection
+- [tools.namespace][] - for namespace reloading
+- [clj-reload][] - for namespace reloading
+- [cljfmt][] - for code formatting
 
 ## License
 
