@@ -478,35 +478,35 @@
       (is (str/includes? (-> (session/message {:op      "eval"
                                                :inspect "true"
                                                :code    fits})
-                                extract-text)
-                            (x-pattern (- max-len 10) "")))
+                             extract-text)
+                         (x-pattern (- max-len 10) "")))
       (is (str/includes? (-> (session/message {:op      "eval"
                                                :inspect "true"
                                                :code    too-long})
-                                extract-text)
-                            (x-pattern max-len "...")))
+                             extract-text)
+                         (x-pattern max-len "...")))
       (is (str/includes? (-> (session/message {:op              "eval"
                                                :inspect         "true"
                                                :code            too-long
                                                :max-atom-length 10})
-                                extract-text)
-                            (x-pattern 10 "..."))))
+                             extract-text)
+                         (x-pattern 10 "..."))))
 
     (testing "max atom length can be changed without re-eval'ing last form"
       (session/message {:op "inspect-clear"})
       (is (str/includes? (-> (session/message {:op      "eval"
                                                :inspect "true"
                                                :code    too-long})
-                                extract-text)
-                            (x-pattern max-len "...")))
+                             extract-text)
+                         (x-pattern max-len "...")))
       (is (str/includes? (-> (session/message {:op              "inspect-refresh"
                                                :max-atom-length 10})
-                                extract-text)
-                            (x-pattern 10 "...")))
+                             extract-text)
+                         (x-pattern 10 "...")))
       (is (str/includes? (-> (session/message {:op              "inspect-refresh"
                                                :max-atom-length 20})
-                                extract-text)
-                            (x-pattern 20 "..."))))))
+                             extract-text)
+                         (x-pattern 20 "..."))))))
 
 (deftest max-value-length-integration-test
   (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)
@@ -592,9 +592,9 @@
                                       :code             nested-coll
                                       :max-nested-depth 5})]
         (is (str/includes? (extract-text default)
-                              "\"[[[[[[[[[[1]]]]]]]]]]\""))
+                           "\"[[[[[[[[[[1]]]]]]]]]]\""))
         (is (str/includes? (extract-text limited)
-                              "\"[[[[[[...]]]]]]\""))))
+                           "\"[[[[[[...]]]]]]\""))))
 
     (testing "max nested depth can be changed without re-eval'ing last form"
       (session/message {:op "inspect-clear"})
@@ -604,9 +604,9 @@
             limited (session/message {:op            "inspect-refresh"
                                       :max-nested-depth 5})]
         (is (str/includes? (extract-text default)
-                              "\"[[[[[[[[[[1]]]]]]]]]]\""))
+                           "\"[[[[[[[[[[1]]]]]]]]]]\""))
         (is (str/includes? (extract-text limited)
-                              "\"[[[[[[...]]]]]]\""))))))
+                           "\"[[[[[[...]]]]]]\""))))))
 
 (def normal-mode-prefix
   ["--- Contents:" [:newline]
