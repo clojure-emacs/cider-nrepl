@@ -40,11 +40,6 @@ release starts immediately after the previous one has been
 shipped. Bugfix/point releases (if any) address only serious bugs and
 never contain new features.
 
-**Note:** Prior to cider-nrepl 0.18, CIDER and cider-nrepl releases
-were always done in sync. As most editors started relying on cider-nrepl
-this was eventually changed and now cider-nrepl releases happen on their
-own schedule.
-
 ## Contributing
 
 ### Issues
