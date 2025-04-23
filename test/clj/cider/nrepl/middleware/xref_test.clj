@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.xref-test
   (:require
    [cider.nrepl.test-session :as session]
-   [clojure.string :as string]
+   [clojure.string :as str]
    [clojure.test :refer :all]))
 
 (use-fixtures :each session/session-fixture)
@@ -27,8 +27,8 @@
               (pr-str response))
       (assert (seq x))
       (doseq [i x]
-        (is (or (string/starts-with? i "file:")
-                (string/starts-with? i "jar:file:")))))))
+        (is (or (str/starts-with? i "file:")
+                (str/starts-with? i "jar:file:")))))))
 
 (deftest fn-deps-integration-test
   (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :sym "foo"})
@@ -47,5 +47,5 @@
                  (map :file-url))]
       (assert (seq x))
       (doseq [i x]
-        (is (or (string/starts-with? i "file:")
-                (string/starts-with? i "jar:file:")))))))
+        (is (or (str/starts-with? i "file:")
+                (str/starts-with? i "jar:file:")))))))

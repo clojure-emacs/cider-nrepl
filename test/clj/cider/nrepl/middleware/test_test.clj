@@ -3,7 +3,6 @@
    [cider.nrepl.middleware.test :as test]
    [cider.nrepl.test-session :as session]
    [cider.test-helpers :refer :all]
-   [clojure.string :as string]
    [clojure.test :refer :all]
    [matcher-combinators.clj-test]
    [matcher-combinators.matchers :as matchers]

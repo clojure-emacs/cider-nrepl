@@ -5,7 +5,7 @@
    [cider.nrepl.version :as version]
    [clojure.tools.cli :as cli]
    [clojure.java.io :as io]
-   [clojure.string :as string]
+   [clojure.string :as str]
    [nrepl.core :as nrepl]
    [nrepl.server :as server]
    [nrepl.transport :as transport])
@@ -32,11 +32,11 @@
         ""
         "Options:"
         options-summary]
-       (string/join \newline)))
+       (str/join \newline)))
 
 (defn- error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
-       (string/join \newline errors)))
+       (str/join \newline errors)))
 
 (def built-in-ops
   "A list of nREPL built-in ops.
@@ -84,9 +84,9 @@ use in e.g. wiki pages, github, etc."
 (defn- adoc-escape
   [s]
   (some-> s
-      (string/replace #"\*(.+?)\*" "\\\\*$1*")
-      (string/replace #"\_(.+?)\_" "\\\\_$1_")
-      (string/escape {\` "``"})))
+      (str/replace #"\*(.+?)\*" "\\\\*$1*")
+      (str/replace #"\_(.+?)\_" "\\\\_$1_")
+      (str/escape {\` "``"})))
 
 (defn- message-slot-adoc
   [msg-slot-docs]

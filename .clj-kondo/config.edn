@@ -10,6 +10,7 @@
                                              (cider.nrepl.print-method/def-print-method)
                                              (cljs.test/is [match? thrown-match?])
                                              (clojure.test/is [match? thrown-match?])]}
+           :consistent-alias      {:aliases {clojure.string str}}
            :unused-import         {:level :off}
            :unresolved-var        {:level :off}
            :unused-binding        {:level :off}

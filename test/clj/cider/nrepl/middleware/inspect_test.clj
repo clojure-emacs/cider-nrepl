@@ -6,7 +6,7 @@
    [cider.nrepl.middleware.info-test :as info-test]
    [cider.test-helpers :refer :all]
    [clojure.edn :as edn]
-   [clojure.string :as string]
+   [clojure.string :as str]
    [clojure.test :refer :all]
    [orchard.java]
    [orchard.inspect]
@@ -468,43 +468,43 @@
 
 (deftest max-atom-length-integration-test
   (let [max-len (:max-atom-length @#'orchard.inspect/default-inspector-config)
-        xs #(string/join (repeat % "x"))
+        xs #(str/join (repeat % "x"))
         fits (pr-str [(xs (- max-len 10))]) ;; 140
         too-long (pr-str [(xs (* max-len 2))]) ;; 300
         x-pattern #(str "\"" (xs %1) %2 "\\\"")
         extract-text #(-> % :value first)]
 
     (testing "max atom length can be set for the eval op"
-      (is (string/includes? (-> (session/message {:op      "eval"
-                                                  :inspect "true"
-                                                  :code    fits})
+      (is (str/includes? (-> (session/message {:op      "eval"
+                                               :inspect "true"
+                                               :code    fits})
                                 extract-text)
                             (x-pattern (- max-len 10) "")))
-      (is (string/includes? (-> (session/message {:op      "eval"
-                                                  :inspect "true"
-                                                  :code    too-long})
+      (is (str/includes? (-> (session/message {:op      "eval"
+                                               :inspect "true"
+                                               :code    too-long})
                                 extract-text)
                             (x-pattern max-len "...")))
-      (is (string/includes? (-> (session/message {:op              "eval"
-                                                  :inspect         "true"
-                                                  :code            too-long
-                                                  :max-atom-length 10})
+      (is (str/includes? (-> (session/message {:op              "eval"
+                                               :inspect         "true"
+                                               :code            too-long
+                                               :max-atom-length 10})
                                 extract-text)
                             (x-pattern 10 "..."))))
 
     (testing "max atom length can be changed without re-eval'ing last form"
       (session/message {:op "inspect-clear"})
-      (is (string/includes? (-> (session/message {:op      "eval"
-                                                  :inspect "true"
-                                                  :code    too-long})
+      (is (str/includes? (-> (session/message {:op      "eval"
+                                               :inspect "true"
+                                               :code    too-long})
                                 extract-text)
                             (x-pattern max-len "...")))
-      (is (string/includes? (-> (session/message {:op              "inspect-refresh"
-                                                  :max-atom-length 10})
+      (is (str/includes? (-> (session/message {:op              "inspect-refresh"
+                                               :max-atom-length 10})
                                 extract-text)
                             (x-pattern 10 "...")))
-      (is (string/includes? (-> (session/message {:op              "inspect-refresh"
-                                                  :max-atom-length 20})
+      (is (str/includes? (-> (session/message {:op              "inspect-refresh"
+                                               :max-atom-length 20})
                                 extract-text)
                             (x-pattern 20 "..."))))))
 
@@ -535,7 +535,7 @@
         big-coll (format "[(range %d)]" big-size)
         coll-pattern (fn [len & [truncate]]
                        (re-pattern (format "\\(%s%s\\)"
-                                           (string/join " " (range len))
+                                           (str/join " " (range len))
                                            (if truncate " ..." ""))))
         extract-text #(-> % :value first)]
 
@@ -591,9 +591,9 @@
                                       :inspect          "true"
                                       :code             nested-coll
                                       :max-nested-depth 5})]
-        (is (string/includes? (extract-text default)
+        (is (str/includes? (extract-text default)
                               "\"[[[[[[[[[[1]]]]]]]]]]\""))
-        (is (string/includes? (extract-text limited)
+        (is (str/includes? (extract-text limited)
                               "\"[[[[[[...]]]]]]\""))))
 
     (testing "max nested depth can be changed without re-eval'ing last form"
@@ -603,9 +603,9 @@
                                       :code    nested-coll})
             limited (session/message {:op            "inspect-refresh"
                                       :max-nested-depth 5})]
-        (is (string/includes? (extract-text default)
+        (is (str/includes? (extract-text default)
                               "\"[[[[[[[[[[1]]]]]]]]]]\""))
-        (is (string/includes? (extract-text limited)
+        (is (str/includes? (extract-text limited)
                               "\"[[[[[[...]]]]]]\""))))))
 
 (def normal-mode-prefix
