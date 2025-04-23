@@ -16,8 +16,10 @@ If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
 [CIDER's user manual](https://docs.cider.mx) instead.
 
-People who are new to nREPL might benefit from reading [its
-user manual](https://nrepl.org).
+> [!TIP]
+>
+> People who are new to nREPL might benefit from reading [its
+> user manual](https://nrepl.org).
 
 ## Documentation
 
