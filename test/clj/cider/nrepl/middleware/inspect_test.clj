@@ -41,7 +41,7 @@
    "  " [:value ":column" 4] " = " [:value #"\d+" 5] [:newline]
    "  " [:value ":file" 6] " = " [:value #"\".*cider/nrepl/middleware/inspect_test.clj\"" 7] [:newline]
    "  " [:value ":name" 8] " = " [:value "any-var" 9] [:newline]
-   "  " [:value ":ns" 10] " = " [:value "cider.nrepl.middleware.inspect-test" 11] [:newline]
+   "  " [:value ":ns" 10] " = " [:value "#namespace[cider.nrepl.middleware.inspect-test]" 11] [:newline]
    [:newline]
    "--- Datafy:" [:newline]
    "  0. " [:value "true" 12] [:newline]])
@@ -696,41 +696,44 @@
     (session/message {:op "inspect-clear"})
     (session/message {:op      "eval"
                       :inspect "true"
-                      :code    "(repeat 5 {:a (repeat 5 {:b 2}) :c (repeat 5 {:d 2})})"})
+                      :max-coll-size 6
+                      :code    "(repeat 5 {:a (repeat 6 {:b 2}) :c (repeat 6 {:d 2})})"})
     (testing "toggle pretty printing and turn it on"
       (is+ ["--- Contents:" [:newline]
-            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
+            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
             [:newline]
-            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
+            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
             [:newline]
-            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
+            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
             [:newline]
-            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
+            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
             [:newline]
-            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
-            [:newline]]
+            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
+            [:newline] [:newline]
+            "--- View mode:" [:newline]
+            "  :pretty"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))
     (testing "toggle pretty printing and turn it off"
       (is+ ["--- Contents:" [:newline]
-            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
+            "  0. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 1]
             [:newline]
-            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
+            "  1. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 2]
             [:newline]
-            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
+            "  2. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 3]
             [:newline]
-            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
+            "  3. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 4]
             [:newline]
-            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
-                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
+            "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
+                                 " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
             [:newline]]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))))
 

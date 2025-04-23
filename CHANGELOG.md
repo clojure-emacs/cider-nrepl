@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.34.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0341-2025-04-23).
+* [#935](https://github.com/clojure-emacs/cider-nrepl/pull/935): Unify injected print-method implementations with orchard.print.
+
 ## 0.55.2 (2025-04-18)
 
 * Bump `orchard` to [0.34.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0340-2025-04-18).

@@ -4,10 +4,9 @@
   calls `print-method`, which includes return values, `pr`, `print`
   and the likes."
   (:require
-   [clojure.main :as main])
+   [orchard.print :as print])
   (:import
-   [clojure.lang AFunction Atom MultiFn Namespace]
-   [java.io Writer]))
+   (clojure.lang AFunction Atom IDeref MultiFn Namespace)))
 
 (def ^:dynamic *pretty-objects*
   "If true, cider prettifies some object descriptions.
@@ -20,76 +19,37 @@
       (alter-var-root #'cider.nrepl.print-method/*pretty-objects* not)"
   true)
 
-(defmacro def-print-method [dispatch-val arg & strings]
-  `(defmethod print-method ~dispatch-val [~arg ~'^Writer w]
-     (if *pretty-objects*
-       (do ~@(map #(list '.write
-                         (with-meta 'w {:tag `Writer})
-                         %)
-                  strings))
-       (#'clojure.core/print-object ~arg ~'w))))
+(defn- replace-with-orchard-print
+  "Replace `clojure.core/print-method` for the given class with
+  `orchard.print/print` when `*pretty-objects*` is true, otherwise call the
+  default Clojure implementation."
+  [klass]
+  (defmethod print-method klass [x writer]
+    (if *pretty-objects*
+      (print/print x writer)
+      (#'clojure.core/print-object writer))))
 
-(defn- translate-class-name ^String [c]
-  (main/demunge (.getName (class c))))
+;; NB: we don't replace all clojure.core/print-method implementations with
+;; orchard.print/print because they arguably have different purpose. Orchard
+;; printer is more human-oriented whereas print-method is a bit more
+;; machine-oriented. So, we only replace it for those types where the visual
+;; improvement is substantial yet we are confident it won't break something.
 
-;;; Atoms
-;; Ex: #atom[{:foo :bar} 0x54274a2b]
-(def-print-method Atom c
-  "#atom["
-  (pr-str @c)
-  (format " 0x%x]" (System/identityHashCode c)))
+;;; Atoms: #atom[{:foo :bar}]
+(replace-with-orchard-print Atom)
 
-;;; Function objects
-;; Ex: #function[cider.nrepl.print-method/multifn-name]
-(def-print-method AFunction c
-  "#function["
-  (translate-class-name c)
-  "]")
+;;; Function objects: #function[clojure.core/str]
+(replace-with-orchard-print AFunction)
 
-;;; Multimethods
-;; Ex: #multifn[print-method 0x3f0cd5b4]
-(defn multifn-name [^MultiFn mfn]
-  (let [field (.getDeclaredField MultiFn "name")
-        private (not (.isAccessible field))]
-    (when private
-      (.setAccessible field true))
-    (let [name (.get field mfn)]
-      (when private
-        (.setAccessible field false))
-      name)))
+;;; Multimethods: #multifn[print-method 0x3f0cd5b4]
+(replace-with-orchard-print MultiFn)
 
-(defn multifn-name-or-translated-name ^String [c]
-  (try (multifn-name c)
-       (catch SecurityException _
-         (translate-class-name c))))
+;;; Namespaces: #namespace[clojure.core]
+(replace-with-orchard-print Namespace)
 
-(def-print-method MultiFn c
-  "#multifn["
-  (multifn-name-or-translated-name c)
-  ;; MultiFn names are not unique so we keep the identity HashCode to
-  ;; make sure it's unique.
-  (format " 0x%x]" (System/identityHashCode c)))
-
-;;; Namespaces
-;; Ex: #namespace[clojure.core]
-(def-print-method Namespace c
-  "#namespace["
-  (format "%s" (ns-name c))
-  "]")
-
-;;; Agents, futures, delays, promises, etc
-(defn- deref-name ^String [c]
-  (let [class-name (translate-class-name c)]
-    (if-let [[_ ^String short-name] (re-find #"^clojure\.lang\.([^.]+)" class-name)]
-      (.toLowerCase short-name)
-      (case (second (re-find #"^clojure\.core/(.+)/reify" class-name))
-        "future-call" "future"
-        "promise"     "promise"
-        nil           class-name))))
-
-;; `deref-as-map` is a private function, so let's be careful.
-(when-let [f (resolve 'clojure.core/deref-as-map)]
-  (def-print-method clojure.lang.IDeref c
-    "#" (deref-name c) "["
-    (pr-str (f c))
-    (format " 0x%x]" (System/identityHashCode c))))
+;;; Various derefables
+;; #agent[1], #agent[<failed> #error[...]]
+;; #delay[<pending>], #delay[1], #delay[<failed> #error[...]]
+;; #future[<pending>], #future[1], #future[<failed> #error[...]]
+;; #promise[<pending>], #promise[1]
+(replace-with-orchard-print IDeref)
