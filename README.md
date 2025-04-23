@@ -9,8 +9,14 @@
 A collection of [nREPL](https://github.com/nrepl/nrepl)
 middleware, originally designed to enhance
 [CIDER](https://github.com/clojure-emacs/cider).
-`cider-nrepl` is also used by [fireplace.vim](https://github.com/tpope/vim-fireplace), [vim-iced](https://github.com/liquidz/vim-iced),
-[Calva](https://calva.io/), [Conjure](https://github.com/Olical/conjure) and other Clojure development tools based on nREPL.
+`cider-nrepl` is also used:
+
+- [fireplace.vim](https://github.com/tpope/vim-fireplace)
+- [vim-iced](https://github.com/liquidz/vim-iced)
+- [Calva](https://calva.io/)
+- [Conjure](https://github.com/Olical/conjure)
+
+and other Clojure development tools based on nREPL.
 
 If you're just a user trying to get started with CIDER, then you
 probably don't want to read this. You should follow the steps in
@@ -59,8 +65,9 @@ guidelines](.github/CONTRIBUTING.md).
 
 ### Local development
 
-Local development tasks, like running the tests or locally installing cider-nrepl are offered by our Makefile.
-We recommend using it, since some aspects can be intricate to newcomers.
+Local development tasks, like running the tests or locally installing
+cider-nrepl are offered by our Makefile.  We recommend using it, since some
+aspects (e.g. the use of [mranderson][]) can be intricate to newcomers.
 
 These are its main tasks for local development:
 
@@ -94,8 +101,10 @@ make docs
 
 ## Releasing to Clojars
 
-**Note:** Make sure you've updated the changelog, `docs/antora.yml`, etc
-before cutting a new release.
+> [!IMPORTANT]
+>
+> Make sure you've updated the changelog, `docs/antora.yml`, etc
+> before cutting a new release.
 
 Release to [clojars](https://clojars.org/) by tagging a new release:
 
@@ -143,6 +152,4 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [tools.namespace]: https://github.com/clojure/tools.namespace
 [clj-reload]: https://github.com/tonsky/clj-reload
 [cljfmt]: https://github.com/weavejester/cljfmt
-[vim-replant]: https://github.com/SevereOverfl0w/vim-replant
-[vim-fireplace]: https://github.com/tpope/vim-fireplace
 [mranderson]: https://github.com/benedekfazekas/mranderson
