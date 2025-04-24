@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.55.3 (2025-04-24)
+
 * [#933](https://github.com/clojure-emacs/cider-nrepl/pull/933): Add the `cider-inspector-print-current-value` command to print the current value of the inspector.
 * Bump `orchard` to [0.34.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0341-2025-04-23).
 * [#935](https://github.com/clojure-emacs/cider-nrepl/pull/935): Unify injected print-method implementations with orchard.print.
