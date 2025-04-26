@@ -287,10 +287,6 @@
 
 ;;; State management
 
-(defn- transport-send [transport msg]
-  ;; Only exists to be rebindable during testing.
-  (transport/send transport msg))
-
 (defn calculate-changed-project-state-response
   "Calculate changes in project state since we lasst notified the client. Response
   is a map:
@@ -338,7 +334,7 @@
       (.send transport response)
       (when (contains? status :done)
         (future
-          (transport-send transport (calculate-changed-project-state-response msg)))))))
+          (transport/send transport (calculate-changed-project-state-response msg)))))))
 
 (defn handle-tracker [handler {:keys [op session] :as msg}]
   (cond
