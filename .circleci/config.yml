@@ -125,8 +125,7 @@ jobs:
       - checkout
       - run:
          name: Deploy
-         command: |
-           lein with-profile -user,+deploy run -m deploy-release make deploy
+         command: make deploy
 
   test:
     description: |

@@ -88,8 +88,14 @@ detect_timeout:
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
 deploy: check-env target/srcdeps
+	@if ! echo "$(CIRCLE_TAG)" | grep -q "^v"; then \
+		echo "[Error] CIRCLE_TAG $(CIRCLE_TAG) must start with 'v'."; \
+		exit 1; \
+	fi
 	rm -f .no-mranderson
-	lein with-profile -user,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
+	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
+	echo "$$PROJECT_VERSION" > resources/cider/nrepl/version.edn
+	lein with-profile -user,-dev,-provided,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME
