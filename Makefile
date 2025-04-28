@@ -1,4 +1,4 @@
-.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lint light-kondo docs test_impl
+.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lint docs test_impl
 .DEFAULT_GOAL := quick-test
 
 # Set bash instead of sh for the @if [[ conditions,
@@ -60,10 +60,6 @@ cljfmt-fix:
 	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
 
 kondo: .make_kondo_prep clean
-	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
-
-# A variation that does not analyze the classpath, as it OOMs otherwise on CircleCI.
-light-kondo: clean
 	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
 
 lint: kondo cljfmt eastwood

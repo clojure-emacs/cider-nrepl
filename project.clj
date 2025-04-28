@@ -137,18 +137,16 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cljfmt [:test
-                      {:plugins [[lein-cljfmt "0.9.2"]]
-                       :cljfmt {:indents {as-> [[:inner 0]]
-                                          delay [[:inner 0]]
-                                          timing [[:inner 0]]
-                                          with-debug-bindings [[:inner 0]]
-                                          merge-meta [[:inner 0]]
-                                          try-if-let [[:block 1]]}}}]
+                      {:plugins [[dev.weavejester/lein-cljfmt "0.13.1"]]
+                       :cljfmt {:extra-indents {timing [[:inner 0]]
+                                                with-debug-bindings [[:inner 0]]
+                                                merge-meta [[:inner 0]]
+                                                try-if-let [[:block 1]]}}}]
 
-             :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2023.09.07"]]}
+             :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2025.04.07"]]}
 
              :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.4.0"]]
+                        {:plugins [[jonase/eastwood "1.4.3"]]
                          :eastwood {:config-files ["eastwood.clj"]
                                     :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]}}]
 
