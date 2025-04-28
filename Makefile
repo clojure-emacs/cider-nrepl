@@ -94,7 +94,7 @@ deploy: check-env target/srcdeps
 	fi
 	rm -f .no-mranderson
 	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
-	echo "$$PROJECT_VERSION" > resources/cider/nrepl/version.edn
+	echo "$$PROJECT_VERSION" > resources/cider/nrepl/version.edn; \
 	lein with-profile -user,-dev,-provided,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
 
 check-env:
