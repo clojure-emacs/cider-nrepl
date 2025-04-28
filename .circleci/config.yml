@@ -93,17 +93,26 @@ jobs:
   lint:
     description: |
       Running linters
-    parameters:
-      steps:
-        type: steps
-    executor: jdk21
+    executor: jdk24
     environment:
       CLOJURE_VERSION: "1.12"
     steps:
       - checkout
       - with_cache:
-          cache_version: "lint_v3_1.12"
-          steps: << parameters.steps >>
+          cache_version: "lint_v4"
+          steps:
+            - run:
+                name: Running cljfmt
+                command: |
+                  make cljfmt
+            - run:
+                name: Running clj-kondo
+                command: |
+                  make kondo
+            - run:
+                name: Running Eastwood
+                command: |
+                  make eastwood
 
   deploy:
     # JDK 8 is preferred for deployments (https://github.com/benedekfazekas/mranderson/issues/57)
@@ -173,20 +182,6 @@ workflows:
               jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk24]
           <<: *run_always
       - lint:
-          steps:
-            - run:
-                name: Running cljfmt
-                command: |
-                  make cljfmt
-            # TODO: use `make kondo` instead once there's a fix for https://github.com/clj-kondo/clj-kondo/issues/2189
-            - run:
-                name: Running clj-kondo
-                command: |
-                  make light-kondo
-            - run:
-                name: Running Eastwood
-                command: |
-                  make eastwood
           <<: *run_always
       - deploy:
           requires:
