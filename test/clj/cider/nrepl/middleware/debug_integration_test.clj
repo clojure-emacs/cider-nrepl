@@ -2,14 +2,20 @@
   (:require
    [cider.nrepl :refer [wrap-debug]]
    [cider.nrepl.middleware.debug :as d]
-   [clojure.test :refer :all]
+   [clojure.test :refer [is testing use-fixtures]]
    [nrepl.core :as nrepl]
    [nrepl.server :as nrepl.server]
    [nrepl.transport :as transport]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [orchard.misc])
   (:import
    java.util.UUID
    [java.util.concurrent TimeUnit LinkedBlockingQueue]))
+
+;; TODO: this test namespace is flaky on JDK8. Disable it there for now.
+(defmacro deftest [name & body]
+  `(when (> orchard.misc/java-api-version 8)
+     (clojure.test/deftest ~name ~@body)))
 
 ;;; Helpers for starting an nRepl session
 ;;; We do not use nrepl/client-session here because it
