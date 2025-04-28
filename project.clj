@@ -76,13 +76,6 @@
                     ~(clojure.java.io/as-relative-path
                       (clojure.java.io/file "doc" "modules" "ROOT" "pages" "nrepl-api" "ops.adoc"))]}
 
-  :release-tasks [["vcs" "assert-committed"]
-                  ["bump-version" "release"]
-                  ["vcs" "commit" "Release %s"]
-                  ["vcs" "tag" "v" "--no-sign"]
-                  ["bump-version"]
-                  ["vcs" "commit" "Begin %s"]]
-
   :deploy-repositories [["clojars" {:url "https://clojars.org/repo"
                                     :username :env/clojars_username
                                     :password :env/clojars_password
@@ -148,6 +141,4 @@
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.3"]]
                          :eastwood {:config-files ["eastwood.clj"]
-                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]}}]
-
-             :deploy {:source-paths [".circleci/deploy"]}})
+                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests cider.tasks]}}]})
