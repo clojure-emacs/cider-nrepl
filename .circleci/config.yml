@@ -129,7 +129,30 @@ jobs:
 
   test:
     description: |
-      Run tests against given version of JDK and Clojure
+      Run quick tests against given version of JDK and Clojure without inlining dependencies
+    parameters:
+      jdk_version:
+        description: Version of JDK to test against
+        type: string
+      clojure_version:
+        description: Version of Clojure to test against
+        type: string
+    executor: << parameters.jdk_version >>
+    environment:
+      CLOJURE_VERSION: << parameters.clojure_version >>
+      JDK_SRC_VERSION: << parameters.jdk_version >>
+    steps:
+      - checkout
+      - with_cache:
+          cache_version: "test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
+          steps:
+            - run:
+                name: Running quick tests
+                command: make quick-test
+
+  full-test:
+    description: |
+      Run tests against given version of JDK and Clojure with inlining the dependencies
     parameters:
       jdk_version:
         description: Version of JDK to test against
@@ -145,7 +168,7 @@ jobs:
     steps:
       - checkout
       - with_cache:
-          cache_version: "test_code_v4_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
+          cache_version: "full_test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
           steps:
             - run:
                 name: Running tests with inlined deps
@@ -171,20 +194,27 @@ workflows:
   ci-test-matrix:
     jobs:
       - test:
-          # Regular tests for all Clojure and JDK versions (except JDK21, see
-          # below). This matrix doesn't perform parser tests because we don't
-          # have JDK sources here.
+          # Regular (quick) tests for all Clojure and JDK versions.
           matrix:
             alias: "test"
             parameters:
               clojure_version: ["1.10", "1.11", "1.12"]
               jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk24]
           <<: *run_always
+      - full-test:
+          # Full tests against selected versions.
+          matrix:
+            alias: "full-test"
+            parameters:
+              clojure_version: ["1.12"]
+              jdk_version: [jdk8, jdk24]
+          <<: *run_always
       - lint:
           <<: *run_always
       - deploy:
           requires:
             - test
+            - full-test
             - lint
           filters:
             branches:
