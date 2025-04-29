@@ -69,8 +69,6 @@
 (defn- get-metadata-if-changed?
   [^Var the-var, ^WeakHashMap real-metadata-ns-cache]
   (let [var-name (.sym the-var)
-        ;; WHM is not thread-safe but we should only access this from a single
-        ;; (session) thread.
         cached-meta (some-> real-metadata-ns-cache (.get var-name))
         current-meta (meta the-var)]
     (when-not (identical? cached-meta current-meta)
@@ -116,23 +114,27 @@
   [the-ns]
   (let [ns-sym (ns-name the-ns)
         old-project-ns-map (:interns (get *old-project-state* ns-sym))
-        real-metadata-whm (when *real-metadata-cache*
+        real-metadata-whm (if *real-metadata-cache*
                             (or (@*real-metadata-cache* ns-sym)
                                 ((swap! *real-metadata-cache* assoc ns-sym
-                                        (WeakHashMap.)) ns-sym)))]
-    (reduce-kv (fn [acc sym the-var]
-                 (if (and (var? the-var)
-                          (not (identical? (.ns ^Var the-var)
-                                           clojure-core)))
-                   (let [old-meta (get old-project-ns-map sym)
-                         new-meta (compute-var-meta the-var real-metadata-whm
-                                                    old-project-ns-map)]
-                     (if (identical? old-meta new-meta)
-                       acc
-                       (assoc acc sym new-meta)))
-                   acc))
-               old-project-ns-map
-               (ns-map the-ns))))
+                                        (WeakHashMap.)) ns-sym))
+                            (WeakHashMap.))]
+    ;; WHM is not thread-safe, so synchronize the access to it to avoid infinite
+    ;; loops like https://github.com/clojure-emacs/cider-nrepl/issues/936.
+    (locking real-metadata-whm
+      (reduce-kv (fn [acc sym the-var]
+                   (if (and (var? the-var)
+                            (not (identical? (.ns ^Var the-var)
+                                             clojure-core)))
+                     (let [old-meta (get old-project-ns-map sym)
+                           new-meta (compute-var-meta the-var real-metadata-whm
+                                                      old-project-ns-map)]
+                       (if (identical? old-meta new-meta)
+                         acc
+                         (assoc acc sym new-meta)))
+                     acc))
+                 old-project-ns-map
+                 (ns-map the-ns)))))
 
 (def clojure-core-map
   (when clojure-core
