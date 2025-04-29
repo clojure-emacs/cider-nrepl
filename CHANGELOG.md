@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.55.7 (2025-04-29)
+
 * [#939](https://github.com/clojure-emacs/cider-nrepl/pull/939): Tracker: synchronize access to WeakHashMap cache to prevent infinite loops.
 
 ## 0.55.6 (2025-04-28)
