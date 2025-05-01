@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* [#941](https://github.com/clojure-emacs/cider-nrepl/pull/941): Stop vendoring Fipp dependency.
+* [#941](https://github.com/clojure-emacs/cider-nrepl/pull/941): Default to orchard.pp printer when Fipp/Puget/Zprint is selected but not found on classpath.
+
 ## 0.55.7 (2025-04-29)
 
 * [#939](https://github.com/clojure-emacs/cider-nrepl/pull/939): Tracker: synchronize access to WeakHashMap cache to prevent infinite loops.

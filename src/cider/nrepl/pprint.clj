@@ -62,14 +62,17 @@
    (pp/pprint writer value options)))
 
 (def ^:private fipp-printer
-  (delay (requiring-resolve 'fipp.edn/pprint)))
+  (delay (try-resolve 'fipp.edn/pprint "Fipp")))
 
 (defn fipp-pprint
   ([value writer]
    (fipp-pprint value writer {}))
   ([value writer options]
-   (binding [*out* writer]
-     (@fipp-printer value options))))
+   (if-some [fipp @fipp-printer]
+     (binding [*out* writer]
+       (fipp value options))
+     ;; Default to orchard.pp/pprint if Fipp could not be loaded.
+     (pp/pprint writer value options))))
 
 (def ^:private puget-printer
   (delay (try-resolve 'puget.printer/pprint "Puget")))
