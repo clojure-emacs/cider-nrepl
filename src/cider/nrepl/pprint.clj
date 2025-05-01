@@ -5,7 +5,8 @@
   {:added "0.20"}
   (:refer-clojure :exclude [pr])
   (:require
-   [clojure.pprint :as pp]
+   [clojure.pprint]
+   [orchard.pp :as pp]
    [orchard.misc :as misc]))
 
 (def ^:private pr-options
@@ -52,7 +53,13 @@
   ([value writer]
    (pprint value writer {}))
   ([value writer options]
-   (apply pp/write value (mapcat identity (assoc options :stream writer)))))
+   (apply clojure.pprint/write value (mapcat identity (assoc options :stream writer)))))
+
+(defn orchard-pprint
+  ([value writer]
+   (pp/pprint writer value {}))
+  ([value writer options]
+   (pp/pprint writer value options)))
 
 (def ^:private fipp-printer
   (delay (requiring-resolve 'fipp.edn/pprint)))
@@ -74,8 +81,8 @@
    (if-some [puget @puget-printer]
      (binding [*out* writer]
        (puget value options))
-     ;; Default ot clojure.pprint/pprint if Puget could not be loaded.
-     (pprint value writer options))))
+     ;; Default to orchard.pp/pprint if Puget could not be loaded.
+     (pp/pprint writer value options))))
 
 (def ^:private zprint-printer
   (delay (try-resolve 'zprint.core/zprint "zprint")))
@@ -87,5 +94,5 @@
    (if-some [zprint @zprint-printer]
      (binding [*out* writer]
        (zprint value options))
-     ;; Default ot clojure.pprint/pprint if Zprint could not be loaded.
-     (pprint value writer options))))
+     ;; Default to orchard.pp/pprint if Puget could not be loaded.
+     (pp/pprint writer value options))))
