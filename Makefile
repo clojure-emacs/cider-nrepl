@@ -1,4 +1,4 @@
-.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean detect_timeout lint docs test_impl
+.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean lint docs test_impl
 .DEFAULT_GOAL := quick-test
 
 # Set bash instead of sh for the @if [[ conditions,
@@ -78,12 +78,6 @@ smoketest: install
 	cd test/smoketest && \
         lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
-
-# Run a background process that prints all JVM stacktraces after five minutes,
-# then kills all JVMs, to help diagnose issues with ClojureScript tests getting
-# stuck.
-detect_timeout:
-	(bin/ci_detect_timeout &)
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 # Please do not deploy locally as it skips various measures (particularly around mranderson).
