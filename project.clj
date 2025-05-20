@@ -138,4 +138,5 @@
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.3"]]
                          :eastwood {:config-files ["eastwood.clj"]
-                                    :exclude-namespaces [cider.nrepl.middleware.test-filter-tests]}}]})
+                                    :exclude-namespaces [cider.nrepl.middleware.debug-test
+                                                         cider.nrepl.middleware.test-filter-tests]}}]})

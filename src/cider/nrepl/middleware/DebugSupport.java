@@ -30,4 +30,26 @@ public class DebugSupport {
     public static double doBreak(Object coor, double val, Object locals, Object STATE__) {
         return (double)doBreak(coor, Numbers.num(val), locals, STATE__);
     }
+
+    // The purpose of the following assoc methods is to build a locals map.
+    // Chaining such assoc calls is more bytecode-compact than a single
+    // RT.mapUniqueKeys(...) because the latter constructs an array (load each
+    // key and value onto the stack, save them into the array) and boxes
+    // primitives (invocations of Numbers.num). Additionally, in this custom
+    // method we turn string keys into symbols, which means we don't have to
+    // generate symbols at the callsite (in the instrumented method). This saves
+    // bytecode because LDC of a constant string is more compact than
+    // ALOAD+GETFIELD of an interned symbol.
+
+    public static IPersistentMap assoc(Object map, Object key, Object value) {
+        return ((IPersistentMap)map).assoc(Symbol.intern(null, (String)key), value);
+    }
+
+    public static IPersistentMap assoc(Object map, Object key, long value) {
+        return assoc(map, key, Numbers.num(value));
+    }
+
+    public static IPersistentMap assoc(Object map, Object key, double value) {
+        return assoc(map, key, Numbers.num(value));
+    }
 }
