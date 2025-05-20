@@ -66,7 +66,7 @@
     (symbol? original-form) `(do
                                (send-if-local '~original-form
                                               (assoc (:msg ~'STATE__) :coor ~coor)
-                                              ~(d/sanitize-env &env))
+                                              ~(d/locals-capturer &env))
                                ~form)
     (seq? form) (wrap-function-form form extras)
     :else form))

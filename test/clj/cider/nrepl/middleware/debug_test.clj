@@ -2,8 +2,10 @@
   (:require
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.debug  :as d]
+   [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
    [clojure.walk :as walk]
+   [matcher-combinators.matchers :as matchers]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.transport :as t]))
 
@@ -72,13 +74,13 @@
           ~m))
 
 (defmacro locals []
-  `~(#'d/sanitize-env &env))
+  `~(#'d/locals-capturer &env))
 
 (defmacro add-locals
   "Add locals to map m."
   [& [m]]
   `(assoc ~m
-          :locals ~(#'d/sanitize-env &env)
+          :locals ~(#'d/locals-capturer &env)
           :original-ns "user"))
 
 (deftest read-debug-input-roundtrip
@@ -200,38 +202,113 @@
 
 (deftest breakpoint
   ;; Map merging
-  (with-redefs [d/read-debug-command (fn [_ v _ s] (assoc (:msg s) :value v))
-                d/debugger-message   (atom [:fake])
-                d/*skip-breaks*      (atom nil)]
-    (binding [*msg* {:session (atom {})
-                     :code    :code
-                     :id      :id
-                     :file    :file
-                     :line    :line
-                     :column  :column}]
-      (let [form `(d/with-initial-debug-bindings
-                    (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10)))
-            m (eval form)]
-        (are [k v] (= (k m) v)
-          :value       11
-          :file        :file
-          :line        :line
-          :column      :column
-          :code        :code
-          :original-id :id))
-      (reset! d/debugger-message [:fake])
-      ;; Locals capturing
-      (is (= (:value (eval `(d/with-initial-debug-bindings
-                              (let [~'x 10]
-                                (d/breakpoint-if-interesting
-                                 (locals)
-                                 {:coor [1]} nil)))))
-             '{x 10}))
-      ;; Top-level sexps are not debugged, just returned.
-      (is (= (eval `(d/with-initial-debug-bindings
-                      (let [~'x 10]
-                        (d/breakpoint-if-interesting
-                         (locals)
-                         {:coor []}
-                         nil))))
-             '{x 10})))))
+  (let [capture (atom nil)]
+    (with-redefs [d/read-debug-command (fn [_ v _ s]
+                                         (reset! capture (assoc (:msg s) :value v))
+                                         v)
+                  d/debugger-message   (atom [:fake])
+                  d/*skip-breaks*      (atom nil)]
+      (binding [*msg* {:session (atom {})
+                       :code    :code
+                       :id      :id
+                       :file    :file
+                       :line    :line
+                       :column  :column}]
+        (let [form `(d/with-initial-debug-bindings
+                      (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10)))
+              m (eval form)]
+          (is+ {:value       11
+                :file        :file
+                :line        :line
+                :column      :column
+                :code        :code
+                :original-id :id}
+               @capture))
+        (reset! d/debugger-message [:fake])
+        ;; Locals capturing
+        (eval `(d/with-initial-debug-bindings
+                 (let [~'x 10]
+                   (d/breakpoint-if-interesting
+                    (locals) {:coor [1]} nil))))
+        (is (= (:value @capture) '{x 10}))
+        ;; Top-level sexps are not debugged, just returned.
+        (is (= (eval `(d/with-initial-debug-bindings
+                        (let [~'x 10]
+                          (d/breakpoint-if-interesting
+                           (locals)
+                           {:coor []}
+                           nil))))
+               '{x 10}))))))
+
+(deftest instrumentation-stress-test
+  (testing "able to compile this function full of locals"
+    (is
+     (-> '(defn a-fn [a0]
+            (let [a0 (long (+))
+                  a1 (long (+ a0))
+                  a2 (+ a0 a1)
+                  a3 (+ a0 a1 a2)
+                  a4 (+ a0 a1 a2 a3)
+                  a5 (+ a0 a1 a2 a3 a4)
+                  a6 (+ a0 a1 a2 a3 a4 a5)
+                  a7 (+ a0 a1 a2 a3 a4 a5 a6)
+                  a8 (+ a0 a1 a2 a3 a4 a5 a6 a7)
+                  a9 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8)
+                  a10 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9)
+                  a11 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)
+                  a12 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11)
+                  a13 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12)
+                  a14 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13)
+                  a15 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14)
+                  a16 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15)
+                  a17 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16)
+                  a18 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17)
+                  a19 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18)
+                  a20 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19)
+                  a21 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20)
+                  a22 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21)
+                  a23 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22)
+                  a24 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23)
+                  a25 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24)
+                  a26 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24 a25)]
+              a0))
+         d/debug-reader
+         ins/instrument-tagged-code
+         eval)))
+
+  (testing "fails if there is one extra line"
+    (is (thrown? clojure.lang.Compiler$CompilerException
+                 (-> '(defn a-fn [a0]
+                        (let [a0 (long (+))
+                              a1 (long (+ a0))
+                              a2 (+ a0 a1)
+                              a3 (+ a0 a1 a2)
+                              a4 (+ a0 a1 a2 a3)
+                              a5 (+ a0 a1 a2 a3 a4)
+                              a6 (+ a0 a1 a2 a3 a4 a5)
+                              a7 (+ a0 a1 a2 a3 a4 a5 a6)
+                              a8 (+ a0 a1 a2 a3 a4 a5 a6 a7)
+                              a9 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8)
+                              a10 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9)
+                              a11 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)
+                              a12 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11)
+                              a13 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12)
+                              a14 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13)
+                              a15 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14)
+                              a16 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15)
+                              a17 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16)
+                              a18 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17)
+                              a19 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18)
+                              a20 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19)
+                              a21 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20)
+                              a22 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21)
+                              a23 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22)
+                              a24 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23)
+                              a25 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24)
+                              a26 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24 a25)
+                              a27 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24 a25 a26)
+                              a28 (+ a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24 a25 a26 a27)]
+                          a0))
+                     d/debug-reader
+                     ins/instrument-tagged-code
+                     eval)))))

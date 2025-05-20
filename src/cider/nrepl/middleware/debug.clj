@@ -147,12 +147,13 @@
   (remove (fn [[k]] (re-find  #"__" (name k))) locals))
 
 ;;; Politely borrowed from clj-debugger.
-(defn sanitize-env
-  "Turn a macro's &env into a map usable for binding."
+(defn locals-capturer
+  "Turn a macro's &env into code that produces a map of locals."
   [env]
-  (into {} (for [[sym bind] (filter-env env)
-                 :when (instance? Compiler$LocalBinding bind)]
-             [`(quote ~sym) (.sym ^Compiler$LocalBinding bind)])))
+  `(-> {}
+       ~@(for [[sym bind] (filter-env env)
+               :when (instance? Compiler$LocalBinding bind)]
+           `(DebugSupport/assoc ~(name sym) ~(.sym ^Compiler$LocalBinding bind)))))
 
 ;;;; ## Getting user input
 ;;;
@@ -470,7 +471,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   "Let-wrap `body` with STATE__ map containing code, file, line, column etc.
   STATE__ is an anaphoric variable available to all breakpoint macros. Ends with
   __ to avid conflicts with user locals and to signify that it's an internal
-  variable which is cleaned in `sanitize-env' along other clojure's
+  variable which is cleaned in `locals-capturer` along other clojure's
   temporaries."
   {:style/indent 0}
   [& body]
@@ -554,7 +555,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                      `(apply-instrumented-maybe (var ~fn-sym) [~@args] ~coor ~'STATE__))
                    form)
         locals (when *do-locals*
-                 (sanitize-env &env))]
+                 (locals-capturer &env))]
     ;; Keep original forms in a separate atom to save some code
     ;; size. Unfortunately same trick wouldn't work for locals.
     (swap! *tmp-forms* assoc coor original-form)
@@ -656,8 +657,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       (binding [*tmp-forms* (atom {})]
         (eval form1))
       (catch java.lang.RuntimeException e
-        (if (re-matches #".*Method code too large!.*" (.getMessage e))
-          (do (notify-client (str "Method code too large!\n"
+        (if (some #(when %
+                     (re-matches #".*Method code too large!.*"
+                                 (.getMessage ^Throwable %)))
+                  [e (.getCause e)])
+          (do (notify-client *msg*
+                             (str "Method code too large!\n"
                                   "Locals and evaluation in local context won't be available.")
                              :warning)
               ;; re-try without locals
