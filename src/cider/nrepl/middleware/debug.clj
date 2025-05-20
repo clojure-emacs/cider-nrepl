@@ -15,6 +15,7 @@
    [orchard.print]
    [orchard.stacktrace :as stacktrace])
   (:import
+   (cider.nrepl.middleware DebugSupport)
    (clojure.lang Compiler$LocalBinding)
    (java.util UUID)))
 
@@ -557,7 +558,7 @@ this map (identified by a key), and will `dissoc` it afterwards."}
     ;; Keep original forms in a separate atom to save some code
     ;; size. Unfortunately same trick wouldn't work for locals.
     (swap! *tmp-forms* assoc coor original-form)
-    `(break ~coor ~val-form ~locals ~'STATE__)))
+    `(DebugSupport/doBreak ~coor ~val-form ~locals ~'STATE__)))
 
 (def irrelevant-return-value-forms
   "Set of special-forms whose return value we don't care about.
