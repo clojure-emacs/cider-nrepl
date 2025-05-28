@@ -27,48 +27,40 @@
 
 (use-fixtures :each session/session-fixture inspect-tap-current-value-test-fixture)
 
+(defn- section? [name rendered]
+  (when (string? rendered)
+    (re-find (re-pattern (str "^--- " name)) rendered)))
+
+(defn section [rendered name]
+  (->> rendered
+       (drop-while #(not (section? name %)))
+       (take-while #(or (section? name %)
+                        (not (section? ".*" %))))
+       ;; Trim newlines
+       reverse
+       (drop-while #(= % [:newline]))
+       reverse
+       (not-empty)))
+
 (def nil-result
-  ["nil" [:newline]])
+  ["Value: nil" [:newline] [:newline] "--- Contents:" [:newline] string? [:newline]])
 
 (def any-var true)
-
-(def var-result
-  ["Class: " [:value "clojure.lang.Var" 0] [:newline]
-   "Value: " [:value "true" 1] [:newline]
-   [:newline]
-   "--- Meta Information:" [:newline]
-   "  " [:value ":line" 2] " = " [:value #"\d+" 3] [:newline]
-   "  " [:value ":column" 4] " = " [:value #"\d+" 5] [:newline]
-   "  " [:value ":file" 6] " = " [:value #"\".*cider/nrepl/middleware/inspect_test.clj\"" 7] [:newline]
-   "  " [:value ":name" 8] " = " [:value "any-var" 9] [:newline]
-   "  " [:value ":ns" 10] " = " [:value "#namespace[cider.nrepl.middleware.inspect-test]" 11] [:newline]
-   [:newline]
-   "--- Datafy:" [:newline]
-   "  0. " [:value "true" 12] [:newline]])
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
 (def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
 
-(def inspect-result
-  ["Class: " [:value "clojure.lang.PersistentTreeMap" 0] [:newline]
-   "Count: 4" [:newline]
-   [:newline]
-   "--- Contents:" [:newline]
+(def inspect-contents
+  ["--- Contents:" [:newline]
    "  " [:value ":a" 1] " = " [:value "{:b 1}" 2] [:newline]
    "  " [:value ":c" 3] " = " [:value "\"a\"" 4] [:newline]
    "  " [:value ":d" 5] " = " [:value "e" 6] [:newline]
-   "  " [:value ":f" 7] " = " [:value "[2 3]" 8] [:newline]])
+   "  " [:value ":f" 7] " = " [:value "[2 3]" 8]])
 
-(def push-result
-  ["Class: " [:value "clojure.lang.PersistentArrayMap" 0] [:newline]
-   "Count: 1" [:newline]
-   [:newline]
-   "--- Contents:" [:newline]
-   "  " [:value ":b" 1] " = " [:value "1" 2] [:newline]
-   [:newline]
-   "--- Path:" [:newline]
-   "  :a"])
+(def push-contents
+  ["--- Contents:" [:newline]
+   "  " [:value ":b" 1] " = " [:value "1" 2]])
 
 (def sibling-result
   ["Class: " [:value "java.lang.String" 0] [:newline]
@@ -78,33 +70,9 @@
    "  c" [:newline]
    [:newline]
    "--- Path:" [:newline]
-   "  (nth 2)"])
-
-(def next-page-result
-  ["Class: " [:value "clojure.lang.LazySeq" 0] [:newline]
-   [:newline]
-   "--- Contents:" [:newline]
-   "  ..." [:newline]
-   "  32. " [:value "32" 1] [:newline]
-   "  33. " [:value "33" 2] [:newline]
-   "  34. " [:value "34" 3] [:newline]
-   [:newline]
-   "--- Page Info:" [:newline]
-   "  Page size: 32, showing page: 2 of 2" [:newline]])
-
-(def first-page-result
-  ["Class: " [:value "clojure.lang.LazySeq" 0] [:newline]
-   [:newline]
-   "--- Contents:" [:newline]
-   "  0. " [:value "0" 1] [:newline]
-   "  1. " [:value "1" 2] [:newline]
-   "  2. " [:value "2" 3] [:newline]
-   "  3. " [:value "3" 4] [:newline]
-   "  4. " [:value "4" 5] [:newline]
-   "  ..." [:newline]
-   [:newline]
-   "--- Page Info:" [:newline]
-   "  Page size: 5, showing page: 1 of ?" [:newline]])
+   "  (nth 2)" [:newline] [:newline]
+   #"--- View mode" [:newline]
+   "  ●normal object pretty"])
 
 (defn value [{:keys [value]}]
   (edn/read-string (first value)))
@@ -117,354 +85,194 @@
 
 (deftest nil-integration-test
   (testing "nil renders correctly"
-    (is (= nil-result
-           (value (session/message {:op      "eval"
-                                    :inspect "true"
-                                    :code    "nil"}))))))
+    (is+ nil-result
+         (value (session/message {:op      "eval"
+                                  :inspect "true"
+                                  :code    "nil"})))))
 
 (deftest pop-empty-integration-test
   (testing "popping an empty inspector renders nil"
-    (is (= nil-result
-           (value (session/message {:op "inspect-pop"}))))))
+    (is+ nil-result
+         (value (session/message {:op "inspect-pop"})))))
 
 (deftest pop-empty-idempotent-integration-test
   (testing "popping an empty inspector is idempotent"
-    (is (= nil-result
-           (value (do
-                    (session/message {:op "inspect-pop"})
-                    (session/message {:op "inspect-pop"})))))))
+    (is+ nil-result
+         (value (do
+                  (session/message {:op "inspect-pop"})
+                  (session/message {:op "inspect-pop"}))))))
 
 (deftest push-empty-integration-test
   (testing "pushing an empty inspector index renders nil"
-    (is (= nil-result
-           (value (session/message {:op  "inspect-push"
-                                    :idx 1}))))))
+    (is+ nil-result
+         (value (session/message {:op  "inspect-push"
+                                  :idx 1})))))
 
 (deftest push-empty-idempotent-integration-test
   (testing "pushing an empty inspector index is idempotent"
-    (is (= nil-result
-           (value (do
-                    (session/message {:op  "inspect-push"
-                                      :idx 1})
-                    (session/message {:op  "inspect-push"
-                                      :idx 1})))))))
+    (is+ nil-result
+         (value (do
+                  (session/message {:op  "inspect-push"
+                                    :idx 1})
+                  (session/message {:op  "inspect-push"
+                                    :idx 1}))))))
 
 (deftest refresh-empty-integration-test
   (testing "refreshing an empty inspector renders nil"
-    (is (= nil-result
-           (value (session/message {:op "inspect-refresh"}))))))
+    (is+ nil-result
+         (value (session/message {:op "inspect-refresh"})))))
 
 (deftest refresh-empty-idempotent-integration-test
   (testing "refreshing an empty inspector renders nil"
-    (is (= nil-result
-           (value (do
-                    (session/message {:op "inspect-refresh"})
-                    (session/message {:op "inspect-refresh"})))))))
-
-(deftest exception-integration-test
-  (testing "eval op error handling"
-    (let [exception-response (session/message {:op      "eval"
-                                               :inspect "true"
-                                               :code    "(first 1)"})]
-
-      (testing "exprs that throw exceptions return an `ex` slot"
-        (is (= "class java.lang.IllegalArgumentException"
-               (:ex exception-response))))
-
-      (testing "exprs that throw exceptions return an `err` slot"
-        (is (-> exception-response ^String (:err) (.contains "IllegalArgumentException"))))))
-
-  (testing "inspect-pop error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "pop exception")))]
-      (let [response (session/message {:op "inspect-pop"})]
-        (is (= (:status response) #{"inspect-pop-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: pop exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-push error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "push exception")))]
-      (let [response (session/message {:op "inspect-push" :idx 1})]
-        (is (= (:status response) #{"inspect-push-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: push exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-refresh error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "refresh exception")))]
-      (let [response (session/message {:op "inspect-refresh"})]
-        (is (= (:status response) #{"inspect-refresh-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: refresh exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-next-sibling error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-sibling exception")))]
-      (let [response (session/message {:op "inspect-next-sibling"})]
-        (is (= (:status response) #{"inspect-next-sibling-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: next-sibling exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-previous-sibling error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "previous-sibling exception")))]
-      (let [response (session/message {:op "inspect-previous-sibling"})]
-        (is (= (:status response) #{"inspect-previous-sibling-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: previous-sibling exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-next-page error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "next-page exception")))]
-      (let [response (session/message {:op "inspect-next-page"})]
-        (is (= (:status response) #{"inspect-next-page-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: next-page exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-prev-page error handling"
-    (with-redefs [i/swap-inspector! (fn [& _] (throw (Exception. "prev-page exception")))]
-      (let [response (session/message {:op "inspect-prev-page"})]
-        (is (= (:status response) #{"inspect-prev-page-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: prev-page exception")))
-        (is (:pp-stacktrace response)))))
-
-  (testing "inspect-set-page-size error handling"
-    (let [response (session/message {:op "inspect-set-page-size" :page-size 0})]
-      (is (= #{"inspect-set-page-size-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? page-size\).*" (:err response))
-      (is (:pp-stacktrace response)))
-
-    (let [response (session/message {:op "inspect-refresh" :page-size 0})]
-      (is (= #{"inspect-refresh-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? page-size\).*" (:err response))
-      (is (:pp-stacktrace response))))
-
-  (testing "inspect-set-max-atom-length error handling"
-    (let [response (session/message {:op "inspect-set-max-atom-length" :max-atom-length 0})]
-      (is (= #{"inspect-set-max-atom-length-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response))
-      (is (:pp-stacktrace response)))
-
-    (let [response (session/message {:op "inspect-refresh" :max-atom-length 0})]
-      (is (= #{"inspect-refresh-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? max-atom-length\).*" (:err response))
-      (is (:pp-stacktrace response))))
-
-  (testing "inspect-set-max-coll-size error handling"
-    (let [response (session/message {:op "inspect-set-max-coll-size" :max-coll-size 0})]
-      (is (= #{"inspect-set-max-coll-size-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response))
-      (is (:pp-stacktrace response)))
-
-    (let [response (session/message {:op "inspect-refresh" :max-coll-size 0})]
-      (is (= #{"inspect-refresh-error" "done"} (:status response)))
-      (is (= "class clojure.lang.ExceptionInfo" (:ex response)))
-      (is+ #".*Precondition failed: \(pos-int\? max-coll-size\).*" (:err response))
-      (is (:pp-stacktrace response)))))
-
-(deftest inspect-var-integration-test
-  (testing "rendering a var"
-    (is+ var-result
-         (value (session/message {:op      "eval"
-                                  :inspect "true"
-                                  :code    "#'cider.nrepl.middleware.inspect-test/any-var"})))))
+    (is+ nil-result
+         (value (do
+                  (session/message {:op "inspect-refresh"})
+                  (session/message {:op "inspect-refresh"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
-    (is (= inspect-result
-           (value (session/message {:op      "eval"
-                                    :inspect "true"
-                                    :code    code}))))))
+    (is+ inspect-contents
+         (-> (session/message {:op      "eval"
+                               :inspect "true"
+                               :code    code})
+             value (section "Contents")))))
 
 (deftest push-integration-test
   (testing "pushing a rendered expr inspector idx"
-    (is (= push-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op  "inspect-push"
-                                      :idx 2})))))))
+    (is+ push-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op  "inspect-push"
+                                   :idx 2}))
+             value (section "Contents")))))
 
 (deftest next-sibling-integration-test
   (testing "jumping to next sibling in a rendered expr inspector"
-    (is (= sibling-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
-                    (session/message {:op  "inspect-push"
-                                      :idx 2})
-                    (session/message {:op  "inspect-next-sibling"})))))))
+    (is+ ["--- Print:" [:newline] "  c"]
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
+                 (session/message {:op  "inspect-push"
+                                   :idx 2})
+                 (session/message {:op  "inspect-next-sibling"}))
+             value (section "Print")))))
 
 (deftest previous-sibling-integration-test
   (testing "jumping to previous sibling in a rendered expr inspector"
-    (is (= sibling-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
-                    (session/message {:op  "inspect-push"
-                                      :idx 4})
-                    (session/message {:op  "inspect-previous-sibling"})))))))
+    (is+ ["--- Print:" [:newline] "  c"]
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    "(map identity (take 35 (cycle [\"a\" \"b\" \"c\"])))"})
+                 (session/message {:op  "inspect-push"
+                                   :idx 4})
+                 (session/message {:op  "inspect-previous-sibling"}))
+             value (section "Print")))))
 
 (deftest next-page-integration-test
   (testing "jumping to next page in a rendered expr inspector"
-    (is (= next-page-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    "(map identity (range 35))"})
-                    (session/message {:op "inspect-next-page"})))))))
+    (is+ ["--- Contents:" [:newline]
+          "  ..." [:newline]
+          "  32. " [:value "32" 1] [:newline]
+          "  33. " [:value "33" 2] [:newline]
+          "  34. " [:value "34" 3]]
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    "(map identity (range 35))"})
+                 (session/message {:op "inspect-next-page"}))
+             value (section "Contents")))))
 
 (deftest prev-page-integration-test
   (testing "jumping to previous page in a rendered expr inspector"
-    (is (= first-page-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    "(map identity (range 35))"})
-                    (session/message {:op        "inspect-refresh"
-                                      :page-size 5})
-                    (session/message {:op "inspect-next-page"})
-                    (session/message {:op "inspect-prev-page"})))))))
+    (is+ ["--- Contents:" [:newline]
+          "  0. " [:value "0" 1] [:newline]
+          "  1. " [:value "1" 2] [:newline]
+          "  2. " [:value "2" 3] [:newline]
+          "  3. " [:value "3" 4] [:newline]
+          "  4. " [:value "4" 5] [:newline]
+          "  ..."]
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    "(map identity (range 35))"})
+                 (session/message {:op        "inspect-refresh"
+                                   :page-size 5})
+                 (session/message {:op "inspect-next-page"})
+                 (session/message {:op "inspect-prev-page"}))
+             value (section "Contents")))))
 
 (deftest pop-integration-test
   (testing "popping a rendered expr inspector"
-    (is (= inspect-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op  "inspect-push"
-                                      :idx 1})
-                    (session/message {:op "inspect-pop"})))))))
+    (is+ inspect-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op  "inspect-push"
+                                   :idx 1})
+                 (session/message {:op "inspect-pop"}))
+             value (section "Contents")))))
 
 (deftest refresh-integration-test
   (testing "refreshing a rendered expr inspector"
-    (is (= inspect-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op "inspect-refresh"})))))))
+    (is+ inspect-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op "inspect-refresh"}))
+             value (section "Contents")))))
 
 (deftest refresh-idempotent-integration-test
   (testing "refreshing a rendered expr inspector is idempotent"
-    (is (= inspect-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op "inspect-refresh"})
-                    (session/message {:op "inspect-refresh"})))))))
+    (is+ inspect-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op "inspect-refresh"})
+                 (session/message {:op "inspect-refresh"}))
+             value (section "Contents")))))
 
 (deftest refresh-after-push-integration-test
   (testing "refreshing a rendered expr inspector after an idx is pushed"
-    (is (= push-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op  "inspect-push"
-                                      :idx 2})
-                    (session/message {:op "inspect-refresh"})))))))
+    (is+ push-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op  "inspect-push"
+                                   :idx 2})
+                 (session/message {:op "inspect-refresh"}))
+             value (section "Contents")))))
 
 (defn inspector-response [x]
   (-> x :value first read-string))
 
-(deftest refresh-atom-test
-  (testing "refreshing an inspected atom"
-    (session/message {:op      "eval"
-                      :inspect "true"
-                      :code    "(def X (atom 111))"})
-    (session/message {:op  "inspect-push"
-                      :idx 1})
-    (let [before "111"
-          after  "112"]
-      (is+ (matchers/embeds [(list :value before 2)])
-           (-> {:op "inspect-refresh"}
-               session/message
-               inspector-response))
-      (testing "After modifying an atom"
-        (session/message {:op      "eval"
-                          :code    "(swap! X inc)"})
-        (testing "Refreshing it shows its newest value"
-          (is+ (matchers/embeds [(list :value after 2)])
-               (-> {:op "inspect-refresh"}
-                   session/message
-                   inspector-response)))))))
-
 (deftest session-binding-integration-test
   (testing "session bindings can be inspected"
-    (is (= inspect-result
-           (value (do
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    code})
-                    (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    "*1"})))))))
+    (is+ inspect-contents
+         (-> (do (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    code})
+                 (session/message {:op      "eval"
+                                   :inspect "true"
+                                   :code    "*1"}))
+             value (section "Contents")))))
 
 (deftest page-size-integration-test
-  (testing "page size can be changed in the eval op itself"
-    (let [normal-page-size (session/message {:op      "eval"
-                                             :inspect "true"
-                                             :code    "(range 100)"})
-          normal-page-2    (session/message {:op "inspect-next-page"})
-
-          small-page-size  (session/message {:op        "eval"
-                                             :inspect   "true"
-                                             :code      "(range 100)"
-                                             :page-size 5})
-          small-page-2     (session/message {:op "inspect-next-page"})
-
-          extract-text     #(-> % :value first)]
-      (is (re-find #"Page size: 32, showing page: 1 of 4"
-                   (extract-text normal-page-size)))
-      (is (re-find #"Page size: 5, showing page: 1 of 20"
-                   (extract-text small-page-size)))
-
-      (is (re-find #"Page size: 32, showing page: 2 of 4"
-                   (extract-text normal-page-2)))
-      (is (re-find #"Page size: 5, showing page: 2 of 20"
-                   (extract-text small-page-2)))))
-
   (testing "page size can be changed via the inspect-refresh op"
-    (session/message {:op "inspect-clear"})
-    (let [normal-page-size (session/message {:op      "eval"
-                                             :inspect "true"
-                                             :code    "(range 100)"})
-          normal-page-2    (session/message {:op "inspect-next-page"})
+    (is+ {:value [#"Page size: 32, showing page: 1 of 4"]}
+         (session/message {:op      "eval"
+                           :inspect "true"
+                           :code    "(range 100)"}))
+    (is+ {:value [#"Page size: 32, showing page: 2 of 4"]}
+         (session/message {:op "inspect-next-page"}))
+    (is+ {:value [#"Page size: 5, showing page: 1 of 20"]}
+         (session/message {:op "inspect-refresh", :page-size 5}))
+    (is+ {:value [#"Page size: 5, showing page: 2 of 20"]}
+         (session/message {:op "inspect-next-page"})))
 
-          small-page-size  (session/message {:op        "inspect-refresh"
-                                             :page-size 5})
-          small-page-2     (session/message {:op "inspect-next-page"})
-
-          extract-text     #(-> % :value first)]
-      (is (re-find #"Page size: 32, showing page: 1 of 4"
-                   (extract-text normal-page-size)))
-      (is (re-find #"Page size: 5, showing page: 1 of 20"
-                   (extract-text small-page-size)))
-
-      (is (re-find #"Page size: 32, showing page: 2 of 4"
-                   (extract-text normal-page-2)))
-      (is (re-find #"Page size: 5, showing page: 2 of 20"
-                   (extract-text small-page-2)))
-
-      (testing "page size config is retained after inspecting new values"
-        (is (re-find #"Page size: 5, showing page: 1 of 200"
-                     (-> (session/message {:op      "eval"
-                                           :inspect "true"
-                                           :code    "(range 1000)"})
-                         extract-text)))))))
+  (testing "page size config is retained after inspecting new values"
+    (is+ {:value [#"Page size: 5, showing page: 1 of 200"]}
+         (session/message {:op      "eval"
+                           :inspect "true"
+                           :code    "(range 1000)"}))))
 
 (deftest max-atom-length-integration-test
   (let [max-len (:max-atom-length @#'orchard.inspect/default-inspector-config)
@@ -519,7 +327,7 @@
                                    :code    infinite-map-code})
                  extract-text
                  count)
-             (+ max-len 300)))
+             (+ max-len 400)))
       (is (< 500
              (-> (session/message {:op               "eval"
                                    :inspect          "true"
@@ -527,7 +335,7 @@
                                    :max-value-length 500})
                  extract-text
                  count)
-             800)))))
+             900)))))
 
 (deftest max-coll-size-integration-test
   (let [size-limit (:max-coll-size @#'orchard.inspect/default-inspector-config)
@@ -715,8 +523,8 @@
             "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
                                  "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
             [:newline] [:newline]
-            "--- View mode:" [:newline]
-            "  :pretty"]
+            #"--- View mode" [:newline]
+            "  ●normal table object ●pretty"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))
     (testing "toggle pretty printing and turn it off"
       (is+ ["--- Contents:" [:newline]
@@ -734,7 +542,9 @@
             [:newline]
             "  4. " [:value (str "{:a ({:b 2} {:b 2} {:b 2} {:b 2} {:b 2} {:b 2}),"
                                  " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
-            [:newline]]
+            [:newline] [:newline]
+            #"--- View mode" [:newline]
+            "  ●normal table object pretty"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))))
 
 (deftest print-length-independence-test

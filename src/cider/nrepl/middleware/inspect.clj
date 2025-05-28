@@ -85,16 +85,8 @@
 (defn toggle-pretty-print-reply [msg]
   (inspector-response msg (swap-inspector! msg #(-> (update % :pretty-print not) (inspect/inspect-render)))))
 
-(defn- toggle-view-mode [{:keys [view-mode] :as inspector}]
-  ;; The order in which view modes are cycled depends on the inspected object.
-  (let [toggle-order (if (inspect/supports-table-view-mode? inspector)
-                       {:normal :table, :table :object, :object :normal}
-                       {:normal :object, :object :normal})
-        next-view-mode (toggle-order view-mode :normal)]
-    (inspect/set-view-mode inspector next-view-mode)))
-
 (defn toggle-view-mode-reply [msg]
-  (inspector-response msg (swap-inspector! msg toggle-view-mode)))
+  (inspector-response msg (swap-inspector! msg inspect/toggle-view-mode)))
 
 (defn- display-analytics-reply [msg]
   (inspector-response msg (swap-inspector! msg inspect/display-analytics)))

@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Bump `orchard` to [0.35.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0350-2025-05-28).
 * [#941](https://github.com/clojure-emacs/cider-nrepl/pull/941): Stop vendoring Fipp dependency.
 * [#941](https://github.com/clojure-emacs/cider-nrepl/pull/941): Default to orchard.pp printer when Fipp/Puget/Zprint is selected but not found on classpath.
 * [#943](https://github.com/clojure-emacs/cider-nrepl/pull/943): Debug: reduce insrumentation bytecode footprint.
