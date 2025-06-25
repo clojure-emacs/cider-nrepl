@@ -21,7 +21,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl/nrepl "1.3.1" :exclusions [org.clojure/clojure]]
-                 [cider/orchard "0.35.0" :exclusions [org.clojure/clojure]]
+                 [cider/orchard "0.36.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [compliment "0.7.0"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                                       org.clojure/clojurescript]]

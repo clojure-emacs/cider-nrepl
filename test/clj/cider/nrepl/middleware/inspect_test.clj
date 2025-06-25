@@ -75,7 +75,14 @@
    "  ●normal object pretty"])
 
 (defn value [{:keys [value]}]
-  (edn/read-string (first value)))
+  (->> (edn/read-string (first value))
+       ;; Merge strings
+       (reduce (fn [acc x]
+                 (let [lst (peek acc)]
+                   (if (and (string? x) (string? lst))
+                     (conj (pop acc) (str lst x))
+                     (conj acc x))))
+               [])))
 
 (defn value-skip-header [resp]
   (drop-while #(not (and (string? %) (.startsWith ^String % "---")))
@@ -524,7 +531,7 @@
                                  "\n      :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
             [:newline] [:newline]
             #"--- View mode" [:newline]
-            "  ●normal table object ●pretty"]
+            "  ●normal table object ●pretty sort-maps"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))
     (testing "toggle pretty printing and turn it off"
       (is+ ["--- Contents:" [:newline]
@@ -544,7 +551,7 @@
                                  " :c ({:d 2} {:d 2} {:d 2} {:d 2} {:d 2} {:d 2})}") 5]
             [:newline] [:newline]
             #"--- View mode" [:newline]
-            "  ●normal table object pretty"]
+            "  ●normal table object pretty sort-maps"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))))
 
 (deftest print-length-independence-test
