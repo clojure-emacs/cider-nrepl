@@ -33,11 +33,16 @@
                  :path (pr-str (seq (:path inspector)))})]
      (response-for msg data extra-response-data))))
 
+(defn- booleanize [m keys]
+  (reduce (fn [m k] (cond-> m
+                      (contains? m k) (update k = "true")))
+          m keys))
+
 (defn- msg->inspector-config [msg]
   (-> (select-keys msg [:page-size :max-atom-length :max-coll-size
                         :max-value-length :max-nested-depth :display-analytics-hint
-                        :pretty-print])
-      (update :pretty-print #(= "true" %))))
+                        :pretty-print :sort-maps :only-diff])
+      (booleanize [:pretty-print :sort-maps :only-diff])))
 
 (defn inspect-reply* [{:keys [view-mode] :as msg} value]
   (let [config (msg->inspector-config msg)

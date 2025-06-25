@@ -33,7 +33,7 @@
     (is+ {:status #{"done"}
           :value [(mc/via read-string
                           (mc/prefix ["Class: " [:value "clojure.lang.ArraySeq" 0] [:newline]
-                                      "Count: 1" [:newline] [:newline]
+                                      "Count: " "1" [:newline] [:newline]
                                       "--- Contents:" [:newline] [:newline]]))]}
          (session/message {:op "cider/profile-summary"}))))
 

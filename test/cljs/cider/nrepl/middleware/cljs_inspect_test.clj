@@ -33,7 +33,14 @@
    "  34. " [:value "34" 3]])
 
 (defn value [{:keys [value]}]
-  (edn/read-string (first value)))
+  (->> (edn/read-string (first value))
+       ;; Merge strings
+       (reduce (fn [acc x]
+                 (let [lst (peek acc)]
+                   (if (and (string? x) (string? lst))
+                     (conj (pop acc) (str lst x))
+                     (conj acc x))))
+               [])))
 
 ;; integration tests
 

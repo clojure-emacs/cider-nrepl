@@ -344,7 +344,10 @@ if applicable, and re-render the updated value."
                           "max-atom-length" "New max length of single rendered value"
                           "max-coll-size" "New max size of rendered collection"
                           "max-nested-depth" "New max nested depth of rendered collection"
-                          "view-mode" "Mode of viewing the value - either `:normal` or `:object`"}
+                          "view-mode" "Mode of viewing the value - either `:normal` or `:object`"
+                          "pretty-print" "Set to true to pretty-print values within the inspector"
+                          "sort-maps" "Set to true to sort maps by their keys when inspecting a map"
+                          "only-diff" "Set to true to only display values that differ when inspecting a diff"}
                :returns inspector-returns}
               "inspect-toggle-pretty-print"
               {:doc "Toggles the pretty printing of values in the inspector."
