@@ -22,7 +22,7 @@
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies [[nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]
                  [cider/orchard "0.37.0" :exclusions [org.clojure/clojure]]
-                 ^:inline-dep [compliment "0.7.0"]
+                 ^:inline-dep [compliment "0.7.1"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                                       org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
