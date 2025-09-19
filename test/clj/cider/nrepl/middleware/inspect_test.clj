@@ -554,6 +554,40 @@
             "  ●normal table object pretty sort-maps"]
            (value-skip-header (session/message {:op "inspect-toggle-pretty-print"}))))))
 
+(deftest tidy-qualified-keywords-integration-test
+  (testing "tidy keywords disabled"
+    (is+ ["--- Contents:" [:newline]
+          "  0. " [:value ":cider.nrepl.middleware.inspect-test/own-kw" pos?]]
+         (-> (session/message {:op      "eval"
+                               :inspect "true"
+                               :ns      "cider.nrepl.middleware.inspect-test"
+                               :code    "[::own-kw]"})
+             value (section "Contents")))
+    (is+ ["--- Contents:" [:newline]
+          "  0. " [:value ":clojure.string/alias-kw" pos?]]
+         (-> (session/message {:op      "eval"
+                               :inspect "true"
+                               :ns      "cider.nrepl.middleware.inspect-test"
+                               :code    "[::str/alias-kw]"})
+             value (section "Contents"))))
+  (testing "tidy keywords enabled"
+    (is+ ["--- Contents:" [:newline]
+          "  0. " [:value "::own-kw" pos?]]
+         (-> (session/message {:op                      "eval"
+                               :inspect                 "true"
+                               :tidy-qualified-keywords "true"
+                               :ns                      "cider.nrepl.middleware.inspect-test"
+                               :code                    "[::own-kw]"})
+             value (section "Contents")))
+    (is+ ["--- Contents:" [:newline]
+          "  0. " [:value "::str/alias-kw" pos?]]
+         (-> (session/message {:op                      "eval"
+                               :inspect                 "true"
+                               :tidy-qualified-keywords "true"
+                               :ns                      "cider.nrepl.middleware.inspect-test"
+                               :code                    "[::str/alias-kw]"})
+             value (section "Contents")))))
+
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
     (is (re-find #"showing page: \d+ of \d+"
