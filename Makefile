@@ -67,12 +67,10 @@ lint: kondo cljfmt eastwood
 # PROJECT_VERSION=x.y.z make install
 install: dump-version check-install-env target/srcdeps
 	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
-	git checkout resources/cider/nrepl/version.edn
 
 # PROJECT_VERSION=x.y.z make fast-install
 fast-install: dump-version check-install-env
 	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
-	git checkout resources/cider/nrepl/version.edn
 
 smoketest: install
 	cd test/smoketest && \
