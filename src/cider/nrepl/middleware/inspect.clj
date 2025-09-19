@@ -39,10 +39,15 @@
           m keys))
 
 (defn- msg->inspector-config [msg]
-  (-> (select-keys msg [:page-size :max-atom-length :max-coll-size
-                        :max-value-length :max-nested-depth :display-analytics-hint
-                        :pretty-print :sort-maps :only-diff])
-      (booleanize [:pretty-print :sort-maps :only-diff])))
+  (as-> msg config
+    (select-keys config [:page-size :sort-maps :max-atom-length :max-coll-size
+                         :max-value-length :max-nested-depth :pretty-print
+                         :display-analytics-hint :only-diff])
+    (booleanize config [:pretty-print :sort-maps :only-diff])
+    (let [pov-ns (when (= (:tidy-qualified-keywords msg) "true")
+                   (some-> msg :ns symbol))]
+      (cond-> config
+        pov-ns (assoc :pov-ns pov-ns)))))
 
 (defn inspect-reply* [{:keys [view-mode] :as msg} value]
   (let [config (msg->inspector-config msg)
