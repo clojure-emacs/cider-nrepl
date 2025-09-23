@@ -78,7 +78,7 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.3"]
-                                       [nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]]}
+                                       [nrepl/nrepl "1.5.0-alpha2" :exclusions [org.clojure/clojure]]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
@@ -90,6 +90,7 @@
              :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0" :exclusions [org.clojure/clojure]]]}
              :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0" :exclusions [org.clojure/clojure]]]}
              :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]]}
+             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.0-alpha2" :exclusions [org.clojure/clojure]]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.2.245"]]}
@@ -142,5 +143,7 @@
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.3"]]
                          :eastwood {:config-files ["eastwood.clj"]
+                                    :ignored-faults {:unused-ret-vals {orchard.java {:line 84}
+                                                                       cider.nrepl.middleware.util.instrument {:line 396}}}
                                     :exclude-namespaces [cider.nrepl.middleware.debug-test
                                                          cider.nrepl.middleware.test-filter-tests]}}]})

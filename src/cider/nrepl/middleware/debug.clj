@@ -2,12 +2,14 @@
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
   (:require
+   [clojure.string :as str]
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
+   [cider.nrepl.middleware.util.eval]
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
-   [nrepl.middleware.interruptible-eval :refer [*msg*]]
+   [nrepl.middleware.interruptible-eval :as ieval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
@@ -174,6 +176,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (defonce print-options (atom nil))
 (defonce step-in-to-next? (atom false))
+
+(def ^:private nrepl-1-5+?
+  (cider.nrepl.middleware.util.nrepl/satisfies-version? 1 5))
 
 (defn pr-short
   "Like `pr-str` but limited in length and depth."
@@ -466,6 +471,10 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 
 (def ^:dynamic *tmp-forms* (atom {}))
 (def ^:dynamic *do-locals* true)
+#_:clj-kondo/ignore
+(def ^:dynamic ^:private *found-debugger-tag*)
+#_:clj-kondo/ignore
+(def ^:dynamic ^:private *top-level-form-meta*)
 
 (defmacro with-initial-debug-bindings
   "Let-wrap `body` with STATE__ map containing code, file, line, column etc.
@@ -476,17 +485,26 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   {:style/indent 0}
   [& body]
   ;; NOTE: *msg* is the message that instrumented the function,
-  `(let [~'STATE__ {:msg ~(let [{:keys [code id file line column ns]} *msg*]
-                            {:code code
-                             ;; Passing clojure.lang.Namespace object
-                             ;; as :original-ns breaks nREPL in bewildering
-                             ;; ways.
-                             ;; NOTE: column numbers in the response map
-                             ;; start from 1 according to Clojure.
-                             ;; This is not a bug and should be converted to
-                             ;; 0-based indexing by the client if necessary.
-                             :original-id id, :original-ns (str (or ns *ns*))
-                             :file file, :line line, :column column})
+  `(let [~'STATE__ {:msg ~(if (bound? #'*top-level-form-meta*)
+                            (let [{:keys [line column ns], form-info ::form-info}
+                                  *top-level-form-meta*
+                                  {:keys [code file original-id]} form-info]
+                              {:code code
+                               ;; Passing clojure.lang.Namespace object
+                               ;; as :original-ns breaks nREPL in bewildering
+                               ;; ways.
+                               ;; NOTE: column numbers in the response map
+                               ;; start from 1 according to Clojure.
+                               ;; This is not a bug and should be converted to
+                               ;; 0-based indexing by the client if necessary.
+                               :original-ns (str (or ns *ns*))
+                               :original-id original-id
+                               :file file, :line line, :column column})
+                            (let [{:keys [code file line column ns id]} *msg*]
+                              {:code code
+                               :original-ns (str (or ns *ns*))
+                               :original-id id
+                               :file file, :line line, :column column}))
                     ;; the coor of first form is used as the debugger session id
                     :session-id (atom nil)
                     :skip (atom false)
@@ -626,50 +644,59 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 ;;; ## Data readers
 ;;
 ;; Set in `src/data_readers.clj`.
+
+(defn- found-debugger-tag []
+  (when (bound? #'*found-debugger-tag*)
+    (set! *found-debugger-tag* true)))
+
 (defn breakpoint-reader
   "#break reader. Mark `form` for breakpointing."
   [form]
+  (found-debugger-tag)
   (ins/tag-form form #'breakpoint-with-initial-debug-bindings true))
 
 (defn debug-reader
   "#dbg reader. Mark all forms in `form` for breakpointing.
   `form` itself is also marked."
   [form]
+  (found-debugger-tag)
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-interesting)
                 #'breakpoint-if-interesting-with-initial-debug-bindings))
 
 (defn break-on-exception-reader
   "#exn reader. Wrap `form` in try-catch and break only on exception"
   [form]
+  (found-debugger-tag)
   (ins/tag-form form #'breakpoint-if-exception-with-initial-debug-bindings true))
 
 (defn debug-on-exception-reader
   "#dbgexn reader. Mark all forms in `form` for breakpointing on exception.
   `form` itself is also marked."
   [form]
+  (found-debugger-tag)
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-exception)
                 #'breakpoint-if-exception-with-initial-debug-bindings))
 
 (defn instrument-and-eval [form]
-  (let [form1 (ins/instrument-tagged-code form)]
-    ;; (ins/print-form form1 true false)
-    (try
-      (binding [*tmp-forms* (atom {})]
-        (eval form1))
-      (catch java.lang.RuntimeException e
-        (if (some #(when %
-                     (re-matches #".*Method code too large!.*"
-                                 (.getMessage ^Throwable %)))
-                  [e (.getCause e)])
-          (do (notify-client *msg*
-                             (str "Method code too large!\n"
-                                  "Locals and evaluation in local context won't be available.")
-                             :warning)
-              ;; re-try without locals
-              (binding [*tmp-forms* (atom {})
-                        *do-locals* false]
-                (eval form1)))
-          (throw e))))))
+  (with-bindings (if nrepl-1-5+? {#'*top-level-form-meta* (meta form)} {})
+    (let [form1 (ins/instrument-tagged-code form)]
+      (try
+        (binding [*tmp-forms* (atom {})]
+          (eval form1))
+        (catch java.lang.RuntimeException e
+          (if (some #(when %
+                       (re-matches #".*Method code too large!.*"
+                                   (.getMessage ^Throwable %)))
+                    [e (.getCause e)])
+            (do (notify-client *msg*
+                               (str "Method code too large!\n"
+                                    "Locals and evaluation in local context won't be available.")
+                               :warning)
+                ;; re-try without locals
+                (binding [*tmp-forms* (atom {})
+                          *do-locals* false]
+                  (eval form1)))
+            (throw e)))))))
 
 (def ^:dynamic *debug-data-readers*
   "Reader macros like #dbg which cause code to be instrumented when present."
@@ -701,6 +728,30 @@ this map (identified by a key), and will `dissoc` it afterwards."}
       ;; If there was no reader macro, fallback on regular eval.
       msg)))
 
+(defn- maybe-debug-nrepl-1-5+
+  "Alternative implementation of `maybe-debug` that is only supported with nREPL
+  1.5+ or higher. This version supports forms compiled by `load-file` and
+  doesn't perform double read like the older version."
+  [msg]
+  (let [read-fn
+        (fn [options reader]
+          (binding [*found-debugger-tag* false]
+            ;; Read the form normally and then check if the flag turned on that
+            ;; tells us the form contains any debugger reader tags.
+            (let [[form code] (ins/comment-trimming-read+string options reader)]
+              (if *found-debugger-tag*
+                ;; Attach the original (but cleaned up) source code for the
+                ;; instrumenter to set up correct debugger state later.
+                (vary-meta form assoc
+                           ::form-info {:code code
+                                        :file (:file msg)
+                                        :original-id (:id msg)})
+                form))))]
+    (assoc msg
+           ::ieval/read-fn read-fn
+           ::ieval/eval-fn (cider.nrepl.middleware.util.eval/eval-dispatcher
+                            instrument-and-eval ::form-info))))
+
 (defn- initialize
   "Initialize the channel used for debug-input requests."
   [{:keys [:nrepl.middleware.print/options] :as msg}]
@@ -723,7 +774,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   (case op
     "eval" (do (when (instance? clojure.lang.Atom session)
                  (swap! session assoc #'*skip-breaks* (atom nil)))
-               (handler (maybe-debug msg)))
+               (handler (if nrepl-1-5+?
+                          (maybe-debug-nrepl-1-5+ msg)
+                          (maybe-debug msg))))
     "debug-instrumented-defs" (instrumented-defs-reply msg)
     "debug-input" (when-let [pro (@promises (:key msg))]
                     (deliver pro input))

@@ -207,12 +207,15 @@ Depending on the type of the return value of the evaluation this middleware may 
               "complete-flush-caches"
               {:doc "Forces the completion backend to repopulate all its caches"}}}))
 
+;; `wrap-debug` has to be sandwiched between `load-file` and `eval`. First
+;; `load-file` transforms its message into an `eval`, then `wrap-debug` attaches
+;; its instrumenting functions to the message, and finally `eval` does the work.
 (def-wrapper wrap-debug cider.nrepl.middleware.debug/handle-debug
   #{"eval"}
   (cljs/requires-piggieback
    {:doc "Provide instrumentation and debugging functionality."
     :expects  #{"eval"}
-    :requires #{#'wrap-print #'session}
+    :requires #{#'wrap-print #'session "load-file"}
     :handles {"debug-input"
               {:doc "Read client input on debug action."
                :requires {"input" "The user's reply to the input request."

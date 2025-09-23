@@ -98,6 +98,10 @@
 (defmethod debugger-send :eval [_ code]
   (nrepl-send {:op "eval" :code code}))
 
+(defmethod debugger-send :load-file [_ code]
+  (nrepl-send {:op "load-file", :file code
+               :file-path "path/to/file.clj", :file-name "file.clj"}))
+
 (defmacro def-debug-op [op]
   `(defmethod debugger-send ~op [_#]
      (nrepl-send {:op "debug-input" :input ~(str op) :key (current-key)})))
@@ -712,3 +716,21 @@
   (--> :continue-all)
   (<-- {:value "{:transport 23}"})
   (<-- {:status ["done"]}))
+
+(when @#'d/nrepl-1-5+?
+  (deftest load-file-enables-debugger-test
+    (--> :load-file ";; comments before form
+                     #_(redundant stuff)
+                     (defn foo [a b] #dbg (+ a b))")
+    (<-- {:value "#'user/foo"})
+    (<-- {:status ["done"]})
+
+    (--> :eval "(foo 4 5)")
+    (<-- {:debug-value "4" :coor [3 1]
+          :code "(defn foo [a b] #dbg (+ a b))"})
+    (--> :next)
+    (<-- {:debug-value "5" :coor [3 2]})
+    (--> :next)
+    (<-- {:debug-value "9" :coor [3]})
+    (--> :next)
+    (<-- {:value "9"})))
