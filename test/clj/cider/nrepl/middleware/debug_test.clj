@@ -208,12 +208,12 @@
                                          v)
                   d/debugger-message   (atom [:fake])
                   d/*skip-breaks*      (atom nil)]
-      (binding [*msg* {:session (atom {})
-                       :code    :code
-                       :id      :id
-                       :file    :file
-                       :line    :line
-                       :column  :column}]
+      (with-bindings {#'d/*top-level-form-meta*
+                      {::d/form-info {:code        :code
+                                      :file        :file
+                                      :original-id :id}
+                       :line         :line
+                       :column       :column}}
         (let [form `(d/with-initial-debug-bindings
                       (d/breakpoint-if-interesting (inc 10) {:coor [6]} ~'(inc 10)))
               m (eval form)]

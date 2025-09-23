@@ -20,7 +20,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]
+  :dependencies [[nrepl/nrepl "1.5.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cider/orchard "0.37.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [compliment "0.7.1"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
