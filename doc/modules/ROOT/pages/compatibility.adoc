@@ -2,9 +2,13 @@
 
 == Java
 
-`cider-nrepl` officially targets Java 8, 11, 17, 21, and the most recent release
-version. More generally speaking - we aim to support all Java releases that are
-currently officially supported by Oracle.
+`cider-nrepl` officially targets Java 8, 11, 17, 21, 25, and the most recent
+release version. More generally speaking - we aim to support all Java releases
+that are currently officially supported by Oracle.
+
+NOTE: Java 8 is soft-deprecated in Orchard (and hence cider-nrepl). Core
+cider-nrepl functionality continues to work on JDK 8, but these following
+features don't: *Java sources parsing*.
 
 == Clojure
 
@@ -29,7 +33,7 @@ Currently `cider-nrepl` requires Piggieback 0.4+ to work properly.
 
 == nREPL
 
-`cider-nrepl` supports nREPL 0.6+.
+`cider-nrepl` supports nREPL 1.0+.
 
 NOTE: We pay special attention to supporting whatever nREPL is bundled with the
 current stable Leiningen release.
@@ -44,16 +48,6 @@ given compatibility tuple.
 .Compatibility Matrix
 |===
 | cider-nrepl | Required JDK | Required Clojure | Required nREPL
-
-| 0.19
-| 8
-| 1.8
-| 0.2.13
-
-| 0.20
-| 8
-| 1.8
-| 0.4.x
 
 | 0.25
 | 8

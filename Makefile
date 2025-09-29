@@ -25,8 +25,8 @@ base-src-jdk17.zip:
 base-src-jdk21.zip:
 	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.7+5.zip jdk21 $@
 
-base-src-jdk24.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk/archive/refs/tags/jdk-24+36.zip jdk24 $@
+base-src-jdk25.zip:
+	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk/archive/refs/tags/jdk-25+36.zip jdk25 $@
 
 copy-sources-to-jdk: base-src-$(JDK_SRC_VERSION).zip
 	mkdir -p $(JAVA_HOME)/lib && cp base-src-$(JDK_SRC_VERSION).zip $(JAVA_HOME)/lib/src.zip
