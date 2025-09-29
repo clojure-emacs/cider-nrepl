@@ -2,8 +2,10 @@
   (:require
    [cider.nrepl.middleware.reload :as rl]
    [cider.nrepl.test-session :as session]
+   [cider.test-helpers :refer :all]
    [clojure.string :as str]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [matcher-combinators.matchers :as mc]))
 
 (use-fixtures :each session/session-fixture)
 
@@ -29,21 +31,19 @@
       ;; but the message does come from clj-reload.core/reload.
       ;; It's two separate messages, but in (:progress response) they are
       ;; concatenated.
-      (is (= "Nothing to unloadNothing to reload" (:progress response)))
-      (is (= #{"done" "ok"} (:status response))))))
+      (is+ {:progress #"Reloading 0 namespaces\.\.\.Reloaded 0 namespaces in \d+ ms"
+            :status #{"done" "ok"}}
+           response))))
 
 (deftest reload-all-op-test
   (testing "reload-all op works"
-    (let [response (session/message {:op "cider.clj-reload/reload-all"})
-          progress-str (:progress response)]
-      (is (str/includes? progress-str "Unloading cider.nrepl.middleware.util.meta-test"))
-      (is (str/includes? progress-str "Loading cider.nrepl.middleware.util.meta-test"))
-      (is (= #{"done" "ok"} (:status response))))))
+    (is+ {:progress (mc/all-of #"Reloading 3 namespaces"
+                               #"Reloaded 3 namespaces in \d+ ms")
+          :status #{"done" "ok"}}
+         (session/message {:op "cider.clj-reload/reload-all"}))))
 
 (deftest reload-clear-op-test
   (testing "reload-all op works"
-    (let [response (session/message {:op "cider.clj-reload/reload-clear"})]
-      (is (seq (:progress response)))
-      (is (= "Nothing to unload" (:progress response)))
-      (is (= #{"done" "ok"} (:status response))))))
-
+    (is+ {:progress "Reloading 0 namespaces..."
+          :status #{"done" "ok"}}
+         (session/message {:op "cider.clj-reload/reload-clear"}))))
