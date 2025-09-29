@@ -27,9 +27,9 @@
                                                                       org.clojure/clojurescript]]
                  ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
                                                            org.clojure/tools.cli]]
-                 ^:inline-dep [org.clojure/tools.namespace "1.3.0" :exclusions [org.clojure/clojurescript
+                 ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
                                                                                 org.clojure/tools.cli]]
-                 ^:inline-dep [io.github.tonsky/clj-reload "0.6.0" :exclusions [org.clojure/clojure]]
+                 ^:inline-dep [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [org.clojure/tools.reader "1.4.1"]
                  [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
                                         ; see Clojure version matrix in profiles below
@@ -85,10 +85,10 @@
              :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
              :1.12 {:dependencies [[org.clojure/clojure "1.12.2"]
-                                   [org.clojure/clojurescript "1.11.132" :scope "provided"]]}
+                                   [org.clojure/clojurescript "1.12.42" :scope "provided"]]}
 
              :maint {:source-paths ["src" "maint"]
-                     :dependencies [[org.clojure/tools.cli "1.1.230"]]}
+                     :dependencies [[org.clojure/tools.cli "1.2.245"]]}
 
              :dev ~dev-test-common-profile
 
