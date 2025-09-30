@@ -4,7 +4,8 @@
   (:require
    clojure.pprint
    [clojure.walk :as walk]
-   [orchard.meta :as m]))
+   [orchard.meta :as m])
+  (:import (clojure.lang LineNumberingPushbackReader)))
 
 ;;;; # Instrumentation
 ;;;
@@ -381,6 +382,52 @@
     (->> (ns-interns ns)
          (filter (comp :cider/instrumented meta second))
          (map first))))
+
+;; Utilities for correctly mapping the read form to its string content. Default
+;; Clojure `read+string` returns leading comments and other garbage as if it is
+;; part of the read form, making our lives harder when we want to align that
+;; with the content of Emacs buffer.
+
+(defn- skip-n-lines
+  "Find the character offset where the nth line starts (after n newlines)."
+  [s lines-to-skip]
+  (try
+    (let [matcher (re-matcher #"\r?\n" s)]
+      (dotimes [_ lines-to-skip] (re-find matcher))
+      (.end matcher))
+    (catch IllegalStateException _ 0)))
+
+(defn- trim-to-form
+  "Trim captured string from reader start position to actual form start position"
+  [captured-string start-line start-col form-line form-col]
+  (if (and (= start-line form-line) (= start-col form-col))
+    ;; No trimming needed - form starts exactly where we started reading
+    captured-string
+    ;; Need to trim: walk through the string counting lines and columns
+    (let [lines-to-skip (- form-line start-line)
+          final-offset (if (= lines-to-skip 0)
+                         (- form-col start-col)
+                         (+ (skip-n-lines captured-string lines-to-skip)
+                            (dec form-col)))] ;; 1-based to 0-based
+      (subs captured-string final-offset))))
+
+(defn comment-trimming-read+string
+  "Like `read+string` but trims comments and skipped forms from the string result,
+  thus only returning the string that actually backs the read form, without the
+  cruft could be before it."
+  [opts, ^LineNumberingPushbackReader reader]
+  (let [start-line (.getLineNumber reader)
+        start-col (.getColumnNumber reader)]
+    (.captureString reader)
+    (let [form (read opts reader)
+          captured-string (.getString reader)
+          {:keys [line column]} (meta form)
+          ;; If form has line/column metadata, trim the captured string.
+          trimmed-string (if (and line column)
+                           (trim-to-form captured-string start-line start-col
+                                         line column)
+                           captured-string)]
+      [form trimmed-string])))
 
 ;;; Instrumentation test support
 ;;;
