@@ -3,9 +3,11 @@
 
 # Set bash instead of sh for the @if [[ conditions,
 # and use the usual safety flags:
-SHELL = /bin/bash -Ee
+SHELL = /bin/bash -Eex
 
 CLOJURE_VERSION ?= 1.12
+NREPL_VERSION ?= 1.4
+COMMON_PROFILES = "+$(CLOJURE_VERSION),+nrepl-$(NREPL_VERSION)"
 TEST_PROFILES ?= "-user,-dev,+test"
 
 # We need Java sources to test Java parsing functionality, but the Docker images
@@ -39,42 +41,40 @@ target/srcdeps: project.clj
 # Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
 	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
 
-test_impl: copy-sources-to-jdk
-		lein with-profile $(TEST_PROFILES),+$(CLOJURE_VERSION) test
+quick-test: copy-sources-to-jdk
+	lein with-profile $(COMMON_PROFILES),$(TEST_PROFILES) test
 
 test: target/srcdeps
-	@make test_impl TEST_PROFILES="$(TEST_PROFILES),+plugin.mranderson/config"
-
-quick-test: test_impl
+	lein with-profile $(COMMON_PROFILES),$(TEST_PROFILES),+plugin.mranderson/config test
 
 eastwood:
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+deploy,+eastwood eastwood
+	lein with-profile -user,-dev,$(COMMON_PROFILES),+deploy,+eastwood eastwood
 
 cljfmt:
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt check
+	lein with-profile -user,-dev,$(COMMON_PROFILES),+cljfmt cljfmt check
 
 cljfmt-fix:
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION),+cljfmt cljfmt fix
+	lein with-profile -user,-dev,$(COMMON_PROFILES),+cljfmt cljfmt fix
 
 .make_kondo_prep: project.clj .clj-kondo/config.edn
-	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
+	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
 
 kondo: .make_kondo_prep clean
-	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,+$(CLOJURE_VERSION) clj-kondo
+	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo
 
 lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=x.y.z make install
 install: dump-version check-install-env target/srcdeps
-	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+$(CLOJURE_VERSION),+plugin.mranderson/config install
+	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,$(COMMON_PROFILES),+plugin.mranderson/config install
 
 # PROJECT_VERSION=x.y.z make fast-install
 fast-install: dump-version check-install-env
-	lein with-profile -user,-dev,+$(CLOJURE_VERSION) install
+	lein with-profile -user,-dev,$(COMMON_PROFILES) install
 
 smoketest: install
 	cd test/smoketest && \
-        lein with-profile -user,-dev,+$(CLOJURE_VERSION) uberjar && \
+        lein with-profile -user,-dev,$(COMMON_PROFILES) uberjar && \
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
@@ -87,7 +87,7 @@ deploy: check-env target/srcdeps
 	rm -f .no-mranderson
 	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
 	echo "\"$$PROJECT_VERSION\"" > resources/cider/nrepl/version.edn; \
-	lein with-profile -user,-dev,-provided,+$(CLOJURE_VERSION),+plugin.mranderson/config deploy clojars
+	lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME
