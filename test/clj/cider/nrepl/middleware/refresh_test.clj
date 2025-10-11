@@ -3,7 +3,9 @@
    [cider.nrepl.middleware.refresh :as r]
    [cider.nrepl.middleware.util.reload :as reload-utils]
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all]))
+   [cider.test-helpers :refer :all]
+   [clojure.test :refer :all]
+   [matcher-combinators.matchers :as mc]))
 
 (use-fixtures :each session/session-fixture)
 
@@ -30,99 +32,98 @@
 
 (deftest refresh-op-test
   (testing "refresh op works"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload})]
-      (is (:reloading response))
-      (is (= #{"done" "ok"} (:status response)))))
+    (is+ {:reloading some?
+          :status #{"done" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload})))
 
   (testing "nothing to refresh after refreshing"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload})]
-      (is (= [] (:reloading response)))
-      (is (= #{"done" "ok"} (:status response))))))
+    (is+ {:reloading []
+          :status #{"done" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload}))))
 
 (deftest before-fn-test
   (testing "before fn works"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :before "cider.nrepl.middleware.refresh-test/before-fn"})]
-      (is (:reloading response))
-      (is (= #{"done" "invoked-before" "invoking-before" "ok"} (:status response)))
-      (is (= "before-fn invoked\n" (:out response)))))
+    (is+ {:reloading some?
+          :status #{"done" "invoked-before" "invoking-before" "ok"}
+          :out "before-fn invoked\n"}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :before "cider.nrepl.middleware.refresh-test/before-fn"})))
 
   (testing "bad before fn results in not resolved response"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :before "foo"})]
-      (is (= #{"done" "invoked-not-resolved" "ok" "invoking-before"} (:status response))))
+    (is+ {:status #{"done" "invoked-not-resolved" "ok" "invoking-before"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :before "non-existent/foo"}))
 
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :before "clojure.core/seq"})]
-      (is (= #{"done" "error" "invoking-before"} (:status response)))
-      (is (:err response))
-      (is (:error response)))
+    (is+ {:status #{"done" "error" "invoking-before"}
+          :err some?
+          :error some?}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :before "clojure.core/seq"}))
 
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :before "java.lang.Thread"})]
-      (is (= #{"done" "invoked-not-resolved" "invoking-before" "ok"}
-             (:status response))))))
+    (is+ {:status #{"done" "invoked-not-resolved" "invoking-before" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :before "java.lang.Thread"}))))
 
 (deftest after-fn-test
   (testing "after fn with zero arity works"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :after "cider.nrepl.middleware.refresh-test/after-fn"})]
-      (is (:reloading response))
-      (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
-      (is (= "after-fn invoked\n" (:out response)))))
+    (is+ {:reloading some?
+          :status #{"done" "invoked-after" "invoking-after" "ok"}
+          :out "after-fn invoked\n"}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :after "cider.nrepl.middleware.refresh-test/after-fn"})))
 
   (testing "after fn with optional arg works"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :after "cider.nrepl.middleware.refresh-test/after-fn-optional-arg"})]
-      (is (:reloading response))
-      (is (= #{"done" "invoked-after" "invoking-after" "ok"} (:status response)))
-      (is (= "after with optional argument works\n" (:out response)))))
+    (is+ {:reloading some?
+          :status #{"done" "invoked-after" "invoking-after" "ok"}
+          :out "after with optional argument works\n"}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :after "cider.nrepl.middleware.refresh-test/after-fn-optional-arg"})))
 
   (testing "bad after fn results in error"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :after "foo"})]
-      (is (= #{"done" "invoked-not-resolved" "invoking-after" "ok"} (:status response))))
+    (is+ {:status #{"done" "invoked-not-resolved" "invoking-after" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :after "non-existent/foo"}))
 
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :after "clojure.core/seq"})]
-      (is (= #{"done" "error" "invoking-after" "ok"} (:status response)))
-      (is (:error response))
-      (is (:err response)))
+    (is+ {:status #{"done" "error" "invoking-after" "ok"}
+          :err some?
+          :error some?}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :after "clojure.core/seq"}))
 
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload
-                                     :after "java.lang.Thread"})]
-      (is (= #{"done" "invoked-not-resolved" "invoking-after" "ok"} (:status response))))))
+    (is+ {:status #{"done" "invoked-not-resolved" "invoking-after" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload
+                           :after "java.lang.Thread"}))))
 
 (deftest refresh-all-op-test
   (testing "refresh-all op works"
-    (let [response (session/message {:op "refresh-all"
-                                     :dirs dirs-to-reload})]
-      (is (seq (:reloading response)))
-      (is (= #{"done" "ok"} (:status response))))))
+    (is+ {:reloading not-empty
+          :status #{"done" "ok"}}
+         (session/message {:op "refresh-all"
+                           :dirs dirs-to-reload}))))
 
 (deftest refresh-clear-op-test
   (testing "refresh-clear op works"
-    (let [_ (session/message {:op "refresh"
-                              :dirs dirs-to-reload})
-          response (session/message {:op "refresh-clear"})]
-      (is (= #{"done"} (:status response)))))
+    (is+ {:status #{"done"}}
+         (do (session/message {:op "refresh"
+                               :dirs dirs-to-reload})
+             (session/message {:op "refresh-clear"}))))
 
   (testing "refresh op works after refresh clear"
-    (let [response (session/message {:op "refresh"
-                                     :dirs dirs-to-reload})]
-      (is (seq (:reloading response)))
-      (is (= #{"done" "ok"} (:status response))))))
+    (is+ {:reloading not-empty
+          :status #{"done" "ok"}}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload}))))
 
 (deftest user-refresh-dirs-test
   (testing "returns nil if clojure.tools.namespace isn't loaded"

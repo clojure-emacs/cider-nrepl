@@ -5,6 +5,7 @@
 * Bump `orchard` to [0.37.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0370-2025-09-19).
 * Bump `compliment` to [0.7.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#071-2025-09-19).
 * [#950](https://github.com/clojure-emacs/cider-nrepl/pull/950): Inspect: support tidying qualified keywords.
+* [#951](https://github.com/clojure-emacs/cider-nrepl/pull/951): Debug: correctly process #dbg tag during load-file.
 
 ## 0.57.0 (2025-06-29)
 

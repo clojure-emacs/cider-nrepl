@@ -140,7 +140,7 @@ jobs:
       nrepl_version:
         description: Version of nREPL to test against
         type: string
-        default: "1.4"
+        default: "1.5"
     executor: << parameters.jdk_version >>
     environment:
       CLOJURE_VERSION: << parameters.clojure_version >>
@@ -221,7 +221,7 @@ workflows:
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk25]
-              nrepl_version: ["1.0", "1.3", "1.4"]
+              nrepl_version: ["1.0", "1.3", "1.4", "1.5"]
           <<: *run_always
       - lint:
           <<: *run_always
