@@ -20,7 +20,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[cider/orchard "0.37.0" :exclusions [org.clojure/clojure]]
+  :dependencies [[cider/orchard "0.37.1" :exclusions [org.clojure/clojure]]
                  ^:inline-dep [compliment "0.7.1"]
                  ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                                       org.clojure/clojurescript]]
@@ -78,7 +78,7 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.3"]
-                                       [nrepl/nrepl "1.5.0-alpha2" :exclusions [org.clojure/clojure]]]}
+                                       [nrepl/nrepl "1.5.0" :exclusions [org.clojure/clojure]]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
@@ -90,7 +90,7 @@
              :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0" :exclusions [org.clojure/clojure]]]}
              :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0" :exclusions [org.clojure/clojure]]]}
              :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]]}
-             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.0-alpha2" :exclusions [org.clojure/clojure]]]}
+             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.0" :exclusions [org.clojure/clojure]]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.2.245"]]}
