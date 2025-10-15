@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.58.0 (2025-10-16)
+
 * Bump `nrepl` to [1.5.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#150-2025-10-15).
 * Bump `orchard` to [0.37.1](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0371-2025-10-14).
 * Bump `compliment` to [0.7.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#071-2025-09-19).
