@@ -20,18 +20,21 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
-  :dependencies [[cider/orchard "0.37.1" :exclusions [org.clojure/clojure]]
-                 ^:inline-dep [compliment "0.7.1"]
-                 ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
-                                                                      org.clojure/clojurescript]]
-                 ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
-                                                           org.clojure/tools.cli]]
-                 ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
-                                                                                org.clojure/tools.cli]]
-                 ^:inline-dep [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
-                 ^:inline-dep [org.clojure/tools.reader "1.4.1"]
-                 [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
-                                        ; see Clojure version matrix in profiles below
+  :dependencies
+  ~(cond-> '[[cider/orchard "0.37.1" :exclusions [org.clojure/clojure]]
+             ^:inline-dep [compliment "0.7.1"]
+             ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
+                                                                  org.clojure/clojurescript]]
+             ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
+                                                       org.clojure/tools.cli]]
+             ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
+                                                                            org.clojure/tools.cli]]
+             ^:inline-dep [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
+             ^:inline-dep [org.clojure/tools.reader "1.4.1"]
+             [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
+     ;; This is the only working way to include nREPL into published jar and
+     ;; still be able to test different nREPL versions.
+     (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.5.2"]))
 
   :pedantic? ~(if (and (System/getenv "CI")
                        (not (System/getenv "CIDER_NO_PEDANTIC")))
@@ -77,20 +80,20 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.3"]
-                                       [nrepl/nrepl "1.5.0" :exclusions [org.clojure/clojure]]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.4"]
+                                       [nrepl/nrepl "1.5.2"]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
-             :1.12 {:dependencies [[org.clojure/clojure "1.12.3"]
+             :1.12 {:dependencies [[org.clojure/clojure "1.12.4"]
                                    [org.clojure/clojurescript "1.12.42" :scope "provided"]]}
 
-             :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0" :exclusions [org.clojure/clojure]]]}
-             :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0" :exclusions [org.clojure/clojure]]]}
-             :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0" :exclusions [org.clojure/clojure]]]}
-             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.0" :exclusions [org.clojure/clojure]]]}
+             :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0"]]}
+             :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0"]]}
+             :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0"]]}
+             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.2"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.2.245"]]}
