@@ -22,16 +22,17 @@
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies
   ~(cond-> '[[cider/orchard "0.37.1" :exclusions [org.clojure/clojure]]
-             ^:inline-dep [compliment "0.7.1"]
-             ^:inline-dep [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
-                                                                  org.clojure/clojurescript]]
+             [compliment "0.7.1"]
+             [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
+             [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]
+             [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
+                                                     org.clojure/clojurescript
+                                                     compliment]]
              ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
                                                        org.clojure/tools.cli]]
              ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
                                                                             org.clojure/tools.cli]]
-             ^:inline-dep [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
-             ^:inline-dep [org.clojure/tools.reader "1.4.1"]
-             [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]]
+             ^:inline-dep [org.clojure/tools.reader "1.4.1"]]
      ;; This is the only working way to include nREPL into published jar and
      ;; still be able to test different nREPL versions.
      (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.5.2"]))
