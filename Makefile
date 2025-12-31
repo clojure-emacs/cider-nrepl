@@ -66,7 +66,7 @@ lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=x.y.z make install
 install: dump-version check-install-env target/srcdeps
-	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,$(COMMON_PROFILES),+plugin.mranderson/config install
+	CIDER_RELEASE=true CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config install
 
 # PROJECT_VERSION=x.y.z make fast-install
 fast-install: dump-version check-install-env
@@ -87,7 +87,7 @@ deploy: check-env target/srcdeps
 	rm -f .no-mranderson
 	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
 	echo "\"$$PROJECT_VERSION\"" > resources/cider/nrepl/version.edn; \
-	lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config deploy clojars
+	CIDER_RELEASE=true lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME
