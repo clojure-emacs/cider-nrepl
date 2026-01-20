@@ -21,7 +21,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies
-  ~(cond-> '[[cider/orchard "0.37.1" :exclusions [org.clojure/clojure]]
+  ~(cond-> '[[cider/orchard "0.38.0" :exclusions [org.clojure/clojure]]
              [compliment "0.7.1"]
              [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
              [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]
