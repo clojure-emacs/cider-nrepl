@@ -198,21 +198,29 @@ workflows:
   version: 2.1
   ci-test-matrix:
     jobs:
-      - test:
-          # Regular (quick) tests for all Clojure and JDK versions.
-          matrix:
-            alias: "test"
-            parameters:
-              clojure_version: ["1.10", "1.11", "1.12"]
-              jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk25]
-          <<: *run_always
       - full-test:
-          # Full tests against selected versions.
+          # Full tests against latest Clojure and fringe JDKs.
           matrix:
             alias: "full-test"
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk8, jdk25]
+          <<: *run_always
+      - test:
+          # Quick tests for older Clojure versions and fringe JDKs.
+          matrix:
+            alias: "test-older-clojure"
+            parameters:
+              clojure_version: ["1.10", "1.11"]
+              jdk_version: [jdk8, jdk25]
+          <<: *run_always
+      - test:
+          # Quick tests for latest Clojure and interim JDK versions.
+          matrix:
+            alias: "test-latest-clojure"
+            parameters:
+              clojure_version: ["1.12"]
+              jdk_version: [jdk11, jdk17, jdk21]
           <<: *run_always
       - test:
           # Test against multiple nREPL versions.
@@ -227,8 +235,9 @@ workflows:
           <<: *run_always
       - deploy:
           requires:
-            - test
             - full-test
+            - test-older-clojure
+            - test-latest-clojure
             - nrepl-test
             - lint
           filters:
