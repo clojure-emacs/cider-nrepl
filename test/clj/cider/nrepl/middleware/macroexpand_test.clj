@@ -20,7 +20,7 @@
 
 (deftest expander-option-test
   (testing "macroexpand-1 expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code (:expr code)
                                                        :display-namespaces "none"})]
@@ -28,7 +28,7 @@
       (is (= #{"done"} status))))
 
   (testing "error handling works"
-    (let [{:keys [status err ex]} (session/message {:op "macroexpand"
+    (let [{:keys [status err ex]} (session/message {:op "cider/macroexpand"
                                                     :expander "macroexpand-1"
                                                     ;; A faulty sexpr:
                                                     :code "(let 1)"
@@ -38,7 +38,7 @@
       (is (= #{"macroexpand-error" "done"} status))))
 
   (testing "macroexpand expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand"
                                                        :code (:expr code)
                                                        :display-namespaces "none"})]
@@ -46,7 +46,7 @@
       (is (= #{"done"} status))))
 
   (testing "macroexpand-all expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-all"
                                                        :code (:expr code)
                                                        :display-namespaces "none"})]
@@ -55,7 +55,7 @@
 
   (testing "macroexpand-step expander works"
     (letfn [(mstep [code]
-              (:expansion (session/message {:op "macroexpand"
+              (:expansion (session/message {:op "cider/macroexpand"
                                             :expander "macroexpand-step"
                                             :code code
                                             :display-namespaces "none"})))]
@@ -65,14 +65,14 @@
         (is (= (:expanded-all code) (nth expansions 6))))))
 
   (testing "macroexpand is the default expander"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :code (:expr code)
                                                        :display-namespaces "none"})]
       (is (= (:expanded code) expansion))
       (is (= #{"done"} status))))
 
   (testing "invalid expander"
-    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "macroexpand"
+    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "cider/macroexpand"
                                                                   :expander "foo"
                                                                   :code "(defn x [] nil)"})]
       (is err)
@@ -86,7 +86,7 @@
 (deftest lazy-expand-test
   (testing "lazy macroexpansion expands in the correct namespace"
     (let [{:keys [expansion status]}
-          (session/message {:op "macroexpand"
+          (session/message {:op "cider/macroexpand"
                             :expander "macroexpand"
                             :ns "cider.nrepl.middleware.macroexpand-test"
                             :code "(lazy-test-macro)"
@@ -113,7 +113,7 @@
 
 (deftest display-namespaces-option-test
   (testing "macroexpand-1 expander with display-namespaces: qualified"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(tidy-test-macro)"
                                                        :ns "cider.nrepl.middleware.macroexpand-test"
@@ -123,7 +123,7 @@
       (is (= #{"done"} status))))
 
   (testing "qualified is the default display-namespaces"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(tidy-test-macro)"
                                                        :ns "cider.nrepl.middleware.macroexpand-test"})]
@@ -132,7 +132,7 @@
       (is (= #{"done"} status))))
 
   (testing "macroexpand-1 expander with display-namespaces: none"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(tidy-test-macro)"
                                                        :ns "cider.nrepl.middleware.macroexpand-test"
@@ -142,7 +142,7 @@
       (is (= #{"done"} status))))
 
   (testing "macroexpand-1 expander with display-namespaces: tidy"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(tidy-test-macro)"
                                                        :ns "cider.nrepl.middleware.macroexpand-test"
@@ -152,7 +152,7 @@
       (is (= #{"done"} status))))
 
   (testing "invalid display-namespaces"
-    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "macroexpand"
+    (let [{:keys [err ex status pp-stacktrace]} (session/message {:op "cider/macroexpand"
                                                                   :code "(defn x [] nil)"
                                                                   :display-namespaces "foo"})]
       (is err)
@@ -162,7 +162,7 @@
 
 (deftest print-meta-option-test
   (testing "macroexpand-1 expander with print-meta: true"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(defn x [] nil)"
                                                        :ns "cider.nrepl.middleware.macroexpand-test"
@@ -181,14 +181,23 @@ it doesn't mess up macroexpansion output"
                                    (nrepl.middleware.interruptible-eval/interruptible-eval nil))))]
       (session/session-fixture
        (fn []
-         (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+         (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                             :expander "macroexpand-1"
                                                             :code (:expr code)
                                                             :display-namespaces "none"})]
            (is (= (:expanded-1 code) expansion)))
 
-         (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+         (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                             :expander "macroexpand"
                                                             :code (:expr code)
                                                             :display-namespaces "none"})]
            (is (= (:expanded code) expansion))))))))
+
+(deftest deprecated-op-test
+  (testing "Deprecated 'macroexpand' op still works"
+    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+                                                       :expander "macroexpand-1"
+                                                       :code (:expr code)
+                                                       :display-namespaces "none"})]
+      (is (= (:expanded-1 code) expansion))
+      (is (= #{"done"} status)))))

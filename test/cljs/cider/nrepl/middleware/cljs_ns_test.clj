@@ -8,19 +8,19 @@
 
 (deftest cljs-ns-test
   (testing "ns-list op"
-    (let [{:keys [ns-list]} (session/message {:op "ns-list"})]
+    (let [{:keys [ns-list]} (session/message {:op "cider/ns-list"})]
       (is (sequential? ns-list))
       (is (every? string? ns-list))))
 
   (testing "ns-vars op"
-    (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
+    (let [{:keys [ns-vars]} (session/message {:op "cider/ns-vars"
                                               :ns "cljs.core"})]
       (is (sequential? ns-vars))
       (is (every? string? ns-vars))
       (is (not (contains? (set ns-vars) "maybe-warn")))))
 
   (testing "ns-vars op with private? var-query"
-    (let [{:keys [ns-vars]} (session/message {:op "ns-vars"
+    (let [{:keys [ns-vars]} (session/message {:op "cider/ns-vars"
                                               :ns "cljs.core"
                                               :var-query {:private? 1}})]
       (is (sequential? ns-vars))
@@ -29,7 +29,7 @@
 
   (testing "ns-vars-with-meta op"
     (let [ns-vars-with-meta (:ns-vars-with-meta
-                             (session/message {:op "ns-vars-with-meta"
+                             (session/message {:op "cider/ns-vars-with-meta"
                                                :ns "cljs.core"}))]
       (is (every? (comp map? second) ns-vars-with-meta))
       (is (= (:+ ns-vars-with-meta)
@@ -39,7 +39,7 @@
 
   (testing "ns-vars-with-meta op with private? var-query"
     (let [ns-vars-with-meta (:ns-vars-with-meta
-                             (session/message {:op "ns-vars-with-meta"
+                             (session/message {:op "cider/ns-vars-with-meta"
                                                :ns "cljs.core"
                                                :var-query {:private? 1}}))]
       (is (every? (comp map? second) ns-vars-with-meta))
@@ -47,12 +47,12 @@
              {:arglists "(quote ([e]))"}))))
 
   (testing "ns-path op"
-    (let [{:keys [^String path ^String url]} (session/message {:op "ns-path"
+    (let [{:keys [^String path ^String url]} (session/message {:op "cider/ns-path"
                                                                :ns "cljs.core"})]
       (is (.endsWith path "cljs/core.cljs"))
       (is (not= path url))
       (is (.startsWith url "jar:file:/")))
 
-    (let [{:keys [^String path]} (session/message {:op "ns-path"
+    (let [{:keys [^String path]} (session/message {:op "cider/ns-path"
                                                    :ns "cljs.repl"})]
       (is (.endsWith path "cljs/repl.cljs")))))

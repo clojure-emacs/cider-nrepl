@@ -7,7 +7,7 @@
 (use-fixtures :each session/session-fixture)
 
 (deftest integration-test
-  (let [response   (session/message {:op "classpath"})
+  (let [response   (session/message {:op "cider/classpath"})
         classpaths (:classpath response)]
     (is (= (:status response) #{"done"}))
     (is (> (count classpaths) 1))
@@ -16,11 +16,17 @@
 
 (deftest error-handling-test
   (with-redefs [classpath-reply (fn [_] (throw (Exception. "cp error")))]
-    (let [response (session/message {:op "classpath"})]
-      (is (= (:status response) #{"done" "classpath-error"}))
+    (let [response (session/message {:op "cider/classpath"})]
+      (is (= (:status response) #{"done" "cider/classpath-error"}))
       (is (-> response ^String (:err) (.startsWith "java.lang.Exception: cp error")))
       (is (= (:ex response) "class java.lang.Exception"))
       (is (:pp-stacktrace response)))))
+
+(deftest deprecated-op-test
+  (testing "Deprecated 'classpath' op still works"
+    (let [response (session/message {:op "classpath"})]
+      (is (= (:status response) #{"done"}))
+      (is (seq (:classpath response))))))
 
 (deftest file-url?-test
   (is (file-url? (.toURL (.toURI (java.io.File. "")))))

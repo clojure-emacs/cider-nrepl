@@ -50,5 +50,7 @@
 
 (defn handle-undef [handler msg]
   (with-safe-transport handler msg
+    "cider/undef" undef-reply
     "undef" undef-reply
+    "cider/undef-all" undef-all-reply
     "undef-all" undef-all-reply))

@@ -26,5 +26,7 @@
 
 (defn handle-clojuredocs [handler msg]
   (with-safe-transport handler msg
+    "cider/clojuredocs-refresh-cache" clojuredocs-refresh-cache-reply
     "clojuredocs-refresh-cache" clojuredocs-refresh-cache-reply
+    "cider/clojuredocs-lookup" clojuredocs-lookup-reply
     "clojuredocs-lookup" clojuredocs-lookup-reply))

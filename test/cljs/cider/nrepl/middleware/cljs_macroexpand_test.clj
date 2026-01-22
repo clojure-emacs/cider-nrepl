@@ -8,21 +8,21 @@
 
 (deftest cljs-macroexpansion-test
   (testing "macroexpand-1 expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "nil"
                                                        :ns "cljs.core"})]
       (is (= "nil" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(pos? 1)"
                                                        :ns "cljs.core"})]
       (is (= "(cljs.core/> 1 0)" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(pos? (pos? 1))"
                                                        :ns "cljs.core"})]
@@ -30,21 +30,21 @@
       (is (= #{"done"} status))))
 
   (testing "macroexpand expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand"
                                                        :code "nil"
                                                        :ns "cljs.core"})]
       (is (= "nil" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand"
                                                        :code "(pos? 1)"
                                                        :ns "cljs.core"})]
       (is (= "(js* \"(~{} > ~{})\" 1 0)" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand"
                                                        :code "(pos? (pos? 1))"
                                                        :ns "cljs.core"})]
@@ -52,21 +52,21 @@
       (is (= #{"done"} status))))
 
   (testing "macroexpand-all expander works"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-all"
                                                        :code "nil"
                                                        :ns "cljs.core"})]
       (is (= "nil" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-all"
                                                        :code "(pos? 1)"
                                                        :ns "cljs.core"})]
       (is (= "(js* \"(~{} > ~{})\" 1 0)" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-all"
                                                        :code "(pos? (pos? 1))"
                                                        :ns "cljs.core"})]
@@ -74,7 +74,7 @@
       (is (= #{"done"} status))))
 
   (testing "invalid expander"
-    (let [{:keys [err ex status] :as response} (session/message {:op "macroexpand"
+    (let [{:keys [err ex status] :as response} (session/message {:op "cider/macroexpand"
                                                                  :expander "foo"
                                                                  :code "(pos? 1)"
                                                                  :ns "cljs.core"})]
@@ -83,7 +83,7 @@
       (is (= #{"done" "macroexpand-error"} status))))
 
   (testing "display-namespaces: qualified"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(defn x [] (clojure.set/union))"
                                                        :ns "clojure.data"
@@ -92,7 +92,7 @@
       (is (= #{"done"} status))))
 
   (testing "display-namespaces: none"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand-1"
                                                        :code "(defn x [] (clojure.set/union))"
                                                        :ns "clojure.data"
@@ -100,7 +100,7 @@
       (is (= "(def x (fn ([] (union))))" expansion))
       (is (= #{"done"} status)))
 
-    (let [{:keys [expansion status] :as response} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status] :as response} (session/message {:op "cider/macroexpand"
                                                                     :expander "macroexpand-1"
                                                                     :code "(defn x [] (.log js/console 1))"
                                                                     :ns "clojure.data"
@@ -109,7 +109,7 @@
       (is (= #{"done"} status))))
 
   (testing "display-namespaces: tidy"
-    (let [{:keys [expansion status] :as response} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status] :as response} (session/message {:op "cider/macroexpand"
                                                                     :expander "macroexpand-1"
                                                                     :code "(defn x [] (clojure.set/union))"
                                                                     :ns "clojure.data"
@@ -118,7 +118,7 @@
       (is (= #{"done"} status))))
 
   (testing "invalid display-namespaces"
-    (let [{:keys [err ex status]} (session/message {:op "macroexpand"
+    (let [{:keys [err ex status]} (session/message {:op "cider/macroexpand"
                                                     :expander "macroexpand-1"
                                                     :code "(defn x [] nil)"
                                                     :display-namespaces "foo"})]
@@ -127,7 +127,7 @@
       (is (= #{"done" "macroexpand-error"} status))))
 
   (testing "print-meta"
-    (let [{:keys [expansion status]} (session/message {:op "macroexpand"
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
                                                        :expander "macroexpand"
                                                        :code "(defn- x [] nil)"
                                                        :print-meta "true"})]

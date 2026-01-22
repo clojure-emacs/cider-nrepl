@@ -89,6 +89,9 @@
 
 (defn handle-complete [handler msg]
   (with-safe-transport handler msg
+    "cider/complete" complete-reply
     "complete" complete-reply
+    "cider/complete-doc" doc-reply
     "complete-doc" doc-reply
+    "cider/complete-flush-caches" flush-caches-reply
     "complete-flush-caches" flush-caches-reply))

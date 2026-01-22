@@ -120,7 +120,7 @@
 
 (defn handle-refresh [handler msg]
   (case (:op msg)
-    "refresh" (refresh-reply (assoc msg :platform find/clj))
-    "refresh-all" (refresh-reply (assoc msg :platform find/clj :add-all? true))
-    "refresh-clear" (clear-reply msg)
+    ("cider/refresh" "refresh") (refresh-reply (assoc msg :platform find/clj))
+    ("cider/refresh-all" "refresh-all") (refresh-reply (assoc msg :platform find/clj :add-all? true))
+    ("cider/refresh-clear" "refresh-clear") (clear-reply msg)
     (handler msg)))

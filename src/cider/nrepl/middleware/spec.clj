@@ -16,6 +16,9 @@
 
 (defn handle-spec [handler msg]
   (with-safe-transport handler msg
+    "cider/spec-list" spec-list-reply
     "spec-list" spec-list-reply
+    "cider/spec-form" spec-form-reply
     "spec-form" spec-form-reply
+    "cider/spec-example" spec-example-reply
     "spec-example" spec-example-reply))

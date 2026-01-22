@@ -516,11 +516,11 @@
 (defn handle-test [handler msg & _configuration]
   (case (:op msg)
     ;; (NOTE: deprecated)
-    "test"            (handle-test-op msg)
+    ("cider/test" "test")         (handle-test-op msg)
     ;; (NOTE: deprecated)
-    "test-all"        (handle-test-all-op msg)
+    ("cider/test-all" "test-all") (handle-test-all-op msg)
 
-    "test-var-query"  (handle-test-var-query-op msg)
-    "test-stacktrace" (handle-stacktrace-op msg)
-    "retest"          (handle-retest-op msg)
+    ("cider/test-var-query" "test-var-query")   (handle-test-var-query-op msg)
+    ("cider/test-stacktrace" "test-stacktrace") (handle-stacktrace-op msg)
+    ("cider/retest" "retest")                   (handle-retest-op msg)
     (handler msg)))

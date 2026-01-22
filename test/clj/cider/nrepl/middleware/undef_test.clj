@@ -14,7 +14,7 @@
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'x)"}))))
     (is (= #{"done"}
-           (:status (session/message {:op "undef"
+           (:status (session/message {:op "cider/undef"
                                       :ns "user"
                                       :sym "x"}))))
     (is (= ["nil"]
@@ -66,7 +66,7 @@
                      (session/message {:op "eval"
                                        :code "(ns-resolve 'user 'postwalk)"})))))
     (is (= #{"done"}
-           (:status (session/message {:op "undef"
+           (:status (session/message {:op "cider/undef"
                                       :ns "user"
                                       :sym "postwalk"}))))
     (is (= ["nil"]
@@ -79,25 +79,25 @@
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'user 'x)"}))))
     (is (= #{"done"}
-           (:status (session/message {:op "undef"
+           (:status (session/message {:op "cider/undef"
                                       :ns "user"
                                       :sym "x"}))))))
 
 (deftest undef-exceptions-test
   (testing "undef throws for non-existent namespaces"
-    (is (= #{"done" "undef-error"}
-           (:status (session/message {:op "undef"
+    (is (= #{"done" "cider/undef-error"}
+           (:status (session/message {:op "cider/undef"
                                       :ns "abc"
                                       :sym "x"})))))
 
   (testing "undef throws with missing arguments"
-    (is (= #{"done" "undef-error"}
-           (:status (session/message {:op "undef"}))
-           (:status (session/message {:op "undef" :ns "user"}))
-           (:status (session/message {:op "undef" :sym "x"})))))
+    (is (= #{"done" "cider/undef-error"}
+           (:status (session/message {:op "cider/undef"}))
+           (:status (session/message {:op "cider/undef" :ns "user"}))
+           (:status (session/message {:op "cider/undef" :sym "x"})))))
 
   (testing "error handling"
-    (let [response (session/message {:op "undef"})]
+    (let [response (session/message {:op "cider/undef"})]
       (is (:pp-stacktrace response))
       (is (:err response))
       (is (:ex response)))))
@@ -117,7 +117,7 @@
            (:value (session/message {:op "eval"
                                      :code "(ns-resolve 'other.ns 'System)"}))))
     (is (= #{"done"}
-           (:status (session/message {:op "undef-all"
+           (:status (session/message {:op "cider/undef-all"
                                       :ns "other.ns"}))))
     (is (= ["nil"]
            (:value (session/message {:op "eval"
@@ -131,3 +131,24 @@
     (is (= ["{}"]
            (:value (session/message {:op "eval"
                                      :code "(ns-aliases 'other.ns)"}))))))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'undef' op still works"
+    (is (= ["#'user/x"]
+           (:value (session/message {:op "eval"
+                                     :code "(def x 1)"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op "undef"
+                                      :ns "user"
+                                      :sym "x"}))))
+    (is (= ["nil"]
+           (:value (session/message {:op "eval"
+                                     :code "(ns-resolve 'user 'x)"})))))
+
+  (testing "Deprecated 'undef-all' op still works"
+    (is (= #{"done"}
+           (:status (session/message {:op "eval"
+                                      :code "(do (ns test.ns.x) (def a 1) (in-ns 'user))"}))))
+    (is (= #{"done"}
+           (:status (session/message {:op "undef-all"
+                                      :ns "test.ns.x"}))))))

@@ -263,10 +263,11 @@
   (let [msg (merge {:expander "macroexpand" :display-namespaces "qualified"} msg)]
     (if (cljs/grab-cljs-env msg)
       (with-safe-transport handler msg
+        "cider/macroexpand" [macroexpansion-reply-cljs :macroexpand-error]
         "macroexpand" [macroexpansion-reply-cljs :macroexpand-error])
       (handle-macroexpand-clj handler msg))))
 
 (defn handle-macroexpand [handler msg]
-  (if (= (:op msg) "macroexpand")
+  (if (#{"cider/macroexpand" "macroexpand"} (:op msg))
     (handle-macroexpand* handler msg)
     (handler msg)))

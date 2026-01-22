@@ -7,7 +7,7 @@
 (use-fixtures :once piggieback-fixture)
 
 (deftest cljs-info-test
-  (let [response (session/message {:op "info"
+  (let [response (session/message {:op "cider/info"
                                    :ns "cljs.core"
                                    :sym "map"})]
     (is (= "cljs.core" (:ns response)))
@@ -19,13 +19,13 @@
     (is (:column response))
     (is (= #{"done"} (:status response))))
 
-  (let [{:keys [status]} (session/message {:op "info"
+  (let [{:keys [status]} (session/message {:op "cider/info"
                                            :ns "cljs.core"
                                            :sym "non-existent-var"})]
     (is (= #{"no-info" "done"} status))))
 
 (deftest cljs-eldoc-test
-  (let [response (session/message {:op "eldoc"
+  (let [response (session/message {:op "cider/eldoc"
                                    :ns "cljs.core"
                                    :sym "println"})]
     (is (= [["&" "objs"]] (:eldoc response)))

@@ -45,4 +45,5 @@
 
 (defn handle-apropos [handler msg]
   (with-safe-transport handler msg
+    "cider/apropos" apropos
     "apropos" apropos))
