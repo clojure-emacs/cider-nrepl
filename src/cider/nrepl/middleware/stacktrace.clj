@@ -65,6 +65,6 @@
   "Handle stacktrace ops."
   [_ {:keys [op] :as msg}]
   (case op
-    "analyze-last-stacktrace" (handle-analyze-last-stacktrace-op msg)
-    "inspect-last-exception"  (handle-inspect-last-exception-op msg)
-    "stacktrace"              (handle-stacktrace-op msg)))
+    ("cider/analyze-last-stacktrace" "analyze-last-stacktrace") (handle-analyze-last-stacktrace-op msg)
+    ("cider/inspect-last-exception" "inspect-last-exception")   (handle-inspect-last-exception-op msg)
+    ("cider/stacktrace" "stacktrace")                           (handle-stacktrace-op msg)))

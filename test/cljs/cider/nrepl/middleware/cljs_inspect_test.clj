@@ -46,7 +46,7 @@
 
 (defn with-fresh-inspector
   [f]
-  (dorun (session/message {:op "inspect-clear"}))
+  (dorun (session/message {:op "cider/inspect-clear"}))
   (f))
 
 (use-fixtures :once piggieback-fixture)
@@ -62,41 +62,41 @@
 (deftest pop-empty-integration-test
   (testing "popping an empty inspector renders nil"
     (is+ (matchers/prefix nil-result)
-         (value (session/message {:op "inspect-pop"})))))
+         (value (session/message {:op "cider/inspect-pop"})))))
 
 (deftest pop-empty-idempotent-integration-test
   (testing "popping an empty inspector is idempotent"
     (is+ (matchers/prefix nil-result)
          (value (do
-                  (session/message {:op "inspect-pop"})
-                  (session/message {:op "inspect-pop"}))))))
+                  (session/message {:op "cider/inspect-pop"})
+                  (session/message {:op "cider/inspect-pop"}))))))
 
 (deftest push-empty-integration-test
   (testing "pushing an empty inspector index renders nil"
     (is+ (matchers/prefix nil-result)
-         (value (session/message {:op "inspect-push"
+         (value (session/message {:op "cider/inspect-push"
                                   :idx 2})))))
 
 (deftest push-empty-idempotent-integration-test
   (testing "pushing an empty inspector index is idempotent"
     (is+ (matchers/prefix nil-result)
          (value (do
-                  (session/message {:op "inspect-push"
+                  (session/message {:op "cider/inspect-push"
                                     :idx 2})
-                  (session/message {:op "inspect-push"
+                  (session/message {:op "cider/inspect-push"
                                     :idx 2}))))))
 
 (deftest refresh-empty-integration-test
   (testing "refreshing an empty inspector renders nil"
     (is+ (matchers/prefix nil-result)
-         (value (session/message {:op "inspect-refresh"})))))
+         (value (session/message {:op "cider/inspect-refresh"})))))
 
 (deftest refresh-empty-idempotent-integration-test
   (testing "refreshing an empty inspector renders nil"
     (is+ (matchers/prefix nil-result)
          (value (do
-                  (session/message {:op "inspect-refresh"})
-                  (session/message {:op "inspect-refresh"}))))))
+                  (session/message {:op "cider/inspect-refresh"})
+                  (session/message {:op "cider/inspect-refresh"}))))))
 
 (deftest inspect-expr-integration-test
   (testing "rendering an expr"
@@ -113,7 +113,7 @@
                (session/message {:op "eval"
                                  :inspect "true"
                                  :code code})
-               (session/message {:op "inspect-push"
+               (session/message {:op "cider/inspect-push"
                                  :idx 2}))
              value (inspect-test/section "Contents")))))
 
@@ -124,9 +124,9 @@
                (session/message {:op "eval"
                                  :inspect "true"
                                  :code code})
-               (session/message {:op "inspect-push"
+               (session/message {:op "cider/inspect-push"
                                  :idx 2})
-               (session/message {:op "inspect-pop"}))
+               (session/message {:op "cider/inspect-pop"}))
              value (inspect-test/section "Contents")))))
 
 (deftest next-page-integration-test
@@ -135,7 +135,7 @@
          (-> (do (session/message {:op "eval"
                                    :inspect "true"
                                    :code "(list* (map identity (range 35)))"})
-                 (session/message {:op "inspect-next-page"}))
+                 (session/message {:op "cider/inspect-next-page"}))
              value (inspect-test/section "Contents")))))
 
 (deftest refresh-integration-test
@@ -145,7 +145,7 @@
               (session/message {:op "eval"
                                 :inspect "true"
                                 :code code})
-              (session/message {:op "inspect-refresh"}))
+              (session/message {:op "cider/inspect-refresh"}))
             value (inspect-test/section "Contents")))))
 
 (deftest session-binding-integration-test

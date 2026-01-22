@@ -9,7 +9,7 @@
 (defn- foo [] (map inc (range 10)))
 
 (deftest fn-refs-integration-test
-  (let [response (session/message {:op "fn-refs" :ns "clojure.core" :sym "map"})
+  (let [response (session/message {:op "cider/fn-refs" :ns "clojure.core" :sym "map"})
         fn-refs (:fn-refs response)]
     (testing (pr-str response)
       (is (= (:status response) #{"done"}))
@@ -17,7 +17,7 @@
       (is (every? map? fn-refs))))
 
   (testing "`:file-url`"
-    (let [response (session/message {:op "fn-refs"
+    (let [response (session/message {:op "cider/fn-refs"
                                      :ns "cider.nrepl.middleware.xref"
                                      :sym "fn-refs-reply"})
           x (->> response
@@ -31,14 +31,14 @@
                 (str/starts-with? i "jar:file:")))))))
 
 (deftest fn-deps-integration-test
-  (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :sym "foo"})
+  (let [response (session/message {:op "cider/fn-deps" :ns "cider.nrepl.middleware.xref-test" :sym "foo"})
         fn-deps (:fn-deps response)]
     (is (= (:status response) #{"done"}))
     (is (= (count fn-deps) 3))
     (is (every? map? fn-deps)))
 
   (testing "`:file-url`"
-    (let [x (->> {:op "fn-deps"
+    (let [x (->> {:op "cider/fn-deps"
                   :ns "cider.nrepl.middleware.xref"
                   :sym "fn-refs-reply"
                   :file-format "v2"}
@@ -49,3 +49,16 @@
       (doseq [i x]
         (is (or (str/starts-with? i "file:")
                 (str/starts-with? i "jar:file:")))))))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'fn-refs' op still works"
+    (let [response (session/message {:op "fn-refs" :ns "clojure.core" :sym "map"})
+          fn-refs (:fn-refs response)]
+      (is (= (:status response) #{"done"}))
+      (is (> (count fn-refs) 0))))
+
+  (testing "Deprecated 'fn-deps' op still works"
+    (let [response (session/message {:op "fn-deps" :ns "cider.nrepl.middleware.xref-test" :sym "foo"})
+          fn-deps (:fn-deps response)]
+      (is (= (:status response) #{"done"}))
+      (is (= (count fn-deps) 3)))))

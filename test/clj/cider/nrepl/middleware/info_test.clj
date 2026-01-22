@@ -143,7 +143,7 @@
             :macro        matchers/absent
             :doc          "This is used for testing"
             :spec         matchers/absent}
-           (session/message {:op "info" :sym "testing-function" :ns "cider.nrepl.middleware.info-test"})))
+           (session/message {:op "cider/info" :sym "testing-function" :ns "cider.nrepl.middleware.info-test"})))
 
     (testing "get info of a clojure macro"
       (is+ {:status       #{"done"}
@@ -153,13 +153,13 @@
             :macro        "true"
             :doc          "a macro for testing"
             :spec         matchers/absent}
-           (session/message {:op "info" :sym "testing-macro" :ns "cider.nrepl.middleware.info-test"})))
+           (session/message {:op "cider/info" :sym "testing-macro" :ns "cider.nrepl.middleware.info-test"})))
 
     (when jdk-sources-present?
       (testing "'fragments' attributes are returned"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}
-              (session/message {:op "info"
+              (session/message {:op "cider/info"
                                 :class "java.lang.Thread"
                                 :member "sleep"})]
           (testing (pr-str response)
@@ -179,7 +179,7 @@
             :javadoc      (if (= misc/java-api-version 8)
                             "cider/nrepl/test/TestClass.html#getInt--"
                             "cider/nrepl/test/TestClass.html#getInt()")}
-           (session/message {:op "info"
+           (session/message {:op "cider/info"
                              :class "cider.nrepl.test.TestClass"
                              :member "getInt"})))
 
@@ -196,7 +196,7 @@
             :javadoc      (if (= misc/java-api-version 8)
                             "cider/nrepl/test/TestClass.html#doSomething-int-int-java.lang.String-"
                             "cider/nrepl/test/TestClass.html#doSomething(int,int,java.lang.String)")}
-           (session/message {:op "info"
+           (session/message {:op "cider/info"
                              :class "cider.nrepl.test.TestClass"
                              :member "doSomething"})))
 
@@ -211,7 +211,7 @@
             :javadoc      (if (= misc/java-api-version 8)
                             "https://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html#capacity--"
                             #"https://docs.oracle.com/en/java/javase/\d+/docs/api/java.base/java/lang/StringBuilder.html#capacity()")}
-           (session/message {:op "info"
+           (session/message {:op "cider/info"
                              :class "java.lang.StringBuilder"
                              :member "capacity"})))
 
@@ -222,7 +222,7 @@
             :special-form "true"
             :doc          #"^The instance member form works"
             :forms-str    #"^\(\.instanceMember instance args\*\)\n\(\.instanceMember"}
-           (session/message {:op "info" :sym "." :ns "user"})))
+           (session/message {:op "cider/info" :sym "." :ns "user"})))
 
     (testing "get info of a clojure non-core file, located in a jar"
       (is+ {:status       #{"done"}
@@ -232,10 +232,10 @@
             :arglists-str "[n]\n[n loader]"
             :doc          #"^Returns the URL for a named"
             :file         #"^jar:file:"}
-           (session/message {:op "info" :sym "resource" :ns "clojure.java.io"})))
+           (session/message {:op "cider/info" :sym "resource" :ns "clojure.java.io"})))
 
     (testing "nested members"
-      (let [response   (session/message {:op "info" :ns (ns-name *ns*) :sym ".toString"})
+      (let [response   (session/message {:op "cider/info" :ns (ns-name *ns*) :sym ".toString"})
             candidates (:candidates response)
             individual (:java.lang.Exception candidates)]
         (is+ {:candidates
@@ -253,15 +253,15 @@
             :file     #"clojure/data.clj$"
             :protocol "#'clojure.data/Diff"
             :ns       "cider.nrepl.middleware.info-test"}
-           (session/message {:op "info"
+           (session/message {:op "cider/info"
                              :ns "cider.nrepl.middleware.info-test"
                              :sym "junk-protocol-client"})))
 
     (testing "see also"
       (is+ {:see-also ["clojure.core/map-indexed" "clojure.core/pmap" "clojure.core/amap" "clojure.core/mapcat" "clojure.core/keep" "clojure.core/juxt" "clojure.core/mapv" "clojure.core/reduce" "clojure.core/run!"]}
-           (session/message {:op "info" :sym "map" :ns "cider.nrepl.middleware.info-test"}))
-      (is+ {:see-also matchers/absent} (session/message {:op "info" :sym "xyz" :ns "cider.nrepl.middleware.info-test"}))
-      (is+ {:see-also matchers/absent} (session/message {:op "info" :sym "xyz"}))))
+           (session/message {:op "cider/info" :sym "map" :ns "cider.nrepl.middleware.info-test"}))
+      (is+ {:see-also matchers/absent} (session/message {:op "cider/info" :sym "xyz" :ns "cider.nrepl.middleware.info-test"}))
+      (is+ {:see-also matchers/absent} (session/message {:op "cider/info" :sym "xyz"}))))
 
   (testing "eldoc op"
     (testing "clojure function"
@@ -271,18 +271,18 @@
             :type   "function"
             :class  matchers/absent
             :ns     "clojure.core"}
-           (session/message {:op "eldoc" :sym "+" :ns "user"})))
+           (session/message {:op "cider/eldoc" :sym "+" :ns "user"})))
 
     (testing "clojure special form"
       (is+ {:status #{"done"}
             :eldoc  [["try" "expr*" "catch-clause*" "finally-clause?"]]
             :type   "special-form"}
-           (session/message {:op "eldoc" :sym "try" :ns "user"})))
+           (session/message {:op "cider/eldoc" :sym "try" :ns "user"})))
 
     (testing "clojure dot operator"
       (is+ {:status #{"done"}
             :type   "special-form"}
-           (session/message {:op "eldoc" :sym "." :ns "user"})))
+           (session/message {:op "cider/eldoc" :sym "." :ns "user"})))
 
     (testing "clojure variable"
       (is+ {:status    #{"done"}
@@ -291,10 +291,10 @@
             :name      "some-test-var"
             :type      "variable"
             :ns        "cider.test-ns.first-test-ns"}
-           (session/message {:op "eldoc" :sym "some-test-var" :ns "cider.test-ns.first-test-ns"})))
+           (session/message {:op "cider/eldoc" :sym "some-test-var" :ns "cider.test-ns.first-test-ns"})))
 
     (testing "java interop method with multiple classes"
-      (let [msg {:op "eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"}]
+      (let [msg {:op "cider/eldoc" :sym ".length" :ns "cider.nrepl.middleware.info-test"}]
 
         (testing "Without a `:context` being provided"
           (is+ {:class  (matchers/embeds ["java.lang.String" "java.lang.StringBuffer" "java.lang.CharSequence" "java.lang.StringBuilder"])
@@ -313,7 +313,7 @@
       (testing "Fragments for java interop method with single class"
         (let [{:keys [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]
                :as response}
-              (session/message {:op "eldoc" :member "sleep" :class "java.lang.Thread"})]
+              (session/message {:op "cider/eldoc" :member "sleep" :class "java.lang.Thread"})]
           (testing (pr-str response)
 
             (doseq [f [doc-fragments doc-first-sentence-fragments doc-block-tags-fragments]]
@@ -324,76 +324,76 @@
             :member "startsWith"
             :type   "function"
             :ns     matchers/absent}
-           (session/message {:op "eldoc" :sym ".startsWith" :ns "cider.nrepl.middleware.info-test"})))
+           (session/message {:op "cider/eldoc" :sym ".startsWith" :ns "cider.nrepl.middleware.info-test"})))
 
     (when jdk-sources-present?
       (testing "java method eldoc lookup, internal testing methods"
         (is+ {:eldoc (matchers/embeds [["this"]
                                        ["this" "prim" "things" "generic"]])
               :type   "function"}
-             (session/message {:op "eldoc" :sym ".fnWithSameName" :ns "cider.nrepl.middleware.info-test"}))))))
+             (session/message {:op "cider/eldoc" :sym ".fnWithSameName" :ns "cider.nrepl.middleware.info-test"}))))))
 
 (deftest missing-info-test
   (testing "ensure info returns a no-info packet if symbol not found"
     (is+ {:status #{"no-info" "done"}}
-         (session/message {:op "info" :sym "awoeijfxcvb" :ns "user"})))
+         (session/message {:op "cider/info" :sym "awoeijfxcvb" :ns "user"})))
 
   (testing "info does not return a no-info packet if ns not found,
 but `:sym` is unqualified and resolves to a clojure.core var"
     (is+ {:status #{"done"}}
-         (session/message {:op "info" :sym "+" :ns "fakefakefake"})))
+         (session/message {:op "cider/info" :sym "+" :ns "fakefakefake"})))
 
   (testing "info does not return a no-info packet if ns not found,
 but `:sym` is qualified and resolves to a clojure.core var"
     (is+ {:status #{"done"}}
-         (session/message {:op "info" :sym "clojure.core/+" :ns "fakefakefake"})))
+         (session/message {:op "cider/info" :sym "clojure.core/+" :ns "fakefakefake"})))
 
   (testing "info does not return a no-info packet if ns not found,
 but `:sym` is qualified and resolves to a clojure.string var"
     (is+ {:status #{"done"}}
-         (session/message {:op "info" :sym "clojure.string/replace" :ns "fakefakefake"})))
+         (session/message {:op "cider/info" :sym "clojure.string/replace" :ns "fakefakefake"})))
 
   (testing "ensure info returns a no-info packet if class not found"
     (is+ {:status #{"no-info" "done"}}
-         (session/message {:op "info" :class "awoeijfxcvb" :member "toString"})))
+         (session/message {:op "cider/info" :class "awoeijfxcvb" :member "toString"})))
 
   (testing "ensure info returns a no-info packet if member not found"
     (is+ {:status #{"no-info" "done"}}
-         (session/message {:op "info" :class "java.lang.Exception" :member "fakefakefake"}))))
+         (session/message {:op "cider/info" :class "java.lang.Exception" :member "fakefakefake"}))))
 
 (deftest missing-eldoc-test
   (testing "ensure eldoc returns a no-eldoc packet if symbol not found"
     (is+ {:status #{"no-eldoc" "done"}}
-         (session/message {:op "eldoc" :sym "awoeijfxcvb" :ns "user"})))
+         (session/message {:op "cider/eldoc" :sym "awoeijfxcvb" :ns "user"})))
 
   (testing "eldoc does not return a no-eldoc packet if ns not found,
 but `:sym` is unqualified and resolves to a clojure.core var"
     (is+ {:status #{"done"}}
-         (session/message {:op "eldoc" :sym "+" :ns "fakefakefake"})))
+         (session/message {:op "cider/eldoc" :sym "+" :ns "fakefakefake"})))
 
   (testing "eldoc does not return a no-eldoc packet if ns not found,
 but `:sym` is qualified and resolves to a clojure.core var"
     (is+ {:status #{"done"}}
-         (session/message {:op "eldoc" :sym "clojure.core/+" :ns "fakefakefake"})))
+         (session/message {:op "cider/eldoc" :sym "clojure.core/+" :ns "fakefakefake"})))
 
   (testing "eldoc does not return a no-eldoc packet if ns not found,
 but `:sym` is qualified and resolves to a clojure.string var"
     (is+ {:status #{"done"}}
-         (session/message {:op "eldoc" :sym "clojure.string/replace" :ns "fakefakefake"})))
+         (session/message {:op "cider/eldoc" :sym "clojure.string/replace" :ns "fakefakefake"})))
 
   (testing "ensure eldoc returns a no-eldoc packet if class not found"
     (is+ {:status #{"no-eldoc" "done"}}
-         (session/message {:op "eldoc" :class "awoeijfxcvb" :member "toString"})))
+         (session/message {:op "cider/eldoc" :class "awoeijfxcvb" :member "toString"})))
 
   (testing "ensure eldoc returns a no-eldoc packet if member not found"
     (is+ {:status #{"no-eldoc" "done"}}
-         (session/message {:op "eldoc" :class "java.lang.Exception" :member "fakefakefake"}))))
+         (session/message {:op "cider/eldoc" :class "java.lang.Exception" :member "fakefakefake"}))))
 
 (deftest error-handling-test
-  (is+ {:status #{"no-info" "done"}} (session/message {:op "info" :class "test"}))
-  (is+ {:status #{"no-eldoc" "done"}} (session/message {:op "eldoc" :class "test"}))
-  (is+ {:status #{"no-info" "done"}} (session/message {:op "info" :member "test"}))
-  (is+ {:status #{"no-eldoc" "done"}} (session/message {:op "eldoc" :member "test"})))
+  (is+ {:status #{"no-info" "done"}} (session/message {:op "cider/info" :class "test"}))
+  (is+ {:status #{"no-eldoc" "done"}} (session/message {:op "cider/eldoc" :class "test"}))
+  (is+ {:status #{"no-info" "done"}} (session/message {:op "cider/info" :member "test"}))
+  (is+ {:status #{"no-eldoc" "done"}} (session/message {:op "cider/eldoc" :member "test"})))
 
 ;;;; eldoc datomic query
 (def testing-datomic-query '[:find ?x
@@ -404,36 +404,57 @@ but `:sym` is qualified and resolves to a clojure.string var"
 (deftest eldoc-datomic-query-test
   (testing "eldoc of inline datomic query"
     (is+ {:inputs '(["$" "%" "?person-id"])}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym "'[:find ?x :in $ % ?person-id]"
                            :ns "user"})))
 
   (testing "eldoc of inline datomic query as map"
     (is+ {:inputs '(["$" "%" "?person-id"])}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym "'{:find [?x] :in [$ % ?person-id]}"
                            :ns "user"})))
 
   (testing "eldoc of datomic query defined as symbol"
     (is+ {:inputs '(["$" "?name"])}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym "testing-datomic-query"
                            :ns "cider.nrepl.middleware.info-test"})))
 
   (testing "eldoc of inline datomic query without :in"
     (is+ {:inputs '(["$"])}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym "'[:find ?x]"
                            :ns "user"})))
 
   (testing "eldoc of inline datomic query as map without :in"
     (is+ {:inputs '(["$"])}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym "'{:find ?x}"
                            :ns "user"})))
 
   (testing "eldoc of empty datomic query"
     (is+ {:status #{"no-eldoc" "done"}}
-         (session/message {:op "eldoc-datomic-query"
+         (session/message {:op "cider/eldoc-datomic-query"
                            :sym ""
+                           :ns "user"}))))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'info' op still works"
+    (is+ {:status #{"done"}
+          :ns     "cider.nrepl.middleware.info-test"
+          :name   "testing-function"}
+         (session/message {:op "info" :sym "testing-function" :ns "cider.nrepl.middleware.info-test"})))
+
+  (testing "Deprecated 'eldoc' op still works"
+    (is+ {:status #{"done"}
+          :eldoc  [[] ["x"] ["x" "y"] ["x" "y" "&" "more"]]
+          :name   "+"
+          :type   "function"
+          :ns     "clojure.core"}
+         (session/message {:op "eldoc" :sym "+" :ns "user"})))
+
+  (testing "Deprecated 'eldoc-datomic-query' op still works"
+    (is+ {:inputs '(["$" "%" "?person-id"])}
+         (session/message {:op "eldoc-datomic-query"
+                           :sym "'[:find ?x :in $ % ?person-id]"
                            :ns "user"}))))

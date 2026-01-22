@@ -118,7 +118,7 @@
   If the slurp is malformed, or fails, lets the rest of the stack keep going."
   [handler msg]
   (let [{:keys [op url transport]} msg]
-    (if (and (= "slurp" op) url)
+    (if (and (#{"cider/slurp" "slurp"} op) url)
       (do (respond-to msg (slurp-url-to-content+body url))
           (respond-to msg :status :done))
       (handler msg))))

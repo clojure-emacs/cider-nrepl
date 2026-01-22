@@ -18,4 +18,5 @@
 
 (defn handle-classpath [handler msg]
   (with-safe-transport handler msg
+    "cider/classpath" classpath-reply
     "classpath" classpath-reply))

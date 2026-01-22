@@ -179,5 +179,7 @@ Please do not inline; they must not be recomputed at runtime."}
 
 (defn handle-out [handler msg]
   (with-safe-transport handler msg
+    "cider/out-subscribe" subscribe-session
     "out-subscribe" subscribe-session
+    "cider/out-unsubscribe" unsubscribe-session
     "out-unsubscribe" unsubscribe-session))

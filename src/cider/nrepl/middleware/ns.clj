@@ -135,10 +135,17 @@
 
 (defn handle-ns [handler msg]
   (with-safe-transport handler msg
+    "cider/ns-list" ns-list-reply
     "ns-list" ns-list-reply
+    "cider/ns-list-vars-by-name" ns-list-vars-by-name-reply
     "ns-list-vars-by-name" ns-list-vars-by-name-reply
+    "cider/ns-vars" ns-vars-reply
     "ns-vars" ns-vars-reply
+    "cider/ns-vars-with-meta" ns-vars-with-meta-reply
     "ns-vars-with-meta" ns-vars-with-meta-reply
+    "cider/ns-path" ns-path-reply
     "ns-path" ns-path-reply
+    "cider/ns-load-all" ns-load-all-reply
     "ns-load-all" ns-load-all-reply
+    "cider/ns-aliases" ns-aliases-reply
     "ns-aliases" ns-aliases-reply))

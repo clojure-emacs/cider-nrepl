@@ -10,12 +10,20 @@
 
 (deftest spec-list-integration-test
   (let [filter-regex "clojure"
-        filtered-spec-list (:spec-list (session/message {:op "spec-list"
+        filtered-spec-list (:spec-list (session/message {:op "cider/spec-list"
                                                          :filter-regex filter-regex}))]
     (testing "Filtered spec list retrieving nothing extra"
       (is (every? #(re-find (re-pattern (str ":?" filter-regex)) %)
                   filtered-spec-list)))
     (testing "Filtering with simple words regex"
       (is (= (count filtered-spec-list)
-             (count (:spec-list (session/message {:op "spec-list"
+             (count (:spec-list (session/message {:op "cider/spec-list"
                                                   :filter-regex (str filter-regex ".+")}))))))))
+
+(deftest deprecated-op-test
+  (testing "Deprecated 'spec-list' op still works"
+    (let [filter-regex "clojure"
+          spec-list (:spec-list (session/message {:op "spec-list"
+                                                  :filter-regex filter-regex}))]
+      (is (every? #(re-find (re-pattern (str ":?" filter-regex)) %)
+                  spec-list)))))

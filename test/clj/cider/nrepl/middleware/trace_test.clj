@@ -36,10 +36,10 @@
 
 (deftest integration-tests-var
   (testing "toggling"
-    (let [on  (session/message {:op "toggle-trace-var"
+    (let [on  (session/message {:op "cider/toggle-trace-var"
                                 :ns "cider.test-ns.first-test-ns"
                                 :sym "same-name-testing-function"})
-          off (session/message {:op "toggle-trace-var"
+          off (session/message {:op "cider/toggle-trace-var"
                                 :ns "cider.test-ns.first-test-ns"
                                 :sym "same-name-testing-function"})]
       (is (= (:status on) (:status off) #{"done"}))
@@ -48,10 +48,10 @@
       (is (= (:var-status off) "untraced"))))
 
   (testing "unresolvable"
-    (let [var-err (session/message {:op "toggle-trace-var"
+    (let [var-err (session/message {:op "cider/toggle-trace-var"
                                     :ns "cider.test-ns.first-test-ns"
                                     :sym "missing"})
-          ns-err  (session/message {:op "toggle-trace-var"
+          ns-err  (session/message {:op "cider/toggle-trace-var"
                                     :ns "cider.test-ns.no-such-ns"
                                     :sym "same-name-testing-function"})]
       (is (= (:status var-err) (:status ns-err) #{"toggle-trace-error" "done"}))
@@ -59,15 +59,36 @@
 
 (deftest integration-test-ns
   (testing "toggling"
+    (let [on  (session/message {:op "cider/toggle-trace-ns"
+                                :ns "cider.test-ns.first-test-ns"})
+          off (session/message {:op "cider/toggle-trace-ns"
+                                :ns "cider.test-ns.first-test-ns"})]
+      (is (= (:status on) (:status off) #{"done"}))
+      (is (= (:ns-status on) "traced"))
+      (is (= (:ns-status off) "untraced")))
+
+    (let [ns-err (session/message {:op "cider/toggle-trace-ns"
+                                   :ns "cider.test-ns.missing"})]
+      (is (= (:status ns-err)  #{"done"}))
+      (is (= (:ns-status ns-err) "not-found")))))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'toggle-trace-var' op still works"
+    (let [on  (session/message {:op "toggle-trace-var"
+                                :ns "cider.test-ns.first-test-ns"
+                                :sym "same-name-testing-function"})
+          off (session/message {:op "toggle-trace-var"
+                                :ns "cider.test-ns.first-test-ns"
+                                :sym "same-name-testing-function"})]
+      (is (= (:status on) (:status off) #{"done"}))
+      (is (= (:var-status on) "traced"))
+      (is (= (:var-status off) "untraced"))))
+
+  (testing "Deprecated 'toggle-trace-ns' op still works"
     (let [on  (session/message {:op "toggle-trace-ns"
                                 :ns "cider.test-ns.first-test-ns"})
           off (session/message {:op "toggle-trace-ns"
                                 :ns "cider.test-ns.first-test-ns"})]
       (is (= (:status on) (:status off) #{"done"}))
       (is (= (:ns-status on) "traced"))
-      (is (= (:ns-status off) "untraced")))
-
-    (let [ns-err (session/message {:op "toggle-trace-ns"
-                                   :ns "cider.test-ns.missing"})]
-      (is (= (:status ns-err)  #{"done"}))
-      (is (= (:ns-status ns-err) "not-found")))))
+      (is (= (:ns-status off) "untraced")))))

@@ -37,8 +37,8 @@
 (def ops-that-can-eval
   "Set of nREPL ops that can lead to code being evaluated."
   #{"eval" "load-file"
-    "refresh" "refresh-all" "refresh-clear"
+    "cider/refresh" "refresh" "cider/refresh-all" "refresh-all" "cider/refresh-clear" "refresh-clear"
     "cider.clj-reload/reload" "cider.clj-reload/reload-all" "cider.clj-reload/reload-clear"
-    "toggle-trace-var" "toggle-trace-ns"
-    "undef" "undef-all"
+    "cider/toggle-trace-var" "toggle-trace-var" "cider/toggle-trace-ns" "toggle-trace-ns"
+    "cider/undef" "undef" "cider/undef-all" "undef-all"
     "cider/profile-toggle-var" "cider/profile-toggle-ns"})

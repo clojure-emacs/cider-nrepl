@@ -29,7 +29,7 @@
   (testing "only single test is run with test"
     (are [tests] (let [{:keys [results] :as test-result}
                        (session/message
-                        {:op "test"
+                        {:op "cider/test"
                          :ns "cider.nrepl.middleware.test-filter-tests"
                          :tests (map name tests)})]
                    (= tests (keys (:cider.nrepl.middleware.test-filter-tests results))))
@@ -41,7 +41,7 @@
 (deftest only-smoke-test-run-test-deprecated
   (testing "only test marked as smoke is run when test-all is used"
     (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
-         (:results (session/message {:op      "test-all"
+         (:results (session/message {:op      "cider/test-all"
                                      :include ["smoke"]
                                      :exclude ["integration"]}))))
 
@@ -64,19 +64,19 @@
     (is+ {:cider.nrepl.middleware.test-filter-tests
           (matchers/all-of {:a-puff-of-smoke-test some?}
                            #(> (count %) 1))}
-         (:results (session/message {:op "test"
+         (:results (session/message {:op "cider/test"
                                      :ns "cider.nrepl.middleware.test-filter-tests"})))))
 
 (deftest only-smoke-test-run-test
   (testing "only test marked as smoke is run when test-var-query is used"
     (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
-         (:results (session/message {:op "test-var-query"
+         (:results (session/message {:op "cider/test-var-query"
                                      :var-query {:include-meta-key ["smoke"]
                                                  :exclude-meta-key ["integration"]}}))))
 
   (testing "only test marked as smoke is run when test-ns is used"
     (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
-         (:results (session/message {:op "test-var-query"
+         (:results (session/message {:op "cider/test-var-query"
                                      :var-query {:ns-query {:exactly ["cider.nrepl.middleware.test-filter-tests"]}
                                                  :include-meta-key ["smoke"]
                                                  :exclude-meta-key ["integration"]}}))))
@@ -85,7 +85,7 @@
     (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?
                                                      :yet-an-other-test some?
                                                      :test-with-map-as-message some?}}
-         (:results (session/message {:op "test-var-query"
+         (:results (session/message {:op "cider/test-var-query"
                                      :var-query {:ns-query {:exactly ["cider.nrepl.middleware.test-filter-tests"]}
                                                  :exclude-meta-key ["integration"]}}))))
 
@@ -93,7 +93,7 @@
     (is+ {:cider.nrepl.middleware.test-filter-tests
           (matchers/all-of {:a-puff-of-smoke-test some?}
                            #(> (count %) 1))}
-         (:results (session/message {:op "test-var-query"
+         (:results (session/message {:op "cider/test-var-query"
                                      :var-query {:ns-query {:exactly ["cider.nrepl.middleware.test-filter-tests"]}}})))))
 
 (deftest handling-of-tests-with-throwing-fixtures
@@ -112,7 +112,7 @@
               :results {:cider.nrepl.middleware.test-with-throwing-fixtures
                         {:cider.nrepl.middleware.test/unknown
                          [{:error "clojure.lang.ExceptionInfo: I'm an exception inside a fixture! {:data 42}"}]}}}
-             (session/message {:op "test"
+             (session/message {:op "cider/test"
                                :ns "cider.nrepl.middleware.test-with-throwing-fixtures"}))))))
 
 (deftest run-test-with-map-as-documentation-message
@@ -120,7 +120,7 @@
     (is+ {:results
           {:cider.nrepl.middleware.test-filter-tests
            {:test-with-map-as-message [{:message "{:key \"val\"}"}]}}}
-         (session/message {:op "test"
+         (session/message {:op "cider/test"
                            :ns "cider.nrepl.middleware.test-filter-tests"
                            :tests ["test-with-map-as-message"]}))))
 
@@ -142,7 +142,7 @@
                        ;; Reports the elapsed time for the entire run,
                        ;; across namespaces
                        :ms #(> % 950)}}
-       (session/message {:op "test-var-query"
+       (session/message {:op "cider/test-var-query"
                          :var-query {:ns-query {:exactly ["failing-test-ns"]}}}))
 
   (testing "Timing also works for `retest` on all levels"
@@ -150,7 +150,7 @@
           :ns-elapsed-time {:failing-test-ns {:humanized string?}}
           :results {:failing-test-ns
                     {:fast-failing-test [{:elapsed-time {:humanized string?}}]}}}
-         (session/message {:op "retest"})))
+         (session/message {:op "cider/retest"})))
 
   (testing "Tests with multiple testing contexts"
     (is+ {:results {:failing-test-ns2
@@ -170,29 +170,29 @@
           :var-elapsed-time {:failing-test-ns2
                              {:two-clauses {:elapsed-time some?}
                               :uses-are {:elapsed-time some?}}}}
-         (session/message {:op "test-var-query"
+         (session/message {:op "cider/test-var-query"
                            :var-query {:ns-query {:exactly ["failing-test-ns2"]}}}))))
 
 (deftest fail-fast-test
   (require 'failing-test-ns)
-  (let [test-result (session/message {:op "test-var-query"
+  (let [test-result (session/message {:op "cider/test-var-query"
                                       :var-query {:ns-query {:exactly ["failing-test-ns"]}}
                                       :fail-fast "true"})]
     (is (= 1
            (count (:failing-test-ns (:results test-result))))))
 
-  (let [test-result (session/message {:op "test-var-query"
+  (let [test-result (session/message {:op "cider/test-var-query"
                                       :var-query {:ns-query {:exactly ["failing-test-ns"]}}
                                       :fail-fast "false"})]
     (is (= 2
            (count (:failing-test-ns (:results test-result))))))
 
-  (let [test-result (session/message {:op "retest"
+  (let [test-result (session/message {:op "cider/retest"
                                       :fail-fast "false"})]
     (is (= 2
            (count (:failing-test-ns (:results test-result))))))
 
-  (let [test-result (session/message {:op "retest"
+  (let [test-result (session/message {:op "cider/retest"
                                       :fail-fast "true"})]
     (is (= 1
            (count (:failing-test-ns (:results test-result)))))))
@@ -260,3 +260,30 @@ that threw the exception")))
                    e
                    (-> #'stack-frame-line-test meta :test))))
         "Returns the line of the exception")))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'test' op still works"
+    (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
+         (:results (session/message {:op      "test"
+                                     :ns      "cider.nrepl.middleware.test-filter-tests"
+                                     :include ["smoke"]
+                                     :exclude ["integration"]}))))
+
+  (testing "Deprecated 'test-all' op still works"
+    (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
+         (:results (session/message {:op      "test-all"
+                                     :include ["smoke"]
+                                     :exclude ["integration"]}))))
+
+  (testing "Deprecated 'test-var-query' op still works"
+    (is+ {:cider.nrepl.middleware.test-filter-tests {:a-puff-of-smoke-test some?}}
+         (:results (session/message {:op "test-var-query"
+                                     :var-query {:include-meta-key ["smoke"]
+                                                 :exclude-meta-key ["integration"]}}))))
+
+  (testing "Deprecated 'retest' op still works"
+    (require 'failing-test-ns)
+    (session/message {:op "cider/test-var-query"
+                      :var-query {:ns-query {:exactly ["failing-test-ns"]}}})
+    (is+ {:results {:failing-test-ns some?}}
+         (session/message {:op "retest"}))))

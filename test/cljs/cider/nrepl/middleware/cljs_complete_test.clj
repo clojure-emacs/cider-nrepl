@@ -7,13 +7,13 @@
 (use-fixtures :once piggieback-fixture)
 
 (deftest cljs-complete-test
-  (let [response (session/message {:op "complete"
+  (let [response (session/message {:op "cider/complete"
                                    :prefix ""})]
     (is (= #{"done"} (:status response)))
     (is (sequential? (:completions response)))
     (is (every? map? (:completions response))))
 
-  (let [response (session/message {:op "complete"
+  (let [response (session/message {:op "cider/complete"
                                    :prefix "defpro"})
         candidate (first (:completions response))]
     (is (= "defprotocol" (:candidate candidate)))
@@ -21,7 +21,7 @@
     (is (= "macro" (:type candidate))))
 
   (testing "function metadata"
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :prefix "assoc"
                                      :extra-metadata ["arglists" "doc"]})
           candidate (first (:completions response))]
@@ -29,7 +29,7 @@
       (is (string? (:doc candidate)))))
 
   (testing "macro metadata"
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :prefix "defprot"
                                      :extra-metadata ["arglists" "doc"]})
           candidate (first (:completions response))]
@@ -38,7 +38,7 @@
 
 (deftest cljs-complete-with-suitable-test
   (testing "js global completion"
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :ns "cljs.user"
                                      :prefix "js/Ob"
                                      :enhanced-cljs-completion? "t"})
@@ -46,12 +46,12 @@
       (is (= [{:candidate "js/Object", :ns "js", :type "function"}] candidates))))
 
   (testing "manages context state"
-    (session/message {:op "complete"
+    (session/message {:op "cider/complete"
                       :ns "cljs.user"
                       :prefix ".xxxx"
                       :context "(__prefix__ js/Object)"
                       :enhanced-cljs-completion? "t"})
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :ns "cljs.user"
                                      :prefix ".key"
                                      :context ":same"
@@ -60,13 +60,13 @@
       (is (= [{:ns "js/Object", :candidate ".keys" :type "function"}] candidates))))
 
   (testing "no suitable completions without enhanced-cljs-completion? flag"
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :ns "cljs.user"
                                      :prefix "js/Ob"})
           candidates (:completions response)]
       (is (empty? candidates))))
   (testing "local bindings"
-    (let [response (session/message {:op "complete"
+    (let [response (session/message {:op "cider/complete"
                                      :ns "cljs.user"
                                      :prefix "ba"
                                      ;; Including `quux :quux` helps ensuring that only
@@ -79,16 +79,16 @@
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"
-    (let [response (session/message {:op "complete-doc" :sym "tru"})]
+    (let [response (session/message {:op "cider/complete-doc" :sym "tru"})]
       (is (= (:status response) #{"done"}))
       (is (empty? (:completion-doc response)) "an unknown symbol should have empty doc.")))
 
   (testing "suitable documentation for a symbol"
-    (let [response (session/message {:op "complete-doc" :sym "map"})]
+    (let [response (session/message {:op "cider/complete-doc" :sym "map"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[f\] \[f coll\] \[f c1 c2\] \[f c1 c2 c3\] \[f c1 c2 c3 & colls\]\)" (:completion-doc response)) "should return the \"map\" docstring")))
 
   (testing "suitable documentation for a macro symbol"
-    (let [response (session/message {:op "complete-doc" :sym "when"})]
+    (let [response (session/message {:op "cider/complete-doc" :sym "when"})]
       (is (= (:status response) #{"done"}))
       (is (re-find #"\(\[test & body\]\)" (:completion-doc response)) "should return the \"when\" docstring"))))

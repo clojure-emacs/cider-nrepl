@@ -777,9 +777,9 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                (handler (if nrepl-1-5+?
                           (maybe-debug-nrepl-1-5+ msg)
                           (maybe-debug msg))))
-    "debug-instrumented-defs" (instrumented-defs-reply msg)
-    "debug-input" (when-let [pro (@promises (:key msg))]
-                    (deliver pro input))
-    "init-debugger" (initialize msg)
+    ("cider/debug-instrumented-defs" "debug-instrumented-defs") (instrumented-defs-reply msg)
+    ("cider/debug-input" "debug-input") (when-let [pro (@promises (:key msg))]
+                                          (deliver pro input))
+    ("cider/init-debugger" "init-debugger") (initialize msg)
     ;; else
     (handler msg)))

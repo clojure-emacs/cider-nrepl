@@ -34,13 +34,13 @@
   (testing "refresh op works"
     (is+ {:reloading some?
           :status #{"done" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload})))
 
   (testing "nothing to refresh after refreshing"
     (is+ {:reloading []
           :status #{"done" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload}))))
 
 (deftest before-fn-test
@@ -48,25 +48,25 @@
     (is+ {:reloading some?
           :status #{"done" "invoked-before" "invoking-before" "ok"}
           :out "before-fn invoked\n"}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :before "cider.nrepl.middleware.refresh-test/before-fn"})))
 
   (testing "bad before fn results in not resolved response"
     (is+ {:status #{"done" "invoked-not-resolved" "ok" "invoking-before"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :before "non-existent/foo"}))
 
     (is+ {:status #{"done" "error" "invoking-before"}
           :err some?
           :error some?}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :before "clojure.core/seq"}))
 
     (is+ {:status #{"done" "invoked-not-resolved" "invoking-before" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :before "java.lang.Thread"}))))
 
@@ -75,7 +75,7 @@
     (is+ {:reloading some?
           :status #{"done" "invoked-after" "invoking-after" "ok"}
           :out "after-fn invoked\n"}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :after "cider.nrepl.middleware.refresh-test/after-fn"})))
 
@@ -83,25 +83,25 @@
     (is+ {:reloading some?
           :status #{"done" "invoked-after" "invoking-after" "ok"}
           :out "after with optional argument works\n"}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :after "cider.nrepl.middleware.refresh-test/after-fn-optional-arg"})))
 
   (testing "bad after fn results in error"
     (is+ {:status #{"done" "invoked-not-resolved" "invoking-after" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :after "non-existent/foo"}))
 
     (is+ {:status #{"done" "error" "invoking-after" "ok"}
           :err some?
           :error some?}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :after "clojure.core/seq"}))
 
     (is+ {:status #{"done" "invoked-not-resolved" "invoking-after" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload
                            :after "java.lang.Thread"}))))
 
@@ -109,20 +109,20 @@
   (testing "refresh-all op works"
     (is+ {:reloading not-empty
           :status #{"done" "ok"}}
-         (session/message {:op "refresh-all"
+         (session/message {:op "cider/refresh-all"
                            :dirs dirs-to-reload}))))
 
 (deftest refresh-clear-op-test
   (testing "refresh-clear op works"
     (is+ {:status #{"done"}}
-         (do (session/message {:op "refresh"
+         (do (session/message {:op "cider/refresh"
                                :dirs dirs-to-reload})
-             (session/message {:op "refresh-clear"}))))
+             (session/message {:op "cider/refresh-clear"}))))
 
   (testing "refresh op works after refresh clear"
     (is+ {:reloading not-empty
           :status #{"done" "ok"}}
-         (session/message {:op "refresh"
+         (session/message {:op "cider/refresh"
                            :dirs dirs-to-reload}))))
 
 (deftest user-refresh-dirs-test
@@ -166,3 +166,19 @@
           ns-obj      (create-ns ns-name)]
       (alter-meta! ns-obj assoc :clojure.tools.namespace.repl/load false)
       (is (true? (#'r/unload-disabled? ns-name))))))
+
+(deftest deprecated-ops-test
+  (testing "Deprecated 'refresh' op still works"
+    (is+ {:status (mc/embeds #{"done"})}
+         (session/message {:op "refresh"
+                           :dirs dirs-to-reload})))
+
+  (testing "Deprecated 'refresh-all' op still works"
+    (is+ {:reloading not-empty
+          :status #{"done" "ok"}}
+         (session/message {:op "refresh-all"
+                           :dirs dirs-to-reload})))
+
+  (testing "Deprecated 'refresh-clear' op still works"
+    (is+ {:status #{"done"}}
+         (session/message {:op "refresh-clear"}))))

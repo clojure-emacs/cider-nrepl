@@ -43,5 +43,7 @@
 
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
+    "cider/fn-refs" fn-refs-reply
     "fn-refs" fn-refs-reply
+    "cider/fn-deps" fn-deps-reply
     "fn-deps" fn-deps-reply))

@@ -29,5 +29,7 @@
 
 (defn handle-trace [handler msg]
   (with-safe-transport handler msg
+    "cider/toggle-trace-var" [toggle-trace-var :toggle-trace-error]
     "toggle-trace-var" [toggle-trace-var :toggle-trace-error]
-    "toggle-trace-ns"  [toggle-trace-ns :toggle-trace-error]))
+    "cider/toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]
+    "toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]))

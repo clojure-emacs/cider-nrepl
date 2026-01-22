@@ -168,6 +168,9 @@
 
 (defn handle-info [handler msg]
   (with-safe-transport handler msg
+    "cider/info" info-reply
     "info" info-reply
+    "cider/eldoc" eldoc-reply
     "eldoc" eldoc-reply
+    "cider/eldoc-datomic-query" eldoc-datomic-query-reply
     "eldoc-datomic-query" eldoc-datomic-query-reply))
