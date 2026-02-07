@@ -21,7 +21,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies
-  ~(cond-> '[[cider/orchard "0.38.0" :exclusions [org.clojure/clojure]]
+  ~(cond-> '[[cider/orchard "0.39.0" :exclusions [org.clojure/clojure]]
              [compliment "0.7.1"]
              [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
              [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]
@@ -136,13 +136,13 @@
                                                               cider.nrepl/wrap-xref]}}]
 
              :cljfmt [:test
-                      {:plugins [[dev.weavejester/lein-cljfmt "0.13.1"]]
+                      {:plugins [[dev.weavejester/lein-cljfmt "0.15.6"]]
                        :cljfmt {:extra-indents {timing [[:inner 0]]
                                                 with-debug-bindings [[:inner 0]]
                                                 merge-meta [[:inner 0]]
                                                 try-if-let [[:block 1]]}}}]
 
-             :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2025.04.07"]]}
+             :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2026.01.19"]]}
 
              :eastwood [:test
                         {:plugins [[jonase/eastwood "1.4.3"]]

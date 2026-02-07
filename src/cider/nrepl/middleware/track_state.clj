@@ -290,7 +290,7 @@
 ;;; State management
 
 (defn calculate-changed-project-state-response
-  "Calculate changes in project state since we lasst notified the client. Response
+  "Calculate changes in project state since we last notified the client. Response
   is a map:
   - `:repl-type` - either `:clj` or `:cljs`
   - `:changed-namespaces` - a map of namespaces that have changed
