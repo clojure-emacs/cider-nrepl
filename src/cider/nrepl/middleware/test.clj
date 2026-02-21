@@ -99,7 +99,7 @@
   (let [matcher-combinators-result? (= (:type (meta object))
                                        :matcher-combinators.clj-test/mismatch)
         print-fn (if matcher-combinators-result?
-                   println
+                   prn
                    pp/pprint)
         ;; The output will contain sorted maps for better readability and diff comparisons.
         result (with-out-str (print-fn (deep-sorted-maps object)))]

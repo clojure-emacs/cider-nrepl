@@ -6,6 +6,7 @@
 * Bump `orchard` to [0.39.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0390-2026-02-07).
 * [#959](https://github.com/clojure-emacs/cider-nrepl/pull/959): Stop shading Compliment and clj-reload.
 * [#710](https://github.com/clojure-emacs/cider-nrepl/issues/710): Make namespaced ops (e.g., `cider/complete`) the default and keep the old names as deprecated aliases.
+* [#965](https://github.com/clojure-emacs/cider-nrepl/issues/965): Stop losing quotes in matcher-combinators test output.
 
 ## 0.58.0 (2025-10-16)
 
