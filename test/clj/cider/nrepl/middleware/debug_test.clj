@@ -5,7 +5,6 @@
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
    [clojure.walk :as walk]
-   [matcher-combinators.matchers :as matchers]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.transport :as t]))
 

@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.middleware.content-type :as content-type]
    [cider.nrepl.test-session :as session]
+   [cider.test-helpers :refer :all]
    [clojure.string :as str]
    [clojure.test :refer :all])
   (:import
@@ -22,63 +23,54 @@
 
 (deftest content-type-middleware-test
   (testing "java.net.URI"
-    (is (= {:body ""
-            :content-type ["message/external-body"
-                           {:URL "https://lambdaisland.com"
-                            :access-type "URL"}]
-            :status #{"done"}}
-           (select-keys (session/message {:op "eval"
-                                          :code "(java.net.URI. \"https://lambdaisland.com\")"
-                                          :content-type "true"})
-                        [:body :content-type :content-transfer-encoding :status]))))
+    (is+ {:body ""
+          :content-type ["message/external-body"
+                         {:URL "https://lambdaisland.com"
+                          :access-type "URL"}]
+          :status #{"done"}}
+         (session/message {:op "eval"
+                           :code "(java.net.URI. \"https://lambdaisland.com\")"
+                           :content-type "true"})))
 
   (testing "java.net.URL"
-    (is (= {:body ""
-            :content-type ["message/external-body"
-                           {:URL "https://lambdaisland.com"
-                            :access-type "URL"}]
-            :status #{"done"}}
-           (select-keys (session/message {:op "eval"
-                                          :code "(java.net.URL. \"https://lambdaisland.com\")"
-                                          :content-type "true"})
-                        [:body :content-type :content-transfer-encoding :status]))))
+    (is+ {:body ""
+          :content-type ["message/external-body"
+                         {:URL "https://lambdaisland.com"
+                          :access-type "URL"}]
+          :status #{"done"}}
+         (session/message {:op "eval"
+                           :code "(java.net.URL. \"https://lambdaisland.com\")"
+                           :content-type "true"})))
 
   (testing "java.io.File"
     (let [f (java.io.File/createTempFile "foo" ".txt")
           path (.getCanonicalPath f)]
-      (is (= {:body ""
-              :content-type
-              ["message/external-body"
-               {:URL (str "file:" path) :access-type "URL"}]
-              :status #{"done"}}
-             (-> {:op "eval"
-                  :code (str "(java.io.File. " (pr-str path) ")")
-                  :content-type "true"}
-                 session/message
-                 (select-keys [:body :content-type :content-transfer-encoding :status]))))))
+      (is+ {:body ""
+            :content-type ["message/external-body"
+                           {:URL (str "file:" path) :access-type "URL"}]
+            :status #{"done"}}
+           (session/message {:op "eval"
+                             :code (str "(java.io.File. " (pr-str path) ")")
+                             :content-type "true"}))))
 
   (testing "java.awt.image.RenderedImage"
-    (is (= {:body (if (SystemUtils/IS_JAVA_1_8)
-                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mNgYGAAAAAEAAHI6uv5AAAAAElFTkSuQmCC"
-                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4XmNgYGAAAAAEAAEP0q3kAAAAAElFTkSuQmCC")
-            :content-type ["image/png" {}]
-            :content-transfer-encoding "base64"
-            :status #{"done"}}
-           (-> {:op "eval"
-                :code "(java.awt.image.BufferedImage. 1 1 java.awt.image.BufferedImage/TYPE_INT_RGB)"
-                :content-type "true"}
-               session/message
-               (select-keys [:body :content-type :content-transfer-encoding :status])))))
+    (is+ {:body (if (SystemUtils/IS_JAVA_1_8)
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mNgYGAAAAAEAAHI6uv5AAAAAElFTkSuQmCC"
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4XmNgYGAAAAAEAAEP0q3kAAAAAElFTkSuQmCC")
+          :content-type ["image/png" {}]
+          :content-transfer-encoding "base64"
+          :status #{"done"}}
+         (session/message {:op "eval"
+                           :code "(java.awt.image.BufferedImage. 1 1 java.awt.image.BufferedImage/TYPE_INT_RGB)"
+                           :content-type "true"})))
 
   (testing "custom type implementation"
-    (is (= {:body "graph foo {\na -- b;\nb -- c;\n}"
-            :content-type ["text/vnd.graphviz" {}]
-            :status #{"done"}}
-           (-> {:op "eval"
-                :code (str "^{:type :graphviz} "
-                           (pr-str
-                            {:name "foo"
-                             :edges [["a" "b"] ["b" "c"]]}))
-                :content-type "true"}
-               session/message
-               (select-keys [:body :content-type :content-transfer-encoding :status]))))))
+    (is+ {:body "graph foo {\na -- b;\nb -- c;\n}"
+          :content-type ["text/vnd.graphviz" {}]
+          :status #{"done"}}
+         (session/message {:op "eval"
+                           :code (str "^{:type :graphviz} "
+                                      (pr-str
+                                       {:name "foo"
+                                        :edges [["a" "b"] ["b" "c"]]}))
+                           :content-type "true"}))))

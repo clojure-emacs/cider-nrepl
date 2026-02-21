@@ -9,3 +9,8 @@
    `(is+ ~expected ~actual nil))
   ([expected actual message]
    `(is (~'match? ~expected ~actual) ~message)))
+
+(defn mc-includes [expected]
+  #(and (string? %) (.contains ^String % expected)))
+
+(matchers/any-of)

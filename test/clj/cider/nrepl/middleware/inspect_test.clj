@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require
-   [matcher-combinators.matchers :as matchers]
+   [matcher-combinators.matchers :as mc]
    [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.test-session :as session]
    [cider.nrepl.middleware.info-test :as info-test]
@@ -248,9 +248,6 @@
                  (session/message {:op "cider/inspect-refresh"}))
              value (section "Contents")))))
 
-(defn inspector-response [x]
-  (-> x :value first read-string))
-
 (deftest session-binding-integration-test
   (testing "session bindings can be inspected"
     (is+ inspect-contents
@@ -284,65 +281,51 @@
 (deftest max-atom-length-integration-test
   (let [max-len (:max-atom-length @#'orchard.inspect/default-inspector-config)
         xs #(str/join (repeat % "x"))
-        fits (pr-str [(xs (- max-len 10))]) ;; 140
+        fits (pr-str [(xs (- max-len 10))])    ;; 140
         too-long (pr-str [(xs (* max-len 2))]) ;; 300
         x-pattern #(str "\"" (xs %1) %2 "\\\"")
         extract-text #(-> % :value first)]
 
     (testing "max atom length can be set for the eval op"
-      (is (str/includes? (-> (session/message {:op      "eval"
-                                               :inspect "true"
-                                               :code    fits})
-                             extract-text)
-                         (x-pattern (- max-len 10) "")))
-      (is (str/includes? (-> (session/message {:op      "eval"
-                                               :inspect "true"
-                                               :code    too-long})
-                             extract-text)
-                         (x-pattern max-len "...")))
-      (is (str/includes? (-> (session/message {:op              "eval"
-                                               :inspect         "true"
-                                               :code            too-long
-                                               :max-atom-length 10})
-                             extract-text)
-                         (x-pattern 10 "..."))))
+      (is+ {:value [(mc-includes (x-pattern (- max-len 10) ""))]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    fits}))
+      (is+ {:value [(mc-includes (x-pattern max-len "..."))]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    too-long}))
+      (is+ {:value [(mc-includes (x-pattern 10 "..."))]}
+           (session/message {:op              "eval"
+                             :inspect         "true"
+                             :code            too-long
+                             :max-atom-length 10})))
 
     (testing "max atom length can be changed without re-eval'ing last form"
       (session/message {:op "cider/inspect-clear"})
-      (is (str/includes? (-> (session/message {:op      "eval"
-                                               :inspect "true"
-                                               :code    too-long})
-                             extract-text)
-                         (x-pattern max-len "...")))
-      (is (str/includes? (-> (session/message {:op              "cider/inspect-refresh"
-                                               :max-atom-length 10})
-                             extract-text)
-                         (x-pattern 10 "...")))
-      (is (str/includes? (-> (session/message {:op              "cider/inspect-refresh"
-                                               :max-atom-length 20})
-                             extract-text)
-                         (x-pattern 20 "..."))))))
+      (is+ {:value [(mc-includes (x-pattern max-len "..."))]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    too-long}))
+      (is+ {:value [(mc-includes (x-pattern 10 "..."))]}
+           (session/message {:op              "cider/inspect-refresh"
+                             :max-atom-length 10}))
+      (is+ {:value [(mc-includes (x-pattern 20 "..."))]}
+           (session/message {:op              "cider/inspect-refresh"
+                             :max-atom-length 20})))))
 
 (deftest max-value-length-integration-test
-  (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)
-        extract-text #(-> % :value first)]
-
+  (let [max-len (:max-value-length @#'orchard.inspect/default-inspector-config)]
     (testing "max value length can be set for the eval op"
-      (is (< max-len
-             (-> (session/message {:op      "eval"
-                                   :inspect "true"
-                                   :code    infinite-map-code})
-                 extract-text
-                 count)
-             (+ max-len 400)))
-      (is (< 500
-             (-> (session/message {:op               "eval"
-                                   :inspect          "true"
-                                   :code             infinite-map-code
-                                   :max-value-length 500})
-                 extract-text
-                 count)
-             900)))))
+      (is+ {:value [#(< max-len (count %) (+ max-len 400))]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    infinite-map-code}))
+      (is+ {:value [#(< 500 (count %) 900)]}
+           (session/message {:op               "eval"
+                             :inspect          "true"
+                             :code             infinite-map-code
+                             :max-value-length 500})))))
 
 (deftest max-coll-size-integration-test
   (let [size-limit (:max-coll-size @#'orchard.inspect/default-inspector-config)
@@ -351,77 +334,65 @@
         coll-pattern (fn [len & [truncate]]
                        (re-pattern (format "\\(%s%s\\)"
                                            (str/join " " (range len))
-                                           (if truncate " ..." ""))))
-        extract-text #(-> % :value first)]
+                                           (if truncate " ..." ""))))]
 
     (testing "max coll size can be set for the eval op"
-      (let [default-coll-size (session/message {:op      "eval"
-                                                :inspect "true"
-                                                :code    big-coll})
-            large-coll-size (session/message {:op            "eval"
-                                              :inspect       "true"
-                                              :code          big-coll
-                                              :max-coll-size big-size})
-            unchanged-default-coll-size (do (session/message {:op "cider/inspect-clear"})
-                                            (session/message {:op      "eval"
-                                                              :inspect "true"
-                                                              :code    big-coll}))]
-        (is (re-find (coll-pattern size-limit :truncate) ;; #"\(0 1 2 3 4 ...\)"
-                     (extract-text default-coll-size)))
-        (is (re-find (coll-pattern big-size)             ;; #"\(0 1 2 3 4 5 6 7 8 9\)"
-                     (extract-text large-coll-size)))
-        (is (re-find (coll-pattern size-limit :truncate)
-                     (extract-text unchanged-default-coll-size)))))
+      (is+ {:value [(coll-pattern size-limit :truncate)]} ;; #"\(0 1 2 3 4 ...\)"
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    big-coll}))
+      (is+ {:value [(coll-pattern big-size)]} ;; #"\(0 1 2 3 4 5 6 7 8 9\)"
+           (session/message {:op            "eval"
+                             :inspect       "true"
+                             :code          big-coll
+                             :max-coll-size big-size}))
+      (is+ {:value [(coll-pattern size-limit :truncate)]}
+           (do (session/message {:op "cider/inspect-clear"})
+               (session/message {:op      "eval"
+                                 :inspect "true"
+                                 :code    big-coll}))))
 
     (testing "max coll size can be changed without re-eval'ing last form"
-      (let [default-coll-size (session/message {:op      "eval"
-                                                :inspect "true"
-                                                :code    big-coll})
-            large-coll-size (session/message {:op            "cider/inspect-refresh"
-                                              :max-coll-size big-size})
-            smaller-coll-size (session/message {:op            "cider/inspect-refresh"
-                                                :max-coll-size (dec big-size)})
-            unchanged-default-coll-size (do (session/message {:op "cider/inspect-clear"})
-                                            (session/message {:op      "eval"
-                                                              :inspect "true"
-                                                              :code    big-coll}))]
-        (is (re-find (coll-pattern size-limit :truncate)
-                     (extract-text default-coll-size)))
-        (is (re-find (coll-pattern big-size)
-                     (extract-text large-coll-size)))
-        (is (re-find (coll-pattern (dec big-size) :truncate)
-                     (extract-text smaller-coll-size)))
-        (is (re-find (coll-pattern size-limit :truncate)
-                     (extract-text unchanged-default-coll-size)))))))
+      (is+ {:value [(coll-pattern size-limit :truncate)]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    big-coll}))
+      (is+ {:value [(coll-pattern big-size)]}
+           (session/message {:op            "cider/inspect-refresh"
+                             :max-coll-size big-size}))
+      (is+ {:value [(coll-pattern (dec big-size) :truncate)]}
+           (session/message {:op            "cider/inspect-refresh"
+                             :max-coll-size (dec big-size)}))
+      (is+ {:value [(coll-pattern size-limit :truncate)]}
+           (do (session/message {:op "cider/inspect-clear"})
+               (session/message {:op      "eval"
+                                 :inspect "true"
+                                 :code    big-coll}))))))
 
 (deftest max-nested-depth-integration-test
   (let [nested-coll "'([[[[[[[[[[1]]]]]]]]]])"
         extract-text #(-> % :value first)]
 
     (testing "max nested depth can be set for the eval op"
-      (let [default (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    nested-coll})
-            limited (session/message {:op               "eval"
-                                      :inspect          "true"
-                                      :code             nested-coll
-                                      :max-nested-depth 5})]
-        (is (str/includes? (extract-text default)
-                           "\"[[[[[[[[[[1]]]]]]]]]]\""))
-        (is (str/includes? (extract-text limited)
-                           "\"[[[[[[...]]]]]]\""))))
+      (is+ {:value [#(str/includes? % "\"[[[[[[[[[[1]]]]]]]]]]\"")]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    nested-coll}))
+      (is+ {:value [#(str/includes? % "\"[[[[[[...]]]]]]\"")]}
+           (session/message {:op               "eval"
+                             :inspect          "true"
+                             :code             nested-coll
+                             :max-nested-depth 5})))
 
     (testing "max nested depth can be changed without re-eval'ing last form"
       (session/message {:op "cider/inspect-clear"})
-      (let [default (session/message {:op      "eval"
-                                      :inspect "true"
-                                      :code    nested-coll})
-            limited (session/message {:op            "cider/inspect-refresh"
-                                      :max-nested-depth 5})]
-        (is (str/includes? (extract-text default)
-                           "\"[[[[[[[[[[1]]]]]]]]]]\""))
-        (is (str/includes? (extract-text limited)
-                           "\"[[[[[[...]]]]]]\""))))))
+      (is+ {:value [#(str/includes? % "\"[[[[[[[[[[1]]]]]]]]]]\"")]}
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    nested-coll}))
+      (is+ {:value [#(str/includes? % "\"[[[[[[...]]]]]]\"")]}
+           (session/message {:op "cider/inspect-refresh"
+                             :max-nested-depth 5})))))
 
 (def normal-mode-prefix
   ["--- Contents:" [:newline]
@@ -457,13 +428,13 @@
 (deftest object-view-mode-integration-test
   (testing "view-mode can be toggled with inspect-toggle-view-mode op"
     (session/message {:op "cider/inspect-clear"})
-    (is+ (matchers/prefix normal-mode-prefix)
+    (is+ (mc/prefix normal-mode-prefix)
          (value-skip-header (session/message {:op      "eval"
                                               :inspect "true"
                                               :code    "(list 1 2 3)"})))
-    (is+ (matchers/prefix object-mode-prefix)
+    (is+ (mc/prefix object-mode-prefix)
          (value-skip-header (session/message {:op "cider/inspect-toggle-view-mode"})))
-    (is+ (matchers/prefix normal-mode-prefix)
+    (is+ (mc/prefix normal-mode-prefix)
          (value-skip-header (session/message {:op "cider/inspect-toggle-view-mode"}))))
 
   (testing "view-mode is automatically reset after navigating down"
@@ -471,11 +442,11 @@
     (session/message {:op      "eval"
                       :inspect "true"
                       :code    "(list 1 2 3)"})
-    (is+ (matchers/prefix object-mode-prefix)
+    (is+ (mc/prefix object-mode-prefix)
          (value-skip-header (session/message {:op "cider/inspect-toggle-view-mode"})))
-    (is+ (matchers/prefix ["--- Contents:" [:newline]
-                           "  0. " [:value "2" number?] [:newline]
-                           "  1. " [:value "3" number?] [:newline]])
+    (is+ (mc/prefix ["--- Contents:" [:newline]
+                     "  0. " [:value "2" number?] [:newline]
+                     "  1. " [:value "3" number?] [:newline]])
          (value-skip-header (session/message {:op "cider/inspect-push" :idx 13})))))
 
 (deftest display-analytics-integration-test
@@ -484,14 +455,14 @@
     (value-skip-header (session/message {:op      "eval"
                                          :inspect "true"
                                          :code    "(range 100)"}))
-    (is+ (matchers/prefix ["--- Analytics:" [:newline]
-                           "  " [:value ":count" pos?] " = " [:value "100" pos?] [:newline]
-                           "  " [:value ":types" pos?] " = " [:value "{java.lang.Long 100}" pos?] [:newline]])
+    (is+ (mc/prefix ["--- Analytics:" [:newline]
+                     "  " [:value ":count" pos?] " = " [:value "100" pos?] [:newline]
+                     "  " [:value ":types" pos?] " = " [:value "{java.lang.Long 100}" pos?] [:newline]])
          (value-skip-header (session/message {:op "cider/inspect-display-analytics"}))))
 
   (testing "analytics hint is displayed when requested"
     (session/message {:op "cider/inspect-clear"})
-    (is+ (matchers/prefix ["--- Analytics:" [:newline] #"Press 'y' or M-x"])
+    (is+ (mc/prefix ["--- Analytics:" [:newline] #"Press 'y' or M-x"])
          (value-skip-header (session/message {:op      "eval"
                                               :inspect "true"
                                               :code    "(range 100)"
@@ -503,7 +474,7 @@
     (session/message {:op      "eval"
                       :inspect "true"
                       :code    "(repeat 20 {:a 1})"})
-    (is+ (matchers/prefix table-mode-prefix)
+    (is+ (mc/prefix table-mode-prefix)
          (value-skip-header (session/message {:op "cider/inspect-toggle-view-mode"})))))
 
 (deftest pretty-print-integration-test
@@ -590,11 +561,11 @@
 
 (deftest print-length-independence-test
   (testing "*print-length* doesn't break rendering of long collections"
-    (is (re-find #"showing page: \d+ of \d+"
-                 (binding [*print-length* 10]
-                   (first (:value (session/message {:op      "eval"
-                                                    :inspect "true"
-                                                    :code    "(range 100)"}))))))))
+    (is+ {:value [#"showing page: \d+ of \d+"]}
+         (binding [*print-length* 10]
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    "(range 100)"})))))
 
 (deftest inspect-print-current-value-test
   (testing "inspect-print-current-value returns the currently inspected value as a printed string"
@@ -630,41 +601,43 @@
 
 (deftest inspect-print-current-value-no-value-test
   (testing "inspect-print-current-value returns nil if nothing has been inspected yet"
-    (is (= ["nil"] (:value (session/message
-                            {:op "cider/inspect-print-current-value"
-                             :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))))
+    (is+ {:value ["nil"]}
+         (session/message
+          {:op "cider/inspect-print-current-value"
+           :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))
 
 (deftest inspect-print-current-value-default-print-fn-test
   (testing "inspect-print-current-value uses a default print fn when none is provided"
-    (is (= ["nil"] (:value (session/message {:op "cider/inspect-print-current-value"}))))))
+    (is+ {:value ["nil"]}
+         (session/message {:op "cider/inspect-print-current-value"}))))
 
 (deftest inspect-print-current-value-infinite-seq-test
   (testing "inspect-print-current-value works with infinite-seqs"
-    (is (str/starts-with? (first (:value (do (session/message {:op "eval"
-                                                               :code "(def test-val (repeat :x))"})
-                                             (session/message {:op "eval"
-                                                               :inspect "true"
-                                                               :code "test-val"})
-                                             (session/message {:op "cider/inspect-print-current-value"
-                                                               :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))
-                          "(:x"))))
+    (is+ {:value (mc/prefix [#"^\(:x"])}
+         (do (session/message {:op "eval"
+                               :code "(def test-val (repeat :x))"})
+             (session/message {:op "eval"
+                               :inspect "true"
+                               :code "test-val"})
+             (session/message {:op "cider/inspect-print-current-value"
+                               :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"})))))
 
 (deftest inspect-def-current-value-test
   (testing "inspect-def-current-value defines a var with the current inspector value"
-    (is (= "{3 4}"
-           (first (:value (do
-                            (session/message {:op   "eval"
-                                              :code "(def test-val [{1 2} {3 4}])"})
-                            (session/message {:op      "eval"
-                                              :inspect "true"
-                                              :code    "test-val"})
-                            (session/message {:op  "cider/inspect-push"
-                                              :idx 2})
-                            (session/message {:op       "cider/inspect-def-current-value"
-                                              :ns       "user"
-                                              :var-name "sub-map"})
-                            (session/message {:op   "eval"
-                                              :code "sub-map"}))))))))
+    (is+ {:value ["{3 4}"]}
+         (do
+           (session/message {:op   "eval"
+                             :code "(def test-val [{1 2} {3 4}])"})
+           (session/message {:op      "eval"
+                             :inspect "true"
+                             :code    "test-val"})
+           (session/message {:op  "cider/inspect-push"
+                             :idx 2})
+           (session/message {:op       "cider/inspect-def-current-value"
+                             :ns       "user"
+                             :var-name "sub-map"})
+           (session/message {:op   "eval"
+                             :code "sub-map"})))))
 
 (deftest inspect-tap-current-value-test
   (testing "inspect-tap-current-value taps the current inspector value"
