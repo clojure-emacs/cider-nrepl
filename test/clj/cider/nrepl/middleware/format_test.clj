@@ -1,7 +1,9 @@
 (ns cider.nrepl.middleware.format-test
   (:require
    [cider.nrepl.test-session :as session]
+   [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
+   [matcher-combinators.matchers :as mc]
    [nrepl.middleware.print :as print]))
 
 (def ugly-code-sample
@@ -56,123 +58,110 @@
 
 (deftest format-code-op-test
   (testing "format-code works"
-    (let [{:keys [formatted-code status]} (session/message {:op "cider/format-code"
-                                                            :code ugly-code-sample})]
-      (is (= #{"done"} status))
-      (is (= formatted-code-sample formatted-code))))
+    (is+ {:status #{"done"}
+          :formatted-code formatted-code-sample}
+         (session/message {:op "cider/format-code", :code ugly-code-sample})))
 
   (testing "format-code works with indents option"
-    (let [{:keys [formatted-code status]} (session/message {:op "cider/format-code"
-                                                            :code ugly-code-sample
-                                                            :options {"indents" {"let" [["block" 2]]}}})]
-      (is (= #{"done"} status))
-      (is (= "(let [x 3
+    (is+ {:status #{"done"}
+          :formatted-code "(let [x 3
       y 4]
-     (+ (* x x) (* y y)))"
-             formatted-code))))
+     (+ (* x x) (* y y)))"}
+         (session/message {:op "cider/format-code"
+                           :code ugly-code-sample
+                           :options {"indents" {"let" [["block" 2]]}}})))
 
   (testing "format-code works with alias-map option"
     (let [alias-sample    "(foo/bar 1\n2)"
-          default-options {"indents" {"foo.core/bar" [["inner" 0]]}}
-          normal-reply    (session/message {:op "cider/format-code" :code alias-sample
-                                            :options default-options})
-          alias-map-reply (session/message {:op "cider/format-code" :code alias-sample
-                                            :options (assoc default-options
-                                                            "alias-map" {"foo" "foo.core"})})]
-      (is (= #{"done"} (:status normal-reply) (:status alias-map-reply)))
-      (is (= "(foo/bar 1\n         2)" (:formatted-code normal-reply)))
-      (is (= "(foo/bar 1\n  2)" (:formatted-code alias-map-reply)))))
+          default-options {"indents" {"foo.core/bar" [["inner" 0]]}}]
+      (is+ {:status #{"done"}
+            :formatted-code "(foo/bar 1\n         2)"}
+           (session/message {:op "cider/format-code" :code alias-sample
+                             :options default-options}))
+      (is+ {:status #{"done"}
+            :formatted-code "(foo/bar 1\n  2)"}
+           (session/message {:op "cider/format-code" :code alias-sample
+                             :options (assoc default-options
+                                             "alias-map" {"foo" "foo.core"})}))))
 
   (testing "format-code op error handling"
-    (let [{:keys [status ^String err ex]} (session/message {:op "cider/format-code"
-                                                            :code "*/*/*!~v"})]
-      (is (= #{"cider/format-code-error" "done"} status))
-      (is (.startsWith err "clojure.lang.ExceptionInfo: Invalid"))
-      (is (= ex "class clojure.lang.ExceptionInfo"))))
+    (is+ {:status #{"cider/format-code-error" "done"}
+          :ex "class clojure.lang.ExceptionInfo"
+          :err #"^clojure.lang.ExceptionInfo: Invalid"}
+         (session/message {:op "cider/format-code"
+                           :code "*/*/*!~v"})))
 
   (testing "format-code returns an error if indents option is invalid"
-    (let [{:keys [status ^String err ex] :as reply} (session/message {:op "cider/format-code"
-                                                                      :code "(+ 1 2 3)"
-                                                                      :options {"indents" "INVALID"}})]
-      (is (= #{"cider/format-code-error" "done"} status))))
+    (is+ {:status #{"cider/format-code-error" "done"}}
+         (session/message {:op "cider/format-code"
+                           :code "(+ 1 2 3)"
+                           :options {"indents" "INVALID"}})))
 
   (testing "format-code returns an error if alias-map option is invalid"
-    (let [{:keys [status ^String err ex] :as reply} (session/message {:op "cider/format-code"
-                                                                      :code "(+ 1 2 3)"
-                                                                      :options {"alias-map" "INVALID"}})]
-      (is (= #{"cider/format-code-error" "done"} status)))))
+    (is+ {:status #{"cider/format-code-error" "done"}}
+         (session/message {:op "cider/format-code"
+                           :code "(+ 1 2 3)"
+                           :options {"alias-map" "INVALID"}}))))
 
 (deftest format-edn-op-test
   (testing "format-edn works"
-    (let [{:keys [formatted-edn status]} (session/message {:op "cider/format-edn"
-                                                           :edn ugly-edn-sample})]
-      (is (= formatted-edn-sample formatted-edn))
-      (is (= #{"done"} status))))
+    (is+ {:status #{"done"}
+          :formatted-edn formatted-edn-sample}
+         (session/message {:op "cider/format-edn", :edn ugly-edn-sample})))
 
   ;; See: https://github.com/clojure-emacs/cider-nrepl/issues/722
   (testing "Objects of classes without an associated data-reader function are converted to strings via `pr-str`"
-    (let [{:keys [formatted-edn status]
-           :as response} (session/message {:op "cider/format-edn"
-                                           :edn (pr-str [1 2 (Object.) 3 4])})
-          [a b ^String c d e] (read-string formatted-edn)]
-      (testing (pr-str response)
-        (is (= [1 2 3 4]
-               [a b d e]))
-        (is (string? c))
-        (is (.contains c "java.lang.Object@"))
-        (is (= #{"done"} status)))))
+    (is+ {:status #{"done"}
+          :formatted-edn (mc/via read-string [1 2 #"java.lang.Object@" 3 4])}
+         (session/message {:op "cider/format-edn"
+                           :edn (pr-str [1 2 (Object.) 3 4])})))
 
   (testing "format-edn works for multiple forms"
-    (let [{:keys [formatted-edn status]} (session/message {:op "cider/format-edn"
-                                                           :edn ugly-edn-forms-sample})]
-      (is (= formatted-edn-forms-sample formatted-edn))
-      (is (= #{"done"} status))))
+    (is+ {:status #{"done"}
+          :formatted-edn formatted-edn-forms-sample}
+         (session/message {:op "cider/format-edn", :edn ugly-edn-forms-sample})))
 
   (testing "format-edn returns an error if the given EDN is malformed"
-    (let [{:keys [^String err status] :as response} (session/message {:op "cider/format-edn"
-                                                                      :edn unmatched-delimiter-edn-sample})]
-      (is (= #{"cider/format-edn-error" "done"} status))
-      (is (.startsWith err "clojure.lang.ExceptionInfo: Unmatched delimiter"))
-      (is (:pp-stacktrace response))))
+    (is+ {:status #{"cider/format-edn-error" "done"}
+          :err #"^clojure.lang.ExceptionInfo: Unmatched delimiter"
+          :pp-stacktrace some?}
+         (session/message {:op "cider/format-edn"
+                           :edn unmatched-delimiter-edn-sample})))
 
   (testing "format-edn respects the :right-margin print config"
-    (let [wide-edn-sample     "[1 2 3 4 5 6       7 8     9    0]"
-          normal-reply        (session/message {:op  "format-edn" :edn wide-edn-sample})
-          narrow-margin-reply (session/message {:op "cider/format-edn"
-                                                :edn wide-edn-sample
-                                                ::print/print "cider.nrepl.pprint/pprint"
-                                                ::print/options {:right-margin 10}})]
-      (is (= #{"done"} (:status normal-reply)))
-      (is (= "[1 2 3 4 5 6 7 8 9 0]" (:formatted-edn normal-reply)))
-      (is (= #{"done"} (:status narrow-margin-reply)))
-      (is (= "[1\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 0]" (:formatted-edn narrow-margin-reply)))))
+    (let [wide-edn-sample     "[1 2 3 4 5 6       7 8     9    0]"]
+      (is+ {:status #{"done"}
+            :formatted-edn "[1 2 3 4 5 6 7 8 9 0]"}
+           (session/message {:op  "format-edn" :edn wide-edn-sample}))
+      (is+ {:status #{"done"}
+            :formatted-edn "[1\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 0]"}
+           (session/message {:op "cider/format-edn"
+                             :edn wide-edn-sample
+                             ::print/print "cider.nrepl.pprint/pprint"
+                             ::print/options {:right-margin 10}}))))
 
   (testing "format-edn respects the ::print/print slot"
-    (let [{:keys [formatted-edn status]} (session/message {:op "cider/format-edn"
-                                                           :edn "{:b 2 :c 3 :a 1}"
-                                                           ::print/print "cider.nrepl.pprint/puget-pprint"})]
-      (is (= "{:a 1, :b 2, :c 3}" formatted-edn))
-      (is (= #{"done"} status))))
+    (is+ {:status #{"done"}
+          :formatted-edn "{:a 1, :b 2, :c 3}"}
+         (session/message {:op "cider/format-edn"
+                           :edn "{:b 2 :c 3 :a 1}"
+                           ::print/print "cider.nrepl.pprint/puget-pprint"})))
 
   (testing "format-edn uses a default printer if ::print/print is unresolvable"
-    (let [response (-> (session/message {:op "cider/format-edn"
-                                         :edn "{:b 2 :c 3 :a 1}"
-                                         ::print/print "fake.nrepl.pprint/puget-pprint"})
-                       (dissoc :id :session))]
-      (is (= {:formatted-edn "{:b 2, :c 3, :a 1}"
-              :status #{"done" "nrepl.middleware.print/error"}
-              :nrepl.middleware.print/error "Couldn't resolve var fake.nrepl.pprint/puget-pprint"}
-             response)))))
+    (is+ {:status #{"done" "nrepl.middleware.print/error"}
+          :formatted-edn "{:b 2, :c 3, :a 1}"
+          :nrepl.middleware.print/error "Couldn't resolve var fake.nrepl.pprint/puget-pprint"}
+         (session/message {:op "cider/format-edn"
+                           :edn "{:b 2 :c 3 :a 1}"
+                           ::print/print "fake.nrepl.pprint/puget-pprint"}))))
 
 (deftest deprecated-ops-test
   (testing "Deprecated 'format-code' op still works"
-    (let [{:keys [formatted-code status]} (session/message {:op "format-code"
-                                                            :code ugly-code-sample})]
-      (is (= #{"done"} status))
-      (is (= formatted-code-sample formatted-code))))
+    (is+ {:status #{"done"}
+          :formatted-code formatted-code-sample}
+         (session/message {:op "format-code", :code ugly-code-sample})))
 
   (testing "Deprecated 'format-edn' op still works"
-    (let [{:keys [formatted-edn status]} (session/message {:op "format-edn"
-                                                           :edn ugly-edn-sample})]
-      (is (= formatted-edn-sample formatted-edn))
-      (is (= #{"done"} status)))))
+    (is+ {:status #{"done"}
+          :formatted-edn formatted-edn-sample}
+         (session/message {:op "format-edn", :edn ugly-edn-sample}))))

@@ -4,14 +4,14 @@
    [cider.nrepl.test-session :as session]
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
-   [matcher-combinators.matchers :as matchers]))
+   [matcher-combinators.matchers :as mc]))
 
 (use-fixtures :each session/session-fixture)
 
 (deftest complete
   (testing "blank"
     (is+ {:status #{"done"}
-          :completions (matchers/seq-of map?)}
+          :completions (mc/seq-of map?)}
          (session/message {:op "cider/complete"
                            :ns "user"
                            :prefix ""})))
@@ -41,19 +41,19 @@
                                                 :extra-metadata ["arglists" "doc"]})))))
 
   (testing "default sorting"
-    (is+ (matchers/prefix [{:candidate "map"}
-                           {:candidate "map?"}
-                           {:candidate "mapv"}
-                           {:candidate "mapcat"}])
+    (is+ (mc/prefix [{:candidate "map"}
+                     {:candidate "map?"}
+                     {:candidate "mapv"}
+                     {:candidate "mapcat"}])
          (:completions (session/message {:op "cider/complete"
                                          :ns "user"
                                          :prefix "map"}))))
 
   (testing "by-name sorting"
-    (is+ (matchers/prefix [{:candidate "map"}
-                           {:candidate "map-entry?"}
-                           {:candidate "map-indexed"}
-                           {:candidate "map?"}])
+    (is+ (mc/prefix [{:candidate "map"}
+                     {:candidate "map-entry?"}
+                     {:candidate "map-indexed"}
+                     {:candidate "map?"}])
          (:completions (session/message {:op "cider/complete"
                                          :ns "user"
                                          :prefix "map"

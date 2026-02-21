@@ -2,8 +2,10 @@
   (:require
    [cider.nrepl.middleware.apropos :refer [apropos] :as apropos]
    [cider.nrepl.test-session :as session]
+   [cider.test-helpers :refer :all]
    [clojure.string :as str]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [matcher-combinators.matchers :as mc]))
 
 (def ^:private ^{:doc "Can't. See. Me"} my-private-var [:a :b :c])
 
@@ -11,84 +13,76 @@
 
 (deftest msg->var-query-map-test
   (testing "Constructs the ns-query map correctly"
-    (let [msg {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]
-               :query "spelling"}
-          query-map (#'apropos/msg->var-query-map msg)]
-      (is (contains? (:var-query query-map) :ns-query))
-      (is (= 3 (count (-> query-map :var-query :ns-query :exclude-regexps))))))
+    (is+ {:var-query {:ns-query {:exclude-regexps #(= (count %) 3)}}}
+         (#'apropos/msg->var-query-map {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]
+                                        :query "spelling"})))
 
   (testing "No :search key in the query-map if no :query in message"
-    (let [msg {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]}
-          query-map (#'apropos/msg->var-query-map msg)]
-      (is ((complement contains?) (:var-query query-map) :search)))))
+    (is+ {:var-query {:search mc/absent}}
+         (#'apropos/msg->var-query-map {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]}))))
 
 (deftest integration-test
   (testing "Apropos op, typical case"
-    (let [response (session/message {:op "cider/apropos" :query "handle-apropos"})
-          match    (get-in response [:apropos-matches 0])]
-      (is (= (:status response) #{"done"}))
-      (is (= (:type match) "function"))
-      (is (= (:name match) "cider.nrepl.middleware.apropos/handle-apropos"))))
+    (is+ {:status #{"done"}
+          :apropos-matches [{:type "function"
+                             :name "cider.nrepl.middleware.apropos/handle-apropos"}]}
+         (session/message {:op "cider/apropos" :query "handle-apropos"})))
 
   (testing "Exclude namespaces typical case"
-    (let [response (session/message {:op "cider/apropos" :query "handle-apropos"
-                                     :exclude-regexps ["cider.nrepl.middleware.apropos"]})
-          match    (get-in response [:apropos-matches 0])]
-      (is (empty? match))
-      (is (= (:status response) #{"done"}))))
+    (is+ {:status #{"done"}
+          :apropos-matches []}
+         (session/message {:op "cider/apropos" :query "handle-apropos"
+                           :exclude-regexps ["cider.nrepl.middleware.apropos"]})))
 
   (testing "Apropos op, but specialized cases (invoked with prefix argument)"
     (testing "Fails to get a private var because private? unset"
-      (let [response (session/message {:op "cider/apropos" :query "my-private-var"})
-            match    (get-in response [:apropos-matches 0])]
-        (is (= (:status response) #{"done"}))
-        (is (empty? match))))
+      (is+ {:status #{"done"}
+            :apropos-matches []}
+           (session/message {:op "cider/apropos" :query "my-private-var"})))
 
     (testing "Gets a private var using a case insensitive query"
-      (let [response (session/message {:op "cider/apropos" :query "My-Private-Var" :privates? "t"})
-            match    (get-in response [:apropos-matches 0])]
-        (is (= (:status response) #{"done"}))
-        (is (= (:type match) "variable"))
-        (is (= (:name match) "cider.nrepl.middleware.apropos-test/my-private-var"))
-        (is (= (:doc  match) "Can't."))))
+      (is+ {:status #{"done"}
+            :apropos-matches [{:type "variable"
+                               :name "cider.nrepl.middleware.apropos-test/my-private-var"
+                               :doc "Can't."}]}
+           (session/message {:op "cider/apropos" :query "My-Private-Var" :privates? "t"})))
 
     (testing "Fails to get a private var due to case-mismatch in a case sensitive query"
-      (let [response (session/message {:op "cider/apropos"
-                                       :query "My-Private-Var"
-                                       :privates? "t"
-                                       :case-sensitive? "t"})
-            match (get-in response [:apropos-matches 0])]
-        (is (= (:status response) #{"done"}))
-        (is (empty? match))))
+      (is+ {:status #{"done"}
+            :apropos-matches []}
+           (session/message {:op "cider/apropos"
+                             :query "My-Private-Var"
+                             :privates? "t"
+                             :case-sensitive? "t"})))
 
     (testing "Finds a public macro via a case-insensitive search through the docs"
-      (let [doc-query "threads the expr through the forms"
-            response (session/message {:op "cider/apropos" :query doc-query :docs? "t"})
-            match    (get-in response [:apropos-matches 0])]
-        (is (= (:status response) #{"done"}))
-        (is (= (:type match) "macro"))
-        (is (= (:name match) "clojure.core/->"))
-        (is (-> match ^String (:doc) (.startsWith (str/capitalize doc-query))))))))
+      (is+ {:status #{"done"}
+            :apropos-matches (mc/prefix [{:type "macro"
+                                          :name "clojure.core/->"
+                                          :doc #"^Threads the expr through the forms"}])}
+           (session/message {:op "cider/apropos"
+                             :query "threads the expr through the forms"
+                             :docs? "t"})))))
 
 (deftest error-handling-test
   (testing "Handles a fake error done via mocked function"
     (with-redefs [apropos
                   (fn [args] (throw (Exception. "boom")))]
-      (let [response (session/message {:op "cider/apropos" :query "doesn't matter"})]
-        (is (= (:status response) #{"cider/apropos-error" "done"}))
-        (is (= (:ex response) "class java.lang.Exception"))
-        (is (-> response ^String (:err) (.startsWith "java.lang.Exception: boom")))
-        (is (:pp-stacktrace response)))))
+      (is+ {:status #{"cider/apropos-error" "done"}
+            :ex "class java.lang.Exception"
+            :err #"^java.lang.Exception: boom"
+            :pp-stacktrace some?}
+           (session/message {:op "cider/apropos" :query "doesn't matter"}))))
 
   (testing "Handles a real error caused by an improper regular expression"
-    (let [response (session/message {:op "cider/apropos" :query "*illegal"})]
-      (is (= (:status response) #{"cider/apropos-error" "done"}))
-      (is (-> response ^String (:err) (.startsWith "java.util.regex.PatternSyntaxException: Dangling")))
-      (is (:pp-stacktrace response)))))
+    (is+ {:status #{"cider/apropos-error" "done"}
+          :err #"^java.util.regex.PatternSyntaxException: Dangling"
+          :pp-stacktrace some?}
+         (session/message {:op "cider/apropos" :query "*illegal"}))))
 
 (deftest deprecated-op-test
   (testing "Deprecated 'apropos' op still works"
-    (let [response (session/message {:op "apropos" :query "handle-apropos"})
-          match    (get-in response [:apropos-matches 0])]
-      (is (= (:status response) #{"done"}))
-      (is (= (:name match) "cider.nrepl.middleware.apropos/handle-apropos")))))
+    (is+ {:status #{"done"}
+          :apropos-matches [{:type "function"
+                             :name "cider.nrepl.middleware.apropos/handle-apropos"}]}
+         (session/message {:op "apropos" :query "handle-apropos"}))))
