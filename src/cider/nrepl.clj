@@ -985,7 +985,8 @@ stack frame of the most recent exception."
                              "elapsed-time" "a report of the elapsed time spent running all the given namespaces. The structure is `:elapsed-time {:ms <integer> :humanized <string>}`."
                              "ns-elapsed-time" "a report of the elapsed time spent running each namespace. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
                              "var-elapsed-time" "a report of the elapsed time spent running each var. The structure is `:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}`."
-                             "results" "Misc information about the test result. The structure is `:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}`"})
+                             "results" "A map of test results keyed by namespace and var name: `{<ns keyword> {<var keyword> [<assertion> ...]}}`. Each assertion map contains: `:type` (pass/fail/error), `:ns`, `:var`, `:index` (0-based assertion index within the var), `:context` (testing context string or nil), `:message`, `:file`, `:line`. For `:fail`: `:expected` and `:actual` (pretty-printed strings), and optionally `:diffs` and `:gen-input`. For `:error`: `:error` (the exception) and `:line`. Each assertion may also include `:elapsed-time {:ms <integer> :humanized <string>}` when it is the only assertion in its var."
+                             "summary" "A map of test run counts: `{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}`."})
 
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
 
