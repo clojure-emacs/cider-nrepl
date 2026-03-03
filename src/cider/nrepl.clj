@@ -335,43 +335,59 @@ making the results more accurate (and less numerous)."
 Defaults to the value of `orchard.meta/var-meta-allowlist`.
 If specified, the value will be concatenated to that of `orchard.meta/var-meta-allowlist`."})
 
+(def info-returns
+  {"arglists-str"  "The argument list(s) as a formatted string, if applicable."
+   "added"         "The Clojure version when the var was added, if available."
+   "class"         "The Java class name, for Java members."
+   "column"        "The column number where the symbol is defined."
+   "doc"           "The docstring of the symbol, if available."
+   "file"          "Either a URI or a relative path where the symbol is defined."
+   "forms-str"     "The forms for special forms, as a formatted string."
+   "javadoc"       "URL to Javadoc documentation, for Java members."
+   "line"          "The line number where the symbol is defined."
+   "macro"         "\"true\" if the symbol is a macro."
+   "member"        "The Java class member name, for Java members."
+   "modifiers"     "Set of modifiers (e.g. public, static) for Java members."
+   "name"          "The unqualified name of the symbol."
+   "ns"            "The namespace the symbol belongs to."
+   "resource"      "Relative path to the resource file."
+   "returns"       "The return type for Java methods."
+   "see-also"      "A list of related symbol names."
+   "special-form"  "\"true\" if the symbol is a special form."
+   "spec"          "The spec definition, if a spec exists for the symbol."
+   "status"        "done"
+   "url"           "URL to reference documentation, for special forms."
+   "candidates"    "A map of class names to member info, for ambiguous Java member lookups."})
+
+(def eldoc-returns
+  {"eldoc"     "A list of argument lists. Each argument list is a list of strings. Absent for variables."
+   "type"      "The type of symbol: \"function\", \"variable\", \"macro\", or \"special-form\"."
+   "name"      "The unqualified name of the symbol."
+   "ns"        "The namespace the symbol belongs to. Absent for Java members."
+   "class"     "A list of class names, for Java members."
+   "member"    "The Java method name, for Java members."
+   "docstring" "The docstring of the symbol, if available. May be absent."
+   "status"    "done"})
+
 (def-wrapper wrap-info cider.nrepl.middleware.info/handle-info
   (cljs/requires-piggieback
    {:requires #{#'session}
     :handles {"cider/info"
-              {:doc "Return a map of information about the specified symbol.
-
-Note: Documentation may be incomplete; not all return keys are described."
-               :optional info-params
-               :returns (merge {"arglists-str" "The arguments list(s) accepted by the symbol, as a string, if applicable."
-                                "column"       "The column number where the symbol is defined."
-                                "file"         "Either a URI or a relative path where the symbol is defined."
-                                "line"         "The line number the symbol is defined."
-                                "name"         "The unqualified name of the symbol."
-                                "ns"           "The namespace the symbol belongs to."
-                                "status"       "done"}
-                               fragments-doc)}
-              "info"
-              {:doc "Deprecated: use `cider/info` instead. Return a map of information about the specified symbol.
-
-Note: Documentation may be incomplete; not all return keys are described."
-               :optional info-params
-               :returns (merge {"arglists-str" "The arguments list(s) accepted by the symbol, as a string, if applicable."
-                                "column"       "The column number where the symbol is defined."
-                                "file"         "Either a URI or a relative path where the symbol is defined."
-                                "line"         "The line number the symbol is defined."
-                                "name"         "The unqualified name of the symbol."
-                                "ns"           "The namespace the symbol belongs to."
-                                "status"       "done"}
-                               fragments-doc)}
-              "cider/eldoc"
               {:doc "Return a map of information about the specified symbol."
                :optional info-params
-               :returns (merge {"status" "done"} fragments-doc)}
-              "eldoc"
-              {:doc "Deprecated: use `cider/eldoc` instead. Return a map of information about the specified symbol."
+               :returns (merge info-returns fragments-doc)}
+              "info"
+              {:doc "Deprecated: use `cider/info` instead. Return a map of information about the specified symbol."
                :optional info-params
-               :returns (merge {"status" "done"} fragments-doc)}
+               :returns (merge info-returns fragments-doc)}
+              "cider/eldoc"
+              {:doc "Return a map of eldoc information about the specified symbol, suitable for displaying function signatures and short documentation in the editor."
+               :optional info-params
+               :returns (merge eldoc-returns fragments-doc)}
+              "eldoc"
+              {:doc "Deprecated: use `cider/eldoc` instead. Return a map of eldoc information about the specified symbol, suitable for displaying function signatures and short documentation in the editor."
+               :optional info-params
+               :returns (merge eldoc-returns fragments-doc)}
               "cider/eldoc-datomic-query"
               {:doc "Return a map containing the inputs of the datomic query."
                :requires {"sym" "The symbol to lookup"
