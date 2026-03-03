@@ -42,7 +42,8 @@
   "A list of nREPL built-in ops.
   We use it to filter those out in the docs generation process."
   #{:add-middleware :clone :close :completions :describe
-    :eval :interrupt :load-file :lookup :ls-middleware :ls-sessions
+    :eval :forward-system-output :interrupt :load-file :lookup
+    :ls-middleware :ls-sessions
     :sideloader-start :sideloader-provide :stdin :swap-middleware})
 
 (defn relevant-ops
