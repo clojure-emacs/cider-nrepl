@@ -1011,25 +1011,25 @@ stack frame of the most recent exception."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "cider/test-all"
-             {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
+             {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "test-all"
-             {:doc "Deprecated: use `cider/test-all` instead. Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
+             {:doc "Deprecated: use `cider/test-all` instead. Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "cider/test-stacktrace"
-             {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
               :optional wrap-print-optional-arguments}
              "test-stacktrace"
-             {:doc "Deprecated: use `cider/test-stacktrace` instead. Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "Deprecated: use `cider/test-stacktrace` instead. Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
               :optional wrap-print-optional-arguments}
              "cider/retest"
-             {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}
              "retest"
-             {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+             {:doc "Deprecated: use `cider/retest` instead. Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
               :optional wrap-print-optional-arguments
               :returns (merge fail-fast-doc timing-info-return-doc)}}})
 
