@@ -12,6 +12,7 @@
 
 ;; Ensure tested tests are loaded:
 (require 'cider.nrepl.middleware.test-filter-tests)
+(require 'cider.nrepl.middleware.test-report-counters-tests)
 
 (use-fixtures :each session/session-fixture)
 
@@ -259,6 +260,13 @@ that threw the exception")))
                    e
                    (-> #'stack-frame-line-test meta :test))))
         "Returns the line of the exception")))
+
+(deftest report-counters-bound-test
+  (testing "*report-counters* is bound during test execution (see #686)"
+    (is+ {:summary {:pass 1, :fail 0, :error 0}}
+         (session/message {:op "cider/test"
+                           :ns "cider.nrepl.middleware.test-report-counters-tests"
+                           :tests ["report-counters-bound-test"]}))))
 
 (deftest deprecated-ops-test
   (testing "Deprecated 'test' op still works"
