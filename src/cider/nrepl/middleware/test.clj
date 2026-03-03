@@ -82,12 +82,9 @@
          (with-meta (into (sorted-map) x) (meta x))
          x))
      m)
-    (catch Exception _
-      ;; Maps with non-comparable keys aren't sortable so they should be returned as-is.
-      ;; Examples:
-      ;;   {{} 1}
-      ;;   {1 1 :a 1}
-      ;;   {"a" 1 :a 1}
+    (catch Throwable _
+      ;; Some objects can't be walked or sorted (e.g. non-comparable keys,
+      ;; Datomic entities that throw AbstractMethodError). Return as-is.
       m)))
 
 (defn- print-object
