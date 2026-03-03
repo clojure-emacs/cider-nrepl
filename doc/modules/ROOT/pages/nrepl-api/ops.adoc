@@ -10,7 +10,7 @@ This file was _generated_ with `lein docs`
 
 === `analyze-last-stacktrace`
 
-Return messages describing each cause and stack frame of the most recent exception.
+Deprecated: use ``cider/analyze-last-stacktrace`` instead. Return messages describing each cause and stack frame of the most recent exception.
 
 Required parameters::
 {blank}
@@ -31,7 +31,7 @@ Returns::
 
 === `apropos`
 
-Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring.
+Deprecated: use ``cider/apropos`` instead. Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring.
 
 Required parameters::
 * `:query` The search query.
@@ -64,7 +64,7 @@ Returns::
 
 === `classpath`
 
-Obtain a list of entries in the Java classpath.
+Deprecated: use ``cider/classpath`` instead. Obtain a list of entries in the Java classpath.
 
 Required parameters::
 {blank}
@@ -79,7 +79,7 @@ Returns::
 
 === `clojuredocs-lookup`
 
-Return a map of information in ClojureDocs.
+Deprecated: use ``cider/clojuredocs-lookup`` instead. Return a map of information in ClojureDocs.
 
 Required parameters::
 * `:ns` The namespace where ``sym`` will be resolved.
@@ -97,7 +97,7 @@ Returns::
 
 === `clojuredocs-refresh-cache`
 
-Reload exported documents file from ClojureDocs, and store it as a cache.
+Deprecated: use ``cider/clojuredocs-refresh-cache`` instead. Reload exported documents file from ClojureDocs, and store it as a cache.
 
 Required parameters::
 {blank}
@@ -113,7 +113,7 @@ Returns::
 
 === `complete`
 
-Return a list of symbols matching the specified (partial) symbol.
+Deprecated: use ``cider/complete`` instead. Return a list of symbols matching the specified (partial) symbol.
 
 Required parameters::
 * `:ns` The namespace is which to look for completions (falls back to \*ns* if not specified)
@@ -134,7 +134,7 @@ Returns::
 
 === `complete-doc`
 
-Retrieve documentation suitable for display in completion popup
+Deprecated: use ``cider/complete-doc`` instead. Retrieve documentation suitable for display in completion popup
 
 Required parameters::
 * `:ns` The symbol's namespace
@@ -151,7 +151,7 @@ Returns::
 
 === `complete-flush-caches`
 
-Forces the completion backend to repopulate all its caches
+Deprecated: use ``cider/complete-flush-caches`` instead. Forces the completion backend to repopulate all its caches
 
 Required parameters::
 {blank}
@@ -185,7 +185,7 @@ Returns::
 
 === `debug-input`
 
-Read client input on debug action.
+Deprecated: use ``cider/debug-input`` instead. Read client input on debug action.
 
 Required parameters::
 * `:input` The user's reply to the input request.
@@ -202,7 +202,7 @@ Returns::
 
 === `debug-instrumented-defs`
 
-Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed.
+Deprecated: use ``cider/debug-instrumented-defs`` instead. Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed.
 
 Required parameters::
 {blank}
@@ -218,7 +218,7 @@ Returns::
 
 === `debug-middleware`
 
-Debug a code form or fall back on regular eval.
+Deprecated: use ``cider/debug-middleware`` instead. Debug a code form or fall back on regular eval.
 
 Required parameters::
 * `:code` Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen.
@@ -238,7 +238,7 @@ Returns::
 
 === `eldoc`
 
-Return a map of information about the specified symbol.
+Deprecated: use ``cider/eldoc`` instead. Return a map of information about the specified symbol.
 
 Required parameters::
 {blank}
@@ -267,7 +267,7 @@ Returns::
 
 === `eldoc-datomic-query`
 
-Return a map containing the inputs of the datomic query.
+Deprecated: use ``cider/eldoc-datomic-query`` instead. Return a map containing the inputs of the datomic query.
 
 Required parameters::
 * `:ns` The current namespace
@@ -284,7 +284,7 @@ Returns::
 
 === `fn-deps`
 
-Look up the function dependencies of particular function.
+Deprecated: use ``cider/fn-deps`` instead. Look up the function dependencies of particular function.
 
 Required parameters::
 * `:ns` The current namespace
@@ -302,7 +302,7 @@ Returns::
 
 === `fn-refs`
 
-Look up functions that reference a particular function.
+Deprecated: use ``cider/fn-refs`` instead. Look up functions that reference a particular function.
 
 Required parameters::
 * `:ns` The current namespace
@@ -320,7 +320,7 @@ Returns::
 
 === `format-code`
 
-Reformats the given Clojure code, returning the result as a string.
+Deprecated: use ``cider/format-code`` instead. Reformats the given Clojure code, returning the result as a string.
 
 Required parameters::
 * `:code` The code to format.
@@ -337,7 +337,7 @@ Returns::
 
 === `format-edn`
 
-Reformats the given EDN data, returning the result as a string.
+Deprecated: use ``cider/format-edn`` instead. Reformats the given EDN data, returning the result as a string.
 
 Required parameters::
 * `:edn` The data to format.
@@ -359,7 +359,7 @@ Returns::
 
 === `info`
 
-Return a map of information about the specified symbol.
+Deprecated: use ``cider/info`` instead. Return a map of information about the specified symbol.
 
 Note: Documentation may be incomplete; not all return keys are described.
 
@@ -396,7 +396,7 @@ Returns::
 
 === `init-debugger`
 
-Initialize the debugger so that ``breakpoint`` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded.
+Deprecated: use ``cider/init-debugger`` instead. Initialize the debugger so that ``breakpoint`` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded.
 
 Required parameters::
 * `:id` A message id that will be responded to when a breakpoint is reached.
@@ -411,7 +411,7 @@ Returns::
 
 === `inspect-clear`
 
-Clears the state state of the inspector.
+Deprecated: use ``cider/inspect-clear`` instead. Clears the state state of the inspector.
 
 Required parameters::
 * `:session` The current session
@@ -429,7 +429,7 @@ Returns::
 
 === `inspect-def-current-value`
 
-Define the currently inspected value as a var with the given var-name in the provided namespace.
+Deprecated: use ``cider/inspect-def-current-value`` instead. Define the currently inspected value as a var with the given var-name in the provided namespace.
 
 Required parameters::
 * `:ns` Namespace to define var on
@@ -449,7 +449,7 @@ Returns::
 
 === `inspect-display-analytics`
 
-Calculate and render analytics section for the currently inspected object.
+Deprecated: use ``cider/inspect-display-analytics`` instead. Calculate and render analytics section for the currently inspected object.
 
 Required parameters::
 * `:session` The current session
@@ -467,7 +467,7 @@ Returns::
 
 === `inspect-last-exception`
 
-Returns an Inspector response for the last exception that has been processed through ``analyze-last-stacktrace`` for the current nrepl session.
+Deprecated: use ``cider/inspect-last-exception`` instead. Returns an Inspector response for the last exception that has been processed through ``analyze-last-stacktrace`` for the current nrepl session.
 Assumes that ``analyze-last-stacktrace`` has been called first, returning "no-error" otherwise.
 
 Required parameters::
@@ -486,7 +486,7 @@ Returns::
 
 === `inspect-next-page`
 
-Jumps to the next page in paginated collection view.
+Deprecated: use ``cider/inspect-next-page`` instead. Jumps to the next page in paginated collection view.
 
 Required parameters::
 * `:session` The current session
@@ -504,7 +504,7 @@ Returns::
 
 === `inspect-next-sibling`
 
-Increment the index of the last 'nth in the path by 1,
+Deprecated: use ``cider/inspect-next-sibling`` instead. Increment the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value.
 
 Required parameters::
@@ -523,7 +523,7 @@ Returns::
 
 === `inspect-pop`
 
-Moves one level up in the inspector stack.
+Deprecated: use ``cider/inspect-pop`` instead. Moves one level up in the inspector stack.
 
 Required parameters::
 * `:session` The current session
@@ -541,7 +541,7 @@ Returns::
 
 === `inspect-prev-page`
 
-Jumps to the previous page in paginated collection view.
+Deprecated: use ``cider/inspect-prev-page`` instead. Jumps to the previous page in paginated collection view.
 
 Required parameters::
 * `:session` The current session
@@ -559,7 +559,7 @@ Returns::
 
 === `inspect-previous-sibling`
 
-Decrement the index of the last 'nth in the path by 1,
+Deprecated: use ``cider/inspect-previous-sibling`` instead. Decrement the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value.
 
 Required parameters::
@@ -578,7 +578,7 @@ Returns::
 
 === `inspect-print-current-value`
 
-Print the current value of the inspector.
+Deprecated: use ``cider/inspect-print-current-value`` instead. Print the current value of the inspector.
 
 Required parameters::
 * `:session` The current session
@@ -602,7 +602,7 @@ Returns::
 
 === `inspect-push`
 
-Inspects the inside value specified by index.
+Deprecated: use ``cider/inspect-push`` instead. Inspects the inside value specified by index.
 
 Required parameters::
 * `:idx` Index of the internal value currently rendered.
@@ -621,7 +621,7 @@ Returns::
 
 === `inspect-refresh`
 
-Updates inspector with the provided config and re-renders the current value.
+Deprecated: use ``cider/inspect-refresh`` instead. Updates inspector with the provided config and re-renders the current value.
 
 Required parameters::
 * `:session` The current session
@@ -647,7 +647,7 @@ Returns::
 
 === `inspect-set-max-atom-length`
 
-[DEPRECATED - use ``inspect-refresh`` instead] Set the max length of nested atoms to specified value.
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the max length of nested atoms to specified value.
 
 Required parameters::
 * `:max-atom-length` New max length.
@@ -666,7 +666,7 @@ Returns::
 
 === `inspect-set-max-coll-size`
 
-[DEPRECATED - use ``inspect-refresh`` instead] Set the number of nested collection members to display before truncating.
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the number of nested collection members to display before truncating.
 
 Required parameters::
 * `:max-coll-size` New collection size.
@@ -685,7 +685,7 @@ Returns::
 
 === `inspect-set-max-nested-depth`
 
-[DEPRECATED - use ``inspect-refresh`` instead] Set the maximum nested levels to display before truncating.
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the maximum nested levels to display before truncating.
 
 Required parameters::
 * `:max-nested-depth` New nested depth.
@@ -704,7 +704,7 @@ Returns::
 
 === `inspect-set-page-size`
 
-[DEPRECATED - use ``inspect-refresh`` instead] Sets the page size in paginated view to specified value.
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Sets the page size in paginated view to specified value.
 
 Required parameters::
 * `:page-size` New page size.
@@ -723,7 +723,7 @@ Returns::
 
 === `inspect-tap-current-value`
 
-Send the currently inspected value to the Clojure tap>.
+Deprecated: use ``cider/inspect-tap-current-value`` instead. Send the currently inspected value to the Clojure tap>.
 
 Required parameters::
 * `:session` The current session
@@ -741,7 +741,7 @@ Returns::
 
 === `inspect-tap-indexed`
 
-Send the currently inspected sub-value at ``idx`` to the Clojure tap>.
+Deprecated: use ``cider/inspect-tap-indexed`` instead. Send the currently inspected sub-value at ``idx`` to the Clojure tap>.
 
 Required parameters::
 * `:idx` Index of the internal value to be tapped
@@ -760,7 +760,7 @@ Returns::
 
 === `inspect-toggle-pretty-print`
 
-Toggles the pretty printing of values in the inspector.
+Deprecated: use ``cider/inspect-toggle-pretty-print`` instead. Toggles the pretty printing of values in the inspector.
 
 Required parameters::
 * `:session` The current session
@@ -778,7 +778,7 @@ Returns::
 
 === `inspect-toggle-view-mode`
 
-Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. ``:normal`` is the default. When view mode is ``:table``, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is ``:object``, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values.
+Deprecated: use ``cider/inspect-toggle-view-mode`` instead. Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. ``:normal`` is the default. When view mode is ``:table``, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is ``:object``, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values.
 
 Required parameters::
 * `:session` The current session
@@ -796,7 +796,7 @@ Returns::
 
 === `macroexpand`
 
-Produces macroexpansion of some form using the given expander.
+Deprecated: use ``cider/macroexpand`` instead. Produces macroexpansion of some form using the given expander.
 
 Required parameters::
 * `:code` The form to macroexpand.
@@ -816,7 +816,7 @@ Returns::
 
 === `ns-aliases`
 
-Returns a map of [ns-alias] to [ns-name] in a namespace.
+Deprecated: use ``cider/ns-aliases`` instead. Returns a map of [ns-alias] to [ns-name] in a namespace.
 
 Required parameters::
 * `:ns` The namespace to use.
@@ -833,7 +833,7 @@ Returns::
 
 === `ns-list`
 
-Return a sorted list of all namespaces.
+Deprecated: use ``cider/ns-list`` instead. Return a sorted list of all namespaces.
 
 Required parameters::
 {blank}
@@ -850,7 +850,7 @@ Returns::
 
 === `ns-list-vars-by-name`
 
-Return a list of vars named ``name`` amongst all namespaces.
+Deprecated: use ``cider/ns-list-vars-by-name`` instead. Return a list of vars named ``name`` amongst all namespaces.
 
 Required parameters::
 * `:name` The name to use.
@@ -867,7 +867,7 @@ Returns::
 
 === `ns-load-all`
 
-Loads all project namespaces.
+Deprecated: use ``cider/ns-load-all`` instead. Loads all project namespaces.
 
 Required parameters::
 {blank}
@@ -883,7 +883,7 @@ Returns::
 
 === `ns-path`
 
-Returns the path to the file containing ns.
+Deprecated: use ``cider/ns-path`` instead. Returns the path to the file containing ns.
 
 Required parameters::
 * `:ns` The namespace to find.
@@ -901,7 +901,7 @@ Returns::
 
 === `ns-vars`
 
-Returns a sorted list of public vars in a namespace.
+Deprecated: use ``cider/ns-vars`` instead. Returns a sorted list of public vars in a namespace.
 
 Required parameters::
 * `:ns` The namespace to browse.
@@ -919,7 +919,7 @@ Returns::
 
 === `ns-vars-with-meta`
 
-Returns a map of [var-name] to [var-metadata] for public vars in a namespace.
+Deprecated: use ``cider/ns-vars-with-meta`` instead. Returns a map of [var-name] to [var-metadata] for public vars in a namespace.
 
 Required parameters::
 * `:ns` The namespace to use.
@@ -937,7 +937,7 @@ Returns::
 
 === `out-subscribe`
 
-Change #'\*out* so that it also prints to active sessions, even outside an eval scope.
+Deprecated: use ``cider/out-subscribe`` instead. Change #'\*out* so that it also prints to active sessions, even outside an eval scope.
 
 Required parameters::
 {blank}
@@ -951,7 +951,7 @@ Returns::
 
 === `out-unsubscribe`
 
-Change #'\*out* so that it no longer prints to active sessions outside an eval scope.
+Deprecated: use ``cider/out-unsubscribe`` instead. Change #'\*out* so that it no longer prints to active sessions outside an eval scope.
 
 Required parameters::
 {blank}
@@ -965,7 +965,7 @@ Returns::
 
 === `refresh`
 
-Reloads all changed files in dependency order.
+Deprecated: use ``cider/refresh`` instead. Reloads all changed files in dependency order.
 
 Required parameters::
 {blank}
@@ -992,7 +992,7 @@ Returns::
 
 === `refresh-all`
 
-Reloads all files in dependency order.
+Deprecated: use ``cider/refresh-all`` instead. Reloads all files in dependency order.
 
 Required parameters::
 {blank}
@@ -1019,7 +1019,7 @@ Returns::
 
 === `refresh-clear`
 
-Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error.
+Deprecated: use ``cider/refresh-clear`` instead. Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error.
 
 Required parameters::
 {blank}
@@ -1033,7 +1033,7 @@ Returns::
 
 === `resource`
 
-Obtain the path to a resource.
+Deprecated: use ``cider/resource`` instead. Obtain the path to a resource.
 
 Required parameters::
 * `:name` The name of the resource in question.
@@ -1049,7 +1049,7 @@ Returns::
 
 === `resources-list`
 
-Obtain a list of all resources on the classpath.
+Deprecated: use ``cider/resources-list`` instead. Obtain a list of all resources on the classpath.
 
 Required parameters::
 {blank}
@@ -1064,7 +1064,7 @@ Returns::
 
 === `retest`
 
-[DEPRECATED - use ``test-var-query`` instead] Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+Deprecated: use ``cider/retest`` instead. Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -1090,7 +1090,7 @@ Returns::
 
 === `slurp`
 
-Slurps a URL from the nREPL server, returning MIME data.
+Deprecated: use ``cider/slurp`` instead. Slurps a URL from the nREPL server, returning MIME data.
 
 Required parameters::
 {blank}
@@ -1107,7 +1107,7 @@ Returns::
 
 === `spec-example`
 
-Return a string with a pretty printed example for a spec
+Deprecated: use ``cider/spec-example`` instead. Return a string with a pretty printed example for a spec
 
 Required parameters::
 * `:spec-name` The spec namespaced keyword we want the example for
@@ -1124,7 +1124,7 @@ Returns::
 
 === `spec-form`
 
-Return the form of a given spec
+Deprecated: use ``cider/spec-form`` instead. Return the form of a given spec
 
 Required parameters::
 * `:spec-name` The spec namespaced keyword we are looking for
@@ -1141,7 +1141,7 @@ Returns::
 
 === `spec-list`
 
-Return a sorted list of all specs in the registry
+Deprecated: use ``cider/spec-list`` instead. Return a sorted list of all specs in the registry
 
 Required parameters::
 {blank}
@@ -1158,9 +1158,8 @@ Returns::
 
 === `stacktrace`
 
-Return messages describing each cause and
-stack frame of the most recent exception. This op is deprecated, please use the
-``analyze-last-stacktrace`` op instead.
+Deprecated: use ``cider/analyze-last-stacktrace`` instead. Return messages describing each cause and
+stack frame of the most recent exception.
 
 Required parameters::
 {blank}
@@ -1181,7 +1180,7 @@ Returns::
 
 === `test`
 
-[DEPRECATED - use ``test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+[DEPRECATED - use ``cider/test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -1207,7 +1206,7 @@ Returns::
 
 === `test-all`
 
-Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
+Deprecated: use ``cider/test-all`` instead. Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 {blank}
@@ -1233,7 +1232,7 @@ Returns::
 
 === `test-stacktrace`
 
-Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+Deprecated: use ``cider/test-stacktrace`` instead. Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
 
 Required parameters::
 {blank}
@@ -1253,7 +1252,7 @@ Returns::
 
 === `test-var-query`
 
-Run tests specified by the ``var-query`` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+Deprecated: use ``cider/test-var-query`` instead. Run tests specified by the ``var-query`` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
 
 Required parameters::
 * `:var-query` A search query specifying the test vars to execute. See Orchard's var query documentation for more details.
@@ -1280,7 +1279,7 @@ Returns::
 
 === `toggle-trace-ns`
 
-Toggle tracing of a given ns.
+Deprecated: use ``cider/toggle-trace-ns`` instead. Toggle tracing of a given ns.
 
 Required parameters::
 * `:ns` The namespace to trace
@@ -1296,7 +1295,7 @@ Returns::
 
 === `toggle-trace-var`
 
-Toggle tracing of a given var.
+Deprecated: use ``cider/toggle-trace-var`` instead. Toggle tracing of a given var.
 
 Required parameters::
 * `:ns` The current namespace
@@ -1314,7 +1313,7 @@ Returns::
 
 === `undef`
 
-Undefine a symbol
+Deprecated: use ``cider/undef`` instead. Undefine a symbol
 
 Required parameters::
 * `:ns` The namespace is which to resolve sym (falls back to \*ns* if not specified)
@@ -1331,7 +1330,7 @@ Returns::
 
 === `undef-all`
 
-Undefine all aliases and symbols in a namespace
+Deprecated: use ``cider/undef-all`` instead. Undefine all aliases and symbols in a namespace
 
 Required parameters::
 * `:ns` The namespace to operate on
@@ -1342,6 +1341,319 @@ Optional parameters::
 
 Returns::
 * `:status` done
+
+
+
+=== `cider/analyze-last-stacktrace`
+
+Return messages describing each cause and stack frame of the most recent exception.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:status` "done", or "no-error" if ``*e`` is nil
+
+
+
+=== `cider/apropos`
+
+Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring.
+
+Required parameters::
+* `:query` The search query.
+
+
+Optional parameters::
+* `:filter-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+
+
+Returns::
+* `:apropos-matches` A list of matching symbols.
+
+
+
+=== `cider/classpath`
+
+Obtain a list of entries in the Java classpath.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:classpath` A list of the Java classpath entries.
+
+
+
+=== `cider/clojuredocs-lookup`
+
+Return a map of information in ClojureDocs.
+
+Required parameters::
+* `:ns` The namespace where ``sym`` will be resolved.
+* `:sym` The symbol to lookup.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:clojuredocs` A map of information in ClojureDocs.
+* `:status` "no-doc" if there is no document matching to ``ns`` and ``symbol``.
+
+
+
+=== `cider/clojuredocs-refresh-cache`
+
+Reload exported documents file from ClojureDocs, and store it as a cache.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:export-edn-url` EDN file URL exported from ClojureDocs. Defaults to "https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn".
+
+
+Returns::
+* `:status` "ok" if reloading was successful
+
+
+
+=== `cider/complete`
+
+Return a list of symbols matching the specified (partial) symbol.
+
+Required parameters::
+* `:ns` The namespace is which to look for completions (falls back to \*ns* if not specified)
+* `:prefix` The prefix for completion candidates
+* `:session` The current session
+
+
+Optional parameters::
+* `:context` Completion context for compliment.
+* `:extra-metadata` List of extra-metadata fields. Possible values: arglists, doc.
+* `:sort-order` Sorting order of candidates. Possible values: by-name, by-length.
+
+
+Returns::
+* `:completions` A list of possible completions
+
+
+
+=== `cider/complete-doc`
+
+Retrieve documentation suitable for display in completion popup
+
+Required parameters::
+* `:ns` The symbol's namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:completion-doc` Symbol's documentation
+
+
+
+=== `cider/complete-flush-caches`
+
+Forces the completion backend to repopulate all its caches
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `cider/debug-input`
+
+Read client input on debug action.
+
+Required parameters::
+* `:input` The user's reply to the input request.
+* `:key` The corresponding input request key.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `cider/debug-instrumented-defs`
+
+Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:list` The alist of (NAMESPACE . VARS) that are thought to be instrumented.
+* `:status` done
+
+
+
+=== `cider/debug-middleware`
+
+Debug a code form or fall back on regular eval.
+
+Required parameters::
+* `:code` Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen.
+* `:file` File where the code is located.
+* `:id` A message id that will be responded to when a breakpoint is reached.
+* `:ns` Passed to "eval".
+* `:point` Position in the file where the provided code begins.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` "done" if the message will no longer be used, or "need-debug-input" during debugging sessions
+
+
+
+=== `cider/eldoc`
+
+Return a map of information about the specified symbol.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifying the class, if necessary.
+* `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
+with the difference that the symbol at point should be entirely replaced by "\__prefix__".
+For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
+making the results more accurate (and less numerous).
+* `:member` A Java class member.
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+* `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
+Defaults to the value of ``orchard.meta/var-meta-allowlist``.
+If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
+
+
+Returns::
+* `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:status` done
+
+
+
+=== `cider/eldoc-datomic-query`
+
+Return a map containing the inputs of the datomic query.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `cider/fn-deps`
+
+Look up the function dependencies of particular function.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:fn-deps` A list of function deps, with a ``:name :doc :file :file-url :line :column`` structure.
+* `:status` done
+
+
+
+=== `cider/fn-refs`
+
+Look up functions that reference a particular function.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:fn-refs` A list of function references, with a ``:name :doc :file :file-url :line :column`` structure.
+* `:status` done
+
+
+
+=== `cider/format-code`
+
+Reformats the given Clojure code, returning the result as a string.
+
+Required parameters::
+* `:code` The code to format.
+
+
+Optional parameters::
+* `:options` Configuration map for cljfmt.
+
+
+Returns::
+* `:formatted-code` The formatted code.
+
+
+
+=== `cider/format-edn`
+
+Reformats the given EDN data, returning the result as a string.
+
+Required parameters::
+* `:edn` The data to format.
+
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:formatted-edn` The formatted data.
 
 
 
@@ -1357,6 +1669,443 @@ Optional parameters::
 
 Returns::
 {blank}
+
+
+=== `cider/info`
+
+Return a map of information about the specified symbol.
+
+Note: Documentation may be incomplete; not all return keys are described.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:class` A Java class. If ``:ns`` is passed, it will be used for fully-qualifying the class, if necessary.
+* `:context` A Compliment completion context, just like the ones already passed for the "complete" op,
+with the difference that the symbol at point should be entirely replaced by "\__prefix__".
+For Java interop queries, it helps inferring the precise type of the object the ``:sym`` or ``:member`` refers to,
+making the results more accurate (and less numerous).
+* `:member` A Java class member.
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+* `:var-meta-allowlist` The metadata keys from vars to be returned. Currently only affects ``:clj``.
+Defaults to the value of ``orchard.meta/var-meta-allowlist``.
+If specified, the value will be concatenated to that of ``orchard.meta/var-meta-allowlist``.
+
+
+Returns::
+* `:arglists-str` The arguments list(s) accepted by the symbol, as a string, if applicable.
+* `:column` The column number where the symbol is defined.
+* `:doc-block-tags-fragments` May be absent. Represent the 'param', 'returns' and 'throws' sections a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
+* `:file` Either a URI or a relative path where the symbol is defined.
+* `:line` The line number the symbol is defined.
+* `:name` The unqualified name of the symbol.
+* `:ns` The namespace the symbol belongs to.
+* `:status` done
+
+
+
+=== `cider/init-debugger`
+
+Initialize the debugger so that ``breakpoint`` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded.
+
+Required parameters::
+* `:id` A message id that will be responded to when a breakpoint is reached.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `cider/inspect-clear`
+
+Clears the state state of the inspector.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-def-current-value`
+
+Define the currently inspected value as a var with the given var-name in the provided namespace.
+
+Required parameters::
+* `:ns` Namespace to define var on
+* `:session` The current session
+* `:var-name` The var name
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-display-analytics`
+
+Calculate and render analytics section for the currently inspected object.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-last-exception`
+
+Returns an Inspector response for the last exception that has been processed through ``cider/analyze-last-stacktrace`` for the current nrepl session.
+Assumes that ``cider/analyze-last-stacktrace`` has been called first, returning "no-error" otherwise.
+
+Required parameters::
+* `:index` 0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on.
+
+
+Optional parameters::
+* `:ex-data` When equal to "true", inspect ex-data of the exception instead of full exception.
+
+
+Returns::
+* `:status` "done", or "no-error" if ``cider/analyze-last-stacktrace`` wasn't called beforehand (or the ``index`` was out of bounds).
+* `:value` A value, as produced by the Inspector middleware.
+
+
+
+=== `cider/inspect-next-page`
+
+Jumps to the next page in paginated collection view.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-next-sibling`
+
+Increment the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-pop`
+
+Moves one level up in the inspector stack.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-prev-page`
+
+Jumps to the previous page in paginated collection view.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-previous-sibling`
+
+Decrement the index of the last 'nth in the path by 1,
+if applicable, and re-render the updated value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-print-current-value`
+
+Print the current value of the inspector.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-push`
+
+Inspects the inside value specified by index.
+
+Required parameters::
+* `:idx` Index of the internal value currently rendered.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-refresh`
+
+Updates inspector with the provided config and re-renders the current value.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+* `:max-atom-length` New max length of single rendered value
+* `:max-coll-size` New max size of rendered collection
+* `:max-nested-depth` New max nested depth of rendered collection
+* `:only-diff` Set to true to only display values that differ when inspecting a diff
+* `:page-size` New page size
+* `:pretty-print` Set to true to pretty-print values within the inspector
+* `:sort-maps` Set to true to sort maps by their keys when inspecting a map
+* `:view-mode` Mode of viewing the value - either ``:normal`` or ``:object``
+
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-set-max-atom-length`
+
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the max length of nested atoms to specified value.
+
+Required parameters::
+* `:max-atom-length` New max length.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-set-max-coll-size`
+
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the number of nested collection members to display before truncating.
+
+Required parameters::
+* `:max-coll-size` New collection size.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-set-max-nested-depth`
+
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Set the maximum nested levels to display before truncating.
+
+Required parameters::
+* `:max-nested-depth` New nested depth.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-set-page-size`
+
+[DEPRECATED - use ``cider/inspect-refresh`` instead] Sets the page size in paginated view to specified value.
+
+Required parameters::
+* `:page-size` New page size.
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-tap-current-value`
+
+Send the currently inspected value to the Clojure tap>.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-tap-indexed`
+
+Send the currently inspected sub-value at ``idx`` to the Clojure tap>.
+
+Required parameters::
+* `:idx` Index of the internal value to be tapped
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-toggle-pretty-print`
+
+Toggles the pretty printing of values in the inspector.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/inspect-toggle-view-mode`
+
+Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. ``:normal`` is the default. When view mode is ``:table``, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is ``:object``, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values.
+
+Required parameters::
+* `:session` The current session
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` Printed representation of current inspector path.
+* `:status` "done"
+* `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
 
 
 === `cider/log-add-appender`
@@ -1648,6 +2397,175 @@ Returns::
 
 
 
+=== `cider/macroexpand`
+
+Produces macroexpansion of some form using the given expander.
+
+Required parameters::
+* `:code` The form to macroexpand.
+
+
+Optional parameters::
+* `:display-namespaces` How to print namespace-qualified symbols in the result. Possible values are "qualified" to leave all namespaces qualified, "none" to elide all namespaces, or "tidy" to replace namespaces with their aliases in the given namespace. Defaults to "qualified".
+* `:expander` The macroexpansion function to use. Possible values are "macroexpand-1", "macroexpand", "macroexpand-step", or "macroexpand-all". Defaults to "macroexpand".
+* `:ns` The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript.
+* `:print-meta` If truthy, also print metadata of forms.
+
+
+Returns::
+* `:expansion` The macroexpanded form.
+
+
+
+=== `cider/ns-aliases`
+
+Returns a map of [ns-alias] to [ns-name] in a namespace.
+
+Required parameters::
+* `:ns` The namespace to use.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:ns-aliases` The map of [ns-alias] to [ns-name] in a namespace.
+* `:status` done
+
+
+
+=== `cider/ns-list`
+
+Return a sorted list of all namespaces.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:filter-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+
+
+Returns::
+* `:ns-list` The sorted list of all namespaces.
+* `:status` done
+
+
+
+=== `cider/ns-list-vars-by-name`
+
+Return a list of vars named ``name`` amongst all namespaces.
+
+Required parameters::
+* `:name` The name to use.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:var-list` The list obtained.
+
+
+
+=== `cider/ns-load-all`
+
+Loads all project namespaces.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:loaded-ns` The list of ns that were loaded.
+* `:status` done
+
+
+
+=== `cider/ns-path`
+
+Returns the path to the file containing ns.
+
+Required parameters::
+* `:ns` The namespace to find.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:path` The path to the file containing ns. Please favor ``:url`` in ClojureScript, but fall back to ``:path``.
+* `:status` done
+* `:url` The Java URL indicating the file containing ns. Please favor this attribute over ``:path`` when possible. If this value is nil, you can fall back to ``:path``.
+
+
+
+=== `cider/ns-vars`
+
+Returns a sorted list of public vars in a namespace.
+
+Required parameters::
+* `:ns` The namespace to browse.
+
+
+Optional parameters::
+* `:var-query` The search query for vars. Only "private?" is supported for ClojureScript.
+
+
+Returns::
+* `:ns-vars` The sorted list of public vars in a namespace.
+* `:status` done
+
+
+
+=== `cider/ns-vars-with-meta`
+
+Returns a map of [var-name] to [var-metadata] for public vars in a namespace.
+
+Required parameters::
+* `:ns` The namespace to use.
+
+
+Optional parameters::
+* `:var-query` The search query for vars. Only "private?" is supported for ClojureScript.
+
+
+Returns::
+* `:ns-vars-with-meta` The map of [var-name] to [var-metadata] for public vars in a namespace.
+* `:status` done
+
+
+
+=== `cider/out-subscribe`
+
+Change #'\*out* so that it also prints to active sessions, even outside an eval scope.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `cider/out-unsubscribe`
+
+Change #'\*out* so that it no longer prints to active sessions outside an eval scope.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
 === `cider/profile-clear`
 
 Clear profiling data.
@@ -1711,6 +2629,387 @@ Optional parameters::
 Returns::
 * `:status` Done
 * `:value` 'profiled' if profiling enabled, 'unprofiled' if disabled
+
+
+
+=== `cider/refresh`
+
+Reloads all changed files in dependency order.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+* `:dirs` List of directories to scan. If no directories given, defaults to all directories on the classpath.
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:reloading` List of namespaces that will be reloaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `cider/refresh-all`
+
+Reloads all files in dependency order.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:after` The namespace-qualified name of a zero-arity function to call after reloading.
+* `:before` The namespace-qualified name of a zero-arity function to call before reloading.
+* `:dirs` List of directories to scan. If no directories given, defaults to all directories on the classpath.
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
+* `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:reloading` List of namespaces that will be reloaded.
+* `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
+
+
+
+=== `cider/refresh-clear`
+
+Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+{blank}
+
+
+=== `cider/resource`
+
+Obtain the path to a resource.
+
+Required parameters::
+* `:name` The name of the resource in question.
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:resource-path` The file path to a resource.
+
+
+
+=== `cider/resources-list`
+
+Obtain a list of all resources on the classpath.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:resources-list` The list of resources.
+
+
+
+=== `cider/retest`
+
+Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+* `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
+
+
+
+=== `cider/slurp`
+
+Slurps a URL from the nREPL server, returning MIME data.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:body` The slurped content body.
+* `:content-transfer-encoding` The encoding (if any) for the content.
+* `:content-type` A MIME type for the response, if one can be detected.
+
+
+
+=== `cider/spec-example`
+
+Return a string with a pretty printed example for a spec
+
+Required parameters::
+* `:spec-name` The spec namespaced keyword we want the example for
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:example` The pretty printed spec example string
+* `:status` done
+
+
+
+=== `cider/spec-form`
+
+Return the form of a given spec
+
+Required parameters::
+* `:spec-name` The spec namespaced keyword we are looking for
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:spec-form` The spec form
+* `:status` done
+
+
+
+=== `cider/spec-list`
+
+Return a sorted list of all specs in the registry
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:filter-regex` Only the specs that matches filter prefix regex will be returned 
+
+
+Returns::
+* `:spec-list` The sorted list of all specs in the registry with their descriptions
+* `:status` done
+
+
+
+=== `cider/stacktrace`
+
+Deprecated: use ``cider/analyze-last-stacktrace`` instead. Return messages describing each cause and
+stack frame of the most recent exception.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:status` "done", or "no-error" if ``*e`` is nil
+
+
+
+=== `cider/test`
+
+[DEPRECATED - use ``cider/test-var-query`` instead] Run tests in the specified namespace and return results. This accepts a set of ``tests`` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+* `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
+
+
+
+=== `cider/test-all`
+
+Run all tests in the project. If ``load?`` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+* `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
+
+
+
+=== `cider/test-stacktrace`
+
+Return exception cause and stack frame info for an erring test via the ``stacktrace`` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+{blank}
+
+
+=== `cider/test-var-query`
+
+Run tests specified by the ``var-query`` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests.
+
+Required parameters::
+* `:var-query` A search query specifying the test vars to execute. See Orchard's var query documentation for more details.
+
+
+Optional parameters::
+* `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
+* `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
+* `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
+* `:nrepl.middleware.print/print` A fully-qualified symbol naming a var whose function to use for printing. Must point to a function with signature [value writer options].
+* `:nrepl.middleware.print/quota` A hard limit on the number of bytes printed for each value.
+* `:nrepl.middleware.print/stream?` If logical true, the result of printing each value will be streamed to the client over one or more messages.
+
+
+Returns::
+* `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:results` Misc information about the test result. The structure is ``:results {<ns as keyword> {<test var as keyword> [{,,, :elapsed-time {:ms <integer> :humanized <string>}}]}}``
+* `:status` Either done or indication of an error
+* `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
+
+
+
+=== `cider/toggle-trace-ns`
+
+Toggle tracing of a given ns.
+
+Required parameters::
+* `:ns` The namespace to trace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:ns-status` The result of tracing operation
+
+
+
+=== `cider/toggle-trace-var`
+
+Toggle tracing of a given var.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to trace
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:var-name` The fully-qualified name of the traced/untraced var
+* `:var-status` The result of tracing operation
+
+
+
+=== `cider/undef`
+
+Undefine a symbol
+
+Required parameters::
+* `:ns` The namespace is which to resolve sym (falls back to \*ns* if not specified)
+* `:sym` The symbol to undefine
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+
+
+
+=== `cider/undef-all`
+
+Undefine all aliases and symbols in a namespace
+
+Required parameters::
+* `:ns` The namespace to operate on
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
 
 
 
