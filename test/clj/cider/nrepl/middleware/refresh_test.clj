@@ -130,12 +130,17 @@
     (with-redefs [resolve (constantly nil)]
       (is (nil? (#'r/user-refresh-dirs)))))
 
-  ;; Disabling the next test.
-  ;; Unclear how to get the "real" clojure.tools.namespace.repl in
-  ;; this test when this project also localizes via mranderson.
-  #_(testing "honors set-refresh-dirs"
-      (c.t.n.r/set-refresh-dirs "foo" "bar")
-      (is (= ["foo" "bar"] (#'r/user-refresh-dirs)))))
+  ;; The real c.t.n.r is only on the classpath when not running with
+  ;; mranderson-inlined deps (i.e. not in full-test CI builds).
+  (when (try (require 'clojure.tools.namespace.repl) true
+             (catch Exception _ false))
+    (testing "honors set-refresh-dirs"
+      (let [set-refresh-dirs (resolve 'clojure.tools.namespace.repl/set-refresh-dirs)]
+        (set-refresh-dirs "foo" "bar")
+        (try
+          (is (= ["foo" "bar"] (#'r/user-refresh-dirs)))
+          (finally
+            (set-refresh-dirs)))))))
 
 (deftest load-disabled-test
   (testing "is false by default"
