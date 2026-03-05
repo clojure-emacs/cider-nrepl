@@ -364,7 +364,8 @@
    (test-ns ns vars false))
 
   ([ns vars fail-fast?]
-   (binding [test/report report]
+   (binding [test/report report
+             test/*report-counters* (ref test/*initial-report-counters*)]
      (test/do-report {:type :begin-test-ns, :ns ns})
      (let [time-info (atom nil)]
        (timing time-info
