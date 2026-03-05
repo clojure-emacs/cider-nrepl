@@ -15,8 +15,6 @@
   ;; unloaded, which breaks session-fixture, and hence all of the below tests.
   ["test/clj/cider/nrepl/middleware/util"])
 
-;; Calling init from reload ns to work around mrandersonized version
-;; See cider.nrepl.middleware.refresh-test for another test that suffers from this.
 (#'rl/init dirs-to-reload)
 
 (deftest user-reload

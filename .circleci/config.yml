@@ -115,12 +115,7 @@ jobs:
                   make eastwood
 
   deploy:
-    # JDK 8 is preferred for deployments (https://github.com/benedekfazekas/mranderson/issues/57)
     executor: jdk8
-    environment:
-      # Parallelism is disabled, at least for now
-      # (https://github.com/benedekfazekas/mranderson/issues/56)
-      LEIN_JVM_OPTS: -Dmranderson.internal.no-parallelism=true
     steps:
       - checkout
       - run:
@@ -129,7 +124,7 @@ jobs:
 
   test:
     description: |
-      Run quick tests against given version of JDK and Clojure without inlining dependencies
+      Run tests against given version of JDK and Clojure
     parameters:
       jdk_version:
         description: Version of JDK to test against
@@ -152,35 +147,8 @@ jobs:
           cache_version: "test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>_<< parameters.nrepl_version >>"
           steps:
             - run:
-                name: Running quick tests
-                command: make quick-test
-
-  full-test:
-    description: |
-      Run tests against given version of JDK and Clojure with inlining the dependencies
-    parameters:
-      jdk_version:
-        description: Version of JDK to test against
-        type: string
-      clojure_version:
-        description: Version of Clojure to test against
-        type: string
-    executor: << parameters.jdk_version >>
-    environment:
-      CLOJURE_VERSION: << parameters.clojure_version >>
-      JDK_SRC_VERSION: << parameters.jdk_version >>
-      PROJECT_VERSION: 999.99.9
-    steps:
-      - checkout
-      - with_cache:
-          cache_version: "full_test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
-          steps:
-            - run:
-                name: Running tests with inlined deps
-                command: make --debug test
-            - run:
-                name: Running smoketest
-                command: make --debug smoketest
+                name: Running tests
+                command: make test
 
 # The ci-test-matrix does the following:
 #
@@ -198,16 +166,16 @@ workflows:
   version: 2.1
   ci-test-matrix:
     jobs:
-      - full-test:
-          # Full tests against latest Clojure and fringe JDKs.
+      - test:
+          # Tests against latest Clojure and fringe JDKs.
           matrix:
-            alias: "full-test"
+            alias: "test-fringe-jdks"
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk8, jdk25]
           <<: *run_always
       - test:
-          # Quick tests for older Clojure versions and fringe JDKs.
+          # Tests for older Clojure versions and fringe JDKs.
           matrix:
             alias: "test-older-clojure"
             parameters:
@@ -215,7 +183,7 @@ workflows:
               jdk_version: [jdk8, jdk25]
           <<: *run_always
       - test:
-          # Quick tests for latest Clojure and interim JDK versions.
+          # Tests for latest Clojure and interim JDK versions.
           matrix:
             alias: "test-latest-clojure"
             parameters:
@@ -235,7 +203,7 @@ workflows:
           <<: *run_always
       - deploy:
           requires:
-            - full-test
+            - test-fringe-jdks
             - test-older-clojure
             - test-latest-clojure
             - nrepl-test

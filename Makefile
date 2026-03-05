@@ -1,5 +1,5 @@
-.PHONY: test quick-test eastwood cljfmt cljfmt-fix install fast-install smoketest deploy clean lint docs test_impl
-.DEFAULT_GOAL := quick-test
+.PHONY: test eastwood cljfmt cljfmt-fix install smoketest deploy clean lint docs test_impl
+.DEFAULT_GOAL := test
 
 # Set bash instead of sh for the @if [[ conditions,
 # and use the usual safety flags:
@@ -36,16 +36,8 @@ copy-sources-to-jdk: base-src-$(JDK_SRC_VERSION).zip
 dump-version:
 	echo '"$(PROJECT_VERSION)"' > resources/cider/nrepl/version.edn
 
-target/srcdeps: project.clj
-	lein with-profile -user,-dev inline-deps
-# Remove cljfmt.main because it depends on tools.cli which we explicitly removed.
-	rm -f target/srcdeps/cider/nrepl/inlined/deps/cljfmt/*/cljfmt/main.clj
-
-quick-test: copy-sources-to-jdk
+test: copy-sources-to-jdk
 	lein with-profile $(COMMON_PROFILES),$(TEST_PROFILES) test
-
-test: target/srcdeps
-	lein with-profile $(COMMON_PROFILES),$(TEST_PROFILES),+plugin.mranderson/config test
 
 eastwood:
 	lein with-profile -user,-dev,$(COMMON_PROFILES),+deploy,+eastwood eastwood
@@ -57,20 +49,16 @@ cljfmt-fix:
 	lein with-profile -user,-dev,$(COMMON_PROFILES),+cljfmt cljfmt fix
 
 .make_kondo_prep: project.clj .clj-kondo/config.edn
-	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
+	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo --copy-configs --dependencies --lint '$$classpath' > $@
 
 kondo: .make_kondo_prep clean
-	CIDER_NO_MRANDERSON="true" CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo
+	CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,+test,+clj-kondo,+deploy,$(COMMON_PROFILES) clj-kondo
 
 lint: kondo cljfmt eastwood
 
 # PROJECT_VERSION=x.y.z make install
-install: dump-version check-install-env target/srcdeps
-	CIDER_RELEASE=true CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config install
-
-# PROJECT_VERSION=x.y.z make fast-install
-fast-install: dump-version check-install-env
-	lein with-profile -user,-dev,$(COMMON_PROFILES) install
+install: dump-version check-install-env
+	CIDER_RELEASE=true CIDER_NO_PEDANTIC="true" lein with-profile -user,-dev,-provided,$(COMMON_PROFILES) install
 
 smoketest: install
 	cd test/smoketest && \
@@ -78,16 +66,15 @@ smoketest: install
         java -jar target/smoketest-0.1.0-SNAPSHOT-standalone.jar
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
-# Please do not deploy locally as it skips various measures (particularly around mranderson).
-deploy: check-env target/srcdeps
+# Please do not deploy locally as it skips various CI measures.
+deploy: check-env
 	@if ! echo "$(CIRCLE_TAG)" | grep -q "^v"; then \
 		echo "[Error] CIRCLE_TAG $(CIRCLE_TAG) must start with 'v'."; \
 		exit 1; \
 	fi
-	rm -f .no-mranderson
 	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
 	echo "\"$$PROJECT_VERSION\"" > resources/cider/nrepl/version.edn; \
-	CIDER_RELEASE=true lein with-profile -user,-dev,-provided,$(COMMON_PROFILES),+plugin.mranderson/config deploy clojars
+	CIDER_RELEASE=true lein with-profile -user,-dev,-provided,$(COMMON_PROFILES) deploy clojars
 
 check-env:
 ifndef CLOJARS_USERNAME

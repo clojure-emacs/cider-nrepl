@@ -40,18 +40,3 @@ through some hoops to evaluate ClojureScript code from it (e.g. pipe it to
 Piggieback's `eval` or evaluate it against the ClojureScript runtime directly as
 a string). Hopefully this will change down the road.
 
-== Dependency obfuscation
-
-cider-nrepl's dependency would conflict with the dependencies of the application using it,
-so we have to take some care to avoid such situation.
-
-Most of cider-nrepl's dependencies are processed with
-https://github.com/benedekfazekas/mranderson[mranderson], so that
-they won't collide with the dependencies of your own projects. This
-basically means that cider-nrepl doesn't have any runtime dependencies in
-the production artifact - just copies of the deps inlined with changed
-namespaces/packages.
-
-This means that `cider-nrepl` has to also take some steps to hide the inlined namespaces,
-so they won't pollute the results users would be interested in. Pretty much all of cider-nrepl's
-ops would filter out the inlined namespaces.

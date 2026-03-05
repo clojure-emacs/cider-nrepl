@@ -28,11 +28,11 @@
              [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                      org.clojure/clojurescript
                                                      compliment]]
-             ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
-                                                       org.clojure/tools.cli]]
-             ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
-                                                                            org.clojure/tools.cli]]
-             ^:inline-dep [org.clojure/tools.reader "1.4.1"]]
+             [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
+                                          org.clojure/tools.cli]]
+             [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
+                                                               org.clojure/tools.cli]]
+             [org.clojure/tools.reader "1.4.1"]]
      ;; This is the only working way to include nREPL into published jar and
      ;; still be able to test different nREPL versions.
      (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.5.2"]))
@@ -42,15 +42,6 @@
                 :abort
                 ;; :pedantic? can be problematic for certain local dev workflows:
                 false)
-
-  ;; mranderson cannot be put in a profile (as the other plugins),
-  ;; so we conditionally disable it, because otherwise clj-kondo cannot run.
-  :plugins ~(if (System/getenv "CIDER_NO_MRANDERSON")
-              []
-              '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
-
-  :mranderson {:project-prefix "cider.nrepl.inlined.deps"
-               :unresolved-tree false}
 
   :filespecs [{:type :bytes :path "cider/cider-nrepl/project.clj" :bytes ~(slurp "project.clj")}]
 
@@ -71,7 +62,6 @@
                    :debugger :debugger}
 
   :aliases {"bump-version" ["change" "version" "leiningen.release/bump-version"]
-            "mranderson"   ["with-profile" "+plugin.mranderson/config"]
             "docs" ["with-profile" "+maint" "run" "-m" "cider.nrepl.impl.docs" "--file"
                     ~(clojure.java.io/as-relative-path
                       (clojure.java.io/file "doc" "modules" "ROOT" "pages" "nrepl-api" "ops.adoc"))]}

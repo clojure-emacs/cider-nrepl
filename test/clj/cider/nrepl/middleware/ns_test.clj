@@ -22,9 +22,7 @@
 
   (testing "Removal of namespaces created by source rewriting"
     (let [ns-list (:ns-list (session/message {:op "cider/ns-list"}))]
-      (is (not-any? #(or (.startsWith ^String % "deps.")
-                         (.startsWith ^String % "mranderson")
-                         (.startsWith ^String % "eastwood.copieddeps"))
+      (is (not-any? #(.startsWith ^String % "eastwood.copieddeps")
                     ns-list))))
 
   (testing "Removal of namespaces with `filter-regexps`"

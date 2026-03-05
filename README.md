@@ -66,28 +66,14 @@ guidelines](.github/CONTRIBUTING.md).
 ### Local development
 
 Local development tasks, like running the tests or locally installing
-cider-nrepl are offered by our Makefile.  We recommend using it, since some
-aspects (e.g. the use of [mranderson][]) can be intricate to newcomers.
-
-These are its main tasks for local development:
+cider-nrepl are offered by our Makefile:
 
 ```shell
-# Run tests, using mranderson (slower but more realistic)
+# Run tests
 make test
 
-# Run tests, without using mranderson (considerably faster)
-make quick-test
-
-# Install the project in your local ~/.m2 directory, using mranderson (recommended)
-# The JVM flag is a temporary workaround.
-export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
+# Install the project in your local ~/.m2 directory
 PROJECT_VERSION=X.Y.Z make install
-
-# Install the project in your local ~/.m2 directory, without using mranderson
-# (it's faster, but please only use when you repeatedly need to install cider-nrepl)
-# The JVM flag is a temporary workaround.
-export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
-PROJECT_VERSION=X.Y.Z make fast-install
 
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
 # Please try to run this before pushing commits.
@@ -152,4 +138,3 @@ Distributed under the Eclipse Public License, the same as Clojure.
 [tools.namespace]: https://github.com/clojure/tools.namespace
 [clj-reload]: https://github.com/tonsky/clj-reload
 [cljfmt]: https://github.com/weavejester/cljfmt
-[mranderson]: https://github.com/benedekfazekas/mranderson

@@ -5,6 +5,7 @@
    [cider.nrepl.test-session :as session]
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
+   [clojure.tools.namespace.repl :as c.t.n.r]
    [matcher-combinators.matchers :as mc]))
 
 (use-fixtures :each session/session-fixture)
@@ -130,17 +131,12 @@
     (with-redefs [resolve (constantly nil)]
       (is (nil? (#'r/user-refresh-dirs)))))
 
-  ;; The real c.t.n.r is only on the classpath when not running with
-  ;; mranderson-inlined deps (i.e. not in full-test CI builds).
-  (when (try (require 'clojure.tools.namespace.repl) true
-             (catch Exception _ false))
-    (testing "honors set-refresh-dirs"
-      (let [set-refresh-dirs (resolve 'clojure.tools.namespace.repl/set-refresh-dirs)]
-        (set-refresh-dirs "foo" "bar")
-        (try
-          (is (= ["foo" "bar"] (#'r/user-refresh-dirs)))
-          (finally
-            (set-refresh-dirs)))))))
+  (testing "honors set-refresh-dirs"
+    (c.t.n.r/set-refresh-dirs "foo" "bar")
+    (try
+      (is (= ["foo" "bar"] (#'r/user-refresh-dirs)))
+      (finally
+        (c.t.n.r/set-refresh-dirs)))))
 
 (deftest load-disabled-test
   (testing "is false by default"

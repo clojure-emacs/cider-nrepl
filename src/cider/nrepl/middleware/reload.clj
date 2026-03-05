@@ -15,13 +15,12 @@
 (defn- user-reload
   "Resolve clj-reload.core/<sym> from the user project or return fallback."
   [sym fallback]
-  (or (some-> (symbol "clj-reload.core" (str sym)) ;; Don't use mrandorsenized version
+  (or (some-> (symbol "clj-reload.core" (str sym))
               resolve)
       fallback))
 
 (defn- init
-  "Initialize clj-reload with dirs.
-  Only used for test, but necessary because of mranderson."
+  "Initialize clj-reload with dirs."
   [dirs]
   (reload/init {:dirs dirs}))
 
