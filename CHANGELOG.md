@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Remove MrAnderson dependency inlining. cljfmt, tools.namespace, and tools.reader are now regular dependencies.
 * Bump `nrepl` to [1.5.2](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#152-2025-12-29).
 * Bump `orchard` to [0.39.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0390-2026-02-07).
 * [#959](https://github.com/clojure-emacs/cider-nrepl/pull/959): Stop shading Compliment and clj-reload.

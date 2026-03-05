@@ -430,10 +430,6 @@
       [form trimmed-string])))
 
 ;;; Instrumentation test support
-;;;
-;;; This code migrated out of the test namespace to avoid a dependency
-;;; on orchard.meta, because mranderson rewriting does not occur on
-;;; the tests.
 
 (def bp-tracker (atom #{}))
 (defmacro bp [value coor & _]
