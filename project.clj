@@ -94,7 +94,8 @@
              :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0"]]}
              :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0"]]}
              :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0"]]}
-             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.6.0"]]}
+             :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.2"]]}
+             :nrepl-1.6 {:dependencies [[nrepl/nrepl "1.6.0"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.2.245"]]}

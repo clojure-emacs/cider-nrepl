@@ -6,7 +6,7 @@
 SHELL = /bin/bash -Eex
 
 CLOJURE_VERSION ?= 1.12
-NREPL_VERSION ?= 1.5
+NREPL_VERSION ?= 1.6
 COMMON_PROFILES = "+$(CLOJURE_VERSION),+nrepl-$(NREPL_VERSION)"
 TEST_PROFILES ?= "-user,-dev,+test"
 
