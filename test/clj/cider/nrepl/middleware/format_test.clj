@@ -123,7 +123,7 @@
 
   (testing "format-edn returns an error if the given EDN is malformed"
     (is+ {:status #{"cider/format-edn-error" "done"}
-          :err #"^clojure.lang.ExceptionInfo: Unmatched delimiter"
+          :err #"^java.lang.RuntimeException: Unmatched delimiter"
           :pp-stacktrace some?}
          (session/message {:op "cider/format-edn"
                            :edn unmatched-delimiter-edn-sample})))

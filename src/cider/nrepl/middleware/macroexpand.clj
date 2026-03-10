@@ -9,7 +9,6 @@
    [orchard.cljs.analysis :as cljs-ana]
    [nrepl.transport :as transport]
    [clojure.pprint :as pp]
-   [clojure.tools.reader :as reader]
    [clojure.walk :as walk]
    [orchard.misc :as misc])
   (:import
@@ -247,7 +246,7 @@
   and :display-namespaces options."
   [{:keys [code ns] :as msg}]
   (let [expander-fn (resolve-expander-cljs msg)
-        code (reader/read-string code)]
+        code (read-string code)]
     (walk/prewalk (post-expansion-walker-cljs msg)
                   (cljs/with-cljs-env msg
                     (cljs/with-cljs-ns ns

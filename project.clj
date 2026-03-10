@@ -33,6 +33,8 @@
              ^:inline-dep [org.clojure/tools.namespace "1.5.1" :exclusions [org.clojure/clojure
                                                                             org.clojure/clojurescript
                                                                             org.clojure/tools.cli]]
+             ;; Not used directly but brought by both cljfmt and
+             ;; tools.namespace, so it is necessary to have it here.
              ^:inline-dep [org.clojure/tools.reader "1.6.0" :exclusions [org.clojure/clojure]]]
      ;; This is the only working way to include nREPL into published jar and
      ;; still be able to test different nREPL versions.
