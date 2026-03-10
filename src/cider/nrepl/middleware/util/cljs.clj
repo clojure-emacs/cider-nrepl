@@ -1,50 +1,43 @@
 (ns cider.nrepl.middleware.util.cljs)
 
-;; there's a plan to rename the main namespace of
-;; piggieback to piggieback.core and the following code
-;; simply paves the way for this
-(def cider-piggieback?
-  (try (require 'cider.piggieback) true
-       (catch Throwable _ false)))
-
-(def nrepl-piggieback?
-  (try (require 'piggieback.core) true
-       (catch Throwable _ false)))
-
-(defn try-piggieback
-  "If piggieback is loaded, returns `#'cider.piggieback/wrap-cljs-repl`, or
-  false otherwise."
+(defn try-resolve-piggieback
+  "If piggieback is loaded, return `#'cider.piggieback/wrap-cljs-repl`, nil
+  otherwise."
   []
-  (cond
-    cider-piggieback? (resolve 'cider.piggieback/wrap-cljs-repl)
-    nrepl-piggieback? (resolve 'piggieback.core/wrap-cljs-repl)
-    :else false))
-
-(defn- maybe-piggieback
-  [descriptor descriptor-key]
-  (if-let [piggieback (try-piggieback)]
-    (update-in descriptor [descriptor-key] #(set (conj % piggieback)))
-    descriptor))
+  (try (requiring-resolve 'cider.piggieback/wrap-cljs-repl)
+       (catch Exception _)))
 
 (defn expects-piggieback
-  "If piggieback is loaded, returns the descriptor with piggieback's
-  `wrap-cljs-repl` handler assoc'd into its `:expects` set."
+  "Deprecated: returns the descriptor unchanged."
+  {:deprecated "0.59.0"}
   [descriptor]
-  (maybe-piggieback descriptor :expects))
+  descriptor)
 
 (defn requires-piggieback
-  "If piggieback is loaded, returns the descriptor with piggieback's
-  `wrap-cljs-repl` handler assoc'd into its `:requires` set."
+  "Deprecated: returns the descriptor unchanged."
+  {:deprecated "0.59.0"}
   [descriptor]
-  (maybe-piggieback descriptor :requires))
+  descriptor)
+
+(defn maybe-add-piggieback
+  "If piggieback is loaded, conj piggieback mw var to the provided collection."
+  [coll]
+  (if-some [pb (try-resolve-piggieback)]
+    (conj coll pb)
+    coll))
+
+(defn maybe-add-piggieback-symbol
+  "If piggieback is loaded, conj piggieback mw symbol to the provided collection."
+  [coll]
+  (if (try-resolve-piggieback)
+    (conj coll 'cider.piggieback/wrap-cljs-repl)
+    coll))
 
 (defn- cljs-env-path
   "Returns the path in the session map for the ClojureScript compiler
   environment used by piggieback."
   []
-  [(if nrepl-piggieback?
-     (resolve 'piggieback.core/*cljs-compiler-env*)
-     (resolve 'cider.piggieback/*cljs-compiler-env*))])
+  [(resolve 'cider.piggieback/*cljs-compiler-env*)])
 
 (defn- maybe-deref
   [x]
