@@ -150,4 +150,6 @@
                                                                            cider.nrepl.middleware.util.instrument {:line 396}}}
                                         :exclude-namespaces [cider.nrepl.middleware.debug-test
                                                              cider.nrepl.middleware.test-filter-tests]}}
-             :eastwood [:test :eastwood-base]})
+             :eastwood [:test :eastwood-base]
+
+             :antq {:plugins [[com.github.liquidz/antq "RELEASE"]]}})
