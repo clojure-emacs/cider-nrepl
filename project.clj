@@ -32,7 +32,7 @@
                                                        org.clojure/tools.cli]]
              ^:inline-dep [org.clojure/tools.namespace "1.5.0" :exclusions [org.clojure/clojurescript
                                                                             org.clojure/tools.cli]]
-             ^:inline-dep [org.clojure/tools.reader "1.4.1"]]
+             ^:inline-dep [org.clojure/tools.reader "1.6.0"]]
      ;; This is the only working way to include nREPL into published jar and
      ;; still be able to test different nREPL versions.
      (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.5.2"]))
