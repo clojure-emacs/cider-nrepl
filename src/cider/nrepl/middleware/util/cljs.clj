@@ -33,10 +33,15 @@
   (maybe-piggieback descriptor :expects))
 
 (defn requires-piggieback
-  "If piggieback is loaded, returns the descriptor with piggieback's
-  `wrap-cljs-repl` handler assoc'd into its `:requires` set."
+  "Deprecated: returns the descriptor unchanged.
+
+  Previously added piggieback to the `:requires` set of the
+  descriptor, which caused spurious warnings in nREPL 1.6+. Now
+  returns the descriptor unchanged — piggieback's own descriptor
+  handles its ordering in the middleware stack."
+  {:deprecated "0.50"}
   [descriptor]
-  (maybe-piggieback descriptor :requires))
+  descriptor)
 
 (defn- cljs-env-path
   "Returns the path in the session map for the ClojureScript compiler
