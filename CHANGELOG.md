@@ -2,7 +2,9 @@
 
 ## master (unreleased)
 
-* Bump `nrepl` to [1.5.2](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#152-2025-12-29).
+* Bump `nrepl` to [1.6.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#160).
+* Bump `tools.reader` to 1.6.0.
+* Bump `tools.namespace` to 1.5.1.
 * Bump `orchard` to [0.39.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0390-2026-02-07).
 * [#959](https://github.com/clojure-emacs/cider-nrepl/pull/959): Stop shading Compliment and clj-reload.
 * [#710](https://github.com/clojure-emacs/cider-nrepl/issues/710): Make namespaced ops (e.g., `cider/complete`) the default and keep the old names as deprecated aliases.
