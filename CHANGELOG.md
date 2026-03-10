@@ -9,6 +9,7 @@
 * [#959](https://github.com/clojure-emacs/cider-nrepl/pull/959): Stop shading Compliment and clj-reload.
 * [#710](https://github.com/clojure-emacs/cider-nrepl/issues/710): Make namespaced ops (e.g., `cider/complete`) the default and keep the old names as deprecated aliases.
 * [#965](https://github.com/clojure-emacs/cider-nrepl/issues/965): Stop losing quotes in matcher-combinators test output.
+* [#972](https://github.com/clojure-emacs/cider-nrepl/issues/972): Stop relying on tools.reader functions in our code.
 
 ## 0.58.0 (2025-10-16)
 

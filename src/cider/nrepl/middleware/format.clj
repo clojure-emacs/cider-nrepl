@@ -5,12 +5,11 @@
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cljfmt.core :as fmt]
    [clojure.string :as str]
-   [clojure.tools.reader.edn :as edn]
-   [clojure.tools.reader.reader-types :as readers]
+   [clojure.edn :as edn]
    [clojure.walk :as walk]
    [nrepl.middleware.print :as print])
   (:import
-   (java.io StringWriter)))
+   (java.io PushbackReader StringReader StringWriter)))
 
 ;;; Code formatting
 (defn- keyword->symbol [kw]
@@ -37,7 +36,7 @@
 (defn- read-edn
   "Returns a vector of EDN forms, read from the string s."
   [s]
-  (let [reader (readers/string-push-back-reader s)
+  (let [reader (PushbackReader. (StringReader. s))
         sentinel (Object.)]
     (loop [forms []]
       (let [form (edn/read {:eof sentinel
