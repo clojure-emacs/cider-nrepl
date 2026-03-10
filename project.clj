@@ -135,7 +135,8 @@
                                                               cider.nrepl/wrap-tracker
                                                               cider.nrepl/wrap-undef
                                                               cider.nrepl/wrap-version
-                                                              cider.nrepl/wrap-xref]}}]
+                                                              cider.nrepl/wrap-xref
+                                                              cider.piggieback/wrap-cljs-repl]}}]
 
              :cljfmt-base {:plugins [[dev.weavejester/lein-cljfmt "0.15.6"]]
                            :cljfmt {:extra-indents {timing [[:inner 0]]
