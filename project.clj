@@ -135,19 +135,19 @@
                                                               cider.nrepl/wrap-version
                                                               cider.nrepl/wrap-xref]}}]
 
-             :cljfmt [:test
-                      {:plugins [[dev.weavejester/lein-cljfmt "0.15.6"]]
-                       :cljfmt {:extra-indents {timing [[:inner 0]]
-                                                with-debug-bindings [[:inner 0]]
-                                                merge-meta [[:inner 0]]
-                                                try-if-let [[:block 1]]}}}]
+             :cljfmt-base {:plugins [[dev.weavejester/lein-cljfmt "0.15.6"]]
+                           :cljfmt {:extra-indents {timing [[:inner 0]]
+                                                    with-debug-bindings [[:inner 0]]
+                                                    merge-meta [[:inner 0]]
+                                                    try-if-let [[:block 1]]}}}
+             :cljfmt [:test :cljfmt-base]
 
              :clj-kondo {:plugins [[com.github.clj-kondo/lein-clj-kondo "2026.01.19"]]}
 
-             :eastwood [:test
-                        {:plugins [[jonase/eastwood "1.4.3"]]
-                         :eastwood {:config-files ["eastwood.clj"]
-                                    :ignored-faults {:unused-ret-vals {orchard.java {:line 84}
-                                                                       cider.nrepl.middleware.util.instrument {:line 396}}}
-                                    :exclude-namespaces [cider.nrepl.middleware.debug-test
-                                                         cider.nrepl.middleware.test-filter-tests]}}]})
+             :eastwood-base {:plugins [[jonase/eastwood "1.4.3"]]
+                             :eastwood {:config-files ["eastwood.clj"]
+                                        :ignored-faults {:unused-ret-vals {orchard.java {:line 84}
+                                                                           cider.nrepl.middleware.util.instrument {:line 396}}}
+                                        :exclude-namespaces [cider.nrepl.middleware.debug-test
+                                                             cider.nrepl.middleware.test-filter-tests]}}
+             :eastwood [:test :eastwood-base]})
