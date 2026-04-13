@@ -21,7 +21,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies
-  ~(cond-> '[[cider/orchard "0.39.0" :exclusions [org.clojure/clojure]]
+  ~(cond-> '[[cider/orchard "0.41.0" :exclusions [org.clojure/clojure]]
              [compliment "0.7.1"]
              [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
              [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]
@@ -148,8 +148,7 @@
 
              :eastwood-base {:plugins [[jonase/eastwood "1.4.3"]]
                              :eastwood {:config-files ["eastwood.clj"]
-                                        :ignored-faults {:unused-ret-vals {orchard.java {:line 84}
-                                                                           cider.nrepl.middleware.util.instrument {:line 396}}}
+                                        :ignored-faults {:unused-ret-vals {cider.nrepl.middleware.util.instrument {:line 396}}}
                                         :exclude-namespaces [cider.nrepl.middleware.debug-test
                                                              cider.nrepl.middleware.test-filter-tests]}}
              :eastwood [:test :eastwood-base]
