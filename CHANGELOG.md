@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.59.0 (2026-04-14)
+
 * Bump `nrepl` to [1.7.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#170-2026-04-14).
 * Bump `tools.reader` to 1.6.0.
 * Bump `tools.namespace` to 1.5.1.
