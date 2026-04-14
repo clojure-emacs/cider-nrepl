@@ -38,7 +38,7 @@
              ^:inline-dep [org.clojure/tools.reader "1.6.0" :exclusions [org.clojure/clojure]]]
      ;; This is the only working way to include nREPL into published jar and
      ;; still be able to test different nREPL versions.
-     (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.6.0"]))
+     (System/getenv "CIDER_RELEASE") (conj '[nrepl/nrepl "1.7.0"]))
 
   :pedantic? ~(if (and (System/getenv "CI")
                        (not (System/getenv "CIDER_NO_PEDANTIC")))
@@ -85,7 +85,7 @@
                                     :sign-releases false}]]
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.4"]
-                                       [nrepl/nrepl "1.6.0"]]}
+                                       [nrepl/nrepl "1.7.0"]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
@@ -99,6 +99,7 @@
              :nrepl-1.4 {:dependencies [[nrepl/nrepl "1.4.0"]]}
              :nrepl-1.5 {:dependencies [[nrepl/nrepl "1.5.2"]]}
              :nrepl-1.6 {:dependencies [[nrepl/nrepl "1.6.0"]]}
+             :nrepl-1.7 {:dependencies [[nrepl/nrepl "1.7.0"]]}
 
              :maint {:source-paths ["src" "maint"]
                      :dependencies [[org.clojure/tools.cli "1.2.245"]]}

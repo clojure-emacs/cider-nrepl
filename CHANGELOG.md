@@ -2,7 +2,7 @@
 
 ## master (unreleased)
 
-* Bump `nrepl` to [1.6.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#160).
+* Bump `nrepl` to [1.7.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#170-2026-04-14).
 * Bump `tools.reader` to 1.6.0.
 * Bump `tools.namespace` to 1.5.1.
 * Bump `orchard` to [0.41.0](https://github.com/clojure-emacs/orchard/blob/master/CHANGELOG.md#0410-2026-04-13).
