@@ -85,9 +85,13 @@
                            (catch MalformedURLException _e nil))]
     (if (= (.getProtocol url) "file") ;; expected common case
       (let [^Path p (Paths/get (.toURI url))
-            content-type (normalize-content-type (get-file-content-type p))
-            buff (when-not (.isDirectory (io/as-file url)) (Files/readAllBytes p))]
-        (slurp-reply p content-type buff))
+            dir? (.isDirectory (io/as-file url))]
+        (if dir?
+          {:content-type (normalize-content-type "application/octet-stream")
+           :body (str "#binary[location=" p ",size=0]")}
+          (let [content-type (normalize-content-type (get-file-content-type p))
+                buff (Files/readAllBytes p)]
+            (slurp-reply p content-type buff))))
 
       ;; It's not a file, so just try to open it on up
       (let [^URLConnection conn (.openConnection url)
