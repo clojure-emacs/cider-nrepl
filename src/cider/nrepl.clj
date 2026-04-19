@@ -22,7 +22,7 @@
    [orchard.namespace]
    [orchard.java]))
 
-(def min-clojure-verion
+(def min-clojure-version
   "The minimum Clojure version needed by cider-nrepl to work properly.
   Having an enforced minimum version can help users and maintainers alike diagnose issues more quickly,
   avoiding problematic code paths in our middleware, and in clients like cider.el."
@@ -31,14 +31,14 @@
 
 ;; Make sure we're running a supported Clojure version
 (when (or (< (-> *clojure-version* :major long)
-             (-> min-clojure-verion :major long))
+             (-> min-clojure-version :major long))
 
           (and (= (-> *clojure-version* :major long)
-                  (-> min-clojure-verion :major long))
+                  (-> min-clojure-version :major long))
                (< (-> *clojure-version* :minor long)
-                  (-> min-clojure-verion :minor long))))
+                  (-> min-clojure-version :minor long))))
   (let [msg (format "cider-nrepl requires a newer Clojure version (found: %s, minimum required: %s)."
-                    *clojure-version* min-clojure-verion)]
+                    *clojure-version* min-clojure-version)]
     (try
       (.println System/err msg)
       (finally (throw (ex-info msg {}))))))
