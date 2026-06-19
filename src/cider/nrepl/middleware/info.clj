@@ -6,6 +6,7 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [clojure.string :as str]
+   [orchard.cljs.analysis :as cljs-ana]
    [orchard.eldoc :as eldoc]
    [orchard.info :as info]
    [orchard.java.source-files :as src-files]
@@ -166,6 +167,59 @@
     (eldoc/datomic-query ns (or sym symbol))
     (catch Throwable _ {:status :no-eldoc})))
 
+(defn- classify-symbols-clj
+  "Return a map from each symbol string in `symbols` to its classification in
+  `ns` (see `orchard.meta/classify-symbol`), omitting symbols that don't
+  resolve."
+  [ns symbols]
+  (let [ns (or (misc/as-sym ns) 'user)]
+    (reduce (fn [acc s]
+              (if-let [kind (meta/classify-symbol ns (symbol s))]
+                (assoc acc s (name kind))
+                acc))
+            {}
+            symbols)))
+
+(defn- classify-symbol-cljs
+  "Classify the symbol `sym` resolved in the ClojureScript namespace `ns`.
+  Uses read-only `orchard.cljs.analysis` lookups (rather than the heavier
+  `orchard.info/info*`, which mutates the shared compiler env).  ClojureScript
+  has no inline functions, so a resolved var that isn't a macro is a function.
+  Namespace-qualified macros aren't recognized yet."
+  [env ns sym]
+  (cond
+    (or (get (cljs-ana/core-macros env ns) sym)
+        (get (cljs-ana/referred-macros env ns) sym)) "macro"
+    (or (cljs-ana/ns-resolve env ns sym)
+        (get (cljs-ana/core-vars env ns) sym)) "function"
+    (cljs-ana/special-meta env sym) "special"))
+
+(defn- classify-symbols-cljs
+  "Return a map from each macroexpandable symbol string in `symbols` to its
+  classification in the ClojureScript namespace `ns`, omitting symbols that
+  don't resolve."
+  [env ns symbols]
+  (let [ns (or (misc/as-sym ns) 'cljs.user)]
+    (reduce (fn [acc s]
+              (if-let [kind (try (classify-symbol-cljs env ns (symbol s))
+                                 (catch Exception _ nil))]
+                (assoc acc s kind)
+                acc))
+            {}
+            symbols)))
+
+(defn classify-symbols
+  "Classify each symbol string in `:symbols`, resolved in `:ns`.
+  Returns a map from symbol string to its kind (\"macro\", \"inline\",
+  \"special\" or \"function\"); symbols that don't resolve are omitted."
+  [{:keys [symbols] :as msg}]
+  (if-let [env (cljs/grab-cljs-env msg)]
+    (classify-symbols-cljs env (:ns msg) symbols)
+    (classify-symbols-clj (:ns msg) symbols)))
+
+(defn classify-symbols-reply [msg]
+  {:classification (classify-symbols msg)})
+
 (defn handle-info [handler msg]
   (with-safe-transport handler msg
     "cider/info" info-reply
@@ -173,4 +227,5 @@
     "cider/eldoc" eldoc-reply
     "eldoc" eldoc-reply
     "cider/eldoc-datomic-query" eldoc-datomic-query-reply
-    "eldoc-datomic-query" eldoc-datomic-query-reply))
+    "eldoc-datomic-query" eldoc-datomic-query-reply
+    "cider/classify-symbols" classify-symbols-reply))

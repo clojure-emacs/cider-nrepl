@@ -3,6 +3,7 @@
 ## master (unreleased)
 
 * [#979](https://github.com/clojure-emacs/cider-nrepl/pull/979): Bump `orchard` to 0.42.0 and adapt to its removal of the inspector analytics hint (the `:display-analytics-hint` inspect option is gone; use the `cider/inspect-display-analytics` op to show analytics on demand).
+* [#978](https://github.com/clojure-emacs/cider-nrepl/pull/978): Add the `cider/classify-symbols` op, classifying the given symbols as macros, inline-expandable functions, special forms or plain functions, for both Clojure and ClojureScript.
 
 ## 0.59.0 (2026-04-14)
 
