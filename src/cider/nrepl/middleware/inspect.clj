@@ -42,7 +42,7 @@
   (as-> msg config
     (select-keys config [:page-size :sort-maps :max-atom-length :max-coll-size
                          :max-value-length :max-nested-depth :pretty-print
-                         :display-analytics-hint :only-diff])
+                         :only-diff])
     (booleanize config [:pretty-print :sort-maps :only-diff])
     (let [pov-ns (when (= (:tidy-qualified-keywords msg) "true")
                    (some-> msg :ns symbol))]
