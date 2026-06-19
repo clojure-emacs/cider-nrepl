@@ -393,7 +393,13 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
              {:doc "Deprecated: use `cider/eldoc-datomic-query` instead. Return a map containing the inputs of the datomic query."
               :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
-              :returns {"status" "done"}}}})
+              :returns {"status" "done"}}
+             "cider/classify-symbols"
+             {:doc "Classify the given symbols by what kind of operator each is in the given namespace."
+              :requires {"symbols" "A list of symbol strings to classify."}
+              :optional {"ns" "The namespace in which to resolve the symbols. Defaults to 'user."}
+              :returns {"status" "done"
+                        "classification" "A map from each symbol to its kind (\"macro\", \"inline\", \"special\" or \"function\"). Symbols that don't resolve are omitted."}}}})
 
 (def inspector-returns
   {"status" "\"done\""
