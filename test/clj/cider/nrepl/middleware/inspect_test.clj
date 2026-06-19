@@ -458,15 +458,7 @@
     (is+ (mc/prefix ["--- Analytics:" [:newline]
                      "  " [:value ":count" pos?] " = " [:value "100" pos?] [:newline]
                      "  " [:value ":types" pos?] " = " [:value "{java.lang.Long 100}" pos?] [:newline]])
-         (value-skip-header (session/message {:op "cider/inspect-display-analytics"}))))
-
-  (testing "analytics hint is displayed when requested"
-    (session/message {:op "cider/inspect-clear"})
-    (is+ (mc/prefix ["--- Analytics:" [:newline] #"Press 'y' or M-x"])
-         (value-skip-header (session/message {:op      "eval"
-                                              :inspect "true"
-                                              :code    "(range 100)"
-                                              :display-analytics-hint "true"})))))
+         (value-skip-header (session/message {:op "cider/inspect-display-analytics"})))))
 
 (deftest table-view-mode-integration-test
   (testing "table view-mode is supported for lists of maps"

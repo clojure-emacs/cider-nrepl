@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* [#979](https://github.com/clojure-emacs/cider-nrepl/pull/979): Bump `orchard` to 0.42.0 and adapt to its removal of the inspector analytics hint (the `:display-analytics-hint` inspect option is gone; use the `cider/inspect-display-analytics` op to show analytics on demand).
+
 ## 0.59.0 (2026-04-14)
 
 * Bump `nrepl` to [1.7.0](https://github.com/nrepl/nrepl/blob/master/CHANGELOG.md#170-2026-04-14).
