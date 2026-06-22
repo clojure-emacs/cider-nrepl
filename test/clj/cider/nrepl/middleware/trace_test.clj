@@ -3,9 +3,15 @@
    [cider.nrepl.middleware.trace :refer :all]
    [cider.nrepl.test-session :as session]
    [clojure.test :refer :all]
+   [nrepl.transport :as transport]
    [cider.test-ns.first-test-ns]))
 
 (use-fixtures :each session/session-fixture)
+
+(defn traced-sample
+  "A sample fn to trace; nothing else calls it, so its events are predictable."
+  [x]
+  (inc x))
 
 (deftest toggle-trace-var-test
   (testing "toggling"
@@ -105,6 +111,34 @@
       (is (= (:status listed) #{"done"}))
       (is (empty? (:traced-vars listed)))
       (is (empty? (:traced-nses listed))))))
+
+(deftest trace-subscribe-test
+  (testing "subscribe streams events for traced calls, unsubscribe stops them"
+    (let [sent      (atom [])
+          transport (reify transport/Transport
+                      (send [this msg] (swap! sent conj msg) this)
+                      (recv [_this] nil)
+                      (recv [_this _timeout] nil))
+          {id :cider/trace-subscribe} (trace-subscribe {:transport transport
+                                                        :id "42" :session "s"})]
+      (try
+        (is (string? id))
+        (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"})
+        (traced-sample 1)
+        (let [events (keep :cider/trace-event @sent)]
+          (is (= 2 (count events)) "one call event and one return event")
+          (is (= ["call" "return"] (map :phase events)))
+          (is (every? #(= "cider.nrepl.middleware.trace-test/traced-sample" (:name %)) events))
+          (is (= (:id (first events)) (:id (second events))) "call and return share an id"))
+        (finally
+          (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"})
+          (trace-unsubscribe {:subscription id})))
+      ;; after unsubscribe the listener is gone, so a further traced call streams nothing
+      (reset! sent [])
+      (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"})
+      (with-out-str (traced-sample 1)) ; output mode is back to :repl, swallow its print
+      (is (empty? (keep :cider/trace-event @sent)))
+      (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"}))))
 
 (deftest deprecated-ops-test
   (testing "Deprecated 'toggle-trace-var' op still works"
