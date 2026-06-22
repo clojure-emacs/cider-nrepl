@@ -1,0 +1,9 @@
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.5"}
+        nrepl/nrepl         {:mvn/version "1.7.0"}}
+ ;; cider/cider-nrepl is injected at build time with the just-installed version
+ ;; (see the smoketest target in the top-level Makefile), so that the smoke test
+ ;; exercises the real, freshly built artifact.
+ :aliases
+ {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}}
+          :ns-default build}}}
