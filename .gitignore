@@ -1,6 +1,8 @@
 /target
 /lib
 /classes
+/.cpcache
+.eastwood
 /checkouts
 pom.xml
 pom.xml.asc

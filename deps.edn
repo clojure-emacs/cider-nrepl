@@ -1,0 +1,110 @@
+{:paths ["src" "resources" "target/classes"]
+
+ ;; Only the *non-inlined* runtime deps live here, so they (and only they) end
+ ;; up in the published pom. The deps that get source-shaded into the jar are
+ ;; kept under the :inlined-deps alias below, so they never leak into the pom.
+ :deps {org.clojure/clojure         {:mvn/version "1.12.5" :mvn/scope "provided"}
+        ;; nREPL ships as a regular (compile) dependency, matching the
+        ;; historical Leiningen-built pom, so cider-nrepl pulls it in for users.
+        nrepl/nrepl                 {:mvn/version "1.7.0"}
+        cider/orchard               {:mvn/version "0.43.0" :exclusions [org.clojure/clojure]}
+        compliment/compliment       {:mvn/version "0.8.0"}
+        io.github.tonsky/clj-reload {:mvn/version "1.0.0" :exclusions [org.clojure/clojure]}
+        mx.cider/logjam             {:mvn/version "0.3.0" :exclusions [org.clojure/clojure]}
+        org.rksm/suitable           {:mvn/version "0.6.2"
+                                     :exclusions [org.clojure/clojure
+                                                  org.clojure/clojurescript
+                                                  compliment/compliment]}}
+
+ :aliases
+ {;; Dependencies that are source-shaded into the jar by mranderson. They are
+  ;; NOT part of :deps (so they stay out of the pom), but they have to be on the
+  ;; classpath for any non-inlined run (dev/test/repl), where the cider-nrepl
+  ;; sources still refer to them by their original namespaces.
+  ;; NOTE: keep these versions in sync with build.main/inlined-deps.
+  :inlined-deps
+  {:extra-deps {dev.weavejester/cljfmt      {:mvn/version "0.16.4"
+                                             :exclusions [org.clojure/clojure
+                                                          org.clojure/clojurescript
+                                                          org.clojure/tools.cli]}
+                org.clojure/tools.namespace {:mvn/version "1.5.1"}
+                org.clojure/tools.reader    {:mvn/version "1.6.0"}}}
+
+  ;; Run against the inlined/shaded sources instead of src + :inlined-deps.
+  ;; Use after `clojure -T:build inline-deps`, e.g.
+  ;;   clojure -X:1.12:nrepl-1.7:cljs:inlined:test
+  ;; This is the tools.deps equivalent of the old mranderson full-test job.
+  :inlined {:replace-paths ["target/srcdeps" "resources" "target/classes"]}
+
+  ;; ClojureScript-dependent middleware and tests. This is the single source of
+  ;; the ClojureScript version; the Clojure version profiles below deliberately
+  ;; don't pin one (CLJS 1.12 needs JDK21+, so the cljs tests only run there).
+  :cljs
+  {:extra-deps {org.clojure/clojurescript {:mvn/version "1.12.145" :mvn/scope "provided"}
+                cider/piggieback          {:mvn/version "0.6.2"}}}
+
+  ;; Clojure version matrix (use with -M:1.10:test etc.).
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
+  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}}
+
+  ;; nREPL version matrix.
+  :nrepl-1.0 {:override-deps {nrepl/nrepl {:mvn/version "1.0.0"}}}
+  :nrepl-1.3 {:override-deps {nrepl/nrepl {:mvn/version "1.3.0"}}}
+  :nrepl-1.4 {:override-deps {nrepl/nrepl {:mvn/version "1.4.0"}}}
+  :nrepl-1.5 {:override-deps {nrepl/nrepl {:mvn/version "1.5.2"}}}
+  :nrepl-1.6 {:override-deps {nrepl/nrepl {:mvn/version "1.6.0"}}}
+  :nrepl-1.7 {:override-deps {nrepl/nrepl {:mvn/version "1.7.0"}}}
+
+  :test
+  {:extra-paths ["test/clj" "test/cljs" "test/common" "test/src"
+                 "test/java" "test/resources"]
+   :extra-deps {ch.qos.logback/logback-classic {:mvn/version "1.3.7"}
+                mvxcvi/puget                    {:mvn/version "1.3.4" :exclusions [org.clojure/clojure]}
+                fipp/fipp                       {:mvn/version "0.6.29"}
+                org.clojure/test.check          {:mvn/version "1.1.3"}
+                nubank/matcher-combinators      {:mvn/version "3.10.0"}
+                leiningen-core/leiningen-core   {:mvn/version "2.11.2"
+                                                 :exclusions [org.clojure/clojure
+                                                              commons-codec/commons-codec
+                                                              com.google.code.findbugs/jsr305]}
+                io.github.cognitect-labs/test-runner
+                {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+   :jvm-opts ["-Djava.util.logging.config.file=test/resources/logging.properties"
+              "-Dclojure.main.report=stderr"]
+   :exec-fn cognitect.test-runner.api/test
+   ;; Match lein's behaviour of running every namespace in the test paths, not
+   ;; just those named *-test (we have a few fixture nses named *-tests and a
+   ;; cider.nrepl.test-session sanity test that the default pattern would skip).
+   ;; The ClojureScript tests live in test/cljs and are run separately (their
+   ;; CLJS 1.12 Closure compiler needs JDK21+); see the cljs-test Makefile target.
+   :exec-args {:dirs ["test/clj" "test/common"]
+               :patterns [".*"]}}
+
+  ;; Documentation generation (ops.adoc).
+  :maint
+  {:extra-paths ["maint"]
+   :extra-deps {org.clojure/tools.cli {:mvn/version "1.2.245"}}}
+
+  ;; Build/inline/deploy tooling. mranderson 0.6 is the first release with the
+  ;; Leiningen-free mranderson.core/inline-deps entry point.
+  :build
+  {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}
+          slipset/deps-deploy           {:mvn/version "0.2.2"}
+          thomasa/mranderson            {:mvn/version "0.7.0"}}
+   :ns-default build.main}
+
+  :cljfmt
+  {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.15.6"}}
+   :main-opts ["-m" "cljfmt.main"]}
+
+  :kondo
+  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.01.19"}}
+   :main-opts ["-m" "clj-kondo.main"]}
+
+  :eastwood
+  {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
+   ;; The debug middleware deliberately calls the deprecated Thread.stop in its
+   ;; abort path, so that deprecation is ignored.
+   :main-opts ["-m" "eastwood.lint"
+               "{:source-paths [\"src\"] :ignored-faults {:unused-ret-vals {cider.nrepl.middleware.util.instrument {:line 396}} :deprecations {cider.nrepl.middleware.debug true}}}"]}}}
