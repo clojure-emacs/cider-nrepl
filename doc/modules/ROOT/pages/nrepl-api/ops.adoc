@@ -1406,6 +1406,24 @@ Returns::
 
 
 
+=== `cider/classify-symbols`
+
+Classify the given symbols by what kind of operator each is in the given namespace.
+
+Required parameters::
+* `:symbols` A list of symbol strings to classify.
+
+
+Optional parameters::
+* `:ns` The namespace in which to resolve the symbols. Defaults to 'user.
+
+
+Returns::
+* `:classification` A map from each symbol to its kind ("macro", "inline", "special" or "function"). Symbols that don't resolve are omitted.
+* `:status` done
+
+
+
 === `cider/classpath`
 
 Obtain a list of entries in the Java classpath.
@@ -2149,6 +2167,22 @@ Returns::
 * `:path` Printed representation of current inspector path.
 * `:status` "done"
 * `:value` The inspector result. Contains a specially-formatted string that can be ``read`` and then rendered client-side.
+
+
+
+=== `cider/list-traced`
+
+List the vars and namespaces that are currently traced.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:traced-nses` A list of the names of the traced namespaces
+* `:traced-vars` A list of the fully-qualified names of the traced vars
 
 
 
@@ -3058,6 +3092,21 @@ Optional parameters::
 
 Returns::
 * `:status` done
+
+
+
+=== `cider/untrace-all`
+
+Untrace every currently traced var and namespace.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:untraced-count` The number of vars that were untraced
 
 
 
