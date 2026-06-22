@@ -1,7 +1,10 @@
 (ns cider.nrepl.middleware.trace
   (:require
+   [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
-   [orchard.trace :as trace]))
+   [orchard.trace :as trace])
+  (:import
+   [java.util UUID]))
 
 (defn toggle-trace-var
   [{:keys [ns sym]}]
@@ -39,6 +42,41 @@
     (trace/untrace-all)
     {:untraced-count untraced-count}))
 
+(def ^:private subscriptions
+  "Map of subscription id -> the orchard trace listener registered for it."
+  (atom {}))
+
+(defn- serialize-event
+  "Make a trace EVENT bencode-friendly for transport."
+  [event]
+  (update event :phase name))
+
+(defn trace-subscribe
+  "Stream trace events to the client until `cider/trace-unsubscribe`.
+  Registers an orchard trace listener that forwards each event on this
+  request, and routes trace output to listeners instead of the REPL."
+  [msg]
+  (let [id (str (UUID/randomUUID))
+        listener (fn [event]
+                   (respond-to msg
+                               :cider/trace-event (serialize-event event)
+                               :status :cider/trace-event))]
+    (swap! subscriptions assoc id listener)
+    (trace/add-trace-listener listener)
+    (trace/set-output-mode! :listeners)
+    {:cider/trace-subscribe id}))
+
+(defn trace-unsubscribe
+  "Stop streaming trace events for the given subscription.
+  Restores REPL trace output once the last subscription is gone."
+  [{:keys [subscription]}]
+  (when-let [listener (get @subscriptions subscription)]
+    (trace/remove-trace-listener listener)
+    (swap! subscriptions dissoc subscription))
+  (when (empty? @subscriptions)
+    (trace/set-output-mode! :repl))
+  {:cider/trace-unsubscribe subscription})
+
 (defn handle-trace [handler msg]
   (with-safe-transport handler msg
     "cider/toggle-trace-var" [toggle-trace-var :toggle-trace-error]
@@ -46,4 +84,6 @@
     "cider/toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]
     "toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]
     "cider/list-traced" [list-traced :list-traced-error]
-    "cider/untrace-all" [untrace-all :untrace-all-error]))
+    "cider/untrace-all" [untrace-all :untrace-all-error]
+    "cider/trace-subscribe" [trace-subscribe :trace-subscribe-error]
+    "cider/trace-unsubscribe" [trace-unsubscribe :trace-unsubscribe-error]))

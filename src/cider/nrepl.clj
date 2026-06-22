@@ -1075,7 +1075,15 @@ stack frame of the most recent exception."
                         "traced-nses" "A list of the names of the traced namespaces"}}
              "cider/untrace-all"
              {:doc     "Untrace every currently traced var and namespace."
-              :returns {"untraced-count" "The number of vars that were untraced"}}}})
+              :returns {"untraced-count" "The number of vars that were untraced"}}
+             "cider/trace-subscribe"
+             {:doc     "Open a streaming subscription that delivers a message for each traced call and return until `cider/trace-unsubscribe`. While subscribed, trace output is routed to the subscriber instead of the REPL."
+              :returns {"cider/trace-subscribe" "The id of the subscription, to be passed to `cider/trace-unsubscribe`"
+                        "cider/trace-event" "A trace event, with `id`, `phase` (\"call\" or \"return\"), `name`, `depth`, and `args` (on a call) or `value` (on a return)"}}
+             "cider/trace-unsubscribe"
+             {:doc      "Stop streaming trace events for the given subscription."
+              :requires {"subscription" "The id of the subscription to remove"}
+              :returns  {"cider/trace-unsubscribe" "The id of the removed subscription"}}}})
 
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   mw/ops-that-can-eval
