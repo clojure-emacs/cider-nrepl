@@ -3062,6 +3062,38 @@ Returns::
 
 
 
+=== `cider/trace-subscribe`
+
+Open a streaming subscription that delivers a message for each traced call and return until ``cider/trace-unsubscribe``. While subscribed, trace output is routed to the subscriber instead of the REPL.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:cider/trace-event` A trace event, with ``id``, ``phase`` ("call" or "return"), ``name``, ``depth``, and ``args`` (on a call) or ``value`` (on a return)
+* `:cider/trace-subscribe` The id of the subscription, to be passed to ``cider/trace-unsubscribe``
+
+
+
+=== `cider/trace-unsubscribe`
+
+Stop streaming trace events for the given subscription.
+
+Required parameters::
+* `:subscription` The id of the subscription to remove
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:cider/trace-unsubscribe` The id of the removed subscription
+
+
+
 === `cider/undef`
 
 Undefine a symbol
