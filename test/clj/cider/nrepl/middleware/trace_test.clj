@@ -72,6 +72,40 @@
       (is (= (:status ns-err)  #{"done"}))
       (is (= (:ns-status ns-err) "not-found")))))
 
+(deftest list-traced-test
+  (testing "lists the currently traced vars and namespaces"
+    (untrace-all {}) ; start from a clean slate
+    (is (= {:traced-vars [] :traced-nses []} (list-traced {})))
+    (toggle-trace-var {:ns "clojure.core" :sym "zipmap"})
+    (is (= ["#'clojure.core/zipmap"] (:traced-vars (list-traced {}))))
+    (untrace-all {})))
+
+(deftest untrace-all-test
+  (testing "untraces every var and namespace and reports the count"
+    (untrace-all {}) ; start from a clean slate
+    (toggle-trace-var {:ns "clojure.core" :sym "zipmap"})
+    (toggle-trace-ns {:ns "cider.test-ns.first-test-ns"})
+    (is (pos? (:untraced-count (untrace-all {}))))
+    (is (= {:traced-vars [] :traced-nses []} (list-traced {})))))
+
+(deftest integration-test-list-and-untrace-all
+  (testing "listing and clearing traces over the session"
+    (session/message {:op "cider/untrace-all"}) ; clean slate
+    (session/message {:op "cider/toggle-trace-var"
+                      :ns "cider.test-ns.first-test-ns"
+                      :sym "same-name-testing-function"})
+    (let [listed (session/message {:op "cider/list-traced"})]
+      (is (= (:status listed) #{"done"}))
+      (is (= (:traced-vars listed)
+             ["#'cider.test-ns.first-test-ns/same-name-testing-function"])))
+    (let [cleared (session/message {:op "cider/untrace-all"})]
+      (is (= (:status cleared) #{"done"}))
+      (is (= (:untraced-count cleared) 1)))
+    (let [listed (session/message {:op "cider/list-traced"})]
+      (is (= (:status listed) #{"done"}))
+      (is (empty? (:traced-vars listed)))
+      (is (empty? (:traced-nses listed))))))
+
 (deftest deprecated-ops-test
   (testing "Deprecated 'toggle-trace-var' op still works"
     (let [on  (session/message {:op "toggle-trace-var"

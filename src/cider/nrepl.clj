@@ -1068,7 +1068,14 @@ stack frame of the most recent exception."
              "toggle-trace-ns"
              {:doc      "Deprecated: use `cider/toggle-trace-ns` instead. Toggle tracing of a given ns."
               :requires {"ns" "The namespace to trace"}
-              :returns  {"ns-status" "The result of tracing operation"}}}})
+              :returns  {"ns-status" "The result of tracing operation"}}
+             "cider/list-traced"
+             {:doc     "List the vars and namespaces that are currently traced."
+              :returns {"traced-vars" "A list of the fully-qualified names of the traced vars"
+                        "traced-nses" "A list of the names of the traced namespaces"}}
+             "cider/untrace-all"
+             {:doc     "Untrace every currently traced var and namespace."
+              :returns {"untraced-count" "The number of vars that were untraced"}}}})
 
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   mw/ops-that-can-eval
