@@ -5,7 +5,7 @@ Please, use the following checklist to prepare the PR for being reviewed. Thanks
 - [ ] You've updated the [changelog](../blob/master/CHANGELOG.md) (if adding/changing user-visible functionality)
 - [ ] Middleware documentation is up to date
   * Please check out and modify the `cider.nrepl` ns which has all middleware documentation.
-  * Run `lein docs` afterwards, and commit the results.
+  * Run `make docs` afterwards, and commit the results.
 
 **Note:** If you're just starting out to hack on `cider-nrepl` you might find
 [nREPL's documentation](https://nrepl.org) and the

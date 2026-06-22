@@ -6,8 +6,8 @@
    [clojure.string :as str]
    [orchard.misc :refer [java-api-version]]))
 
-(t/deftest test-project-clj-is-clj
-  (let [resp (-> "project.clj"
+(t/deftest test-clj-file-is-clj
+  (let [resp (-> "build/main.clj"
                  io/file
                  io/as-url
                  .toString

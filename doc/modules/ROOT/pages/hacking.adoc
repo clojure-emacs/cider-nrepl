@@ -6,12 +6,13 @@ while working on the project.
 
 == Makefile
 
-cider-nrepl has some pretty complicated Lein profiles, as it has to deal with multiple versions of
-Clojure and ClojureScript, plus dependency inlining with Mr. Anderson. That's why we've
-added a good old `Makefile` to save you the trouble of having to think about the profiles
-and just focus on the tasks at hand.
+cider-nrepl is built with `tools.deps`. It has to deal with multiple versions of
+Clojure and ClojureScript, plus dependency inlining with Mr. Anderson, which means a
+fair number of aliases and build steps. That's why we've added a good old `Makefile`
+to save you the trouble of remembering them and just focus on the tasks at hand.
 
-Obviously you can still work with Lein directly, but you won't have to do this most of the time.
+Obviously you can still invoke the underlying `clojure` commands directly, but you
+won't have to do this most of the time.
 
 == Testing your changes
 
@@ -29,9 +30,10 @@ Just do:
 
   $ make test
 
-That's going to handle the dependency inlining behind the scenes.
-By default the tests are going to be run against the most recent
-Clojure version that's supported.
+This runs against the real (non-inlined) dependencies, which is what you want
+most of the time. To run the suite against the mranderson-inlined sources (what
+gets published), use `make inlined-test`. By default the tests are run against
+the most recent Clojure version that's supported.
 
 == Linting
 

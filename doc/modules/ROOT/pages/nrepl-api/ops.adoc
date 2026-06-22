@@ -1,5 +1,5 @@
 ////
-This file was _generated_ with `lein docs`
+This file was _generated_ with `make docs`
    *Do not edit!*
 ////
 = Supported nREPL operations
