@@ -28,7 +28,7 @@
 (defn- usage [options-summary]
   (->> [(:doc (meta #'-main))
         ""
-        "Usage: lein -m +maint run cider.nrepl.impl.docs [options]"
+        "Usage: clojure -M:maint -m cider.nrepl.impl.docs [options]"
         ""
         "Options:"
         options-summary]
@@ -128,7 +128,7 @@ use in e.g. wiki pages, github, etc."
                              "\n   **Do not edit!** -->\n"
                              (describe-markdown resp))
         (= format "adoc") (str "////\n"
-                               "This file was _generated_ with `lein docs`"
+                               "This file was _generated_ with `make docs`"
                                "\n   *Do not edit!*\n"
                                "////\n"
                                (describe-adoc resp))))

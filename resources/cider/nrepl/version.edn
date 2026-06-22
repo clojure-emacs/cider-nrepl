@@ -1,3 +1,3 @@
-;; This file is automatically overwriten by `make deploy` job
-;; whenever we perform a deployment.
+;; The real version is stamped into the built jar by the build (see
+;; build.main/jar); this placeholder is what you get when running from source.
 "0.0.0"
