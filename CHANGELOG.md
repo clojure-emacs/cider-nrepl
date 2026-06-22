@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* [#980](https://github.com/clojure-emacs/cider-nrepl/pull/980): Migrate the build from Leiningen to tools.deps (the source-shading of cljfmt/tools.namespace/tools.reader is now driven by mranderson's Leiningen-free `inline-deps` entry point).
+
 ## 0.61.0 (2026-06-29)
 
 * [#453](https://github.com/clojure-emacs/cider-nrepl/issues/453): The `cider/format-code` op now accepts a `formatter` argument, the fully-qualified name of a formatting function `[code options] -> code`, so projects can format with zprint (`cider.nrepl.middleware.format/zprint`) instead of the default cljfmt.
