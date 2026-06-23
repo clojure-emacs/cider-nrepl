@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#984](https://github.com/clojure-emacs/cider-nrepl/pull/984): Enlighten now reports the value of every sub-expression as it runs, not just a definition's return value and locals - so the whole computation lights up, much closer to the Light Table feature it was modeled on.
 * [#983](https://github.com/clojure-emacs/cider-nrepl/pull/983): Fix enlighten overlay placement when one evaluation spans several top-level forms (e.g. evaluating a region): each form's values are now reported at that form's own line instead of the line where the evaluation started.
 * [#982](https://github.com/clojure-emacs/cider-nrepl/pull/982): Add the `cider/trace-subscribe` and `cider/trace-unsubscribe` ops, streaming a structured event for every traced call and return so clients can render trace output in a dedicated buffer instead of the REPL (requires `orchard` 0.43.0).
 * [#981](https://github.com/clojure-emacs/cider-nrepl/pull/981): Add the `cider/list-traced` op (listing the currently traced vars and namespaces) and the `cider/untrace-all` op (untracing everything at once).

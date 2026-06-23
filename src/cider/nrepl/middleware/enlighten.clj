@@ -30,9 +30,10 @@
   "Wrap a form representing a function/macro/special-form call.
   Return an equivalent form, instrumented to work with enlighten.
 
-  Currently this only instruments forms that could run several times
-  in a single evaluation. This is necessary so that the client can
-  clean-up overlays from previous evaluations."
+  `fn*`/`def`/`loop*` get special handling (they can run several times in a
+  single evaluation, so the client must clean up overlays from previous runs).
+  Every other sub-form simply reports its own value, so the whole computation
+  lights up - not just the definition's return value."
   [[head & args :as form] {:keys [coor]}]
   (let [erase `(d/debugger-send (assoc (:msg ~'STATE__)
                                        :coor ~coor
@@ -57,8 +58,14 @@
               form))
       ;; Ensure that any `recur`s remain in the tail position.
       loop* (list* head (first args) erase (rest args))
-      ;; Else.
-      form)))
+      ;; Every other sub-form reports its own value, like the `def` case does.
+      `(let [out# ~form]
+         (->> (assoc (:msg ~'STATE__)
+                     :coor ~coor
+                     :status :enlighten
+                     :debug-value (pr-very-short out#))
+              d/debugger-send)
+         out#))))
 
 (defmacro light-form
   "Return the result of form, and maybe enlighten it."
