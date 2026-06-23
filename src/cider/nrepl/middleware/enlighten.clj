@@ -6,7 +6,8 @@
   {:author "Artur Malabarba"}
   (:require
    [cider.nrepl.middleware.debug :as d]
-   [cider.nrepl.middleware.util.instrument :as ins]))
+   [cider.nrepl.middleware.util.instrument :as ins]
+   [nrepl.middleware.interruptible-eval :refer [*msg*]]))
 
 (defn pr-very-short [val]
   (binding [*print-length* 3, *print-level* 2]
@@ -76,12 +77,19 @@
 
 ;;; Middleware
 (defn eval-with-enlighten
-  "Like `eval`, but also enlighten code."
+  "Like `eval`, but also enlighten code.
+  Called once per top-level form.  Binds `d/*top-level-form-meta*` to the form's
+  own metadata so each overlay is placed by that form's line/column rather than
+  by the start of the whole evaluation - which matters when one evaluation spans
+  several top-level forms (e.g. evaluating a region)."
   [form]
   (let [form1 `(d/with-initial-debug-bindings
                  ~(ins/instrument-tagged-code (light-reader form)))]
-    ;; (ins/print-form form1 true)
-    (eval form1)))
+    (binding [d/*top-level-form-meta*
+              (assoc (meta form)
+                     :cider.nrepl.middleware.debug/form-info
+                     {:file (:file *msg*) :original-id (:id *msg*)})]
+      (eval form1))))
 
 (defn handle-enlighten
   [h {:keys [op enlighten] :as msg}]

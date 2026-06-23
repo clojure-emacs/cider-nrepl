@@ -474,7 +474,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
 #_:clj-kondo/ignore
 (def ^:dynamic ^:private *found-debugger-tag*)
 #_:clj-kondo/ignore
-(def ^:dynamic ^:private *top-level-form-meta*)
+(def ^{:dynamic true
+       :doc "Per-form metadata (line/column and `::form-info`) of the top-level
+  form being instrumented.  When bound, `with-initial-debug-bindings` uses it for
+  accurate per-form coordinates; otherwise it falls back to the whole-eval
+  `*msg*`.  Bound by the debugger's instrumenting eval and by
+  `enlighten/eval-with-enlighten`.  Must stay unbound by default - giving it a
+  root value would make `(bound? ...)` always true and break the fallback."}
+  *top-level-form-meta*)
 
 (defmacro with-initial-debug-bindings
   "Let-wrap `body` with STATE__ map containing code, file, line, column etc.

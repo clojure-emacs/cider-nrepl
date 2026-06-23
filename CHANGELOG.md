@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#983](https://github.com/clojure-emacs/cider-nrepl/pull/983): Fix enlighten overlay placement when one evaluation spans several top-level forms (e.g. evaluating a region): each form's values are now reported at that form's own line instead of the line where the evaluation started.
 * [#982](https://github.com/clojure-emacs/cider-nrepl/pull/982): Add the `cider/trace-subscribe` and `cider/trace-unsubscribe` ops, streaming a structured event for every traced call and return so clients can render trace output in a dedicated buffer instead of the REPL (requires `orchard` 0.43.0).
 * [#981](https://github.com/clojure-emacs/cider-nrepl/pull/981): Add the `cider/list-traced` op (listing the currently traced vars and namespaces) and the `cider/untrace-all` op (untracing everything at once).
 * [#979](https://github.com/clojure-emacs/cider-nrepl/pull/979): Bump `orchard` to 0.42.0 and adapt to its removal of the inspector analytics hint (the `:display-analytics-hint` inspect option is gone; use the `cider/inspect-display-analytics` op to show analytics on demand).
