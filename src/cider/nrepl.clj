@@ -1154,6 +1154,17 @@ You can also request to compute the info directly by requesting the \"cider/get-
               :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
               :returns {"who-implements" "A map with `:kind` (\"protocol\", \"multimethod\" or \"other\"); for a protocol an `:impls` list of `:name :file :file-url :line :column` maps, for a multimethod a `:dispatch-values` list."
+                        "status" "done"}}
+             "cider/type-protocols"
+             {:doc "Look up the protocols a type implements."
+              :requires {"sym" "The type to lookup"
+                         "ns" "The current namespace"}
+              :returns {"type-protocols" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
+                        "status" "done"}}
+             "cider/protocols-with-method"
+             {:doc "Look up the protocols that declare a method of a given name."
+              :requires {"method" "The method name to lookup"}
+              :returns {"protocols-with-method" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
                         "status" "done"}}}})
 
 (def-wrapper wrap-clojuredocs cider.nrepl.middleware.clojuredocs/handle-clojuredocs

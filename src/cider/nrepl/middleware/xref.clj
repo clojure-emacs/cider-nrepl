@@ -64,10 +64,31 @@
        :else
        {:kind "other"})}))
 
+(defn- resolve-class
+  "Resolve `sym` (in namespace `ns`) to a class, or nil.
+  Handles a bare/imported type name, a value-holding var, and a dotted class name
+  - a slash-qualified record symbol won't resolve, since records are classes."
+  [ns sym]
+  (let [s (misc/as-sym sym)
+        r (try (ns-resolve (misc/as-sym ns) s) (catch Throwable _ nil))]
+    (cond
+      (class? r) r
+      (and (var? r) (class? (deref r))) (deref r)
+      (var? r) (class (deref r))
+      :else (try (Class/forName (str s)) (catch Throwable _ nil)))))
+
+(defn type-protocols-reply [{:keys [ns sym]}]
+  {:type-protocols (mapv xref-data (xref/type-protocols (resolve-class ns sym)))})
+
+(defn protocols-with-method-reply [{:keys [method]}]
+  {:protocols-with-method (mapv xref-data (xref/protocols-with-method method))})
+
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
     "cider/fn-refs" fn-refs-reply
     "fn-refs" fn-refs-reply
     "cider/fn-deps" fn-deps-reply
     "fn-deps" fn-deps-reply
-    "cider/who-implements" who-implements-reply))
+    "cider/who-implements" who-implements-reply
+    "cider/type-protocols" type-protocols-reply
+    "cider/protocols-with-method" protocols-with-method-reply))
