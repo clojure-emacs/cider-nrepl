@@ -102,3 +102,22 @@
     (testing (pr-str response)
       (is (= (:status response) #{"done"}))
       (is (= "other" (:kind result))))))
+
+(deftest type-protocols-integration-test
+  (let [response (session/message {:op "cider/type-protocols"
+                                   :ns "cider.nrepl.middleware.xref-test"
+                                   :sym "TestImpl"})
+        names (set (map :name (:type-protocols response)))]
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (some #(str/includes? % "TestProto") names)
+          "lists the protocol the record implements"))))
+
+(deftest protocols-with-method-integration-test
+  (let [response (session/message {:op "cider/protocols-with-method"
+                                   :method "test-m"})
+        names (set (map :name (:protocols-with-method response)))]
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (some #(str/includes? % "TestProto") names)
+          "lists the protocol declaring the method"))))
