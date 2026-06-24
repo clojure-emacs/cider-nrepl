@@ -41,9 +41,33 @@
                    (map xref-data)
                    (sort-by file-line-column))}))
 
+(defn- impl-data [{:keys [name file line column]}]
+  {:name name
+   :file file
+   :file-url (some-> file filename-as-url)
+   :line line
+   :column column})
+
+(defn who-implements-reply [{:keys [ns sym]}]
+  (let [v (ns-resolve (misc/as-sym ns) (misc/as-sym sym))
+        x (when v (deref v))]
+    {:who-implements
+     (cond
+       (instance? clojure.lang.MultiFn x)
+       {:kind "multimethod"
+        :dispatch-values (xref/multimethod-dispatch-values v)}
+
+       (and (map? x) (:on-interface x))
+       {:kind "protocol"
+        :impls (mapv impl-data (xref/protocol-impls v))}
+
+       :else
+       {:kind "other"})}))
+
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
     "cider/fn-refs" fn-refs-reply
     "fn-refs" fn-refs-reply
     "cider/fn-deps" fn-deps-reply
-    "fn-deps" fn-deps-reply))
+    "fn-deps" fn-deps-reply
+    "cider/who-implements" who-implements-reply))
