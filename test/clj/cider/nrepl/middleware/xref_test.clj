@@ -62,3 +62,43 @@
           fn-deps (:fn-deps response)]
       (is (= (:status response) #{"done"}))
       (is (= (count fn-deps) 3)))))
+
+;;; who-implements
+
+(defprotocol TestProto
+  (test-m [_]))
+
+(defrecord TestImpl [x]
+  TestProto
+  (test-m [_] x))
+
+(deftest who-implements-protocol-test
+  (let [response (session/message {:op "cider/who-implements"
+                                   :ns "cider.nrepl.middleware.xref-test"
+                                   :sym "TestProto"})
+        result (:who-implements response)]
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (= "protocol" (:kind result)))
+      (is (some #(= "cider.nrepl.middleware.xref_test.TestImpl" (:name %))
+                (:impls result))
+          "includes the inline defrecord implementer"))))
+
+(deftest who-implements-multimethod-test
+  (let [response (session/message {:op "cider/who-implements"
+                                   :ns "clojure.core"
+                                   :sym "print-method"})
+        result (:who-implements response)]
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (= "multimethod" (:kind result)))
+      (is (seq (:dispatch-values result))))))
+
+(deftest who-implements-other-test
+  (let [response (session/message {:op "cider/who-implements"
+                                   :ns "clojure.core"
+                                   :sym "map"})
+        result (:who-implements response)]
+    (testing (pr-str response)
+      (is (= (:status response) #{"done"}))
+      (is (= "other" (:kind result))))))

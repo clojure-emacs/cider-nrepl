@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#985](https://github.com/clojure-emacs/cider-nrepl/pull/985): Add the `cider/who-implements` op, returning the implementations of a protocol (both `extend`-style and inline `defrecord`/`deftype`, with source locations) or the dispatch values of a multimethod (requires `orchard` 0.43.0-alpha2).
 * [#984](https://github.com/clojure-emacs/cider-nrepl/pull/984): Enlighten now reports the value of every sub-expression as it runs, not just a definition's return value and locals - so the whole computation lights up, much closer to the Light Table feature it was modeled on.
 * [#983](https://github.com/clojure-emacs/cider-nrepl/pull/983): Fix enlighten overlay placement when one evaluation spans several top-level forms (e.g. evaluating a region): each form's values are now reported at that form's own line instead of the line where the evaluation started.
 * [#982](https://github.com/clojure-emacs/cider-nrepl/pull/982): Add the `cider/trace-subscribe` and `cider/trace-unsubscribe` ops, streaming a structured event for every traced call and return so clients can render trace output in a dedicated buffer instead of the REPL (requires `orchard` 0.43.0).

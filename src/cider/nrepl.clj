@@ -1148,6 +1148,12 @@ You can also request to compute the info directly by requesting the \"cider/get-
               :requires {"sym" "The symbol to lookup"
                          "ns" "The current namespace"}
               :returns {"fn-deps" "A list of function deps, with a `:name :doc :file :file-url :line :column` structure."
+                        "status" "done"}}
+             "cider/who-implements"
+             {:doc "Look up the implementations of a protocol or the dispatch values of a multimethod."
+              :requires {"sym" "The symbol to lookup"
+                         "ns" "The current namespace"}
+              :returns {"who-implements" "A map with `:kind` (\"protocol\", \"multimethod\" or \"other\"); for a protocol an `:impls` list of `:name :file :file-url :line :column` maps, for a multimethod a `:dispatch-values` list."
                         "status" "done"}}}})
 
 (def-wrapper wrap-clojuredocs cider.nrepl.middleware.clojuredocs/handle-clojuredocs
