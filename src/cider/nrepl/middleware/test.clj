@@ -2,8 +2,10 @@
   "Test execution, reporting, and inspection"
   {:author "Jeff Valk"}
   (:require
+   [cider.nrepl.middleware.test.cljs :as test-cljs]
    [cider.nrepl.middleware.test.extensions :as extensions]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
+   [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [clojure.pprint :as pp]
    [clojure.string :as str]
@@ -512,13 +514,17 @@
             (respond-to msg :status :done)))))
 
 (defn handle-test [handler msg & _configuration]
-  (case (:op msg)
-    ;; (NOTE: deprecated)
-    ("cider/test" "test")         (handle-test-op msg)
-    ;; (NOTE: deprecated)
-    ("cider/test-all" "test-all") (handle-test-all-op msg)
+  (if (and (cljs/grab-cljs-env msg)
+           (test-cljs/handle-test-cljs handler msg))
+    ;; Handled by the ClojureScript path.
+    nil
+    (case (:op msg)
+      ;; (NOTE: deprecated)
+      ("cider/test" "test")         (handle-test-op msg)
+      ;; (NOTE: deprecated)
+      ("cider/test-all" "test-all") (handle-test-all-op msg)
 
-    ("cider/test-var-query" "test-var-query")   (handle-test-var-query-op msg)
-    ("cider/test-stacktrace" "test-stacktrace") (handle-stacktrace-op msg)
-    ("cider/retest" "retest")                   (handle-retest-op msg)
-    (handler msg)))
+      ("cider/test-var-query" "test-var-query")   (handle-test-var-query-op msg)
+      ("cider/test-stacktrace" "test-stacktrace") (handle-stacktrace-op msg)
+      ("cider/retest" "retest")                   (handle-retest-op msg)
+      (handler msg))))

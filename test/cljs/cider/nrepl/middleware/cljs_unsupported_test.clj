@@ -18,7 +18,6 @@
                {:op "cider/refresh"}
                {:op "cider.clj-reload/reload"}
                {:op "cider/spec-list"}
-               {:op "cider/test-var-query" :ns-query {:exactly ["cljs.user"]}}
                {:op "cider/undef" :ns "cljs.user" :symbol "x"}]]
     (testing (:op msg)
       (let [{:keys [status err]} (session/message msg)]
