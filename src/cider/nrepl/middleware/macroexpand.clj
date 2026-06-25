@@ -171,12 +171,27 @@
     @(resolve 'cljs.analyzer/macroexpand-1)
     (catch Exception _)))
 
+(def ^:private empty-env-cljs
+  (try
+    (require 'cljs.analyzer)
+    @(resolve 'cljs.analyzer/empty-env)
+    (catch Exception _)))
+
 (defn- resolve-expander-cljs
   "Returns the macroexpansion fn for macroexpanding ClojureScript code,
-  corresponding to the given value of the :expander option."
+  corresponding to the given value of the :expander option.
+
+  Must be called with `cljs.env/*compiler*` and `cljs.analyzer/*cljs-ns*` bound
+  (i.e. inside `with-cljs-env`/`with-cljs-ns`), since `empty-env` derives the
+  analysis environment's `:ns` from those. Passing the compiler env returned by
+  `cljs/grab-cljs-env` straight to `macroexpand-1` (as the code used to) is *not*
+  a valid analysis environment: it leaves `:ns` empty, so macros referred into
+  the namespace (e.g. via `:refer-macros`) don't resolve and only cljs.core
+  macros expand. See clojure-emacs/cider#2099."
   [{:keys [expander] :as msg}]
-  (let [macroexpand-1 (fn [form]
-                        (macroexpand-1-cljs (cljs/grab-cljs-env msg) form))
+  (let [env (empty-env-cljs)
+        macroexpand-1 (fn [form]
+                        (macroexpand-1-cljs env form))
 
         macroexpand (fn [form]
                       (let [mform (macroexpand-1 form)]
@@ -245,12 +260,11 @@
   in the context of the given :ns, using the provided :expander.
   and :display-namespaces options."
   [{:keys [code ns] :as msg}]
-  (let [expander-fn (resolve-expander-cljs msg)
-        code (read-string code)]
+  (let [code (read-string code)]
     (walk/prewalk (post-expansion-walker-cljs msg)
                   (cljs/with-cljs-env msg
                     (cljs/with-cljs-ns ns
-                      (expander-fn code))))))
+                      ((resolve-expander-cljs msg) code))))))
 
 (defn macroexpansion-reply-cljs [msg]
   (let [msg (update msg :ns #(or (misc/as-sym %) 'cljs.user))]
