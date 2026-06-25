@@ -8,18 +8,22 @@
   (see `cider.nrepl.cljs.test`), then reshape that data into the very same report
   the Clojure path produces. See clojure-emacs/cider#555.
 
-  Current limitations: only synchronous tests are supported (`cljs.test/async`
-  tests aren't awaited); `fail-fast` is ignored (`cljs.test` has no equivalent);
-  and running specific vars runs (but only reports) their whole namespace, since
-  fixtures are namespace-scoped."
+  Asynchronous (`cljs.test/async`) tests are awaited by polling the runtime for
+  the `:end-run-tests` event (a single eval can't block the JS event loop), up to
+  an optional `:timeout`. Other limitations: `fail-fast` is ignored (`cljs.test`
+  has no equivalent); running specific vars runs (but only reports) their whole
+  namespace, since fixtures are namespace-scoped; and concurrent test runs
+  sharing one ClojureScript runtime aren't isolated (the reporter state and the
+  JVM-side results store are global)."
   (:require
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [base-error-response eval-interceptor-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
    [clojure.string :as str]
    [nrepl.middleware.caught :as caught]
    [orchard.misc :as misc])
   (:import
+   (java.util.concurrent Executors ScheduledExecutorService ThreadFactory TimeUnit)
    (nrepl.transport Transport)))
 
 (def ^:private reporter
@@ -108,12 +112,6 @@
                  :error (get by-type :error 0)}
                 summary)}))
 
-(defn- reply [msg vars response]
-  (let [data (cljs/response-value msg response)
-        report (reshape data vars)]
-    (reset! results (:results report))
-    (respond-to msg (util/transform-value report))))
-
 (defn- eval-cljs
   "Send `code` to be evaluated in the ClojureScript runtime, using `transport` to
   intercept the result."
@@ -145,6 +143,37 @@
             (on-done)))
         this))))
 
+(defn- value-transport
+  "Transport for the run/poll evals. Forwards `:out`/`:err` so test output still
+  reaches the client, hands the evaluated value to `on-value`, and forwards eval
+  errors. The eval's own `:done` is swallowed (the op sends a single terminal
+  `:done` itself) - except when the eval completes without ever producing a value
+  (e.g. an interrupt), in which case `terminate!` ends the op so it can't hang."
+  [{:keys [^Transport transport] :as msg} on-value terminate!]
+  (let [value-seen? (volatile! false)]
+    (reify Transport
+      (recv [_this] (.recv transport))
+      (recv [_this timeout] (.recv transport timeout))
+      (send [this response]
+        (cond
+          (contains? response :value)
+          (do (vreset! value-seen? true)
+              (on-value (cljs/response-value msg response)))
+
+          (and (contains? (:status response) :eval-error)
+               (contains? response ::caught/throwable))
+          (do (.send transport (base-error-response msg (::caught/throwable response) :test-error))
+              (terminate! #{:done}))
+
+          (or (contains? response :out) (contains? response :err))
+          (.send transport response)
+
+          (contains? (:status response) :done)
+          (when-not @value-seen?
+            (terminate! (cond-> #{:done}
+                          (contains? (:status response) :interrupted) (conj :interrupted)))))
+        this))))
+
 (defn- missing-namespaces
   "Of `nss`, the ones not present in the running ClojureScript compiler env (so
   they can't be tested). Returns nil when the env can't be inspected."
@@ -155,15 +184,56 @@
                            set)]
     (seq (remove known nss))))
 
-(defn- run-tests [handler msg {:keys [all? nss] :as target}]
+(def ^:private poll-interval-ms 100)
+(def ^:private default-timeout-ms 30000)
+
+(defonce ^:private ^ScheduledExecutorService poll-executor
+  (Executors/newSingleThreadScheduledExecutor
+   (reify ThreadFactory
+     (newThread [_ r] (doto (Thread. ^Runnable r "cider-cljs-test-poll")
+                        (.setDaemon true))))))
+
+(defn- timeout-ms [{:keys [timeout]}]
+  (let [n (when timeout (try (Integer/parseInt (str timeout)) (catch Exception _ nil)))]
+    (if (and n (pos? n)) n default-timeout-ms)))
+
+(defn- run-tests [handler msg {:keys [all? nss vars] :as target}]
   (if (and (not all?) (missing-namespaces msg nss))
     (respond-to msg :status #{:namespace-not-found :done})
-    (let [run (fn []
+    (let [done? (atom false)
+          deadline (+ (System/currentTimeMillis) (timeout-ms msg))
+          ;; `finish!`/`terminate!` both guard on `done?` so the op replies with
+          ;; exactly one terminal `:done`, even under interrupt/poll races.
+          finish! (fn [data extra-status]
+                    (when (compare-and-set! done? false true)
+                      (let [report (reshape data vars)]
+                        (reset! results (:results report))
+                        (respond-to msg (util/transform-value report))
+                        (respond-to msg :status (cond-> #{:done} extra-status (conj extra-status))))))
+          terminate! (fn [status] (when (compare-and-set! done? false true)
+                                    (respond-to msg :status status)))]
+      (letfn [(poll-eval [on-value]
+                (eval-cljs handler msg "(cider.nrepl.cljs.test/poll)"
+                           (value-transport msg on-value terminate!)))
+              (on-value [data]
+                (cond
+                  ;; The op already ended (e.g. interrupted): stop polling.
+                  @done? nil
+                  ;; The run (incl. async tests) finished.
+                  (:done? data) (finish! data nil)
+                  ;; Still running: poll again after a short delay.
+                  (< (System/currentTimeMillis) deadline)
+                  (.schedule poll-executor ^Runnable #(poll-eval on-value)
+                             (long poll-interval-ms) TimeUnit/MILLISECONDS)
+                  ;; Timed out: report whatever has been captured so far.
+                  :else
+                  (eval-cljs handler msg "(cider.nrepl.cljs.test/collect)"
+                             (value-transport msg #(finish! % :test-timeout) terminate!))))
+              (run []
                 (eval-cljs handler msg (run-code target)
-                           (eval-interceptor-transport
-                            msg (fn [m response] (reply m (:vars target) response)) :test-error)))]
-      ;; Load the runtime helper first (separate message), then run the tests.
-      (eval-cljs handler msg require-code (swallowing-transport msg run)))))
+                           (value-transport msg on-value terminate!)))]
+        ;; Load the runtime helper first (separate message), then run the tests.
+        (eval-cljs handler msg require-code (swallowing-transport msg run))))))
 
 ;;; ## Op handlers
 
