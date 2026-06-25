@@ -1019,8 +1019,10 @@ stack frame of the most recent exception."
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
-  {:clojure-only? true
-   :doc "Middleware that handles testing requests."
+  {:doc "Middleware that handles testing requests."
+   ;; Expect piggieback so that, for ClojureScript, the `eval` op we synthesize
+   ;; to run the tests flows down into the piggieback middleware.
+   :expects (cljs/maybe-add-piggieback #{})
    :requires #{#'session #'wrap-print}
    :handles {"cider/test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."

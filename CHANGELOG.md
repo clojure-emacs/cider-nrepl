@@ -3,7 +3,8 @@
 ## master (unreleased)
 
 * [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
-* [clojure-emacs/cider#2198](https://github.com/clojure-emacs/cider/issues/2198): Clojure-only ops (apropos, xref, trace, profile, test, refresh, reload, undef, spec) now reply with a `clojure-only` status when a ClojureScript REPL is active, instead of a confusing failure or a JVM-only result.
+* [clojure-emacs/cider#2198](https://github.com/clojure-emacs/cider/issues/2198): Clojure-only ops (apropos, xref, trace, profile, refresh, reload, undef, spec) now reply with a `clojure-only` status when a ClojureScript REPL is active, instead of a confusing failure or a JVM-only result.
+* [#555](https://github.com/clojure-emacs/cider-nrepl/issues/555): The `test` ops (`cider/test`, `cider/test-var-query`, `cider/test-all`, `cider/retest`) now run ClojureScript tests via `cljs.test` when a ClojureScript REPL is active, returning the same report shape as for Clojure. Asynchronous (`cljs.test/async`) tests aren't awaited yet.
 
 ## 0.60.0 (2026-06-24)
 
