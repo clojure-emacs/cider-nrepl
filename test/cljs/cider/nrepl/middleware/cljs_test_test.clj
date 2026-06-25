@@ -70,6 +70,33 @@
     (is (= #{"done"} status))
     (is (= 0 (:test summary)))))
 
+(deftest cljs-async-test
+  ;; cljs.test/async tests finish after run-tests returns; the middleware must
+  ;; poll the runtime until they complete rather than reporting empty results.
+  (session/message {:op "eval"
+                    :code (nrepl/code (require 'cider.nrepl.sample-cljs-async-test-ns))})
+  (let [{:keys [summary results status]}
+        (session/message {:op "cider/test-var-query"
+                          :var-query {:ns-query {:exactly ["cider.nrepl.sample-cljs-async-test-ns"]}}})]
+    (is (= #{"done"} status))
+    (testing "async assertions are awaited and captured"
+      (is (= 2 (:test summary)))
+      (is (= 1 (:pass summary)))
+      (is (= 1 (:fail summary)))
+      (is (= #{:async-passing-test :async-failing-test}
+             (set (keys (:cider.nrepl.sample-cljs-async-test-ns results))))))))
+
+(deftest cljs-async-timeout-test
+  (session/message {:op "eval"
+                    :code (nrepl/code (require 'cider.nrepl.sample-cljs-timeout-test-ns))})
+  (let [{:keys [status]}
+        (session/message {:op "cider/test-var-query"
+                          :var-query {:ns-query {:exactly ["cider.nrepl.sample-cljs-timeout-test-ns"]}}
+                          :timeout "800"})]
+    (testing "an async test that never completes times out instead of hanging"
+      (is (contains? status "test-timeout"))
+      (is (contains? status "done")))))
+
 (deftest cljs-namespace-not-found-test
   (require-sample!)
   (let [{:keys [status]} (session/message {:op "cider/test-var-query"
