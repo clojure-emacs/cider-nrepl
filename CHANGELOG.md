@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+* [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
+
 ## 0.60.0 (2026-06-24)
 
 * [#986](https://github.com/clojure-emacs/cider-nrepl/pull/986): Add the `cider/type-protocols` op (the protocols a type implements) and the `cider/protocols-with-method` op (the protocols declaring a method of a given name), each returning `:name :file :file-url :line :column` maps (requires `orchard` 0.43.0).

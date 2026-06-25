@@ -2,7 +2,8 @@
   (:require
    [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
    [cider.nrepl.test-session :as session]
-   [clojure.test :refer :all]))
+   [clojure.test :refer :all]
+   [nrepl.core :as nrepl]))
 
 (use-fixtures :once piggieback-fixture)
 
@@ -133,4 +134,18 @@
                                                        :print-meta "true"})]
       (is (= "(def ^{:private true, :arglists (quote ([]))} x\n (clojure.core/fn ([] nil)))"
              expansion))
+      (is (= #{"done"} status))))
+
+  (testing "user-defined macros expand (see clojure-emacs/cider#2099)"
+    (let [{:keys [status]}
+          (session/message
+           {:op "eval"
+            :code (nrepl/code (require '[cider.nrepl.middleware.cljs-macroexpand-test-macros
+                                         :refer-macros [my-when]]))})]
+      (is (= #{"done"} status) "requiring the test macro namespace should succeed"))
+    (let [{:keys [expansion status]} (session/message {:op "cider/macroexpand"
+                                                       :expander "macroexpand-1"
+                                                       :code "(my-when true 1)"
+                                                       :ns "cljs.user"})]
+      (is (= "(if true (do 1))" expansion))
       (is (= #{"done"} status)))))
