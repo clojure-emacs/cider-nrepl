@@ -3,6 +3,7 @@
 ## master (unreleased)
 
 * [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
+* [clojure-emacs/cider#2198](https://github.com/clojure-emacs/cider/issues/2198): Clojure-only ops (apropos, xref, trace, profile, test, refresh, reload, undef, spec) now reply with a `clojure-only` status when a ClojureScript REPL is active, instead of a confusing failure or a JVM-only result.
 
 ## 0.60.0 (2026-06-24)
 

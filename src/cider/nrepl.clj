@@ -127,17 +127,27 @@
                                   [trigger-it descriptor])
         trigger-it (eval trigger-it)
         descriptor (update (eval descriptor) :requires (fnil conj #{}) #'nrepl.middleware.session/session)
+        ;; Clojure-only ops set `:clojure-only?` so they reply with a clear
+        ;; message instead of a JVM-only result when a cljs REPL is active. The
+        ;; flag is stripped before the descriptor reaches nREPL.
+        clojure-only? (:clojure-only? descriptor)
+        descriptor (dissoc descriptor :clojure-only?)
         cond (if (or (nil? trigger-it) (set? trigger-it))
                (let [ops-set (into (-> descriptor :handles keys set) trigger-it)]
                  `(~ops-set (:op ~'msg)))
                `(~trigger-it ~'msg))
+        run-handler (if clojure-only?
+                      `(if (cljs/grab-cljs-env ~'msg)
+                         (cljs/respond-clojure-only ~'msg)
+                         (run-deferred-handler ~handler-fn ~'h ~'msg))
+                      `(run-deferred-handler ~handler-fn ~'h ~'msg))
         doc (or (:doc descriptor) "")]
     (assert descriptor)
     `(do
        (defn ~name ~doc [~'h]
          (fn [~'msg]
            (if (and ~cond (not (:inhibit-cider-middleware ~'msg)))
-             (run-deferred-handler ~handler-fn ~'h ~'msg)
+             ~run-handler
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
 
@@ -177,7 +187,8 @@ Depending on the type of the return value of the evaluation this middleware may 
                         "body" "The slurped content body."}}}})
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
-  {:doc "Middleware that handles apropos requests"
+  {:clojure-only? true
+   :doc "Middleware that handles apropos requests"
    :handles {"cider/apropos"
              {:doc "Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring."
               :requires {"query" "The search query."}
@@ -828,7 +839,8 @@ if applicable, and re-render the updated value."
              {:doc "Deprecated: use `cider/out-unsubscribe` instead. Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}})
 
 (def-wrapper wrap-profile cider.nrepl.middleware.profile/handle-profile
-  {:doc     "Middleware for manual profiling"
+  {:clojure-only? true
+   :doc     "Middleware for manual profiling"
    :handles {"cider/profile-toggle-var" {:doc      "Toggle profiling of a given var."
                                          :requires {"sym" "The symbol to profile"
                                                     "ns"  "The current namespace"}
@@ -851,7 +863,8 @@ if applicable, and re-render the updated value."
    "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
 
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
-  {:doc "Refresh middleware."
+  {:clojure-only? true
+   :doc "Refresh middleware."
    :requires #{"clone" #'wrap-print}
    :handles {"cider/refresh"
              {:doc "Reloads all changed files in dependency order."
@@ -897,7 +910,8 @@ if applicable, and re-render the updated value."
              {:doc "Deprecated: use `cider/refresh-clear` instead. Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}}})
 
 (def-wrapper wrap-reload cider.nrepl.middleware.reload/handle-reload
-  {:doc "Reload middleware."
+  {:clojure-only? true
+   :doc "Reload middleware."
    :requires #{"clone" #'wrap-print}
    :handles {"cider.clj-reload/reload"
              {:doc "Reloads all changed files in dependency order,
@@ -935,7 +949,8 @@ those configured directories will be honored."
               :returns {"resources-list" "The list of resources."}}}})
 
 (def-wrapper wrap-spec cider.nrepl.middleware.spec/handle-spec
-  {:doc "Middleware that provides `clojure.spec` browsing functionality."
+  {:clojure-only? true
+   :doc "Middleware that provides `clojure.spec` browsing functionality."
    :requires (cljs/maybe-add-piggieback #{})
    :handles {"cider/spec-list" {:doc "Return a sorted list of all specs in the registry"
                                 :returns {"status" "done"
@@ -1004,7 +1019,8 @@ stack frame of the most recent exception."
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
-  {:doc "Middleware that handles testing requests."
+  {:clojure-only? true
+   :doc "Middleware that handles testing requests."
    :requires #{#'session #'wrap-print}
    :handles {"cider/test-var-query"
              {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
@@ -1048,7 +1064,8 @@ stack frame of the most recent exception."
               :returns (merge fail-fast-doc timing-info-return-doc)}}})
 
 (def-wrapper wrap-trace cider.nrepl.middleware.trace/handle-trace
-  {:doc     "Toggle tracing of a given var."
+  {:clojure-only? true
+   :doc     "Toggle tracing of a given var."
    :handles {"cider/toggle-trace-var"
              {:doc      "Toggle tracing of a given var."
               :requires {"sym" "The symbol to trace"
@@ -1096,7 +1113,8 @@ You can also request to compute the info directly by requesting the \"cider/get-
              "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}})
 
 (def-wrapper wrap-undef cider.nrepl.middleware.undef/handle-undef
-  {:doc "Middleware to undefine a symbol in a namespace."
+  {:clojure-only? true
+   :doc "Middleware to undefine a symbol in a namespace."
    :handles
    {"cider/undef" {:doc "Undefine a symbol"
                    :requires {"sym" "The symbol to undefine"
@@ -1124,7 +1142,8 @@ You can also request to compute the info directly by requesting the \"cider/get-
                "status" "done"}}}})
 
 (def-wrapper wrap-xref cider.nrepl.middleware.xref/handle-xref
-  {:doc "Middleware that provides find references functionality."
+  {:clojure-only? true
+   :doc "Middleware that provides find references functionality."
    :handles {"cider/fn-refs"
              {:doc "Look up functions that reference a particular function."
               :requires {"sym" "The symbol to lookup"

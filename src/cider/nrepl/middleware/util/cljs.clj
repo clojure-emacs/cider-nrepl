@@ -1,4 +1,6 @@
-(ns cider.nrepl.middleware.util.cljs)
+(ns cider.nrepl.middleware.util.cljs
+  (:require
+   [cider.nrepl.middleware.util :as util]))
 
 (defn try-resolve-piggieback
   "If piggieback is loaded, return `#'cider.piggieback/wrap-cljs-repl`, nil
@@ -81,3 +83,13 @@
     `(binding [cljs.analyzer/*cljs-ns* ~ns-sym]
        ~@body)
     (catch Exception _)))
+
+(defn respond-clojure-only
+  "Replies to `msg` signaling that its op is Clojure-only and isn't available
+  while a ClojureScript REPL is active, then short-circuits the middleware. Lets
+  the client surface a clear message instead of a confusing failure or a
+  JVM-only result. See clojure-emacs/cider#2198."
+  [{:keys [op] :as msg}]
+  (util/respond-to msg
+                   :status #{:done :clojure-only}
+                   :err (str "The \"" op "\" op is Clojure-only and isn't available in a ClojureScript REPL.\n")))
