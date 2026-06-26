@@ -3,6 +3,7 @@
   {:author "Bozhidar Batsov"
    :added "0.22"}
   (:require
+   [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [clojure.java.io :as io]
    [orchard.meta :as meta]
@@ -27,15 +28,15 @@
 (defn file-line-column [{:keys [file-url file line column]}]
   [(or file-url file) (or line 0) (or column 0)])
 
-(defn fn-refs-reply [{:keys [ns sym]}]
-  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
+(defn fn-refs-reply [msg]
+  (let [var (util/msg->var msg)]
     {:fn-refs (->> var
                    xref/fn-refs
                    (map xref-data)
                    (sort-by file-line-column))}))
 
-(defn fn-deps-reply [{:keys [ns sym]}]
-  (let [var (ns-resolve (misc/as-sym ns) (misc/as-sym sym))]
+(defn fn-deps-reply [msg]
+  (let [var (util/msg->var msg)]
     {:fn-deps (->> var
                    xref/fn-deps
                    (map xref-data)
@@ -48,8 +49,8 @@
    :line line
    :column column})
 
-(defn who-implements-reply [{:keys [ns sym]}]
-  (let [v (ns-resolve (misc/as-sym ns) (misc/as-sym sym))
+(defn who-implements-reply [msg]
+  (let [v (util/msg->var msg)
         x (when v (deref v))]
     {:who-implements
      (cond

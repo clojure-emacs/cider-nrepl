@@ -2,13 +2,14 @@
   "Simplistic manual tracing profiler for coarse usecases where the accuracy
   doesn't matter much and you already know which functions to measure."
   (:require
+   [cider.nrepl.middleware.util :refer [msg->var]]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
    [cider.nrepl.middleware.inspect :as inspect-mw]
    [nrepl.misc :refer [response-for]]
    [orchard.profile :as profile]))
 
-(defn toggle-var-reply [{:keys [ns sym] :as msg}]
-  (if-let [v (ns-resolve (symbol ns) (symbol sym))]
+(defn toggle-var-reply [msg]
+  (if-let [v (msg->var msg)]
     (if (profile/profiled? v)
       (do (profile/unprofile-var v)
           (response-for msg :status :done :value "unprofiled"))
