@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.middleware.debug :as d]
    [cider.nrepl.middleware.enlighten :as e]
+   [cider.test-helpers :refer [is+]]
    [clojure.test :refer [deftest is]]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.transport :as t]))
@@ -36,9 +37,10 @@
   (let [msg (->> (enlighten-run (with-meta '(defn enl-sample [] (+ 1 2))
                                   {:line 42 :column 5}))
                  (filter :debug-value) first)]
-    (is (some? msg) "an enlighten value was sent")
-    (is (= #{:enlighten} (:status msg)))
-    (is (= 42 (:line msg)) "positioned by the form's line, not the eval's")))
+    ;; `:line` is positioned by the form's own line, not the eval's start line.
+    (is+ {:status #{:enlighten}
+          :line 42}
+         msg)))
 
 (deftest reports-every-subexpression-value
   ;; The whole computation lights up, not just the return value and locals.
