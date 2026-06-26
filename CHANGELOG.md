@@ -2,10 +2,9 @@
 
 ## master (unreleased)
 
+* [#994](https://github.com/clojure-emacs/cider-nrepl/pull/994): Error handling: catch `Throwable` (not just `Exception`) when handling ops, so an op that hits an `Error` (e.g. `StackOverflowError`, `AssertionError`) returns a proper error response instead of hanging the client without a terminal `done`. The stacktrace ops, which reply outside the shared error machinery, got the same guarantee.
 * [#993](https://github.com/clojure-emacs/cider-nrepl/pull/993): Fix op descriptor metadata: document `cider/get-state`'s return values (previously rendered blank) and correct the `cider/log-remove-consumer` return key.
 * [#992](https://github.com/clojure-emacs/cider-nrepl/pull/992): Bump `cljfmt` to 0.16.4 (from 0.9.2).
-* Error handling: catch `Throwable` (not just `Exception`) when handling ops, so an op that hits an `Error` (e.g. `StackOverflowError`, `AssertionError`) returns a proper error response instead of hanging the client without a terminal `done`. The stacktrace ops, which reply outside the shared error machinery, got the same guarantee.
-* Bump `cljfmt` to 0.16.4 (from 0.9.2).
 * [#955](https://github.com/clojure-emacs/cider-nrepl/issues/955): The `cider/format-code` op now applies the project's `.cljfmt.edn`/`.cljfmt.clj` configuration automatically, with any options passed in the request taking precedence.
 * [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
 * [clojure-emacs/cider#2198](https://github.com/clojure-emacs/cider/issues/2198): Clojure-only ops (apropos, xref, trace, profile, refresh, reload, undef, spec) now reply with a `clojure-only` status when a ClojureScript REPL is active, instead of a confusing failure or a JVM-only result.
