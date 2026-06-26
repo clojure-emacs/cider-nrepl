@@ -1,14 +1,14 @@
 (ns cider.nrepl.middleware.trace
   (:require
-   [cider.nrepl.middleware.util :refer [respond-to]]
+   [cider.nrepl.middleware.util :refer [msg->var respond-to]]
    [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [orchard.trace :as trace])
   (:import
    [java.util UUID]))
 
 (defn toggle-trace-var
-  [{:keys [ns sym]}]
-  (if-let [v (ns-resolve (symbol ns) (symbol sym))]
+  [msg]
+  (if-let [v (msg->var msg)]
     (if (trace/traceable? v)
       (if (trace/traced? v)
         (do (trace/untrace-var* v)
