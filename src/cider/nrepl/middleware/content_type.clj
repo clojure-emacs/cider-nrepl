@@ -46,7 +46,6 @@
   (:require
    [cider.nrepl.middleware.slurp :refer [slurp-reply]])
   (:import
-   [java.awt.image RenderedImage]
    [java.io ByteArrayOutputStream File OutputStream]
    [java.net URI URL]
    java.nio.file.Path

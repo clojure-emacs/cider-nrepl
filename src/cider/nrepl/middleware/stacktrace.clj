@@ -6,7 +6,6 @@
    [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
-   [nrepl.middleware.print :as print]
    [nrepl.transport :as t]
    [orchard.stacktrace :as stacktrace]))
 

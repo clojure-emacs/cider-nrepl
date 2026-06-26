@@ -7,7 +7,6 @@
   (:require
    [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.reload :as reload-utils]
-   [clojure.main :refer [repl-caught]]
    [clojure.tools.namespace.dir :as dir]
    [clojure.tools.namespace.find :as find]
    [clojure.tools.namespace.reload :as reload]

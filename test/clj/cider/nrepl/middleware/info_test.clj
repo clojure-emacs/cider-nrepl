@@ -9,6 +9,10 @@
    [matcher-combinators.matchers :as matchers]
    [orchard.java.source-files]
    [orchard.misc :as misc])
+  ;; These classes declare methods that share a name; they're imported so the
+  ;; eldoc/info tests can introspect the same-named methods across them. The
+  ;; import is used at runtime (via ns introspection), not in Clojure source.
+  #_{:clj-kondo/ignore [:unused-import]}
   (:import (cider.nrepl.test AnotherTestClass TestClass YetAnotherTest)))
 
 (defprotocol FormatResponseTest

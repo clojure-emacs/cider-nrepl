@@ -19,6 +19,8 @@ out
 .nrepl-port
 .source-deps
 .clj-kondo/.cache
+.clj-kondo/imports
+.make_kondo_prep
 /.no-mranderson
 /test-runner
 /.test-classpath

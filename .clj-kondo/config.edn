@@ -11,18 +11,19 @@
                                              (cljs.test/is [match? thrown-match?])
                                              (clojure.test/is [match? thrown-match?])]}
            :consistent-alias      {:aliases {clojure.string str}}
-           :unused-import         {:level :off}
+           ;; The following are deliberately left off; each is noisy or
+           ;; false-positive-prone in this codebase:
+           ;; - :unresolved-var fires on `def-wrapper`-generated vars
+           ;; - :unused-binding fires on intentionally-ignored handler args
+           ;; - :refer-all fires on the `:refer :all` test convention
+           ;; - :unused-private-var fires on macros used via expansion and the
+           ;;   side-effecting `warmup-once` defonce
+           ;; - :missing-else-branch flags idiomatic `(if cond then)`
            :unresolved-var        {:level :off}
            :unused-binding        {:level :off}
            :refer-all             {:level :off}
-           :unused-namespace      {:level :off}
-           :missing-test-assertion {:level :off}
-           :use                   {:level :off}
-           :redundant-let         {:level :off}
            :unused-private-var    {:level :off}
            :missing-else-branch   {:level :off}
-           :unused-referred-var   {:level :off}
-           :type-mismatch         {:level :off}
            :unresolved-namespace  {:exclude [clojure.main nrepl.transport js]}}
  :output  {:progress      true
            :exclude-files ["data_readers" "tasks"]}}

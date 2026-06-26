@@ -3,7 +3,6 @@
    :clojure.tools.namespace.repl/load false}
   (:require
    [cider.nrepl.middleware.out :as o]
-   [clojure.string :as str]
    [clojure.test :refer :all])
   (:import
    [java.io PrintWriter StringWriter]

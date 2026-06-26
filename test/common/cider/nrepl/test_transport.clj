@@ -1,7 +1,7 @@
 (ns cider.nrepl.test-transport
   "A transport for testing"
-  (:use
-   [nrepl.transport :only [Transport]]))
+  (:require
+   [nrepl.transport :refer [Transport]]))
 
 (defrecord TestTransport [msgs]
   Transport

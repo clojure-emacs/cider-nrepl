@@ -8,7 +8,6 @@
    [clojure.stacktrace]
    [clojure.walk :as walk]
    [nrepl.middleware.caught :as caught]
-   [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
    [nrepl.transport :as transport]
    [orchard.stacktrace :as stacktrace])
