@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Fix op descriptor metadata: document `cider/get-state`'s return values (previously rendered blank) and correct the `cider/log-remove-consumer` return key.
 * Bump `cljfmt` to 0.16.4 (from 0.9.2).
 * [#955](https://github.com/clojure-emacs/cider-nrepl/issues/955): The `cider/format-code` op now applies the project's `.cljfmt.edn`/`.cljfmt.clj` configuration automatically, with any options passed in the request taking precedence.
 * [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
