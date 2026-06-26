@@ -47,8 +47,10 @@
       (is (= #{"done"} (:status response)))))
 
   (testing "errors handled properly"
+    ;; `(ffirst 1)` is a deliberate type error - the point is to exercise
+    ;; error handling - so silence the type-mismatch linter here.
     (let [response (session/message {:op "eval"
-                                     :code (nrepl/code (ffirst 1))})]
+                                     :code #_{:clj-kondo/ignore [:type-mismatch]} (nrepl/code (ffirst 1))})]
       (is (= "class clojure.lang.ExceptionInfo"
              (:ex response)
              (:root-ex response)))

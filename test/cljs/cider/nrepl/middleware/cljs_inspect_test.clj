@@ -1,6 +1,5 @@
 (ns cider.nrepl.middleware.cljs-inspect-test
   (:require
-   [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.middleware.inspect-test :as inspect-test]
    [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
    [cider.nrepl.test-session :as session]

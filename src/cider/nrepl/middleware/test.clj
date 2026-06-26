@@ -12,7 +12,6 @@
    [clojure.test :as test]
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
-   [nrepl.middleware.print :as print]
    [orchard.misc :as misc]
    [orchard.query :as query]
    [orchard.stacktrace :as stacktrace]))

@@ -2,7 +2,6 @@
   (:require
    [cider.nrepl.middleware.ns :refer [ns-vars-clj ns-list-vars-by-name] :as cider-ns]
    [cider.nrepl.test-session :as session]
-   [cider.nrepl.test-transport :refer [messages test-transport]]
    [cider.test-ns first-test-ns second-test-ns third-test-ns]
    [clojure.test :refer :all]))
 

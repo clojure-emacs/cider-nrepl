@@ -1,7 +1,6 @@
 (ns cider.nrepl-test
   (:require
-   [cider.nrepl :as sut]
-   [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is]]
    [nrepl.version]))
 
 (deftest versions-sanity-check

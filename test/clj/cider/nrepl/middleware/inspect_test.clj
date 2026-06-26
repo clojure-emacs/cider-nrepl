@@ -1,16 +1,13 @@
 (ns cider.nrepl.middleware.inspect-test
   (:require
    [matcher-combinators.matchers :as mc]
-   [cider.nrepl.middleware.inspect :as i]
    [cider.nrepl.test-session :as session]
-   [cider.nrepl.middleware.info-test :as info-test]
    [cider.test-helpers :refer :all]
    [clojure.edn :as edn]
    [clojure.string :as str]
    [clojure.test :refer :all]
    [orchard.java]
-   [orchard.inspect]
-   [orchard.info :as info]))
+   [orchard.inspect]))
 
 (def inspect-tap-current-value-test-atom (atom nil))
 

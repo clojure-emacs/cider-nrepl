@@ -1,7 +1,6 @@
 (ns cider.nrepl.middleware.log-test
   (:require [cider.nrepl.test-session :as session]
             [cider.test-helpers :refer [is+]]
-            [clojure.set :as set]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [clojure.test.check.generators :as gen]
             [logjam.framework :as framework]))
@@ -302,17 +301,17 @@
       (framework/log framework {:message "a-2"})
       (Thread/sleep 100)
       (framework/log framework {:message "a-3"})
-      (let [[event-3 event-2 event-1] (search-events framework appender {})]
-        (let [options {:filters {:start-time (inc (:timestamp event-1))
-                                 :end-time (dec (:timestamp event-3))}}
-              events (search-events framework appender options)]
-          (is (= 1 (count events)))
-          (is+ {:id (:id event-2)
-                :level "INFO"
-                :logger string?
-                :message "a-2"
-                :timestamp int?}
-               (first events)))))))
+      (let [[event-3 event-2 event-1] (search-events framework appender {})
+            options {:filters {:start-time (inc (:timestamp event-1))
+                               :end-time (dec (:timestamp event-3))}}
+            events (search-events framework appender options)]
+        (is (= 1 (count events)))
+        (is+ {:id (:id event-2)
+              :level "INFO"
+              :logger string?
+              :message "a-2"
+              :timestamp int?}
+             (first events))))))
 
 (deftest test-threads
   (with-each-framework [framework (frameworks)]

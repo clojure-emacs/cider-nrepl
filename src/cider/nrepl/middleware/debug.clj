@@ -2,7 +2,6 @@
   "Expression-based debugger for clojure code"
   {:author "Artur Malabarba"}
   (:require
-   [clojure.string :as str]
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
@@ -10,7 +9,6 @@
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.interruptible-eval :as ieval :refer [*msg*]]
-   [nrepl.middleware.print :as print]
    [orchard.info :as info]
    [orchard.inspect :as inspect]
    [orchard.meta :as m]
