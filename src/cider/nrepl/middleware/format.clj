@@ -2,7 +2,7 @@
   "Code and EDN formatting functionality."
   (:refer-clojure :exclude [read-string])
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [cljfmt.config :as fmt-config]
    [cljfmt.core :as fmt]
    [clojure.edn :as edn]
@@ -100,7 +100,5 @@
 ;;; Middleware op handling
 (defn handle-format [handler msg]
   (with-safe-transport handler msg
-    "cider/format-code" format-code-reply
-    "format-code" format-code-reply
-    "cider/format-edn" format-edn-reply
-    "format-edn" format-edn-reply))
+    (with-op-aliases {"cider/format-code" format-code-reply
+                      "cider/format-edn" format-edn-reply})))

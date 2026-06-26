@@ -3,7 +3,7 @@
   {:author "Jeff Valk"}
   (:require
    [cider.nrepl.middleware.util.coerce :as util.coerce]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [orchard.apropos :as apropos]))
 
 ;;; ## Middleware
@@ -45,5 +45,4 @@
 
 (defn handle-apropos [handler msg]
   (with-safe-transport handler msg
-    "cider/apropos" apropos
-    "apropos" apropos))
+    (with-op-aliases {"cider/apropos" apropos})))

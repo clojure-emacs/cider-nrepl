@@ -4,7 +4,7 @@
   {:added "0.22"}
   (:require
    [cider.nrepl.middleware.util :as util]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [orchard.clojuredocs :as docs]))
 
 (defn- clojuredocs-lookup-reply [{:keys [ns sym]}]
@@ -26,7 +26,5 @@
 
 (defn handle-clojuredocs [handler msg]
   (with-safe-transport handler msg
-    "cider/clojuredocs-refresh-cache" clojuredocs-refresh-cache-reply
-    "clojuredocs-refresh-cache" clojuredocs-refresh-cache-reply
-    "cider/clojuredocs-lookup" clojuredocs-lookup-reply
-    "clojuredocs-lookup" clojuredocs-lookup-reply))
+    (with-op-aliases {"cider/clojuredocs-refresh-cache" clojuredocs-refresh-cache-reply
+                      "cider/clojuredocs-lookup" clojuredocs-lookup-reply})))

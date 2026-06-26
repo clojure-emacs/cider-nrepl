@@ -161,18 +161,41 @@
 
   Actions can be functions, maps, non-associate collections, and single items
   such as kw's, strings, numbers, etc. The utilization of each type is discussed
-  above in the `selector` method."
+  above in the `selector` method.
+
+  The op/action pairings can be given either as flat varargs (`op action op
+  action ...`) or as a single map expression (`{op action, ...}`), the latter
+  being handy together with `with-op-aliases`."
   {:style/indent 2}
   [handler msg & pairings]
-  `(let [{op# :op transport# :transport :as msg#} ~msg]
-     (if-let [action# (get (hash-map ~@pairings) op#)]
-       (let [[op-action# err-action#]  (if (vector? action#) action# [action# ::default])]
-         ;; Catch `Throwable`, not just `Exception`: an `Error` (e.g.
-         ;; `AssertionError`, `StackOverflowError`) escaping here would leave the
-         ;; op without a terminal `:done`, hanging the client until it times out.
-         (try (transport/send transport# (op-handler op-action# msg#))
-              (catch Throwable e# (transport/send transport# (error-handler err-action# msg# e#)))))
-       (~handler msg#))))
+  (let [dispatch (if (= 1 (count pairings))
+                   (first pairings)
+                   `(hash-map ~@pairings))]
+    `(let [{op# :op transport# :transport :as msg#} ~msg]
+       (if-let [action# (get ~dispatch op#)]
+         (let [[op-action# err-action#]  (if (vector? action#) action# [action# ::default])]
+           ;; Catch `Throwable`, not just `Exception`: an `Error` (e.g.
+           ;; `AssertionError`, `StackOverflowError`) escaping here would leave the
+           ;; op without a terminal `:done`, hanging the client until it times out.
+           (try (transport/send transport# (op-handler op-action# msg#))
+                (catch Throwable e# (transport/send transport# (error-handler err-action# msg# e#)))))
+         (~handler msg#)))))
+
+(defn with-op-aliases
+  "Given a map of op names to actions, add an entry for the deprecated,
+  unnamespaced alias of every `cider/`-namespaced op (pointing to the same
+  action). This is the dispatch-side mirror of
+  `cider.nrepl/with-deprecated-aliases`, so the handler answers exactly the same
+  legacy op names the descriptors advertise, without hand-duplicating each
+  pairing. Ops not starting with `cider/` are passed through unchanged."
+  [pairings]
+  (reduce-kv
+   (fn [acc op action]
+     (if (.startsWith ^String op "cider/")
+       (assoc acc op action (subs op (count "cider/")) action)
+       (assoc acc op action)))
+   {}
+   pairings))
 
 (defn eval-interceptor-transport
   "Return a transport that wraps the transport in `msg` and intercepts the

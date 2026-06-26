@@ -1,0 +1,3 @@
+-m
+eastwood.lint
+{:source-paths ["src"] :ignored-faults {:unused-ret-vals {cider.nrepl.middleware.util.instrument {:line 396}} :deprecations {cider.nrepl.middleware.debug true}}}

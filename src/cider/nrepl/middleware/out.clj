@@ -12,7 +12,7 @@
   {:clojure.tools.namespace.repl/unload false
    :clojure.tools.namespace.repl/load false}
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]])
   (:import
    [java.io PrintWriter Writer PrintStream OutputStream]
    [java.util.concurrent
@@ -179,7 +179,5 @@ Please do not inline; they must not be recomputed at runtime."}
 
 (defn handle-out [handler msg]
   (with-safe-transport handler msg
-    "cider/out-subscribe" subscribe-session
-    "out-subscribe" subscribe-session
-    "cider/out-unsubscribe" unsubscribe-session
-    "out-unsubscribe" unsubscribe-session))
+    (with-op-aliases {"cider/out-subscribe" subscribe-session
+                      "cider/out-unsubscribe" unsubscribe-session})))
