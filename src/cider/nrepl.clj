@@ -151,6 +151,25 @@
              (~'h ~'msg))))
        (set-descriptor! #'~name ~descriptor))))
 
+(defn with-deprecated-aliases
+  "Expand a map of `cider/`-namespaced op descriptors so it also contains a
+  deprecated, unnamespaced alias for each op. Each alias carries the same
+  metadata as its primary, with a deprecation notice prepended to its `:doc`.
+  This keeps the legacy op names working (see #710) without hand-duplicating
+  every descriptor. Ops not starting with `cider/` are passed through unchanged."
+  [handles]
+  (reduce-kv
+   (fn [acc op descriptor]
+     (if (.startsWith ^String op "cider/")
+       (let [bare (subs op (count "cider/"))]
+         (assoc acc
+                op descriptor
+                bare (update descriptor :doc
+                             #(str "Deprecated: use `" op "` instead. " %))))
+       (assoc acc op descriptor)))
+   {}
+   handles))
+
 ;;; Deferred Middleware Wrappers
 ;;
 ;; Each middleware is defined in its own namespace, but here we're defining
@@ -175,75 +194,50 @@ Depending on the type of the return value of the evaluation this middleware may 
 
 (def-wrapper wrap-slurp cider.nrepl.middleware.slurp/handle-slurp
   {:doc "Middleware that handles slurp requests."
-   :handles {"cider/slurp"
-             {:doc "Slurps a URL from the nREPL server, returning MIME data."
-              :returns {"content-type" "A MIME type for the response, if one can be detected."
-                        "content-transfer-encoding" "The encoding (if any) for the content."
-                        "body" "The slurped content body."}}
-             "slurp"
-             {:doc "Deprecated: use `cider/slurp` instead. Slurps a URL from the nREPL server, returning MIME data."
-              :returns {"content-type" "A MIME type for the response, if one can be detected."
-                        "content-transfer-encoding" "The encoding (if any) for the content."
-                        "body" "The slurped content body."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/slurp"
+               {:doc "Slurps a URL from the nREPL server, returning MIME data."
+                :returns {"content-type" "A MIME type for the response, if one can be detected."
+                          "content-transfer-encoding" "The encoding (if any) for the content."
+                          "body" "The slurped content body."}}})})
 
 (def-wrapper wrap-apropos cider.nrepl.middleware.apropos/handle-apropos
   {:clojure-only? true
    :doc "Middleware that handles apropos requests"
-   :handles {"cider/apropos"
-             {:doc "Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring."
-              :requires {"query" "The search query."}
-              :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
-              :returns {"apropos-matches" "A list of matching symbols."}}
-             "apropos"
-             {:doc "Deprecated: use `cider/apropos` instead. Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring."
-              :requires {"query" "The search query."}
-              :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
-              :returns {"apropos-matches" "A list of matching symbols."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/apropos"
+               {:doc "Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring."
+                :requires {"query" "The search query."}
+                :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
+                :returns {"apropos-matches" "A list of matching symbols."}}})})
 
 (def-wrapper wrap-classpath cider.nrepl.middleware.classpath/handle-classpath
   {:doc "Middleware that provides the java classpath."
-   :handles {"cider/classpath"
-             {:doc "Obtain a list of entries in the Java classpath."
-              :returns {"classpath" "A list of the Java classpath entries."}}
-             "classpath"
-             {:doc "Deprecated: use `cider/classpath` instead. Obtain a list of entries in the Java classpath."
-              :returns {"classpath" "A list of the Java classpath entries."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/classpath"
+               {:doc "Obtain a list of entries in the Java classpath."
+                :returns {"classpath" "A list of the Java classpath entries."}}})})
 
 (def-wrapper wrap-complete cider.nrepl.middleware.complete/handle-complete
   {:doc "Middleware providing completion support."
    :requires (cljs/maybe-add-piggieback #{#'session})
-   :handles {"cider/complete"
-             {:doc "Return a list of symbols matching the specified (partial) symbol."
-              :requires {"ns" "The namespace is which to look for completions (falls back to *ns* if not specified)"
-                         "prefix" "The prefix for completion candidates"
-                         "session" "The current session"}
-              :optional {"context" "Completion context for compliment."
-                         "sort-order" "Sorting order of candidates. Possible values: by-name, by-length."
-                         "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
-              :returns {"completions" "A list of possible completions"}}
-             "complete"
-             {:doc "Deprecated: use `cider/complete` instead. Return a list of symbols matching the specified (partial) symbol."
-              :requires {"ns" "The namespace is which to look for completions (falls back to *ns* if not specified)"
-                         "prefix" "The prefix for completion candidates"
-                         "session" "The current session"}
-              :optional {"context" "Completion context for compliment."
-                         "sort-order" "Sorting order of candidates. Possible values: by-name, by-length."
-                         "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
-              :returns {"completions" "A list of possible completions"}}
-             "cider/complete-doc"
-             {:doc "Retrieve documentation suitable for display in completion popup"
-              :requires {"ns" "The symbol's namespace"
-                         "sym" "The symbol to lookup"}
-              :returns {"completion-doc" "Symbol's documentation"}}
-             "complete-doc"
-             {:doc "Deprecated: use `cider/complete-doc` instead. Retrieve documentation suitable for display in completion popup"
-              :requires {"ns" "The symbol's namespace"
-                         "sym" "The symbol to lookup"}
-              :returns {"completion-doc" "Symbol's documentation"}}
-             "cider/complete-flush-caches"
-             {:doc "Forces the completion backend to repopulate all its caches"}
-             "complete-flush-caches"
-             {:doc "Deprecated: use `cider/complete-flush-caches` instead. Forces the completion backend to repopulate all its caches"}}})
+   :handles (with-deprecated-aliases
+              {"cider/complete"
+               {:doc "Return a list of symbols matching the specified (partial) symbol."
+                :requires {"ns" "The namespace is which to look for completions (falls back to *ns* if not specified)"
+                           "prefix" "The prefix for completion candidates"
+                           "session" "The current session"}
+                :optional {"context" "Completion context for compliment."
+                           "sort-order" "Sorting order of candidates. Possible values: by-name, by-length."
+                           "extra-metadata" "List of extra-metadata fields. Possible values: arglists, doc."}
+                :returns {"completions" "A list of possible completions"}}
+               "cider/complete-doc"
+               {:doc "Retrieve documentation suitable for display in completion popup"
+                :requires {"ns" "The symbol's namespace"
+                           "sym" "The symbol to lookup"}
+                :returns {"completion-doc" "Symbol's documentation"}}
+               "cider/complete-flush-caches"
+               {:doc "Forces the completion backend to repopulate all its caches"}})})
 
 ;; `wrap-debug` has to be sandwiched between `load-file` and `eval`. First
 ;; `load-file` transforms its message into an `eval`, then `wrap-debug` attaches
@@ -253,46 +247,27 @@ Depending on the type of the return value of the evaluation this middleware may 
   {:doc "Provide instrumentation and debugging functionality."
    :expects  #{"eval"}
    :requires (cljs/maybe-add-piggieback #{#'wrap-print #'session "load-file"})
-   :handles {"cider/debug-input"
-             {:doc "Read client input on debug action."
-              :requires {"input" "The user's reply to the input request."
-                         "key" "The corresponding input request key."}
-              :returns  {"status" "done"}}
-             "debug-input"
-             {:doc "Deprecated: use `cider/debug-input` instead. Read client input on debug action."
-              :requires {"input" "The user's reply to the input request."
-                         "key" "The corresponding input request key."}
-              :returns  {"status" "done"}}
-             "cider/init-debugger"
-             {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
-              :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-             "init-debugger"
-             {:doc "Deprecated: use `cider/init-debugger` instead. Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
-              :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
-             "cider/debug-instrumented-defs"
-             {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed."
-              :returns {"status" "done"
-                        "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
-             "debug-instrumented-defs"
-             {:doc "Deprecated: use `cider/debug-instrumented-defs` instead. Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed."
-              :returns {"status" "done"
-                        "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
-             "cider/debug-middleware"
-             {:doc "Debug a code form or fall back on regular eval."
-              :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
-                         "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-                         "file"  "File where the code is located."
-                         "ns"    "Passed to \"eval\"."
-                         "point" "Position in the file where the provided code begins."}
-              :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}
-             "debug-middleware"
-             {:doc "Deprecated: use `cider/debug-middleware` instead. Debug a code form or fall back on regular eval."
-              :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
-                         "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
-                         "file"  "File where the code is located."
-                         "ns"    "Passed to \"eval\"."
-                         "point" "Position in the file where the provided code begins."}
-              :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}}})
+   :handles (with-deprecated-aliases
+              {"cider/debug-input"
+               {:doc "Read client input on debug action."
+                :requires {"input" "The user's reply to the input request."
+                           "key" "The corresponding input request key."}
+                :returns  {"status" "done"}}
+               "cider/init-debugger"
+               {:doc "Initialize the debugger so that `breakpoint` works correctly. This usually does not respond immediately. It sends a response when a breakpoint is reached or when the message is discarded."
+                :requires {"id" "A message id that will be responded to when a breakpoint is reached."}}
+               "cider/debug-instrumented-defs"
+               {:doc "Return an alist of definitions currently thought to be instrumented on each namespace. Due to Clojure's versatility, this could include false positives, but there will not be false negatives. Instrumentations inside protocols are not listed."
+                :returns {"status" "done"
+                          "list"   "The alist of (NAMESPACE . VARS) that are thought to be instrumented."}}
+               "cider/debug-middleware"
+               {:doc "Debug a code form or fall back on regular eval."
+                :requires {"id"    "A message id that will be responded to when a breakpoint is reached."
+                           "code"  "Code to debug, there must be a #dbg or a #break reader macro in it, or nothing will happen."
+                           "file"  "File where the code is located."
+                           "ns"    "Passed to \"eval\"."
+                           "point" "Position in the file where the provided code begins."}
+                :returns {"status" "\"done\" if the message will no longer be used, or \"need-debug-input\" during debugging sessions"}}})})
 
 (def-wrapper wrap-enlighten cider.nrepl.middleware.enlighten/handle-enlighten
   :enlighten
@@ -301,26 +276,17 @@ Depending on the type of the return value of the evaluation this middleware may 
 (def-wrapper wrap-format cider.nrepl.middleware.format/handle-format
   {:doc "Middleware providing support for formatting Clojure code and EDN data."
    :requires #{#'wrap-print}
-   :handles {"cider/format-code"
-             {:doc "Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
-              :requires {"code" "The code to format."}
-              :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
-              :returns {"formatted-code" "The formatted code."}}
-             "format-code"
-             {:doc "Deprecated: use `cider/format-code` instead. Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
-              :requires {"code" "The code to format."}
-              :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
-              :returns {"formatted-code" "The formatted code."}}
-             "cider/format-edn"
-             {:doc "Reformats the given EDN data, returning the result as a string."
-              :requires {"edn" "The data to format."}
-              :optional wrap-print-optional-arguments
-              :returns {"formatted-edn" "The formatted data."}}
-             "format-edn"
-             {:doc "Deprecated: use `cider/format-edn` instead. Reformats the given EDN data, returning the result as a string."
-              :requires {"edn" "The data to format."}
-              :optional wrap-print-optional-arguments
-              :returns {"formatted-edn" "The formatted data."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/format-code"
+               {:doc "Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
+                :requires {"code" "The code to format."}
+                :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
+                :returns {"formatted-code" "The formatted code."}}
+               "cider/format-edn"
+               {:doc "Reformats the given EDN data, returning the result as a string."
+                :requires {"edn" "The data to format."}
+                :optional wrap-print-optional-arguments
+                :returns {"formatted-edn" "The formatted data."}}})})
 
 (def fragments-desc
   "It's a vector of fragments, where fragment is a map with `:type` ('text' or 'html') and `:content` plain text or html markup, respectively")
@@ -379,38 +345,28 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
 
 (def-wrapper wrap-info cider.nrepl.middleware.info/handle-info
   {:requires (cljs/maybe-add-piggieback #{#'session})
-   :handles {"cider/info"
-             {:doc "Return a map of information about the specified symbol."
-              :optional info-params
-              :returns (merge info-returns fragments-doc)}
-             "info"
-             {:doc "Deprecated: use `cider/info` instead. Return a map of information about the specified symbol."
-              :optional info-params
-              :returns (merge info-returns fragments-doc)}
-             "cider/eldoc"
-             {:doc "Return a map of eldoc information about the specified symbol, suitable for displaying function signatures and short documentation in the editor."
-              :optional info-params
-              :returns (merge eldoc-returns fragments-doc)}
-             "eldoc"
-             {:doc "Deprecated: use `cider/eldoc` instead. Return a map of eldoc information about the specified symbol, suitable for displaying function signatures and short documentation in the editor."
-              :optional info-params
-              :returns (merge eldoc-returns fragments-doc)}
-             "cider/eldoc-datomic-query"
-             {:doc "Return a map containing the inputs of the datomic query."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"status" "done"}}
-             "eldoc-datomic-query"
-             {:doc "Deprecated: use `cider/eldoc-datomic-query` instead. Return a map containing the inputs of the datomic query."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"status" "done"}}
-             "cider/classify-symbols"
-             {:doc "Classify the given symbols by what kind of operator each is in the given namespace."
-              :requires {"symbols" "A list of symbol strings to classify."}
-              :optional {"ns" "The namespace in which to resolve the symbols. Defaults to 'user."}
-              :returns {"status" "done"
-                        "classification" "A map from each symbol to its kind (\"macro\", \"inline\", \"special\" or \"function\"). Symbols that don't resolve are omitted."}}}})
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/info"
+                {:doc "Return a map of information about the specified symbol."
+                 :optional info-params
+                 :returns (merge info-returns fragments-doc)}
+                "cider/eldoc"
+                {:doc "Return a map of eldoc information about the specified symbol, suitable for displaying function signatures and short documentation in the editor."
+                 :optional info-params
+                 :returns (merge eldoc-returns fragments-doc)}
+                "cider/eldoc-datomic-query"
+                {:doc "Return a map containing the inputs of the datomic query."
+                 :requires {"sym" "The symbol to lookup"
+                            "ns" "The current namespace"}
+                 :returns {"status" "done"}}})
+             ;; `cider/classify-symbols` is newer and has no deprecated alias.
+             {"cider/classify-symbols"
+              {:doc "Classify the given symbols by what kind of operator each is in the given namespace."
+               :requires {"symbols" "A list of symbol strings to classify."}
+               :optional {"ns" "The namespace in which to resolve the symbols. Defaults to 'user."}
+               :returns {"status" "done"
+                         "classification" "A map from each symbol to its kind (\"macro\", \"inline\", \"special\" or \"function\"). Symbols that don't resolve are omitted."}}})})
 
 (def inspector-returns
   {"status" "\"done\""
@@ -425,196 +381,126 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
            inspector's state in the `:value` slot."
    :requires #{"clone" #'wrap-caught #'wrap-print}
    :expects (cljs/maybe-add-piggieback #{"eval"})
-   :handles {"cider/inspect-print-current-value"
-             {:doc "Print the current value of the inspector."
-              :requires {"session" "The current session"}
-              :optional wrap-print-optional-arguments
-              :returns inspector-returns}
-             "inspect-print-current-value"
-             {:doc "Deprecated: use `cider/inspect-print-current-value` instead. Print the current value of the inspector."
-              :requires {"session" "The current session"}
-              :optional wrap-print-optional-arguments
-              :returns inspector-returns}
-             "cider/inspect-pop"
-             {:doc "Moves one level up in the inspector stack."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-pop"
-             {:doc "Deprecated: use `cider/inspect-pop` instead. Moves one level up in the inspector stack."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-push"
-             {:doc "Inspects the inside value specified by index."
-              :requires {"idx" "Index of the internal value currently rendered."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "inspect-push"
-             {:doc "Deprecated: use `cider/inspect-push` instead. Inspects the inside value specified by index."
-              :requires {"idx" "Index of the internal value currently rendered."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-next-sibling"
-             {:doc "Increment the index of the last 'nth in the path by 1,
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/inspect-print-current-value"
+                {:doc "Print the current value of the inspector."
+                 :requires {"session" "The current session"}
+                 :optional wrap-print-optional-arguments
+                 :returns inspector-returns}
+                "cider/inspect-pop"
+                {:doc "Moves one level up in the inspector stack."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-push"
+                {:doc "Inspects the inside value specified by index."
+                 :requires {"idx" "Index of the internal value currently rendered."
+                            "session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-next-sibling"
+                {:doc "Increment the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-next-sibling"
-             {:doc "Deprecated: use `cider/inspect-next-sibling` instead. Increment the index of the last 'nth in the path by 1,
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-previous-sibling"
+                {:doc "Decrement the index of the last 'nth in the path by 1,
 if applicable, and re-render the updated value."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-previous-sibling"
-             {:doc "Decrement the index of the last 'nth in the path by 1,
-if applicable, and re-render the updated value."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-previous-sibling"
-             {:doc "Deprecated: use `cider/inspect-previous-sibling` instead. Decrement the index of the last 'nth in the path by 1,
-if applicable, and re-render the updated value."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-refresh"
-             {:doc "Updates inspector with the provided config and re-renders the current value."
-              :requires {"session" "The current session"}
-              :optional {"page-size" "New page size"
-                         "max-atom-length" "New max length of single rendered value"
-                         "max-coll-size" "New max size of rendered collection"
-                         "max-nested-depth" "New max nested depth of rendered collection"
-                         "view-mode" "Mode of viewing the value - either `:normal` or `:object`"
-                         "pretty-print" "Set to true to pretty-print values within the inspector"
-                         "sort-maps" "Set to true to sort maps by their keys when inspecting a map"
-                         "only-diff" "Set to true to only display values that differ when inspecting a diff"}
-              :returns inspector-returns}
-             "inspect-refresh"
-             {:doc "Deprecated: use `cider/inspect-refresh` instead. Updates inspector with the provided config and re-renders the current value."
-              :requires {"session" "The current session"}
-              :optional {"page-size" "New page size"
-                         "max-atom-length" "New max length of single rendered value"
-                         "max-coll-size" "New max size of rendered collection"
-                         "max-nested-depth" "New max nested depth of rendered collection"
-                         "view-mode" "Mode of viewing the value - either `:normal` or `:object`"
-                         "pretty-print" "Set to true to pretty-print values within the inspector"
-                         "sort-maps" "Set to true to sort maps by their keys when inspecting a map"
-                         "only-diff" "Set to true to only display values that differ when inspecting a diff"}
-              :returns inspector-returns}
-             "cider/inspect-toggle-pretty-print"
-             {:doc "Toggles the pretty printing of values in the inspector."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-toggle-pretty-print"
-             {:doc "Deprecated: use `cider/inspect-toggle-pretty-print` instead. Toggles the pretty printing of values in the inspector."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-toggle-view-mode"
-             {:doc "Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:table`, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is `:object`, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-toggle-view-mode"
-             {:doc "Deprecated: use `cider/inspect-toggle-view-mode` instead. Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:table`, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is `:object`, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-display-analytics"
-             {:doc "Calculate and render analytics section for the currently inspected object."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-display-analytics"
-             {:doc "Deprecated: use `cider/inspect-display-analytics` instead. Calculate and render analytics section for the currently inspected object."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-next-page"
-             {:doc "Jumps to the next page in paginated collection view."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-next-page"
-             {:doc "Deprecated: use `cider/inspect-next-page` instead. Jumps to the next page in paginated collection view."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-prev-page"
-             {:doc "Jumps to the previous page in paginated collection view."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-prev-page"
-             {:doc "Deprecated: use `cider/inspect-prev-page` instead. Jumps to the previous page in paginated collection view."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-set-page-size"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Sets the page size in paginated view to specified value."
-              :requires {"page-size" "New page size."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "inspect-set-page-size"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Sets the page size in paginated view to specified value."
-              :requires {"page-size" "New page size."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-set-max-atom-length"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the max length of nested atoms to specified value."
-              :requires {"max-atom-length" "New max length."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "inspect-set-max-atom-length"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the max length of nested atoms to specified value."
-              :requires {"max-atom-length" "New max length."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-set-max-coll-size"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the number of nested collection members to display before truncating."
-              :requires {"max-coll-size" "New collection size."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "inspect-set-max-coll-size"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the number of nested collection members to display before truncating."
-              :requires {"max-coll-size" "New collection size."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-set-max-nested-depth"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the maximum nested levels to display before truncating."
-              :requires {"max-nested-depth" "New nested depth."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "inspect-set-max-nested-depth"
-             {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the maximum nested levels to display before truncating."
-              :requires {"max-nested-depth" "New nested depth."
-                         "session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-clear"
-             {:doc "Clears the state state of the inspector."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-clear"
-             {:doc "Deprecated: use `cider/inspect-clear` instead. Clears the state state of the inspector."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-def-current-value"
-             {:doc "Define the currently inspected value as a var with the given var-name in the provided namespace."
-              :requires {"session" "The current session"
-                         "ns" "Namespace to define var on"
-                         "var-name" "The var name"}
-              :returns inspector-returns}
-             "inspect-def-current-value"
-             {:doc "Deprecated: use `cider/inspect-def-current-value` instead. Define the currently inspected value as a var with the given var-name in the provided namespace."
-              :requires {"session" "The current session"
-                         "ns" "Namespace to define var on"
-                         "var-name" "The var name"}
-              :returns inspector-returns}
-             "cider/inspect-tap-current-value"
-             {:doc "Send the currently inspected value to the Clojure tap>."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "inspect-tap-current-value"
-             {:doc "Deprecated: use `cider/inspect-tap-current-value` instead. Send the currently inspected value to the Clojure tap>."
-              :requires {"session" "The current session"}
-              :returns inspector-returns}
-             "cider/inspect-tap-indexed"
-             {:doc "Send the currently inspected sub-value at `idx` to the Clojure tap>."
-              :requires {"session" "The current session"
-                         "idx" "Index of the internal value to be tapped"}
-              :returns inspector-returns}
-             "inspect-tap-indexed"
-             {:doc "Deprecated: use `cider/inspect-tap-indexed` instead. Send the currently inspected sub-value at `idx` to the Clojure tap>."
-              :requires {"session" "The current session"
-                         "idx" "Index of the internal value to be tapped"}
-              :returns inspector-returns}}})
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-refresh"
+                {:doc "Updates inspector with the provided config and re-renders the current value."
+                 :requires {"session" "The current session"}
+                 :optional {"page-size" "New page size"
+                            "max-atom-length" "New max length of single rendered value"
+                            "max-coll-size" "New max size of rendered collection"
+                            "max-nested-depth" "New max nested depth of rendered collection"
+                            "view-mode" "Mode of viewing the value - either `:normal` or `:object`"
+                            "pretty-print" "Set to true to pretty-print values within the inspector"
+                            "sort-maps" "Set to true to sort maps by their keys when inspecting a map"
+                            "only-diff" "Set to true to only display values that differ when inspecting a diff"}
+                 :returns inspector-returns}
+                "cider/inspect-toggle-pretty-print"
+                {:doc "Toggles the pretty printing of values in the inspector."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-toggle-view-mode"
+                {:doc "Toggles the viewing mode of the inspector. This influences the way how inspector is rendering the current value. `:normal` is the default. When view mode is `:table`, the value will be rendered as a table (only supported for sequences of maps or tuples). When view mode is `:object`, any value will be rendered as a Java object (fields shown as is). View mode is automatically reset back to normal when navigating to child values."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-display-analytics"
+                {:doc "Calculate and render analytics section for the currently inspected object."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-next-page"
+                {:doc "Jumps to the next page in paginated collection view."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-prev-page"
+                {:doc "Jumps to the previous page in paginated collection view."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-clear"
+                {:doc "Clears the state state of the inspector."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-def-current-value"
+                {:doc "Define the currently inspected value as a var with the given var-name in the provided namespace."
+                 :requires {"session" "The current session"
+                            "ns" "Namespace to define var on"
+                            "var-name" "The var name"}
+                 :returns inspector-returns}
+                "cider/inspect-tap-current-value"
+                {:doc "Send the currently inspected value to the Clojure tap>."
+                 :requires {"session" "The current session"}
+                 :returns inspector-returns}
+                "cider/inspect-tap-indexed"
+                {:doc "Send the currently inspected sub-value at `idx` to the Clojure tap>."
+                 :requires {"session" "The current session"
+                            "idx" "Index of the internal value to be tapped"}
+                 :returns inspector-returns}})
+             ;; These ops are deprecated in favour of `cider/inspect-refresh` (a
+             ;; *different* op), so they keep their bespoke notice and stay
+             ;; hand-written rather than going through `with-deprecated-aliases`.
+             {"cider/inspect-set-page-size"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Sets the page size in paginated view to specified value."
+               :requires {"page-size" "New page size."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "inspect-set-page-size"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Sets the page size in paginated view to specified value."
+               :requires {"page-size" "New page size."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "cider/inspect-set-max-atom-length"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the max length of nested atoms to specified value."
+               :requires {"max-atom-length" "New max length."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "inspect-set-max-atom-length"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the max length of nested atoms to specified value."
+               :requires {"max-atom-length" "New max length."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "cider/inspect-set-max-coll-size"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the number of nested collection members to display before truncating."
+               :requires {"max-coll-size" "New collection size."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "inspect-set-max-coll-size"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the number of nested collection members to display before truncating."
+               :requires {"max-coll-size" "New collection size."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "cider/inspect-set-max-nested-depth"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the maximum nested levels to display before truncating."
+               :requires {"max-nested-depth" "New nested depth."
+                          "session" "The current session"}
+               :returns inspector-returns}
+              "inspect-set-max-nested-depth"
+              {:doc "[DEPRECATED - use `cider/inspect-refresh` instead] Set the maximum nested levels to display before truncating."
+               :requires {"max-nested-depth" "New nested depth."
+                          "session" "The current session"}
+               :returns inspector-returns}})})
 
 (def-wrapper wrap-log cider.nrepl.middleware.log/handle-log
   {:doc "Middleware that captures log events and makes them inspect-able."
@@ -743,100 +629,60 @@ if applicable, and re-render the updated value."
   {:doc "Macroexpansion middleware."
    :requires (cljs/maybe-add-piggieback #{#'session})
    :expects #{"eval"}
-   :handles {"cider/macroexpand"
-             {:doc "Produces macroexpansion of some form using the given expander."
-              :requires {"code" "The form to macroexpand."}
-              :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
-                         "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", \"macroexpand-step\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
-                         "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
-                         "print-meta" "If truthy, also print metadata of forms."}
-              :returns {"expansion" "The macroexpanded form."}}
-             "macroexpand"
-             {:doc "Deprecated: use `cider/macroexpand` instead. Produces macroexpansion of some form using the given expander."
-              :requires {"code" "The form to macroexpand."}
-              :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
-                         "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", \"macroexpand-step\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
-                         "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
-                         "print-meta" "If truthy, also print metadata of forms."}
-              :returns {"expansion" "The macroexpanded form."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/macroexpand"
+               {:doc "Produces macroexpansion of some form using the given expander."
+                :requires {"code" "The form to macroexpand."}
+                :optional {"ns" "The namespace in which to perform the macroexpansion. Defaults to 'user for Clojure and 'cljs.user for ClojureScript."
+                           "expander" "The macroexpansion function to use. Possible values are \"macroexpand-1\", \"macroexpand\", \"macroexpand-step\", or \"macroexpand-all\". Defaults to \"macroexpand\"."
+                           "display-namespaces" "How to print namespace-qualified symbols in the result. Possible values are \"qualified\" to leave all namespaces qualified, \"none\" to elide all namespaces, or \"tidy\" to replace namespaces with their aliases in the given namespace. Defaults to \"qualified\"."
+                           "print-meta" "If truthy, also print metadata of forms."}
+                :returns {"expansion" "The macroexpanded form."}}})})
 
 (def-wrapper wrap-ns cider.nrepl.middleware.ns/handle-ns
   {:doc "Provide ns listing and browsing functionality."
    :requires (cljs/maybe-add-piggieback #{#'session})
-   :handles {"cider/ns-list"
-             {:doc "Return a sorted list of all namespaces."
-              :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-              :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
-             "ns-list"
-             {:doc "Deprecated: use `cider/ns-list` instead. Return a sorted list of all namespaces."
-              :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-              :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
-             "cider/ns-list-vars-by-name"
-             {:doc "Return a list of vars named `name` amongst all namespaces."
-              :requires {"name" "The name to use."}
-              :returns {"status" "done" "var-list" "The list obtained."}}
-             "ns-list-vars-by-name"
-             {:doc "Deprecated: use `cider/ns-list-vars-by-name` instead. Return a list of vars named `name` amongst all namespaces."
-              :requires {"name" "The name to use."}
-              :returns {"status" "done" "var-list" "The list obtained."}}
-             "cider/ns-vars"
-             {:doc "Returns a sorted list of public vars in a namespace."
-              :requires {"ns" "The namespace to browse."}
-              :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-              :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
-             "ns-vars"
-             {:doc "Deprecated: use `cider/ns-vars` instead. Returns a sorted list of public vars in a namespace."
-              :requires {"ns" "The namespace to browse."}
-              :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-              :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
-             "cider/ns-vars-with-meta"
-             {:doc "Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
-              :requires {"ns" "The namespace to use."}
-              :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-              :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
-             "ns-vars-with-meta"
-             {:doc "Deprecated: use `cider/ns-vars-with-meta` instead. Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
-              :requires {"ns" "The namespace to use."}
-              :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-              :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
-             "cider/ns-path"
-             {:doc "Returns the path to the file containing ns."
-              :requires {"ns" "The namespace to find."}
-              :returns {"status" "done"
-                        "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
-                        "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
-             "ns-path"
-             {:doc "Deprecated: use `cider/ns-path` instead. Returns the path to the file containing ns."
-              :requires {"ns" "The namespace to find."}
-              :returns {"status" "done"
-                        "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
-                        "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
-             "cider/ns-load-all"
-             {:doc "Loads all project namespaces."
-              :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
-             "ns-load-all"
-             {:doc "Deprecated: use `cider/ns-load-all` instead. Loads all project namespaces."
-              :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
-             "cider/ns-aliases"
-             {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
-              :requires {"ns" "The namespace to use."}
-              :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}
-             "ns-aliases"
-             {:doc "Deprecated: use `cider/ns-aliases` instead. Returns a map of [ns-alias] to [ns-name] in a namespace."
-              :requires {"ns" "The namespace to use."}
-              :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/ns-list"
+               {:doc "Return a sorted list of all namespaces."
+                :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
+                :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
+               "cider/ns-list-vars-by-name"
+               {:doc "Return a list of vars named `name` amongst all namespaces."
+                :requires {"name" "The name to use."}
+                :returns {"status" "done" "var-list" "The list obtained."}}
+               "cider/ns-vars"
+               {:doc "Returns a sorted list of public vars in a namespace."
+                :requires {"ns" "The namespace to browse."}
+                :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+                :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
+               "cider/ns-vars-with-meta"
+               {:doc "Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
+                :requires {"ns" "The namespace to use."}
+                :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+                :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
+               "cider/ns-path"
+               {:doc "Returns the path to the file containing ns."
+                :requires {"ns" "The namespace to find."}
+                :returns {"status" "done"
+                          "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
+                          "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
+               "cider/ns-load-all"
+               {:doc "Loads all project namespaces."
+                :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
+               "cider/ns-aliases"
+               {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
+                :requires {"ns" "The namespace to use."}
+                :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}})})
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   {:requires #{#'session}
    :expects (cljs/maybe-add-piggieback #{"eval"})
-   :handles {"cider/out-subscribe"
-             {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
-             "out-subscribe"
-             {:doc "Deprecated: use `cider/out-subscribe` instead. Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
-             "cider/out-unsubscribe"
-             {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}
-             "out-unsubscribe"
-             {:doc "Deprecated: use `cider/out-unsubscribe` instead. Change #'*out* so that it no longer prints to active sessions outside an eval scope."}}})
+   :handles (with-deprecated-aliases
+              {"cider/out-subscribe"
+               {:doc "Change #'*out* so that it also prints to active sessions, even outside an eval scope."}
+               "cider/out-unsubscribe"
+               {:doc "Change #'*out* so that it no longer prints to active sessions outside an eval scope."}})})
 
 (def-wrapper wrap-profile cider.nrepl.middleware.profile/handle-profile
   {:clojure-only? true
@@ -866,48 +712,28 @@ if applicable, and re-render the updated value."
   {:clojure-only? true
    :doc "Refresh middleware."
    :requires #{"clone" #'wrap-print}
-   :handles {"cider/refresh"
-             {:doc "Reloads all changed files in dependency order."
-              :optional (merge wrap-print-optional-arguments
-                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."}
-                               code-reloading-before-after-opts)
-              :returns {"reloading" "List of namespaces that will be reloaded."
-                        "status" "`:ok` if reloading was successful; otherwise `:error`."
-                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                        "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
-             "refresh"
-             {:doc "Deprecated: use `cider/refresh` instead. Reloads all changed files in dependency order."
-              :optional (merge wrap-print-optional-arguments
-                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."}
-                               code-reloading-before-after-opts)
-              :returns {"reloading" "List of namespaces that will be reloaded."
-                        "status" "`:ok` if reloading was successful; otherwise `:error`."
-                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                        "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
-             "cider/refresh-all"
-             {:doc "Reloads all files in dependency order."
-              :optional (merge wrap-print-optional-arguments
-                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
-                                "before" "The namespace-qualified name of a zero-arity function to call before reloading."
-                                "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
-              :returns {"reloading" "List of namespaces that will be reloaded."
-                        "status" "`:ok` if reloading was successful; otherwise `:error`."
-                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                        "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
-             "refresh-all"
-             {:doc "Deprecated: use `cider/refresh-all` instead. Reloads all files in dependency order."
-              :optional (merge wrap-print-optional-arguments
-                               {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
-                                "before" "The namespace-qualified name of a zero-arity function to call before reloading."
-                                "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
-              :returns {"reloading" "List of namespaces that will be reloaded."
-                        "status" "`:ok` if reloading was successful; otherwise `:error`."
-                        "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                        "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
-             "cider/refresh-clear"
-             {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}
-             "refresh-clear"
-             {:doc "Deprecated: use `cider/refresh-clear` instead. Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}}})
+   :handles (with-deprecated-aliases
+              {"cider/refresh"
+               {:doc "Reloads all changed files in dependency order."
+                :optional (merge wrap-print-optional-arguments
+                                 {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."}
+                                 code-reloading-before-after-opts)
+                :returns {"reloading" "List of namespaces that will be reloaded."
+                          "status" "`:ok` if reloading was successful; otherwise `:error`."
+                          "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
+                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+               "cider/refresh-all"
+               {:doc "Reloads all files in dependency order."
+                :optional (merge wrap-print-optional-arguments
+                                 {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
+                                  "before" "The namespace-qualified name of a zero-arity function to call before reloading."
+                                  "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
+                :returns {"reloading" "List of namespaces that will be reloaded."
+                          "status" "`:ok` if reloading was successful; otherwise `:error`."
+                          "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
+                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+               "cider/refresh-clear"
+               {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}})})
 
 (def-wrapper wrap-reload cider.nrepl.middleware.reload/handle-reload
   {:clojure-only? true
@@ -933,81 +759,66 @@ those configured directories will be honored."
 
 (def-wrapper wrap-resource cider.nrepl.middleware.resource/handle-resource
   {:doc "Middleware that provides the path to resource."
-   :handles {"cider/resource"
-             {:doc "Obtain the path to a resource."
-              :requires {"name" "The name of the resource in question."}
-              :returns {"resource-path" "The file path to a resource."}}
-             "resource"
-             {:doc "Deprecated: use `cider/resource` instead. Obtain the path to a resource."
-              :requires {"name" "The name of the resource in question."}
-              :returns {"resource-path" "The file path to a resource."}}
-             "cider/resources-list"
-             {:doc "Obtain a list of all resources on the classpath."
-              :returns {"resources-list" "The list of resources."}}
-             "resources-list"
-             {:doc "Deprecated: use `cider/resources-list` instead. Obtain a list of all resources on the classpath."
-              :returns {"resources-list" "The list of resources."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/resource"
+               {:doc "Obtain the path to a resource."
+                :requires {"name" "The name of the resource in question."}
+                :returns {"resource-path" "The file path to a resource."}}
+               "cider/resources-list"
+               {:doc "Obtain a list of all resources on the classpath."
+                :returns {"resources-list" "The list of resources."}}})})
 
 (def-wrapper wrap-spec cider.nrepl.middleware.spec/handle-spec
   {:clojure-only? true
    :doc "Middleware that provides `clojure.spec` browsing functionality."
    :requires (cljs/maybe-add-piggieback #{})
-   :handles {"cider/spec-list" {:doc "Return a sorted list of all specs in the registry"
-                                :returns {"status" "done"
-                                          "spec-list" "The sorted list of all specs in the registry with their descriptions"}
-                                :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
-             "spec-list" {:doc "Deprecated: use `cider/spec-list` instead. Return a sorted list of all specs in the registry"
-                          :returns {"status" "done"
-                                    "spec-list" "The sorted list of all specs in the registry with their descriptions"}
-                          :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
-             "cider/spec-form" {:doc "Return the form of a given spec"
-                                :requires {"spec-name" "The spec namespaced keyword we are looking for"}
-                                :returns {"status" "done"
-                                          "spec-form" "The spec form"}}
-             "spec-form" {:doc "Deprecated: use `cider/spec-form` instead. Return the form of a given spec"
-                          :requires {"spec-name" "The spec namespaced keyword we are looking for"}
-                          :returns {"status" "done"
-                                    "spec-form" "The spec form"}}
-             "cider/spec-example" {:doc "Return a string with a pretty printed example for a spec"
-                                   :requires {"spec-name" "The spec namespaced keyword we want the example for"}
-                                   :returns {"status" "done"
-                                             "example" "The pretty printed spec example string"}}
-             "spec-example" {:doc "Deprecated: use `cider/spec-example` instead. Return a string with a pretty printed example for a spec"
-                             :requires {"spec-name" "The spec namespaced keyword we want the example for"}
-                             :returns {"status" "done"
-                                       "example" "The pretty printed spec example string"}}}})
+   :handles (with-deprecated-aliases
+              {"cider/spec-list" {:doc "Return a sorted list of all specs in the registry"
+                                  :returns {"status" "done"
+                                            "spec-list" "The sorted list of all specs in the registry with their descriptions"}
+                                  :optional {"filter-regex" "Only the specs that matches filter prefix regex will be returned "}}
+               "cider/spec-form" {:doc "Return the form of a given spec"
+                                  :requires {"spec-name" "The spec namespaced keyword we are looking for"}
+                                  :returns {"status" "done"
+                                            "spec-form" "The spec form"}}
+               "cider/spec-example" {:doc "Return a string with a pretty printed example for a spec"
+                                     :requires {"spec-name" "The spec namespaced keyword we want the example for"}
+                                     :returns {"status" "done"
+                                               "example" "The pretty printed spec example string"}}})})
 
 (def-wrapper wrap-stacktrace cider.nrepl.middleware.stacktrace/handle-stacktrace
   {:doc "Middleware that handles stacktrace requests, sending
            cause and stack frame info for the most recent exception."
    :requires (cljs/maybe-add-piggieback #{#'session #'wrap-print})
    :expects #{}
-   :handles {"cider/analyze-last-stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
-                                              :optional wrap-print-optional-arguments
-                                              :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
-             "analyze-last-stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and stack frame of the most recent exception."
-                                        :optional wrap-print-optional-arguments
-                                        :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
-             "cider/inspect-last-exception" {:doc "Returns an Inspector response for the last exception that has been processed through `cider/analyze-last-stacktrace` for the current nrepl session.
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/analyze-last-stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
+                                                 :optional wrap-print-optional-arguments
+                                                 :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}})
+             ;; `inspect-last-exception`'s alias body references the unnamespaced op
+             ;; names, and the `stacktrace` ops are deprecated in favour of a
+             ;; *different* op, so both stay hand-written.
+             {"cider/inspect-last-exception" {:doc "Returns an Inspector response for the last exception that has been processed through `cider/analyze-last-stacktrace` for the current nrepl session.
 Assumes that `cider/analyze-last-stacktrace` has been called first, returning \"no-error\" otherwise."
-                                             :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
-                                             :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
-                                             :returns {"status" "\"done\", or \"no-error\" if `cider/analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
-                                                       "value" "A value, as produced by the Inspector middleware."}}
-             "inspect-last-exception" {:doc "Deprecated: use `cider/inspect-last-exception` instead. Returns an Inspector response for the last exception that has been processed through `analyze-last-stacktrace` for the current nrepl session.
+                                              :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
+                                              :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
+                                              :returns {"status" "\"done\", or \"no-error\" if `cider/analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
+                                                        "value" "A value, as produced by the Inspector middleware."}}
+              "inspect-last-exception" {:doc "Deprecated: use `cider/inspect-last-exception` instead. Returns an Inspector response for the last exception that has been processed through `analyze-last-stacktrace` for the current nrepl session.
 Assumes that `analyze-last-stacktrace` has been called first, returning \"no-error\" otherwise."
-                                       :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
-                                       :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
-                                       :returns {"status" "\"done\", or \"no-error\" if `analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
-                                                 "value" "A value, as produced by the Inspector middleware."}}
-             "cider/stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
+                                        :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
+                                        :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
+                                        :returns {"status" "\"done\", or \"no-error\" if `analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
+                                                  "value" "A value, as produced by the Inspector middleware."}}
+              "cider/stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
 stack frame of the most recent exception."
-                                 :optional wrap-print-optional-arguments
-                                 :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
-             "stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
+                                  :optional wrap-print-optional-arguments
+                                  :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
+              "stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
 stack frame of the most recent exception."
-                           :optional wrap-print-optional-arguments
-                           :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}}})
+                            :optional wrap-print-optional-arguments
+                            :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}})})
 
 (def timing-info-return-doc {"status" "Either done or indication of an error"
                              "elapsed-time" "a report of the elapsed time spent running all the given namespaces. The structure is `:elapsed-time {:ms <integer> :humanized <string>}`."
@@ -1024,85 +835,66 @@ stack frame of the most recent exception."
    ;; to run the tests flows down into the piggieback middleware.
    :expects (cljs/maybe-add-piggieback #{})
    :requires #{#'session #'wrap-print}
-   :handles {"cider/test-var-query"
-             {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
-              :optional (merge wrap-print-optional-arguments)
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "test-var-query"
-             {:doc "Deprecated: use `cider/test-var-query` instead. Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
-              :optional (merge wrap-print-optional-arguments)
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "cider/test"
-             {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "test"
-             {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "cider/test-all"
-             {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "test-all"
-             {:doc "Deprecated: use `cider/test-all` instead. Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "cider/test-stacktrace"
-             {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
-              :optional wrap-print-optional-arguments}
-             "test-stacktrace"
-             {:doc "Deprecated: use `cider/test-stacktrace` instead. Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
-              :optional wrap-print-optional-arguments}
-             "cider/retest"
-             {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}
-             "retest"
-             {:doc "Deprecated: use `cider/retest` instead. Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-              :optional wrap-print-optional-arguments
-              :returns (merge fail-fast-doc timing-info-return-doc)}}})
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/test-var-query"
+                {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+                 :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
+                 :optional (merge wrap-print-optional-arguments)
+                 :returns (merge fail-fast-doc timing-info-return-doc)}
+                "cider/test-all"
+                {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+                 :optional wrap-print-optional-arguments
+                 :returns (merge fail-fast-doc timing-info-return-doc)}
+                "cider/test-stacktrace"
+                {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
+                 :optional wrap-print-optional-arguments}
+                "cider/retest"
+                {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+                 :optional wrap-print-optional-arguments
+                 :returns (merge fail-fast-doc timing-info-return-doc)}})
+             ;; `cider/test` is deprecated in favour of a *different* op
+             ;; (`cider/test-var-query`), so it keeps its bespoke notice.
+             {"cider/test"
+              {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+               :optional wrap-print-optional-arguments
+               :returns (merge fail-fast-doc timing-info-return-doc)}
+              "test"
+              {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
+               :optional wrap-print-optional-arguments
+               :returns (merge fail-fast-doc timing-info-return-doc)}})})
 
 (def-wrapper wrap-trace cider.nrepl.middleware.trace/handle-trace
   {:clojure-only? true
    :doc     "Toggle tracing of a given var."
-   :handles {"cider/toggle-trace-var"
-             {:doc      "Toggle tracing of a given var."
-              :requires {"sym" "The symbol to trace"
-                         "ns"  "The current namespace"}
-              :returns  {"var-status" "The result of tracing operation"
-                         "var-name"   "The fully-qualified name of the traced/untraced var"}}
-             "toggle-trace-var"
-             {:doc      "Deprecated: use `cider/toggle-trace-var` instead. Toggle tracing of a given var."
-              :requires {"sym" "The symbol to trace"
-                         "ns"  "The current namespace"}
-              :returns  {"var-status" "The result of tracing operation"
-                         "var-name"   "The fully-qualified name of the traced/untraced var"}}
-             "cider/toggle-trace-ns"
-             {:doc      "Toggle tracing of a given ns."
-              :requires {"ns" "The namespace to trace"}
-              :returns  {"ns-status" "The result of tracing operation"}}
-             "toggle-trace-ns"
-             {:doc      "Deprecated: use `cider/toggle-trace-ns` instead. Toggle tracing of a given ns."
-              :requires {"ns" "The namespace to trace"}
-              :returns  {"ns-status" "The result of tracing operation"}}
-             "cider/list-traced"
-             {:doc     "List the vars and namespaces that are currently traced."
-              :returns {"traced-vars" "A list of the fully-qualified names of the traced vars"
-                        "traced-nses" "A list of the names of the traced namespaces"}}
-             "cider/untrace-all"
-             {:doc     "Untrace every currently traced var and namespace."
-              :returns {"untraced-count" "The number of vars that were untraced"}}
-             "cider/trace-subscribe"
-             {:doc     "Open a streaming subscription that delivers a message for each traced call and return until `cider/trace-unsubscribe`. While subscribed, trace output is routed to the subscriber instead of the REPL."
-              :returns {"cider/trace-subscribe" "The id of the subscription, to be passed to `cider/trace-unsubscribe`"
-                        "cider/trace-event" "A trace event, with `id`, `phase` (\"call\" or \"return\"), `name`, `depth`, and `args` (on a call) or `value` (on a return)"}}
-             "cider/trace-unsubscribe"
-             {:doc      "Stop streaming trace events for the given subscription."
-              :requires {"subscription" "The id of the subscription to remove"}
-              :returns  {"cider/trace-unsubscribe" "The id of the removed subscription"}}}})
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/toggle-trace-var"
+                {:doc      "Toggle tracing of a given var."
+                 :requires {"sym" "The symbol to trace"
+                            "ns"  "The current namespace"}
+                 :returns  {"var-status" "The result of tracing operation"
+                            "var-name"   "The fully-qualified name of the traced/untraced var"}}
+                "cider/toggle-trace-ns"
+                {:doc      "Toggle tracing of a given ns."
+                 :requires {"ns" "The namespace to trace"}
+                 :returns  {"ns-status" "The result of tracing operation"}}})
+             ;; These ops are new and never had unnamespaced aliases.
+             {"cider/list-traced"
+              {:doc     "List the vars and namespaces that are currently traced."
+               :returns {"traced-vars" "A list of the fully-qualified names of the traced vars"
+                         "traced-nses" "A list of the names of the traced namespaces"}}
+              "cider/untrace-all"
+              {:doc     "Untrace every currently traced var and namespace."
+               :returns {"untraced-count" "The number of vars that were untraced"}}
+              "cider/trace-subscribe"
+              {:doc     "Open a streaming subscription that delivers a message for each traced call and return until `cider/trace-unsubscribe`. While subscribed, trace output is routed to the subscriber instead of the REPL."
+               :returns {"cider/trace-subscribe" "The id of the subscription, to be passed to `cider/trace-unsubscribe`"
+                         "cider/trace-event" "A trace event, with `id`, `phase` (\"call\" or \"return\"), `name`, `depth`, and `args` (on a call) or `value` (on a return)"}}
+              "cider/trace-unsubscribe"
+              {:doc      "Stop streaming trace events for the given subscription."
+               :requires {"subscription" "The id of the subscription to remove"}
+               :returns  {"cider/trace-unsubscribe" "The id of the removed subscription"}}})})
 
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   mw/ops-that-can-eval
@@ -1120,20 +912,14 @@ You can also request to compute the info directly by requesting the \"cider/get-
   {:clojure-only? true
    :doc "Middleware to undefine a symbol in a namespace."
    :handles
-   {"cider/undef" {:doc "Undefine a symbol"
-                   :requires {"sym" "The symbol to undefine"
-                              "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
-                   :returns {"status" "done"}}
-    "undef" {:doc "Deprecated: use `cider/undef` instead. Undefine a symbol"
-             :requires {"sym" "The symbol to undefine"
-                        "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
-             :returns {"status" "done"}}
-    "cider/undef-all" {:doc "Undefine all aliases and symbols in a namespace"
-                       :requires {"ns" "The namespace to operate on"}
-                       :returns {"status" "done"}}
-    "undef-all" {:doc "Deprecated: use `cider/undef-all` instead. Undefine all aliases and symbols in a namespace"
-                 :requires {"ns" "The namespace to operate on"}
-                 :returns {"status" "done"}}}})
+   (with-deprecated-aliases
+     {"cider/undef" {:doc "Undefine a symbol"
+                     :requires {"sym" "The symbol to undefine"
+                                "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
+                     :returns {"status" "done"}}
+      "cider/undef-all" {:doc "Undefine all aliases and symbols in a namespace"
+                         :requires {"ns" "The namespace to operate on"}
+                         :returns {"status" "done"}}})})
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
   {:doc "Provides CIDER-nREPL version information."
@@ -1148,72 +934,53 @@ You can also request to compute the info directly by requesting the \"cider/get-
 (def-wrapper wrap-xref cider.nrepl.middleware.xref/handle-xref
   {:clojure-only? true
    :doc "Middleware that provides find references functionality."
-   :handles {"cider/fn-refs"
-             {:doc "Look up functions that reference a particular function."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"fn-refs" "A list of function references, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}
-             "fn-refs"
-             {:doc "Deprecated: use `cider/fn-refs` instead. Look up functions that reference a particular function."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"fn-refs" "A list of function references, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}
-             "cider/fn-deps"
-             {:doc "Look up the function dependencies of particular function."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"fn-deps" "A list of function deps, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}
-             "fn-deps"
-             {:doc "Deprecated: use `cider/fn-deps` instead. Look up the function dependencies of particular function."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"fn-deps" "A list of function deps, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}
-             "cider/who-implements"
-             {:doc "Look up the implementations of a protocol or the dispatch values of a multimethod."
-              :requires {"sym" "The symbol to lookup"
-                         "ns" "The current namespace"}
-              :returns {"who-implements" "A map with `:kind` (\"protocol\", \"multimethod\" or \"other\"); for a protocol an `:impls` list of `:name :file :file-url :line :column` maps, for a multimethod a `:dispatch-values` list."
-                        "status" "done"}}
-             "cider/type-protocols"
-             {:doc "Look up the protocols a type implements."
-              :requires {"sym" "The type to lookup"
-                         "ns" "The current namespace"}
-              :returns {"type-protocols" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}
-             "cider/protocols-with-method"
-             {:doc "Look up the protocols that declare a method of a given name."
-              :requires {"method" "The method name to lookup"}
-              :returns {"protocols-with-method" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
-                        "status" "done"}}}})
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/fn-refs"
+                {:doc "Look up functions that reference a particular function."
+                 :requires {"sym" "The symbol to lookup"
+                            "ns" "The current namespace"}
+                 :returns {"fn-refs" "A list of function references, with a `:name :doc :file :file-url :line :column` structure."
+                           "status" "done"}}
+                "cider/fn-deps"
+                {:doc "Look up the function dependencies of particular function."
+                 :requires {"sym" "The symbol to lookup"
+                            "ns" "The current namespace"}
+                 :returns {"fn-deps" "A list of function deps, with a `:name :doc :file :file-url :line :column` structure."
+                           "status" "done"}}})
+             ;; These ops are new and never had unnamespaced aliases.
+             {"cider/who-implements"
+              {:doc "Look up the implementations of a protocol or the dispatch values of a multimethod."
+               :requires {"sym" "The symbol to lookup"
+                          "ns" "The current namespace"}
+               :returns {"who-implements" "A map with `:kind` (\"protocol\", \"multimethod\" or \"other\"); for a protocol an `:impls` list of `:name :file :file-url :line :column` maps, for a multimethod a `:dispatch-values` list."
+                         "status" "done"}}
+              "cider/type-protocols"
+              {:doc "Look up the protocols a type implements."
+               :requires {"sym" "The type to lookup"
+                          "ns" "The current namespace"}
+               :returns {"type-protocols" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
+                         "status" "done"}}
+              "cider/protocols-with-method"
+              {:doc "Look up the protocols that declare a method of a given name."
+               :requires {"method" "The method name to lookup"}
+               :returns {"protocols-with-method" "A list of protocols, with a `:name :doc :file :file-url :line :column` structure."
+                         "status" "done"}}})})
 
 (def-wrapper wrap-clojuredocs cider.nrepl.middleware.clojuredocs/handle-clojuredocs
   {:doc "Middleware to find a documents from ClojureDocs."
-   :handles {"cider/clojuredocs-refresh-cache"
-             {:doc "Reload exported documents file from ClojureDocs, and store it as a cache."
-              :requires {}
-              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn\"."}
-              :returns {"status" "\"ok\" if reloading was successful"}}
-             "clojuredocs-refresh-cache"
-             {:doc "Deprecated: use `cider/clojuredocs-refresh-cache` instead. Reload exported documents file from ClojureDocs, and store it as a cache."
-              :requires {}
-              :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn\"."}
-              :returns {"status" "\"ok\" if reloading was successful"}}
-             "cider/clojuredocs-lookup"
-             {:doc "Return a map of information in ClojureDocs."
-              :requires {"ns" "The namespace where `sym` will be resolved."
-                         "sym" "The symbol to lookup."}
-              :returns {"clojuredocs" "A map of information in ClojureDocs."
-                        "status" "\"no-doc\" if there is no document matching to `ns` and `symbol`."}}
-             "clojuredocs-lookup"
-             {:doc "Deprecated: use `cider/clojuredocs-lookup` instead. Return a map of information in ClojureDocs."
-              :requires {"ns" "The namespace where `sym` will be resolved."
-                         "sym" "The symbol to lookup."}
-              :returns {"clojuredocs" "A map of information in ClojureDocs."
-                        "status" "\"no-doc\" if there is no document matching to `ns` and `symbol`."}}}})
+   :handles (with-deprecated-aliases
+              {"cider/clojuredocs-refresh-cache"
+               {:doc "Reload exported documents file from ClojureDocs, and store it as a cache."
+                :requires {}
+                :optional {"export-edn-url" "EDN file URL exported from ClojureDocs. Defaults to \"https://github.com/clojure-emacs/clojuredocs-export-edn/raw/master/exports/export.compact.edn\"."}
+                :returns {"status" "\"ok\" if reloading was successful"}}
+               "cider/clojuredocs-lookup"
+               {:doc "Return a map of information in ClojureDocs."
+                :requires {"ns" "The namespace where `sym` will be resolved."
+                           "sym" "The symbol to lookup."}
+                :returns {"clojuredocs" "A map of information in ClojureDocs."
+                          "status" "\"no-doc\" if there is no document matching to `ns` and `symbol`."}}})})
 
 ;;; CIDER's nREPL Handler
 ;;
