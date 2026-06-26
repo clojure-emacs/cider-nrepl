@@ -4,7 +4,7 @@
   original namespace, whereas unqualified symbols are interpreted as both a var
   and ns alias to be unmapped from the current namespace."
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [orchard.misc :as misc]))
 
 (defn undef
@@ -50,7 +50,5 @@
 
 (defn handle-undef [handler msg]
   (with-safe-transport handler msg
-    "cider/undef" undef-reply
-    "undef" undef-reply
-    "cider/undef-all" undef-all-reply
-    "undef-all" undef-all-reply))
+    (with-op-aliases {"cider/undef" undef-reply
+                      "cider/undef-all" undef-all-reply})))

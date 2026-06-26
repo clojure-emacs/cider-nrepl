@@ -4,7 +4,7 @@
   Uses clj-suitable for ClojureScript completion."
   (:require
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [compliment.core :as complete]
    [compliment.utils :as complete-utils]
    [orchard.misc :as misc]
@@ -89,9 +89,6 @@
 
 (defn handle-complete [handler msg]
   (with-safe-transport handler msg
-    "cider/complete" complete-reply
-    "complete" complete-reply
-    "cider/complete-doc" doc-reply
-    "complete-doc" doc-reply
-    "cider/complete-flush-caches" flush-caches-reply
-    "complete-flush-caches" flush-caches-reply))
+    (with-op-aliases {"cider/complete" complete-reply
+                      "cider/complete-doc" doc-reply
+                      "cider/complete-flush-caches" flush-caches-reply})))

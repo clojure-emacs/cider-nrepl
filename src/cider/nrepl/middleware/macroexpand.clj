@@ -5,7 +5,7 @@
    [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling
-    :refer [base-error-response eval-interceptor-transport with-safe-transport]]
+    :refer [base-error-response eval-interceptor-transport with-op-aliases with-safe-transport]]
    [orchard.cljs.analysis :as cljs-ana]
    [nrepl.transport :as transport]
    [clojure.pprint :as pp]
@@ -276,8 +276,7 @@
   (let [msg (merge {:expander "macroexpand" :display-namespaces "qualified"} msg)]
     (if (cljs/grab-cljs-env msg)
       (with-safe-transport handler msg
-        "cider/macroexpand" [macroexpansion-reply-cljs :macroexpand-error]
-        "macroexpand" [macroexpansion-reply-cljs :macroexpand-error])
+        (with-op-aliases {"cider/macroexpand" [macroexpansion-reply-cljs :macroexpand-error]}))
       (handle-macroexpand-clj handler msg))))
 
 (defn handle-macroexpand [handler msg]

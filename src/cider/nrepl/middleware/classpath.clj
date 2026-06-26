@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.classpath
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [clojure.java.io :as io]
    [orchard.java.classpath :as cp]
    [orchard.misc :as misc]))
@@ -18,5 +18,4 @@
 
 (defn handle-classpath [handler msg]
   (with-safe-transport handler msg
-    "cider/classpath" classpath-reply
-    "classpath" classpath-reply))
+    (with-op-aliases {"cider/classpath" classpath-reply})))
