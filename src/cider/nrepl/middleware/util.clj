@@ -1,7 +1,8 @@
 (ns cider.nrepl.middleware.util
   "Utility functions that might be useful in middleware."
   (:require [nrepl.transport :as transport]
-            [nrepl.misc :refer [response-for]]))
+            [nrepl.misc :refer [response-for]]
+            [orchard.misc :as misc]))
 
 (defmulti transform-value "Transform a value for output" type)
 
@@ -49,3 +50,10 @@
   "Send a response for `msg` with `response-data` using message's transport."
   [msg & response-data]
   (transport/send (:transport msg) (apply response-for msg response-data)))
+
+(defn msg->var
+  "Resolve the var referred to by the `:ns` and `:sym` slots of an op `msg`,
+  coercing both from their on-the-wire strings. Returns nil if it doesn't
+  resolve to a var."
+  [{:keys [ns sym]}]
+  (ns-resolve (misc/as-sym ns) (misc/as-sym sym)))
