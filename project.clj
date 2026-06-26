@@ -28,8 +28,9 @@
              [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
                                                      org.clojure/clojurescript
                                                      compliment]]
-             ^:inline-dep [cljfmt "0.9.2" :exclusions [org.clojure/clojurescript
-                                                       org.clojure/tools.cli]]
+             ^:inline-dep [dev.weavejester/cljfmt "0.16.4" :exclusions [org.clojure/clojure
+                                                                        org.clojure/clojurescript
+                                                                        org.clojure/tools.cli]]
              ^:inline-dep [org.clojure/tools.namespace "1.5.1" :exclusions [org.clojure/clojure
                                                                             org.clojure/clojurescript
                                                                             org.clojure/tools.cli]]
