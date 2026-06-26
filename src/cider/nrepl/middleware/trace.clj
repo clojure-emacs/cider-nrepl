@@ -1,7 +1,7 @@
 (ns cider.nrepl.middleware.trace
   (:require
    [cider.nrepl.middleware.util :refer [respond-to]]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [orchard.trace :as trace])
   (:import
    [java.util UUID]))
@@ -79,11 +79,10 @@
 
 (defn handle-trace [handler msg]
   (with-safe-transport handler msg
-    "cider/toggle-trace-var" [toggle-trace-var :toggle-trace-error]
-    "toggle-trace-var" [toggle-trace-var :toggle-trace-error]
-    "cider/toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]
-    "toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]
-    "cider/list-traced" [list-traced :list-traced-error]
-    "cider/untrace-all" [untrace-all :untrace-all-error]
-    "cider/trace-subscribe" [trace-subscribe :trace-subscribe-error]
-    "cider/trace-unsubscribe" [trace-unsubscribe :trace-unsubscribe-error]))
+    (merge
+     (with-op-aliases {"cider/toggle-trace-var" [toggle-trace-var :toggle-trace-error]
+                       "cider/toggle-trace-ns" [toggle-trace-ns :toggle-trace-error]})
+     {"cider/list-traced" [list-traced :list-traced-error]
+      "cider/untrace-all" [untrace-all :untrace-all-error]
+      "cider/trace-subscribe" [trace-subscribe :trace-subscribe-error]
+      "cider/trace-unsubscribe" [trace-unsubscribe :trace-unsubscribe-error]})))

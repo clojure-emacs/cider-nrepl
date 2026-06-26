@@ -3,7 +3,7 @@
   {:author "Bozhidar Batsov"
    :added "0.22"}
   (:require
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [clojure.java.io :as io]
    [orchard.meta :as meta]
    [orchard.misc :as misc]
@@ -85,10 +85,9 @@
 
 (defn handle-xref [handler msg]
   (with-safe-transport handler msg
-    "cider/fn-refs" fn-refs-reply
-    "fn-refs" fn-refs-reply
-    "cider/fn-deps" fn-deps-reply
-    "fn-deps" fn-deps-reply
-    "cider/who-implements" who-implements-reply
-    "cider/type-protocols" type-protocols-reply
-    "cider/protocols-with-method" protocols-with-method-reply))
+    (merge
+     (with-op-aliases {"cider/fn-refs" fn-refs-reply
+                       "cider/fn-deps" fn-deps-reply})
+     {"cider/who-implements" who-implements-reply
+      "cider/type-protocols" type-protocols-reply
+      "cider/protocols-with-method" protocols-with-method-reply})))

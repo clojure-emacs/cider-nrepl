@@ -73,6 +73,29 @@
       (is (contains? (:status resp) :cider/boom-error))
       (is (= "class java.lang.AssertionError" (:ex resp))))))
 
+(deftest with-op-aliases-test
+  (testing "adds a bare alias for every cider/-namespaced op, sharing its action"
+    (is (= {"cider/foo" :foo "foo" :foo
+            "cider/bar" :bar "bar" :bar}
+           (err/with-op-aliases {"cider/foo" :foo "cider/bar" :bar}))))
+  (testing "passes unnamespaced ops through untouched"
+    (is (= {"cider/foo" :foo "foo" :foo
+            "plain" :plain}
+           (err/with-op-aliases {"cider/foo" :foo "plain" :plain})))))
+
+(deftest with-safe-transport-map-dispatch-test
+  ;; `with-safe-transport` accepts a single pairings map (as produced by
+  ;; `with-op-aliases`), and the generated bare alias dispatches to the same
+  ;; action as its `cider/`-namespaced primary.
+  (doseq [op ["cider/ping" "ping"]]
+    (let [transport (tt/test-transport)]
+      (err/with-safe-transport (fn [_] :unhandled)
+        {:op op :transport transport :id 1}
+        (err/with-op-aliases {"cider/ping" (fn [_] {:pong "ok"})}))
+      (let [resp (first (tt/messages transport))]
+        (is (= "ok" (:pong resp)) (str "op " op " was handled"))
+        (is (contains? (:status resp) :done))))))
+
 (deftest error-handler-root-ex
   (let [e (Exception. "testing" (Throwable. "root-cause"))
         e2 (Exception. "testing2")]

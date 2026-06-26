@@ -3,7 +3,7 @@
    [cider.nrepl.middleware.util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling
-    :refer [eval-interceptor-transport with-safe-transport]]
+    :refer [eval-interceptor-transport with-op-aliases with-safe-transport]]
    [cider.nrepl.pprint :as pprint]
    [nrepl.middleware.print :as print]
    [nrepl.misc :refer [response-for]]
@@ -140,39 +140,21 @@
 
     :else
     (with-safe-transport handler msg
-      "cider/inspect-pop" pop-reply
-      "inspect-pop" pop-reply
-      "cider/inspect-push" push-reply
-      "inspect-push" push-reply
-      "cider/inspect-next-sibling" next-sibling-reply
-      "inspect-next-sibling" next-sibling-reply
-      "cider/inspect-previous-sibling" previous-sibling-reply
-      "inspect-previous-sibling" previous-sibling-reply
-      "cider/inspect-next-page" next-page-reply
-      "inspect-next-page" next-page-reply
-      "cider/inspect-prev-page" prev-page-reply
-      "inspect-prev-page" prev-page-reply
-      "cider/inspect-refresh" refresh-reply
-      "inspect-refresh" refresh-reply
-      "cider/inspect-toggle-pretty-print" toggle-pretty-print-reply
-      "inspect-toggle-pretty-print" toggle-pretty-print-reply
-      "cider/inspect-toggle-view-mode" toggle-view-mode-reply
-      "inspect-toggle-view-mode" toggle-view-mode-reply
-      "cider/inspect-display-analytics" display-analytics-reply
-      "inspect-display-analytics" display-analytics-reply
-      "cider/inspect-set-page-size" refresh-reply
-      "inspect-set-page-size" refresh-reply
-      "cider/inspect-set-max-atom-length" refresh-reply
-      "inspect-set-max-atom-length" refresh-reply
-      "cider/inspect-set-max-coll-size" refresh-reply
-      "inspect-set-max-coll-size" refresh-reply
-      "cider/inspect-set-max-nested-depth" refresh-reply
-      "inspect-set-max-nested-depth" refresh-reply
-      "cider/inspect-clear" clear-reply
-      "inspect-clear" clear-reply
-      "cider/inspect-def-current-value" def-current-value
-      "inspect-def-current-value" def-current-value
-      "cider/inspect-tap-current-value" tap-current-value
-      "inspect-tap-current-value" tap-current-value
-      "cider/inspect-tap-indexed" tap-indexed
-      "inspect-tap-indexed" tap-indexed)))
+      (with-op-aliases {"cider/inspect-pop" pop-reply
+                        "cider/inspect-push" push-reply
+                        "cider/inspect-next-sibling" next-sibling-reply
+                        "cider/inspect-previous-sibling" previous-sibling-reply
+                        "cider/inspect-next-page" next-page-reply
+                        "cider/inspect-prev-page" prev-page-reply
+                        "cider/inspect-refresh" refresh-reply
+                        "cider/inspect-toggle-pretty-print" toggle-pretty-print-reply
+                        "cider/inspect-toggle-view-mode" toggle-view-mode-reply
+                        "cider/inspect-display-analytics" display-analytics-reply
+                        "cider/inspect-set-page-size" refresh-reply
+                        "cider/inspect-set-max-atom-length" refresh-reply
+                        "cider/inspect-set-max-coll-size" refresh-reply
+                        "cider/inspect-set-max-nested-depth" refresh-reply
+                        "cider/inspect-clear" clear-reply
+                        "cider/inspect-def-current-value" def-current-value
+                        "cider/inspect-tap-current-value" tap-current-value
+                        "cider/inspect-tap-indexed" tap-indexed}))))

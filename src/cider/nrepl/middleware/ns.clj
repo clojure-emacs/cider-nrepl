@@ -4,7 +4,7 @@
    [cider.nrepl.middleware.util :as util]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [cider.nrepl.middleware.util.meta :as um]
    [orchard.cljs.analysis :as cljs-analysis]
    [clojure.java.io :as io]
@@ -135,17 +135,10 @@
 
 (defn handle-ns [handler msg]
   (with-safe-transport handler msg
-    "cider/ns-list" ns-list-reply
-    "ns-list" ns-list-reply
-    "cider/ns-list-vars-by-name" ns-list-vars-by-name-reply
-    "ns-list-vars-by-name" ns-list-vars-by-name-reply
-    "cider/ns-vars" ns-vars-reply
-    "ns-vars" ns-vars-reply
-    "cider/ns-vars-with-meta" ns-vars-with-meta-reply
-    "ns-vars-with-meta" ns-vars-with-meta-reply
-    "cider/ns-path" ns-path-reply
-    "ns-path" ns-path-reply
-    "cider/ns-load-all" ns-load-all-reply
-    "ns-load-all" ns-load-all-reply
-    "cider/ns-aliases" ns-aliases-reply
-    "ns-aliases" ns-aliases-reply))
+    (with-op-aliases {"cider/ns-list" ns-list-reply
+                      "cider/ns-list-vars-by-name" ns-list-vars-by-name-reply
+                      "cider/ns-vars" ns-vars-reply
+                      "cider/ns-vars-with-meta" ns-vars-with-meta-reply
+                      "cider/ns-path" ns-path-reply
+                      "cider/ns-load-all" ns-load-all-reply
+                      "cider/ns-aliases" ns-aliases-reply})))

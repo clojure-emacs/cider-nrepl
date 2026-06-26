@@ -4,7 +4,7 @@
    [compliment.sources.class-members]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
-   [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]]
+   [cider.nrepl.middleware.util.error-handling :refer [with-op-aliases with-safe-transport]]
    [clojure.string :as str]
    [orchard.cljs.analysis :as cljs-ana]
    [orchard.eldoc :as eldoc]
@@ -222,10 +222,8 @@
 
 (defn handle-info [handler msg]
   (with-safe-transport handler msg
-    "cider/info" info-reply
-    "info" info-reply
-    "cider/eldoc" eldoc-reply
-    "eldoc" eldoc-reply
-    "cider/eldoc-datomic-query" eldoc-datomic-query-reply
-    "eldoc-datomic-query" eldoc-datomic-query-reply
-    "cider/classify-symbols" classify-symbols-reply))
+    (merge
+     (with-op-aliases {"cider/info" info-reply
+                       "cider/eldoc" eldoc-reply
+                       "cider/eldoc-datomic-query" eldoc-datomic-query-reply})
+     {"cider/classify-symbols" classify-symbols-reply})))
