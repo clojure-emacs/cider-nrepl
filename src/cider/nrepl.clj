@@ -16,10 +16,8 @@
    [nrepl.middleware.caught :refer [wrap-caught]]
    [nrepl.middleware.print :refer [wrap-print wrap-print-optional-arguments]]
    [nrepl.middleware.session :refer [session]]
-   [nrepl.misc :as misc :refer [with-session-classloader]]
+   [nrepl.misc :refer [with-session-classloader]]
    [nrepl.server :as nrepl-server]
-   [orchard.info]
-   [orchard.namespace]
    [orchard.java]))
 
 (def min-clojure-version
