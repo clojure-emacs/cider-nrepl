@@ -1,10 +1,13 @@
 (ns cider.nrepl.middleware.format-test
   (:require
+   [cider.nrepl.middleware.format :as format]
    [cider.nrepl.test-session :as session]
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
    [matcher-combinators.matchers :as mc]
-   [nrepl.middleware.print :as print]))
+   [nrepl.middleware.print :as print])
+  (:import
+   (java.io File)))
 
 (def ugly-code-sample
   "( let [x 3
@@ -102,6 +105,75 @@
          (session/message {:op "cider/format-code"
                            :code "(+ 1 2 3)"
                            :options {"alias-map" "INVALID"}}))))
+
+(defn- with-temp-config*
+  "Write CONTENTS to a temp cljfmt config file, make cljfmt's config lookup
+  return it for the duration of THUNK, then clean up."
+  [contents thunk]
+  (let [tmp (File/createTempFile "cljfmt" ".edn")]
+    (try
+      (spit tmp contents)
+      (with-redefs [format/config-file (constantly tmp)]
+        (thunk))
+      (finally
+        (.delete tmp)))))
+
+(defn- format-with-config [contents msg]
+  (with-temp-config* contents #(:formatted-code (format/format-code-reply msg))))
+
+(deftest cljfmt-config-test
+  ;; See: https://github.com/clojure-emacs/cider-nrepl/issues/955
+  (let [alias-sample "(foo/bar 1\n2)"]
+    (testing "indent rules from the project config are applied"
+      (is (= "(let [x 3\n      y 4]\n     (+ (* x x) (* y y)))"
+             (format-with-config "{:extra-indents {let [[:block 2]]}}"
+                                 {:code ugly-code-sample}))))
+
+    (testing ":extra-indents and :alias-map from the project config are applied"
+      (is (= "(foo/bar 1\n  2)"
+             (format-with-config "{:extra-indents {foo.core/bar [[:inner 0]]}
+                                   :alias-map {\"foo\" \"foo.core\"}}"
+                                 {:code alias-sample}))))
+
+    (testing "boolean toggles from the project config are respected"
+      (is (= "(+ 1 2)   "
+             (format-with-config "{:remove-trailing-whitespace? false}"
+                                 {:code "(+ 1 2)   "}))))
+
+    (testing "explicit request options take precedence over the project config"
+      ;; The config's bogus alias for `foo` would stop the indent rule (keyed on
+      ;; `foo.core/bar`) from matching; the request's correct alias makes it apply.
+      (is (= "(foo/bar 1\n  2)"
+             (format-with-config "{:alias-map {\"foo\" \"wrong.ns\"}
+                                   :extra-indents {foo.core/bar [[:inner 0]]}}"
+                                 {:code alias-sample
+                                  :options {:alias-map {:foo "foo.core"}}}))))
+
+    (testing "formatting works unchanged when there is no project config"
+      (is (= formatted-code-sample
+             (with-redefs [format/config-file (constantly nil)]
+               (:formatted-code (format/format-code-reply {:code ugly-code-sample}))))))
+
+    (testing "a malformed project config surfaces a clear error"
+      (is (thrown-with-msg?
+           clojure.lang.ExceptionInfo #"Failed to read cljfmt config"
+           (format-with-config "{:indents " {:code "(+ 1 2)"}))))
+
+    (testing "a .clj config is honored but read with eval disabled"
+      (let [tmp (File/createTempFile "cljfmt" ".clj")]
+        (try
+          (with-redefs [format/config-file (constantly tmp)]
+            (testing "a plain-data config is applied"
+              (spit tmp "{:remove-trailing-whitespace? false}")
+              (is (= "(+ 1 2)   "
+                     (:formatted-code (format/format-code-reply {:code "(+ 1 2)   "})))))
+            (testing "an embedded eval form is rejected, not executed"
+              (spit tmp "{:x #=(+ 1 1)}")
+              (is (thrown-with-msg?
+                   clojure.lang.ExceptionInfo #"Failed to read cljfmt config"
+                   (format/format-code-reply {:code "(+ 1 2)"})))))
+          (finally
+            (.delete tmp)))))))
 
 (deftest format-edn-op-test
   (testing "format-edn works"

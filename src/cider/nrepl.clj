@@ -302,9 +302,9 @@ Depending on the type of the return value of the evaluation this middleware may 
   {:doc "Middleware providing support for formatting Clojure code and EDN data."
    :requires #{#'wrap-print}
    :handles {"cider/format-code"
-             {:doc "Reformats the given Clojure code, returning the result as a string."
+             {:doc "Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
               :requires {"code" "The code to format."}
-              :optional {"options" "Configuration map for cljfmt."}
+              :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
               :returns {"formatted-code" "The formatted code."}}
              "format-code"
              {:doc "Deprecated: use `cider/format-code` instead. Reformats the given Clojure code, returning the result as a string."

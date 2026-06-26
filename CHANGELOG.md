@@ -3,6 +3,7 @@
 ## master (unreleased)
 
 * Bump `cljfmt` to 0.16.4 (from 0.9.2).
+* [#955](https://github.com/clojure-emacs/cider-nrepl/issues/955): The `cider/format-code` op now applies the project's `.cljfmt.edn`/`.cljfmt.clj` configuration automatically, with any options passed in the request taking precedence.
 * [clojure-emacs/cider#2099](https://github.com/clojure-emacs/cider/issues/2099): Fix ClojureScript macroexpansion of user-defined macros (e.g. those referred via `:refer-macros`), which previously echoed back unexpanded because the compiler env was passed to the analyzer instead of a proper analysis environment.
 * [clojure-emacs/cider#2198](https://github.com/clojure-emacs/cider/issues/2198): Clojure-only ops (apropos, xref, trace, profile, refresh, reload, undef, spec) now reply with a `clojure-only` status when a ClojureScript REPL is active, instead of a confusing failure or a JVM-only result.
 * [#555](https://github.com/clojure-emacs/cider-nrepl/issues/555): The `test` ops (`cider/test`, `cider/test-var-query`, `cider/test-all`, `cider/retest`) now run ClojureScript tests via `cljs.test` when a ClojureScript REPL is active, returning the same report shape as for Clojure. Asynchronous (`cljs.test/async`) tests are awaited, bounded by an optional `:timeout` (default 30s).
