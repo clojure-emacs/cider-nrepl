@@ -22,3 +22,5 @@ out
 /.no-mranderson
 /test-runner
 /.test-classpath
+.cpcache
+.eastwood

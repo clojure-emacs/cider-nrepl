@@ -1,2 +1,0 @@
--Djava.util.logging.config.file=test/resources/logging.properties
--Dclojure.main.report=stderr
