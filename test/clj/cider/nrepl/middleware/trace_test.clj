@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.middleware.trace :refer :all]
    [cider.nrepl.test-session :as session]
+   [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
    [nrepl.transport :as transport]
    [cider.test-ns.first-test-ns]))
@@ -48,10 +49,14 @@
           off (session/message {:op "cider/toggle-trace-var"
                                 :ns "cider.test-ns.first-test-ns"
                                 :sym "same-name-testing-function"})]
-      (is (= (:status on) (:status off) #{"done"}))
-      (is (= (:var-name on) (:var-name off) "#'cider.test-ns.first-test-ns/same-name-testing-function"))
-      (is (= (:var-status on) "traced"))
-      (is (= (:var-status off) "untraced"))))
+      (is+ {:status #{"done"}
+            :var-name "#'cider.test-ns.first-test-ns/same-name-testing-function"
+            :var-status "traced"}
+           on)
+      (is+ {:status #{"done"}
+            :var-name "#'cider.test-ns.first-test-ns/same-name-testing-function"
+            :var-status "untraced"}
+           off)))
 
   (testing "unresolvable"
     (let [var-err (session/message {:op "cider/toggle-trace-var"
@@ -60,8 +65,11 @@
           ns-err  (session/message {:op "cider/toggle-trace-var"
                                     :ns "cider.test-ns.no-such-ns"
                                     :sym "same-name-testing-function"})]
-      (is (= (:status var-err) (:status ns-err) #{"toggle-trace-error" "done"}))
-      (is (:var-status var-err) "not-found"))))
+      (is+ {:status #{"toggle-trace-error" "done"}
+            :var-status "not-found"}
+           var-err)
+      (is+ {:status #{"toggle-trace-error" "done"}}
+           ns-err))))
 
 (deftest integration-test-ns
   (testing "toggling"
@@ -69,14 +77,12 @@
                                 :ns "cider.test-ns.first-test-ns"})
           off (session/message {:op "cider/toggle-trace-ns"
                                 :ns "cider.test-ns.first-test-ns"})]
-      (is (= (:status on) (:status off) #{"done"}))
-      (is (= (:ns-status on) "traced"))
-      (is (= (:ns-status off) "untraced")))
+      (is+ {:status #{"done"} :ns-status "traced"} on)
+      (is+ {:status #{"done"} :ns-status "untraced"} off))
 
     (let [ns-err (session/message {:op "cider/toggle-trace-ns"
                                    :ns "cider.test-ns.missing"})]
-      (is (= (:status ns-err)  #{"done"}))
-      (is (= (:ns-status ns-err) "not-found")))))
+      (is+ {:status #{"done"} :ns-status "not-found"} ns-err))))
 
 (deftest list-traced-test
   (testing "lists the currently traced vars and namespaces"
@@ -101,16 +107,16 @@
                       :ns "cider.test-ns.first-test-ns"
                       :sym "same-name-testing-function"})
     (let [listed (session/message {:op "cider/list-traced"})]
-      (is (= (:status listed) #{"done"}))
-      (is (= (:traced-vars listed)
-             ["#'cider.test-ns.first-test-ns/same-name-testing-function"])))
+      (is+ {:status #{"done"}
+            :traced-vars ["#'cider.test-ns.first-test-ns/same-name-testing-function"]}
+           listed))
     (let [cleared (session/message {:op "cider/untrace-all"})]
-      (is (= (:status cleared) #{"done"}))
-      (is (= (:untraced-count cleared) 1)))
+      (is+ {:status #{"done"} :untraced-count 1} cleared))
     (let [listed (session/message {:op "cider/list-traced"})]
-      (is (= (:status listed) #{"done"}))
-      (is (empty? (:traced-vars listed)))
-      (is (empty? (:traced-nses listed))))))
+      (is+ {:status #{"done"}
+            :traced-vars empty?
+            :traced-nses empty?}
+           listed))))
 
 (deftest trace-subscribe-test
   (testing "subscribe streams events for traced calls, unsubscribe stops them"
@@ -148,15 +154,13 @@
           off (session/message {:op "toggle-trace-var"
                                 :ns "cider.test-ns.first-test-ns"
                                 :sym "same-name-testing-function"})]
-      (is (= (:status on) (:status off) #{"done"}))
-      (is (= (:var-status on) "traced"))
-      (is (= (:var-status off) "untraced"))))
+      (is+ {:status #{"done"} :var-status "traced"} on)
+      (is+ {:status #{"done"} :var-status "untraced"} off)))
 
   (testing "Deprecated 'toggle-trace-ns' op still works"
     (let [on  (session/message {:op "toggle-trace-ns"
                                 :ns "cider.test-ns.first-test-ns"})
           off (session/message {:op "toggle-trace-ns"
                                 :ns "cider.test-ns.first-test-ns"})]
-      (is (= (:status on) (:status off) #{"done"}))
-      (is (= (:ns-status on) "traced"))
-      (is (= (:ns-status off) "untraced")))))
+      (is+ {:status #{"done"} :ns-status "traced"} on)
+      (is+ {:status #{"done"} :ns-status "untraced"} off))))

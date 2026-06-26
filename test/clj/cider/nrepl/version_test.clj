@@ -1,13 +1,15 @@
 (ns cider.nrepl.version-test
   (:require
    [cider.nrepl.version :as v]
+   [cider.test-helpers :refer :all]
    [clojure.test :refer :all]))
 
 (deftest version-string-test
   (is (string? v/version-string)))
 
 (deftest version-test
-  (is (contains? v/version :major))
-  (is (contains? v/version :minor))
-  (is (contains? v/version :incremental))
-  (is (contains? v/version :version-string)))
+  (is+ {:major some?
+        :minor some?
+        :incremental some?
+        :version-string some?}
+       v/version))
