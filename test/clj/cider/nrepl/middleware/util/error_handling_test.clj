@@ -59,6 +59,20 @@
           "Should pass since *ns* is inside a quoted list and doesn't get evaluated")
       (is (thrown? IllegalArgumentException (deep-bencodable? [:a :vector 1 {:a :map} 2 [:sub :vec :bad *ns*] '(:a :list) 3]))))))
 
+(deftest with-safe-transport-catches-throwable-test
+  ;; An `Error` (not just an `Exception`) escaping an op-action must still
+  ;; produce a terminal `:done`, otherwise the client hangs waiting for it.
+  (let [transport (tt/test-transport)
+        msg {:op "cider/boom" :transport transport :id 1}]
+    (err/with-safe-transport (fn [_] :unhandled)
+      msg
+      "cider/boom" (fn [_] (throw (AssertionError. "boom"))))
+    (let [resp (first (tt/messages transport))]
+      (is (some? resp) "an error response is sent rather than the Error propagating")
+      (is (contains? (:status resp) :done))
+      (is (contains? (:status resp) :cider/boom-error))
+      (is (= "class java.lang.AssertionError" (:ex resp))))))
+
 (deftest error-handler-root-ex
   (let [e (Exception. "testing" (Throwable. "root-cause"))
         e2 (Exception. "testing2")]

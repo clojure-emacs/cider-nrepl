@@ -167,8 +167,11 @@
   `(let [{op# :op transport# :transport :as msg#} ~msg]
      (if-let [action# (get (hash-map ~@pairings) op#)]
        (let [[op-action# err-action#]  (if (vector? action#) action# [action# ::default])]
+         ;; Catch `Throwable`, not just `Exception`: an `Error` (e.g.
+         ;; `AssertionError`, `StackOverflowError`) escaping here would leave the
+         ;; op without a terminal `:done`, hanging the client until it times out.
          (try (transport/send transport# (op-handler op-action# msg#))
-              (catch Exception e# (transport/send transport# (error-handler err-action# msg# e#)))))
+              (catch Throwable e# (transport/send transport# (error-handler err-action# msg# e#)))))
        (~handler msg#))))
 
 (defn eval-interceptor-transport
