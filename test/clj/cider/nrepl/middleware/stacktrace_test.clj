@@ -64,6 +64,17 @@
       (testing "returns done and no-error status"
         (is (= #{"done" "no-error"} (:status response)))))))
 
+(deftest analyze-last-stacktrace-error-test
+  ;; These ops stream their replies directly, so an error during analysis must
+  ;; still terminate the op with `:done` instead of hanging the client.
+  (testing "an error during analysis still terminates with done"
+    (session/message {:op "eval" :code "(first 1)"})
+    (with-redefs [sut/analyze-last-stacktrace (fn [_] (throw (AssertionError. "boom")))]
+      (let [response (session/message {:op "cider/analyze-last-stacktrace"})]
+        (is (contains? (:status response) "done"))
+        (is (contains? (:status response) "stacktrace-error"))
+        (is (= "class java.lang.AssertionError" (:ex response)))))))
+
 (deftest deprecated-ops-test
   (testing "Deprecated 'stacktrace' op still works"
     (session/message {:op "eval" :code "(first 1)"})

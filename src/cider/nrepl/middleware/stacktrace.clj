@@ -4,6 +4,7 @@
   (:require
    [cider.nrepl.middleware.inspect :as middleware.inspect]
    [cider.nrepl.middleware.util :refer [respond-to]]
+   [cider.nrepl.middleware.util.error-handling :refer [base-error-response]]
    [cider.nrepl.middleware.util.nrepl :refer [notify-client]]
    [nrepl.middleware.print :as print]
    [nrepl.transport :as t]
@@ -62,9 +63,17 @@
     (respond-to msg :status :done)))
 
 (defn handle-stacktrace
-  "Handle stacktrace ops."
-  [_ {:keys [op] :as msg}]
-  (case op
-    ("cider/analyze-last-stacktrace" "analyze-last-stacktrace") (handle-analyze-last-stacktrace-op msg)
-    ("cider/inspect-last-exception" "inspect-last-exception")   (handle-inspect-last-exception-op msg)
-    ("cider/stacktrace" "stacktrace")                           (handle-stacktrace-op msg)))
+  "Handle stacktrace ops.
+
+  Unlike most middleware these ops stream their replies directly rather than
+  going through `with-safe-transport`, so guard them here: any error still has
+  to produce a terminal `:done`, otherwise the client hangs."
+  [handler {:keys [op transport] :as msg}]
+  (try
+    (case op
+      ("cider/analyze-last-stacktrace" "analyze-last-stacktrace") (handle-analyze-last-stacktrace-op msg)
+      ("cider/inspect-last-exception" "inspect-last-exception")   (handle-inspect-last-exception-op msg)
+      ("cider/stacktrace" "stacktrace")                           (handle-stacktrace-op msg)
+      (handler msg))
+    (catch Throwable e
+      (t/send transport (base-error-response msg e :done :stacktrace-error)))))
