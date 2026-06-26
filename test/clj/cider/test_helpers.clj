@@ -1,6 +1,5 @@
 (ns cider.test-helpers
   (:require [clojure.test :refer :all]
-            [matcher-combinators.matchers :as matchers]
             [matcher-combinators.test :refer [match?]]))
 
 (defmacro is+
@@ -12,5 +11,3 @@
 
 (defn mc-includes [expected]
   #(and (string? %) (.contains ^String % expected)))
-
-(matchers/any-of)

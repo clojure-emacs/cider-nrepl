@@ -307,9 +307,9 @@ Depending on the type of the return value of the evaluation this middleware may 
               :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
               :returns {"formatted-code" "The formatted code."}}
              "format-code"
-             {:doc "Deprecated: use `cider/format-code` instead. Reformats the given Clojure code, returning the result as a string."
+             {:doc "Deprecated: use `cider/format-code` instead. Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
               :requires {"code" "The code to format."}
-              :optional {"options" "Configuration map for cljfmt."}
+              :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
               :returns {"formatted-code" "The formatted code."}}
              "cider/format-edn"
              {:doc "Reformats the given EDN data, returning the result as a string."
@@ -702,7 +702,7 @@ if applicable, and re-render the updated value."
                 "appender" "The name of the appender."
                 "consumer" "The name of the consumer."}
      :returns {"status" "done"
-               "cider/log-add-consumer" "The removed consumer."}}
+               "cider/log-remove-consumer" "The removed consumer."}}
 
     "cider/log-update-appender"
     {:doc "Update the appender of a log framework."
@@ -1110,9 +1110,11 @@ stack frame of the most recent exception."
 You can also request to compute the info directly by requesting the \"cider/get-state\" op."
    :requires #{#'session}
    :expects (cljs/maybe-add-piggieback mw/ops-that-can-eval)
-   :handles {"cider/get-state" {}}
-   :returns {"repl-type" "`:clj` or `:cljs`."
-             "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}})
+   :handles {"cider/get-state"
+             {:doc "Return the current REPL state: its type and any namespaces changed since the last notification."
+              :returns {"status" "done"
+                        "repl-type" "`:clj` or `:cljs`."
+                        "changed-namespaces" "A map of namespaces to `{:aliases ,,, :interns ,,,}`"}}}})
 
 (def-wrapper wrap-undef cider.nrepl.middleware.undef/handle-undef
   {:clojure-only? true
