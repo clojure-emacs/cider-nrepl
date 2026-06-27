@@ -61,7 +61,7 @@
   ;; so we conditionally disable it, because otherwise clj-kondo cannot run.
   :plugins ~(if (System/getenv "CIDER_NO_MRANDERSON")
               []
-              '[[thomasa/mranderson "0.5.4-SNAPSHOT"]])
+              '[[thomasa/mranderson "0.7.0"]])
 
   :mranderson {:project-prefix "cider.nrepl.inlined.deps"
                :unresolved-tree false}
