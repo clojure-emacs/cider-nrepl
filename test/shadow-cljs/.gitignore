@@ -1,0 +1,6 @@
+/node_modules
+/.shadow-cljs
+/out
+/public/js
+/.cpcache
+package-lock.json
