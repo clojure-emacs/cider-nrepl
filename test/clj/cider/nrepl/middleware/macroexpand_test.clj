@@ -29,7 +29,13 @@
                            :display-namespaces "none"})))
 
   (testing "error handling works"
-    (is+ {:status #{"macroexpand-error" "done"}
+    ;; The op tags the error as `macroexpand-error` only when piggieback is
+    ;; loaded (the retag needs the `::caught/throwable` that piggieback's eval
+    ;; path attaches). Without it - e.g. a plain Clojure setup, or an older JDK
+    ;; where ClojureScript's Java-21 closure-compiler can't load piggieback - it
+    ;; degrades to a plain `eval-error`. Either way the error is fully reported.
+    (is+ {:status #(and (contains? % "done")
+                        (some #{"macroexpand-error" "eval-error"} %))
           :err string?
           :ex string?}
          (session/message {:op "cider/macroexpand"

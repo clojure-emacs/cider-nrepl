@@ -75,7 +75,12 @@
                                      :context "(defn foo [bar] (let [baz :baz, quux :quux] (str __prefix__)))"
                                      :enhanced-cljs-completion? "t"})
           candidates (:completions response)]
-      (is (= [{:candidate "bar", :type "local"}, {:candidate "baz", :type "local"}] candidates)))))
+      ;; Assert on the local candidates specifically: the prefix `ba` may also
+      ;; match core vars that differ across ClojureScript versions (e.g.
+      ;; `cljs.core/bases` was added in 1.12), but the locals must be exactly
+      ;; `bar`/`baz` - `quux` is excluded, proving the prefix is respected.
+      (is (= [{:candidate "bar", :type "local"} {:candidate "baz", :type "local"}]
+             (filter (comp #{"local"} :type) candidates))))))
 
 (deftest cljs-complete-doc-test
   (testing "no suitable documentation can be found"
