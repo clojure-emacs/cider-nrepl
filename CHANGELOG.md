@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Bump `compliment` to [0.8.0](https://github.com/alexander-yakushev/compliment/blob/0.8.0/CHANGELOG.md) (adds Babashka compatibility).
 * [#1003](https://github.com/clojure-emacs/cider-nrepl/pull/1003): Resolve the ClojureScript compiler environment through a provider chain instead of piggieback alone, adding a shadow-cljs provider so the static-analysis ops keep working in a shadow REPL that doesn't load piggieback.
 * [#994](https://github.com/clojure-emacs/cider-nrepl/pull/994): Error handling: catch `Throwable` (not just `Exception`) when handling ops, so an op that hits an `Error` (e.g. `StackOverflowError`, `AssertionError`) returns a proper error response instead of hanging the client without a terminal `done`. The stacktrace ops, which reply outside the shared error machinery, got the same guarantee.
 * [#993](https://github.com/clojure-emacs/cider-nrepl/pull/993): Fix op descriptor metadata: document `cider/get-state`'s return values (previously rendered blank) and correct the `cider/log-remove-consumer` return key.
