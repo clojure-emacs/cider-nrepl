@@ -894,6 +894,22 @@ stack frame of the most recent exception."
                :requires {"subscription" "The id of the subscription to remove"}
                :returns  {"cider/trace-unsubscribe" "The id of the removed subscription"}}})})
 
+(def-wrapper wrap-tap cider.nrepl.middleware.tap/handle-tap
+  {:clojure-only? true
+   :doc     "Stream values sent to `tap>` to the client and inspect them."
+   :handles {"cider/tap-subscribe"
+             {:doc     "Open a streaming subscription that delivers a summary of each value sent to `tap>` until `cider/tap-unsubscribe`."
+              :returns {"cider/tap-subscribe" "The id of the subscription, to be passed to `cider/tap-unsubscribe`"
+                        "cider/tap-value" "A tapped value summary, with `idx` (for `cider/tap-inspect`), `summary`, `type` and, when counted, `count`"}}
+             "cider/tap-unsubscribe"
+             {:doc      "Stop streaming tapped values for the given subscription."
+              :requires {"subscription" "The id of the subscription to remove"}
+              :returns  {"cider/tap-unsubscribe" "The id of the removed subscription"}}
+             "cider/tap-inspect"
+             {:doc      "Start an inspector session on a retained tapped value."
+              :requires {"idx" "The index of the tapped value to inspect"}
+              :returns  {"value" "The inspector rendering of the tapped value"}}}})
+
 (def-wrapper wrap-tracker cider.nrepl.middleware.track-state/handle-tracker
   mw/ops-that-can-eval
   {:doc "Under its normal operation mode, enhances the `eval` op by notifying the client of the current REPL state.
