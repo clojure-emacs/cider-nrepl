@@ -36,8 +36,8 @@
 
 (deftest reload-all-op-test
   (testing "reload-all op works"
-    (is+ {:progress (mc/all-of #"Reloading 3 namespaces"
-                               #"Reloaded 3 namespaces in \d+ ms")
+    (is+ {:progress (mc/all-of #"Reloading 4 namespaces"
+                               #"Reloaded 4 namespaces in \d+ ms")
           :status #{"done" "ok"}}
          (session/message {:op "cider.clj-reload/reload-all"}))))
 
