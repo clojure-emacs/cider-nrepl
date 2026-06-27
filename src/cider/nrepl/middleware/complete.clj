@@ -10,10 +10,6 @@
    [orchard.misc :as misc]
    [suitable.compliment.sources.cljs :as suitable-sources]))
 
-(def shadow-cljs-present?
-  (try (require 'shadow.cljs.devtools.api) true
-       (catch Throwable _ false)))
-
 ;; controls if dynamic cljs code completions are active
 (def suitable-enabled? true)
 
