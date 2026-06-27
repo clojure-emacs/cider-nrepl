@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#1007](https://github.com/clojure-emacs/cider-nrepl/pull/1007): Don't crash at startup on an older JDK when a Java-21 ClojureScript (recent closure-compiler) is on the classpath: the ClojureScript load probes now catch `Throwable`, so cider-nrepl falls back to a Clojure-only setup instead of failing to load.
 * Bump `compliment` to [0.8.0](https://github.com/alexander-yakushev/compliment/blob/0.8.0/CHANGELOG.md) (adds Babashka compatibility).
 * [#1003](https://github.com/clojure-emacs/cider-nrepl/pull/1003): Resolve the ClojureScript compiler environment through a provider chain instead of piggieback alone, adding a shadow-cljs provider so the static-analysis ops keep working in a shadow REPL that doesn't load piggieback.
 * [#994](https://github.com/clojure-emacs/cider-nrepl/pull/994): Error handling: catch `Throwable` (not just `Exception`) when handling ops, so an op that hits an `Error` (e.g. `StackOverflowError`, `AssertionError`) returns a proper error response instead of hanging the client without a terminal `done`. The stacktrace ops, which reply outside the shared error machinery, got the same guarantee.

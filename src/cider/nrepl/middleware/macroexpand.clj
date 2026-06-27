@@ -165,17 +165,21 @@
 
 ;; ClojureScript impl
 
+;; Throwable, not Exception: loading ClojureScript can fail with an
+;; `UnsupportedClassVersionError` on an older JDK (recent closure-compiler is
+;; Java-21 bytecode), and these run at namespace load. Degrade to nil so the
+;; Clojure macroexpansion path keeps working instead of failing to load.
 (def ^:private macroexpand-1-cljs
   (try
     (require 'cljs.analyzer)
     @(resolve 'cljs.analyzer/macroexpand-1)
-    (catch Exception _)))
+    (catch Throwable _)))
 
 (def ^:private empty-env-cljs
   (try
     (require 'cljs.analyzer)
     @(resolve 'cljs.analyzer/empty-env)
-    (catch Exception _)))
+    (catch Throwable _)))
 
 (defn- resolve-expander-cljs
   "Returns the macroexpansion fn for macroexpanding ClojureScript code,

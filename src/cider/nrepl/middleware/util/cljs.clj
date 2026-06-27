@@ -6,8 +6,12 @@
   "If piggieback is loaded, return `#'cider.piggieback/wrap-cljs-repl`, nil
   otherwise."
   []
+  ;; Catch Throwable, not just Exception: loading piggieback pulls in
+  ;; ClojureScript, whose recent closure-compiler is Java-21 bytecode, so on an
+  ;; older JDK the require fails with an `UnsupportedClassVersionError` (an
+  ;; Error). We want to degrade to a Clojure-only setup, not crash at startup.
   (try (requiring-resolve 'cider.piggieback/wrap-cljs-repl)
-       (catch Exception _)))
+       (catch Throwable _)))
 
 (defn expects-piggieback
   "Deprecated: returns the descriptor unchanged."
@@ -136,14 +140,16 @@
     (require 'cljs.env)
     `(binding [cljs.env/*compiler* (grab-cljs-env* ~msg)]
        ~@body)
-    (catch Exception _)))
+    ;; Throwable, not Exception: loading ClojureScript can fail with an
+    ;; `UnsupportedClassVersionError` on an older JDK (see `try-resolve-piggieback`).
+    (catch Throwable _)))
 
 (defmacro with-cljs-ns [ns-sym & body]
   (try
     (require 'cljs.analyzer)
     `(binding [cljs.analyzer/*cljs-ns* ~ns-sym]
        ~@body)
-    (catch Exception _)))
+    (catch Throwable _)))
 
 (defn respond-clojure-only
   "Replies to `msg` signaling that its op is Clojure-only and isn't available

@@ -23,6 +23,18 @@
     (with-redefs [cljs/cljs-env-providers [(constantly (atom {:a 1}))]]
       (is (= {:a 1} (cljs/grab-cljs-env {}))))))
 
+(deftest try-resolve-piggieback-degrades-on-error-test
+  (testing "a class-version error while loading ClojureScript degrades to nil, not a crash"
+    ;; Recent ClojureScript ships a Java-21 closure-compiler, so on an older JDK
+    ;; the piggieback require surfaces an `UnsupportedClassVersionError` - an
+    ;; Error, not an Exception. The startup probe must swallow it and fall back
+    ;; to a Clojure-only setup rather than take the whole middleware stack down.
+    (with-redefs [requiring-resolve
+                  (fn [_] (throw (UnsupportedClassVersionError.
+                                  "closure-compiler has been compiled by a more recent JDK")))]
+      (is (nil? (cljs/try-resolve-piggieback)))
+      (is (= #{:session} (cljs/maybe-add-piggieback #{:session}))))))
+
 (deftest shadow-env-handle-test
   (testing "nil stays nil"
     (is (nil? (shadow-env-handle nil))))
