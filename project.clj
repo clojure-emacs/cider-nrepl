@@ -15,7 +15,7 @@
                    [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
                    [fipp "0.6.29" :exclusions [org.clojure/clojure]]
                    [org.clojure/test.check "1.1.3" :exclusions [org.clojure/clojure]]
-                   [cider/piggieback "0.6.1"]
+                   [cider/piggieback "0.6.2"]
                    [nubank/matcher-combinators "3.10.0"]]
    :source-paths ["test/src"]
    :global-vars {'*assert* true}

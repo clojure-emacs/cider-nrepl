@@ -36,7 +36,9 @@
     (let [response (session/message {:op "eval"
                                      :code (nrepl/code (js/Object.))})]
       (is (= "cljs.user" (:ns response)))
-      (is (= ["#js{}"] (:value response)))
+      ;; piggieback 0.6.2 fixed tagged-literal printing to emit the space after
+      ;; the reader tag (nrepl/piggieback#120), so this is now "#js {}".
+      (is (= ["#js {}"] (:value response)))
       (is (= #{"done"} (:status response)))))
 
   (testing "eval works"
