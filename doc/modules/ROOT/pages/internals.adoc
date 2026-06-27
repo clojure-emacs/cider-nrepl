@@ -29,16 +29,132 @@ for some operation to be performed for some unresolved symbol in the current nam
 
 == ClojureScript Support
 
-Currently the ClojureScript support relies on inspecting the ClojureScript compiler
-state. `cider-nrepl` would fetch the compiler state from Piggieback and pass it
-to the underlying libraries (e.g. `orchard` and `clj-suitable`) that do something useful with it.
+ClojureScript support hinges on one thing: getting hold of the ClojureScript
+*compiler environment* for the session. `cider-nrepl` runs in a Clojure context,
+so it can't analyze ClojureScript on its own - it hands the compiler env to the
+underlying libraries (`orchard`, `clj-suitable`, the `cljs.analyzer`) that know
+how to read it.
 
-Unfortunately the majority of the middleware don't support ClojureScript
-currently, as they are implemented in terms of Clojure-only libraries. Another
-roadblock is that `cider-nrepl` runs in a Clojure context and you have to jump
-through some hoops to evaluate ClojureScript code from it (e.g. pipe it to
-Piggieback's `eval` or evaluate it against the ClojureScript runtime directly as
-a string). Hopefully this will change down the road.
+=== The compiler-env seam
+
+Every ClojureScript-aware op funnels through a single function,
+`cider.nrepl.middleware.util.cljs/grab-cljs-env`. It resolves the session's
+compiler env through an ordered *provider chain* (`cljs-env-providers`); the
+first provider to return a non-nil value wins:
+
+[horizontal]
+Piggieback:: Reads the compiler-env atom from the session var
+`cider.piggieback/*cljs-compiler-env*`. Tried first, so existing setups behave
+exactly as they always have.
+shadow-cljs:: Reads the build id from shadow's `*repl-state*` and fetches the
+build's compiler env via the public `shadow.cljs.devtools.api/compiler-env`.
+
+New backends (figwheel, weasel, ...) would plug in as additional providers.
+
+=== Two kinds of ops
+
+It helps to split the ClojureScript ops in two:
+
+* *Static-analysis ops* (`info`, `complete`, `eldoc`, `ns-*`, analyzer-based
+  `macroexpand`) only need to *read* the compiler env. These work through
+  `grab-cljs-env` and don't evaluate anything.
+* *Eval-delegating ops* (`test` via `cljs.test`, eval-based `macroexpand`,
+  dynamic completion) need to *run* ClojureScript in the runtime. `cider-nrepl`
+  never evaluates ClojureScript itself - it relies on whatever cljs-eval
+  middleware is in the stack (Piggieback or shadow's own) to do that.
+
+=== A note on shadow-cljs
+
+shadow-cljs is the only major environment with its own nREPL server rather than
+a Piggieback client. Two things are worth knowing:
+
+* It evaluates ClojureScript by forwarding code to the live build worker and its
+  connected JS runtime - it does **not** run a `cljs.repl` loop the way
+  Piggieback does. This is why its eval-delegating ops "just work" once a build
+  is running.
+* It still pulls Piggieback in transitively and populates
+  `cider.piggieback/*cljs-compiler-env*` itself (with a deref handle over the
+  build's live compiler env) specifically so that tools like `cider-nrepl` keep
+  working. In other words, on a default shadow setup the *Piggieback* provider
+  already serves shadow; the dedicated shadow provider is a fallback for setups
+  where that var isn't populated.
+
+A small sample project for exercising shadow support by hand lives under
+`test/shadow-cljs/`.
+
+=== Toward first-class shadow support
+
+A few things stand between the current "works via the Piggieback shim" state and
+genuinely Piggieback-independent shadow support:
+
+* *Discovering the build id.* `api/compiler-env` is public and stable. To learn
+  *which* build a session is on, we read the
+  `:shadow.cljs.devtools.server.nrepl-impl/build-id` key shadow stamps onto every
+  message it forwards - the same seam `clj-suitable` uses, and one shadow keeps
+  stable for tooling (its `set-build-id` notes the key is "kept since cider uses
+  it"). It lives in an internal namespace, though, so getting it officially
+  blessed as a public integration key is a worthwhile upstream ask.
+* *Snapshot vs. live env.* `api/compiler-env` returns a snapshot map, not the
+  live atom Piggieback exposes. That's fine for read-only static analysis (we
+  wrap it so it still derefs and tolerates the analyzer's transient swaps), but
+  it's a sharp edge for anything that expects to mutate compiler state.
+* *Eval-delegating ops.* These ride whatever cljs-eval middleware is in the
+  stack. On shadow that's shadow's own eval, which bypasses cider-nrepl's eval
+  machinery entirely - so things keyed off cider's eval path (e.g. `track-state`)
+  don't run for cljs evals (https://github.com/thheller/shadow-cljs/issues/1138[shadow-cljs#1138]).
+  A shadow-aware path could instead call the public
+  `shadow.cljs.devtools.api/cljs-eval` directly (as `clj-suitable` already does
+  for dynamic completion), but that's a larger change tracked separately.
+* *Testing.* The live shadow path can't run in CI without dragging the whole
+  shadow toolchain onto the test classpath, so it's covered by the manual
+  fixture rather than the automated suite.
+
+Those are the tractable, cider-nrepl-sized items. The deeper limitation is not
+ours to fix alone, and it's worth recording why.
+
+=== The Piggieback debate
+
+The reason shadow-cljs has to *emulate* Piggieback rather than use it goes back
+to a long-running design discussion. shadow's author summed up his position in
+https://github.com/thheller/shadow-cljs/issues/561[thheller/shadow-cljs#561]:
+Piggieback is "too coupled to `cljs.repl` and `cljs.closure`" (which shadow
+doesn't use at all,
+https://github.com/thheller/shadow-cljs/issues/249[#249]), `cljs.repl` exposes
+"no concept of a runtime or session" to hook into, and ultimately "the
+Piggieback approach is fundamentally flawed and cannot be fixed."
+
+The concrete sticking point is in
+https://github.com/nrepl/piggieback/issues/88[nrepl/piggieback#88]: Piggieback
+wraps `cljs.repl/repl`, which binds a *single* `IJavaScriptEnv` per session.
+Shadow's model is many runtimes per build - browser tabs, a node process,
+react-native, all at once - which that abstraction can't express. Both shadow
+(`shadow.remote`) and figwheel solve eval their own way; Piggieback's "make
+ClojureScript transparent by reusing the `eval`/`load-file` ops" design is
+exactly what gets in the way.
+
+Why does cider-nrepl ride the Piggieback shim at all, then? Mostly history: we
+never taught cider-nrepl shadow's own API, and shadow's author kindly offered
+the Piggieback emulation so tools would work unchanged. As discussed in
+https://github.com/clojure-emacs/clj-suitable/issues/34[clj-suitable#34], the
+shim is *basic* compatibility and not everything works through it; in an ideal
+world cider-nrepl would talk to shadow's own nREPL middleware, which exposes the
+full functionality. `suitable` already carries shadow-specific code for exactly
+this reason, rather than going through `grab-cljs-env`.
+
+The takeaway for cider-nrepl: the part we own - *reading* the compiler env for
+static analysis - is well served by the provider chain and is happily backend
+agnostic (the shadow provider here is the first shadow-aware path). The part
+that's genuinely hard - multiplexed runtimes and distinct ClojureScript ops
+instead of hijacked `eval` - lives at the nREPL/backend layer. The realistic
+improvement path is incremental: add shadow-aware code paths (as `suitable`
+does) where the Piggieback compat falls short, while first-class support
+ultimately depends on the broader story (a runtime concept in nREPL, or
+backend-specific ops). That's why this is documented as direction rather than
+promised as a feature.
+
+Beyond the env plumbing, the broader limitation remains: many middleware are
+still Clojure-only because they're implemented in terms of Clojure-only
+libraries. Widening genuine ClojureScript coverage is an ongoing effort.
 
 == Dependency obfuscation
 
