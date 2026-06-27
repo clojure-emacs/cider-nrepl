@@ -3,10 +3,10 @@
                    ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                    [ch.qos.logback/logback-classic "1.3.7"]
                    [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
-                   [fipp "0.6.26"]
-                   [org.clojure/test.check "1.1.1"]
-                   [cider/piggieback "0.6.0"]
-                   [nubank/matcher-combinators "3.9.1"]]
+                   [fipp "0.6.29" :exclusions [org.clojure/clojure]]
+                   [org.clojure/test.check "1.1.3" :exclusions [org.clojure/clojure]]
+                   [cider/piggieback "0.6.1"]
+                   [nubank/matcher-combinators "3.10.0"]]
    :source-paths ["test/src"]
    :global-vars {'*assert* true}
    :java-source-paths ["test/java"]
@@ -22,7 +22,7 @@
   :scm {:name "git" :url "https://github.com/clojure-emacs/cider-nrepl"}
   :dependencies
   ~(cond-> '[[cider/orchard "0.43.0" :exclusions [org.clojure/clojure]]
-             [compliment "0.7.1"]
+             [compliment "0.8.0"]
              [io.github.tonsky/clj-reload "1.0.0" :exclusions [org.clojure/clojure]]
              [mx.cider/logjam "0.3.0" :exclusions [org.clojure/clojure]]
              [org.rksm/suitable "0.6.2" :exclusions [org.clojure/clojure
@@ -85,14 +85,14 @@
                                     :password :env/clojars_password
                                     :sign-releases false}]]
 
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.4"]
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.5"]
                                        [nrepl/nrepl "1.7.0"]]}
 
              :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
                                    [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
              :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
                                    [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
-             :1.12 {:dependencies [[org.clojure/clojure "1.12.4"]
+             :1.12 {:dependencies [[org.clojure/clojure "1.12.5"]
                                    [org.clojure/clojurescript "1.12.42" :scope "provided"]]}
 
              :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0"]]}
