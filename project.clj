@@ -1,5 +1,15 @@
+;; ClojureScript's bundled closure-compiler ships Java-21 bytecode as of
+;; 1.12.42+, so the cljs test suite can only load on JDK 21+. Gate the cljs
+;; test path (and, transitively, the whole cljs suite) on the running JDK;
+;; JDK 8/11/17 run the Clojure-only tests. cider-nrepl itself stays JDK 8
+;; compatible because it loads ClojureScript lazily and only when present.
+(def jdk-major
+  (Integer/parseInt (re-find #"\d+$" (System/getProperty "java.specification.version"))))
+
+(def cljs-test? (>= jdk-major 21))
+
 (def dev-test-common-profile
-  {:dependencies '[[org.clojure/clojurescript "1.11.60" :scope "provided"]
+  {:dependencies '[[org.clojure/clojurescript "1.12.145" :scope "provided"]
                    ;; 1.3.7 and 1.4.7 are working, but we need 1.3.7 for JDK8
                    [ch.qos.logback/logback-classic "1.3.7"]
                    [mvxcvi/puget "1.3.4" :exclusions [org.clojure/clojure]]
@@ -61,7 +71,8 @@
   :source-paths ["src"]
   :java-source-paths ["src"]
   :resource-paths ["resources"]
-  :test-paths ["test/clj" "test/cljs" "test/common"]
+  :test-paths ~(cond-> ["test/clj" "test/common"]
+                 cljs-test? (conj "test/cljs"))
 
   :test-selectors {:default (fn [test-meta]
                               (let [parse-version (fn [v] (mapv #(Integer/parseInt (re-find #"\d+" %)) (clojure.string/split v #"\.")))
@@ -88,12 +99,12 @@
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.12.5"]
                                        [nrepl/nrepl "1.7.0"]]}
 
-             :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]
-                                   [org.clojure/clojurescript "1.10.520" :scope "provided"]]}
-             :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]
-                                   [org.clojure/clojurescript "1.11.60" :scope "provided"]]}
-             :1.12 {:dependencies [[org.clojure/clojure "1.12.5"]
-                                   [org.clojure/clojurescript "1.12.42" :scope "provided"]]}
+             ;; These profiles only set the Clojure version; the ClojureScript
+             ;; version is controlled solely by dev-test-common-profile, since a
+             ;; cljs entry here would lose the profile merge to it anyway.
+             :1.10 {:dependencies [[org.clojure/clojure "1.10.3"]]}
+             :1.11 {:dependencies [[org.clojure/clojure "1.11.4"]]}
+             :1.12 {:dependencies [[org.clojure/clojure "1.12.5"]]}
 
              :nrepl-1.0 {:dependencies [[nrepl/nrepl "1.0.0"]]}
              :nrepl-1.3 {:dependencies [[nrepl/nrepl "1.3.0"]]}
