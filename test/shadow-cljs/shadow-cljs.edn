@@ -1,0 +1,29 @@
+;; Minimal shadow-cljs config used as a cider-nrepl test fixture.
+;;
+;; Two builds:
+;;   :app  - the canonical browser "Hello World" from the shadow-cljs UsersGuide,
+;;           handy for poking at cider-nrepl ops from a real editor session.
+;;   :node - a :node-script build that gives a headless cljs REPL, so the same
+;;           ops can be exercised without a browser (CI-friendly).
+;;
+;; The :nrepl middleware below installs the diagnostic probe (see
+;; src/dev/cljs_env_probe.clj) that reports whether a session's shadow build is
+;; reachable from the nREPL session map - the question that gates native shadow
+;; support in cider-nrepl.
+{:source-paths ["src/main" "src/dev"]
+
+ :dependencies []
+
+ :nrepl {:middleware [cljs-env-probe/wrap-cljs-env-probe]}
+
+ :builds
+ {:app  {:target     :browser
+         :output-dir "public/js"
+         :asset-path "/js"
+         :modules    {:main {:init-fn shadow-sample.app/init}}
+         :devtools   {:http-root "public"
+                      :http-port 8080}}
+
+  :node {:target     :node-script
+         :output-to  "out/node-main.js"
+         :main       shadow-sample.node/main}}}

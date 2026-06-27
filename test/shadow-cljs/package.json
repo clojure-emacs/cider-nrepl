@@ -1,0 +1,9 @@
+{
+  "name": "cider-nrepl-shadow-sample",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A minimal shadow-cljs project used as a fixture for exercising cider-nrepl's ClojureScript support.",
+  "devDependencies": {
+    "shadow-cljs": "3.4.11"
+  }
+}
