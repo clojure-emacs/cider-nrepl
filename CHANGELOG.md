@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#903](https://github.com/clojure-emacs/cider-nrepl/issues/903): Back `cider.nrepl.pprint/pprint` with `orchard.pp` instead of `clojure.pprint`, so pretty-printing a lazy sequence no longer interleaves its realization side effects into the result. The previous `clojure.pprint` behavior is still available as `cider.nrepl.pprint/clojure-pprint`.
 * [#1010](https://github.com/clojure-emacs/cider-nrepl/pull/1010): The `tap` middleware now works in ClojureScript: a runtime helper buffers values sent to `tap>` and the JVM side polls and streams them (the same approach the cljs test middleware uses for async tests). Streaming only - cljs tapped values aren't inspectable, since the value lives in the JS runtime.
 * [#680](https://github.com/clojure-emacs/cider-nrepl/issues/680): The test ops now honor a namespace's `test-ns-hook`, so a namespace whose tests run only through the hook (with no standalone `deftest` vars) is no longer silently skipped.
 * [#1007](https://github.com/clojure-emacs/cider-nrepl/pull/1007): Don't crash at startup on an older JDK when a Java-21 ClojureScript (recent closure-compiler) is on the classpath: the ClojureScript load probes now catch `Throwable`, so cider-nrepl falls back to a Clojure-only setup instead of failing to load.

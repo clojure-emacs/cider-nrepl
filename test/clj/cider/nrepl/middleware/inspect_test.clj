@@ -590,7 +590,9 @@
 
 (deftest inspect-print-current-value-no-value-test
   (testing "inspect-print-current-value returns nil if nothing has been inspected yet"
-    (is+ {:value ["nil"]}
+    ;; `pprint` is backed by orchard.pp, which terminates the output with a
+    ;; newline (like `clojure.pprint/pprint`).
+    (is+ {:value ["nil\n"]}
          (session/message
           {:op "cider/inspect-print-current-value"
            :nrepl.middleware.print/print "cider.nrepl.pprint/pprint"}))))
