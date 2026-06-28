@@ -895,12 +895,11 @@ stack frame of the most recent exception."
                :returns  {"cider/trace-unsubscribe" "The id of the removed subscription"}}})})
 
 (def-wrapper wrap-tap cider.nrepl.middleware.tap/handle-tap
-  {:clojure-only? true
-   :doc     "Stream values sent to `tap>` to the client and inspect them."
+  {:doc     "Stream values sent to `tap>` to the client and inspect them."
    :handles {"cider/tap-subscribe"
-             {:doc     "Open a streaming subscription that delivers a summary of each value sent to `tap>` until `cider/tap-unsubscribe`."
+             {:doc     "Open a streaming subscription that delivers a summary of each value sent to `tap>` until `cider/tap-unsubscribe`. Works in ClojureScript too (by polling the runtime), but cljs tapped values aren't inspectable."
               :returns {"cider/tap-subscribe" "The id of the subscription, to be passed to `cider/tap-unsubscribe`"
-                        "cider/tap-value" "A tapped value summary, with `idx` (for `cider/tap-inspect`), `summary`, `type` and, when counted, `count`"}}
+                        "cider/tap-value" "A tapped value summary, with `summary`, `type`, when counted `count`, and (Clojure only) an `idx` for `cider/tap-inspect`"}}
              "cider/tap-unsubscribe"
              {:doc      "Stop streaming tapped values for the given subscription."
               :requires {"subscription" "The id of the subscription to remove"}

@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* [#1010](https://github.com/clojure-emacs/cider-nrepl/pull/1010): The `tap` middleware now works in ClojureScript: a runtime helper buffers values sent to `tap>` and the JVM side polls and streams them (the same approach the cljs test middleware uses for async tests). Streaming only - cljs tapped values aren't inspectable, since the value lives in the JS runtime.
 * [#1007](https://github.com/clojure-emacs/cider-nrepl/pull/1007): Don't crash at startup on an older JDK when a Java-21 ClojureScript (recent closure-compiler) is on the classpath: the ClojureScript load probes now catch `Throwable`, so cider-nrepl falls back to a Clojure-only setup instead of failing to load.
 * [#1006](https://github.com/clojure-emacs/cider-nrepl/pull/1006): Add a `tap` middleware: `cider/tap-subscribe` streams a summary of every value sent to `tap>` (retaining recent ones, bounded), `cider/tap-inspect` opens an inspector session on a retained value by index, and `cider/tap-unsubscribe` stops the stream. Clojure-only for now.
 * Bump `compliment` to [0.8.0](https://github.com/alexander-yakushev/compliment/blob/0.8.0/CHANGELOG.md) (adds Babashka compatibility).
