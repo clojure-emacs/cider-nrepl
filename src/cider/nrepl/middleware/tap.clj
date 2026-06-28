@@ -8,7 +8,9 @@
   value by its index, so the client reuses the existing inspector UI."
   (:require
    [cider.nrepl.middleware.inspect :as inspect]
+   [cider.nrepl.middleware.tap.cljs :as tap-cljs]
    [cider.nrepl.middleware.util :refer [respond-to]]
+   [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.error-handling :refer [with-safe-transport]])
   (:import
    [java.util UUID]))
@@ -87,7 +89,14 @@
       {:status #{:tap-value-not-retained}})))
 
 (defn handle-tap [handler msg]
-  (with-safe-transport handler msg
-    {"cider/tap-subscribe"   [tap-subscribe :tap-subscribe-error]
-     "cider/tap-unsubscribe" [tap-unsubscribe :tap-unsubscribe-error]
-     "cider/tap-inspect"     [tap-inspect :tap-inspect-error]}))
+  ;; In a ClojureScript REPL the JVM `add-tap' can't see taps in the JS runtime,
+  ;; so subscribe/unsubscribe are handled by polling the runtime (it streams and
+  ;; replies on its own).  `tap-inspect' stays on the Clojure path - cljs taps
+  ;; carry no `idx' and aren't inspectable yet.
+  (if (and (cljs/grab-cljs-env msg)
+           (#{"cider/tap-subscribe" "cider/tap-unsubscribe"} (:op msg)))
+    (tap-cljs/handle handler msg)
+    (with-safe-transport handler msg
+      {"cider/tap-subscribe"   [tap-subscribe :tap-subscribe-error]
+       "cider/tap-unsubscribe" [tap-unsubscribe :tap-unsubscribe-error]
+       "cider/tap-inspect"     [tap-inspect :tap-inspect-error]})))
