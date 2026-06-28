@@ -13,6 +13,7 @@
 ;; Ensure tested tests are loaded:
 (require 'cider.nrepl.middleware.test-filter-tests)
 (require 'cider.nrepl.middleware.test-report-counters-tests)
+(require 'cider.nrepl.middleware.test-ns-hook-tests)
 
 (use-fixtures :each session/session-fixture)
 
@@ -38,6 +39,15 @@
       [:a-smokey-test]
       [:a-puff-of-smoke-test :a-smokey-test]
       [:a-puff-of-smoke-test :a-smokey-test :yet-an-other-test])))
+
+(deftest test-ns-hook-test
+  ;; #680: a namespace whose assertions run only through `test-ns-hook` (with no
+  ;; standalone `deftest` vars for the var query to find) must still be
+  ;; exercised, instead of being silently skipped as "No assertions were run".
+  (testing "the test op honors test-ns-hook for a hook-only namespace"
+    (is+ {:summary {:test 1 :pass 1 :fail 0 :error 0}}
+         (session/message {:op "test"
+                           :ns "cider.nrepl.middleware.test-ns-hook-tests"}))))
 
 (deftest only-smoke-test-run-test-deprecated
   (testing "only test marked as smoke is run when test-all is used"
