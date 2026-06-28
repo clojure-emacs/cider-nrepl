@@ -378,6 +378,21 @@
                         :ns-elapsed-time @time-info})
        @current-report))))
 
+(defn- with-test-ns-hook-namespaces
+  "Augment `corpus` (a map of namespace -> test vars) with namespaces matching
+  `ns-query` that define a `test-ns-hook` but contribute no vars of their own.
+  `clojure.test` runs such a namespace's tests entirely through the hook, so
+  without this they would be silently skipped (reported as \"No assertions\").
+  `:has-tests?` is cleared because a hook-only namespace has no test vars and
+  would otherwise be filtered out. See #680."
+  [corpus ns-query]
+  (let [already-tested (set (keys corpus))]
+    (into corpus
+          (comp (remove already-tested)
+                (filter #(ns-resolve % 'test-ns-hook))
+                (map (fn [ns] [ns nil])))
+          (query/namespaces (assoc ns-query :has-tests? false)))))
+
 (defn test-var-query
   "Call `test-ns` for each var found via var-query."
   ([var-query]
@@ -386,9 +401,10 @@
   ([var-query fail-fast?]
    (report-reset!)
    (let [elapsed-time (atom nil)
-         corpus (group-by
-                 (comp :ns meta)
-                 (query/vars var-query))]
+         corpus (-> (group-by
+                     (comp :ns meta)
+                     (query/vars var-query))
+                    (with-test-ns-hook-namespaces (:ns-query var-query)))]
      (timing elapsed-time
        (reduce (fn [_ [ns vars]]
                  (cond-> (test-ns ns vars fail-fast?)
