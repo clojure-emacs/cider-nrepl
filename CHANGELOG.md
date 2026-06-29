@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Simplify the deferred middleware-loading machinery to use `requiring-resolve` (which already serializes the `require` that the old hand-rolled lock guarded), removing the internal `delayed-handlers`, `require-lock`, and `run-deferred-handler` vars. No change in boot time or behavior.
 * [#980](https://github.com/clojure-emacs/cider-nrepl/pull/980): Migrate the build from Leiningen to tools.deps (the source-shading of cljfmt/tools.namespace/tools.reader is now driven by mranderson's Leiningen-free `inline-deps` entry point).
 
 ## 0.61.0 (2026-06-29)
