@@ -8,7 +8,8 @@
    [clojure.edn :as edn]
    [clojure.string :as str]
    [clojure.walk :as walk]
-   [nrepl.middleware.print :as print])
+   [nrepl.middleware.print :as print]
+   [orchard.misc :as misc])
   (:import
    (java.io PushbackReader StringReader StringWriter)))
 
@@ -55,8 +56,17 @@
     (:alias-map options)
     (assoc :alias-map (reduce-kv (fn [m k v] (assoc m (name k) v)) {} (:alias-map options)))))
 
-(defn format-code-reply
-  [{:keys [code options]}]
+;;; Formatters
+;;;
+;;; A formatter is a function of `[code options] -> formatted-code`. Each one
+;;; decides for itself how to interpret `options`, just as the EDN printers do.
+;;; `cljfmt` is the default; alternative formatters are selected by passing the
+;;; fully-qualified name of their var as the `formatter` op argument.
+
+(defn cljfmt
+  "The default code formatter. Reformats `code` with cljfmt, layering the
+  editor-supplied `options` on top of the project's cljfmt configuration."
+  [code options]
   (let [config (or (project-config) {})
         request (request-overrides options)
         ;; The project's config applies first; the request options layer on top.
@@ -66,7 +76,48 @@
         opts (cond-> config
                (:indents request)   (update :extra-indents merge (:indents request))
                (:alias-map request) (update :alias-map merge (:alias-map request)))]
-    {:formatted-code (fmt/reformat-string code opts)}))
+    (fmt/reformat-string code opts)))
+
+;; zprint is an optional dependency; resolve it lazily and only once, mirroring
+;; the optional printers in `cider.nrepl.pprint`.
+(def ^:private zprint-file-str
+  (delay (misc/require-and-resolve 'zprint.core/zprint-file-str)))
+
+(defn zprint
+  "A code formatter backed by zprint, for projects that prefer it over cljfmt.
+  zprint must be on the classpath; the editor-supplied `options` are passed
+  straight through to `zprint.core/zprint-file-str` as a zprint options map."
+  [code options]
+  (if-let [f @zprint-file-str]
+    (f code "<stdin>" options)
+    (throw (ex-info "zprint is not available on the classpath" {}))))
+
+(defn- resolve-formatter
+  "Resolve the `formatter` op argument (a fully-qualified var name) to a
+  formatting function, defaulting to `cljfmt`. Throws a clear error when the
+  formatter's namespace fails to load, when the var doesn't exist, or when it
+  doesn't resolve to a function."
+  [formatter]
+  (if formatter
+    (let [sym (symbol formatter)
+          resolved (try
+                     (requiring-resolve sym)
+                     (catch Exception e
+                       (throw (ex-info (str "Couldn't load formatter " formatter ": " (.getMessage e))
+                                       {:formatter formatter} e))))]
+      (when-not resolved
+        (throw (ex-info (str "Couldn't resolve formatter " formatter)
+                        {:formatter formatter})))
+      (let [f (var-get resolved)]
+        (when-not (ifn? f)
+          (throw (ex-info (str "Formatter " formatter " is not a function")
+                          {:formatter formatter})))
+        f))
+    cljfmt))
+
+(defn format-code-reply
+  [{:keys [code options formatter]}]
+  {:formatted-code ((resolve-formatter formatter) code options)})
 
 ;;; EDN formatting
 (defn- read-edn

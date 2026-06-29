@@ -106,6 +106,58 @@
                            :code "(+ 1 2 3)"
                            :options {"alias-map" "INVALID"}}))))
 
+(defn shout-formatter
+  "A trivial custom formatter used to exercise the `formatter` argument."
+  [code _options]
+  (.toUpperCase ^String code))
+
+(def not-a-formatter
+  "A non-fn var, to exercise the formatter-isn't-a-function guard."
+  42)
+
+(deftest configurable-formatter-test
+  (testing "a custom formatter is selected by its fully-qualified name"
+    (is+ {:status #{"done"}
+          :formatted-code "(FOO BAR)"}
+         (session/message {:op "cider/format-code"
+                           :code "(foo bar)"
+                           :formatter "cider.nrepl.middleware.format-test/shout-formatter"})))
+
+  (testing "a missing var in an existing namespace returns a resolve error"
+    (is+ {:status #{"cider/format-code-error" "done"}
+          :err #"Couldn't resolve formatter cider.nrepl.middleware.format-test/no-such-fn"}
+         (session/message {:op "cider/format-code"
+                           :code "(foo bar)"
+                           :formatter "cider.nrepl.middleware.format-test/no-such-fn"})))
+
+  (testing "a formatter whose namespace can't be loaded returns a load error"
+    (is+ {:status #{"cider/format-code-error" "done"}
+          :err #"Couldn't load formatter no.such.ns/formatter"}
+         (session/message {:op "cider/format-code"
+                           :code "(foo bar)"
+                           :formatter "no.such.ns/formatter"})))
+
+  (testing "a formatter that isn't a function returns an error"
+    (is+ {:status #{"cider/format-code-error" "done"}
+          :err #"Formatter cider.nrepl.middleware.format-test/not-a-formatter is not a function"}
+         (session/message {:op "cider/format-code"
+                           :code "(foo bar)"
+                           :formatter "cider.nrepl.middleware.format-test/not-a-formatter"})))
+
+  (testing "the cljfmt default still applies when no formatter is given"
+    (is+ {:status #{"done"}
+          :formatted-code formatted-code-sample}
+         (session/message {:op "cider/format-code" :code ugly-code-sample}))))
+
+(deftest zprint-formatter-test
+  ;; zprint isn't a dependency of cider-nrepl, so the built-in adapter can only
+  ;; be exercised on its "not available" path here. The happy path is covered by
+  ;; projects that put zprint on their own classpath.
+  (testing "the built-in zprint formatter reports when zprint is absent"
+    (is (thrown-with-msg?
+         clojure.lang.ExceptionInfo #"zprint is not available on the classpath"
+         (format/zprint "(foo bar)" {})))))
+
 (defn- with-temp-config*
   "Write CONTENTS to a temp cljfmt config file, make cljfmt's config lookup
   return it for the duration of THUNK, then clean up."
