@@ -1,6 +1,7 @@
 (ns build.main
   (:refer-clojure :exclude [test])
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.tools.build.api :as b]
             [clojure.tools.build.tasks.write-pom]
             [deps-deploy.deps-deploy :as dd]
@@ -119,3 +120,54 @@
   (jar opts)
   (log "Installing %s to local Maven repository..." version)
   (b/install opts))
+
+;;; Release preparation
+
+(def ^:private changelog-file "CHANGELOG.md")
+(def ^:private usage-file "doc/modules/ROOT/pages/usage.adoc")
+(def ^:private unreleased-marker "## master (unreleased)\n")
+
+(defn- roll-changelog
+  "Stamp the unreleased section with `version` and `date`, leaving an empty
+  unreleased section on top for the next cycle."
+  [contents version date]
+  (when-not (str/includes? contents unreleased-marker)
+    (throw (ex-info (str "Couldn't find the '" (str/trim unreleased-marker)
+                         "' marker in " changelog-file)
+                    {})))
+  (str/replace-first contents unreleased-marker
+                     (str unreleased-marker "\n## " version " (" date ")\n")))
+
+(defn- bump-usage-version
+  "Point the cider-nrepl coordinates in the usage docs at `version`, in both the
+  Leiningen (`[cider/cider-nrepl \"x\"]`) and deps.edn (`{:mvn/version \"x\"}`)
+  forms. Other coordinates (Clojure, piggieback, ...) are left untouched."
+  [contents version]
+  (-> contents
+      (str/replace #"cider/cider-nrepl \"[^\"]+\""
+                   (str "cider/cider-nrepl \"" version "\""))
+      (str/replace #"cider/cider-nrepl \{:mvn/version \"[^\"]+\""
+                   (str "cider/cider-nrepl {:mvn/version \"" version "\""))))
+
+(defn release
+  "Prepare a release of the given version: roll the CHANGELOG's unreleased
+  section over to `version` dated today, bump the cider-nrepl version in the
+  usage docs, commit the result and create the annotated `vX.Y.Z` tag.
+
+  Pushing the tag is what triggers the Clojars deploy on CI, so that step is
+  deliberately left to you.
+
+    clojure -T:build release :version '\"0.62.0\"'"
+  [{:keys [version]}]
+  (let [version (str version)
+        tag (str "v" version)]
+    (assert (re-matches #"\d+\.\d+\.\d+" version)
+            (str "Expected a release version like 0.62.0, got: " version))
+    (let [date (str (java.time.LocalDate/now))]
+      (spit changelog-file (roll-changelog (slurp changelog-file) version date))
+      (spit usage-file (bump-usage-version (slurp usage-file) version)))
+    ;; Commit just these paths so any unrelated staged changes are left alone.
+    (b/git-process {:git-args ["commit" "-m" version changelog-file usage-file]})
+    (b/git-process {:git-args ["tag" "-a" tag "-m" version]})
+    (log "Prepared release %s." version)
+    (log "Review the commit, then push to deploy: git push origin HEAD %s" tag)))

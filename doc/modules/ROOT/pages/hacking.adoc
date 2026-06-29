@@ -42,10 +42,18 @@ cider-nrepl uses eastwood and cljfmt. Make sure your changes conform to the proj
   $ make eastwood
   $ make cljfmt
 
-== Deploying
+== Releasing
 
-Just do:
+Releases are cut from git tags. First prepare the release locally:
 
-  $ make deploy
+  $ PROJECT_VERSION=x.y.z make release
 
-This is going to handle the dependency inlining behind the scenes.
+This rolls the changelog over to the new version (dated today), bumps the
+cider-nrepl version in the usage docs, commits the result and creates the
+`vx.y.z` tag. Review the commit, then push it:
+
+  $ git push origin HEAD vx.y.z
+
+Pushing the tag triggers CI, which runs `make deploy` to inline the shaded
+dependencies and publish the artifact to Clojars. Don't deploy locally; doing
+so skips the checks CI performs.
