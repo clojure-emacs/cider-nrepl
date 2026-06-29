@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.61.0 (2026-06-29)
+
 * [#453](https://github.com/clojure-emacs/cider-nrepl/issues/453): The `cider/format-code` op now accepts a `formatter` argument, the fully-qualified name of a formatting function `[code options] -> code`, so projects can format with zprint (`cider.nrepl.middleware.format/zprint`) instead of the default cljfmt.
 * [#903](https://github.com/clojure-emacs/cider-nrepl/issues/903): Back `cider.nrepl.pprint/pprint` with `orchard.pp` instead of `clojure.pprint`, so pretty-printing a lazy sequence no longer interleaves its realization side effects into the result. The previous `clojure.pprint` behavior is still available as `cider.nrepl.pprint/clojure-pprint`.
 * [#1010](https://github.com/clojure-emacs/cider-nrepl/pull/1010): The `tap` middleware now works in ClojureScript: a runtime helper buffers values sent to `tap>` and the JVM side polls and streams them (the same approach the cljs test middleware uses for async tests). Streaming only - cljs tapped values aren't inspectable, since the value lives in the JS runtime.
