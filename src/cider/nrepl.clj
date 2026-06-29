@@ -63,48 +63,30 @@
 
 ;;; Functionality for deferred middleware loading
 ;;
-;; cider-nrepl depends on many libraries and loading all middleware at
-;; startup time causes significant delays. That's why we've developed
-;; a simple approach to delay loading the actual definition of a middleware
-;; until a request handled by this middleware is made.
-
-(def delayed-handlers
-  "Map of `delay`s holding deferred middleware handlers."
-  (atom {}))
-
-(def require-lock
-  "Lock used to inhibit concurrent `require` of the middleware namespaces.
-  Clojure seem to have issues with concurrent loading of transitive
-  dependencies. The issue is extremely hard to reproduce. For the context see
-  https://github.com/clojure-emacs/cider/issues/2092 and
-  https://github.com/clojure-emacs/cider/pull/2078."
-  (Object.))
+;; cider-nrepl depends on many libraries, so loading every middleware namespace
+;; at startup once cost tens of seconds. We avoid that by deferring the load of
+;; each middleware's actual handler until the first request it handles arrives.
+;;
+;; `requiring-resolve` does the work the bespoke delay/atom/lock machinery used
+;; to: it serializes the `require` (the thread-safety we used to guard with a
+;; manual lock - see cider#2092) and the namespace system caches the result, so
+;; resolving an already-loaded handler is just a var lookup.
 
 (defn- resolve-or-fail [sym]
   (or (resolve sym)
       (throw (IllegalArgumentException. (format "Cannot resolve %s" sym)))))
 
-(defn- handler-future
-  "Check whether a delay exists in the `delayed-handlers`. Otherwise make a delay
-  out of `fn-name` and place it in the atom. "
-  [sym ns fn-name session]
-  (or (get @delayed-handlers sym)
-      (get (swap! delayed-handlers assoc sym
-                  (delay
-                    (locking require-lock
-                      (with-session-classloader session
-                        (require ns))
-                      (resolve-or-fail fn-name))))
-           sym)))
-
-(defmacro run-deferred-handler
-  "Require and invoke the handler delay at run-time with arguments `handler` and `msg`.
-  `fn-name` must be a namespaced symbol (unquoted)."
-  [fn-name handler msg]
-  (let [ns  (symbol (namespace `~fn-name))
-        sym (symbol (name `~fn-name))]
-    `(@(handler-future '~sym '~ns '~fn-name (:session ~msg))
-      ~handler ~msg)))
+(defn- deferred-handler
+  "Require and resolve the deferred handler named by `sym` (a fully-qualified
+  symbol). Loads it within `session`'s classloader so middleware that depend on
+  classpath added at runtime (e.g. via pomegranate) still resolve. Throws if
+  `sym` can't be resolved. `session` is passed positionally because nREPL <1.7
+  takes it as `with-session-classloader`'s first argument; newer nREPL ignores
+  it (binding the current thread's context classloader instead)."
+  [sym session]
+  (or (with-session-classloader session
+        (requiring-resolve sym))
+      (throw (IllegalArgumentException. (str "Cannot resolve middleware handler " sym)))))
 
 (defmacro ^{:arglists '([name handler-fn descriptor]
                         [name handler-fn trigger-it descriptor])}
@@ -134,11 +116,12 @@
                (let [ops-set (into (-> descriptor :handles keys set) trigger-it)]
                  `(~ops-set (:op ~'msg)))
                `(~trigger-it ~'msg))
+        invoke `((deferred-handler '~handler-fn (:session ~'msg)) ~'h ~'msg)
         run-handler (if clojure-only?
                       `(if (cljs/grab-cljs-env ~'msg)
                          (cljs/respond-clojure-only ~'msg)
-                         (run-deferred-handler ~handler-fn ~'h ~'msg))
-                      `(run-deferred-handler ~handler-fn ~'h ~'msg))
+                         ~invoke)
+                      invoke)
         doc (or (:doc descriptor) "")]
     (assert descriptor)
     `(do
