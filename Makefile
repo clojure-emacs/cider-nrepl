@@ -1,4 +1,4 @@
-.PHONY: test quick-test cljs-test inlined-test smoketest copy-sources-to-jdk javac javac-test inline-deps jar install deploy clean lint cljfmt cljfmt-fix kondo eastwood docs
+.PHONY: test quick-test cljs-test inlined-test smoketest copy-sources-to-jdk javac javac-test inline-deps jar install release deploy clean lint cljfmt cljfmt-fix kondo eastwood docs
 .DEFAULT_GOAL := quick-test
 
 SHELL = /bin/bash -Ee
@@ -106,6 +106,12 @@ lint: cljfmt kondo eastwood
 
 docs:
 	clojure -M:maint -m cider.nrepl.impl.docs --file doc/modules/ROOT/pages/nrepl-api/ops.adoc
+
+# Prepare a release: roll the changelog, bump the docs version, commit and tag.
+# Pushing the tag (which triggers the deploy below) is left to you.
+# PROJECT_VERSION=x.y.z make release
+release: check-version
+	clojure -T:build release :version '"$(PROJECT_VERSION)"'
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 deploy: check-env
