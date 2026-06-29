@@ -278,7 +278,8 @@ Depending on the type of the return value of the evaluation this middleware may 
               {"cider/format-code"
                {:doc "Reformats the given Clojure code, returning the result as a string. The project's `.cljfmt.edn`/`.cljfmt.clj` (if any) is applied automatically, with the supplied `options` taking precedence."
                 :requires {"code" "The code to format."}
-                :optional {"options" "Configuration map for cljfmt, layered on top of the project's cljfmt configuration."}
+                :optional {"options" "Configuration map passed to the formatter. For the default cljfmt formatter it is layered on top of the project's cljfmt configuration."
+                           "formatter" "The fully-qualified name of the formatting function to use, e.g. `cider.nrepl.middleware.format/zprint`. Defaults to cljfmt. The function takes `[code options]` and returns the formatted code."}
                 :returns {"formatted-code" "The formatted code."}}
                "cider/format-edn"
                {:doc "Reformats the given EDN data, returning the result as a string."
