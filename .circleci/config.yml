@@ -105,6 +105,9 @@ jobs:
             - run:
                 name: Running Eastwood
                 command: make eastwood
+            - run:
+                name: Checking the descriptor return contract
+                command: make descriptor-contract
 
   deploy:
     # JDK 8 is preferred for deployments, to keep the bundled Java classes

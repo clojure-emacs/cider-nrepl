@@ -1,4 +1,4 @@
-.PHONY: test quick-test cljs-test inlined-test smoketest copy-sources-to-jdk javac javac-test inline-deps jar install release deploy clean lint cljfmt cljfmt-fix kondo eastwood docs
+.PHONY: test quick-test cljs-test inlined-test descriptor-contract smoketest copy-sources-to-jdk javac javac-test inline-deps jar install release deploy clean lint cljfmt cljfmt-fix kondo eastwood docs
 .DEFAULT_GOAL := quick-test
 
 SHELL = /bin/bash -Ee
@@ -52,6 +52,12 @@ quick-test: javac-test
 	LEIN_VERSION=$(LEIN_VERSION) clojure -X$(TEST_ALIASES)
 
 test: quick-test
+
+# Audit that every op's documented :returns matches what it actually emits, by
+# running the suite with the test session instrumented. Slower than the unit
+# tests (it runs the whole op suite), so it's a separate target.
+descriptor-contract: javac-test
+	LEIN_VERSION=$(LEIN_VERSION) clojure -M:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test -m cider.nrepl.descriptor-contract
 
 # ClojureScript middleware tests. Kept separate because the CLJS 1.12 Closure
 # compiler requires JDK21+, so CI only runs these on recent JDKs.
