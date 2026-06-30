@@ -294,10 +294,13 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
 (def info-returns
   {"arglists-str"  "The argument list(s) as a formatted string, if applicable."
    "added"         "The Clojure version when the var was added, if available."
+   "annotated-arglists" "The argument lists annotated with parameter/return types, for Java members."
+   "argtypes"      "The argument types of a Java method, as a list of class names."
    "class"         "The Java class name, for Java members."
    "column"        "The column number where the symbol is defined."
    "doc"           "The docstring of the symbol, if available."
    "file"          "Either a URI or a relative path where the symbol is defined."
+   "file-url"      "A URL (file:// or http(s)://) to the symbol's source location, if resolvable."
    "forms-str"     "The forms for special forms, as a formatted string."
    "javadoc"       "URL to Javadoc documentation, for Java members."
    "line"          "The line number where the symbol is defined."
@@ -306,12 +309,17 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
    "modifiers"     "Set of modifiers (e.g. public, static) for Java members."
    "name"          "The unqualified name of the symbol."
    "ns"            "The namespace the symbol belongs to."
+   "parameter-types" "The parameter types of a Java method, as a list of class names."
+   "protocol"      "The protocol that declares the symbol, for protocol methods."
    "resource"      "Relative path to the resource file."
    "returns"       "The return type for Java methods."
    "see-also"      "A list of related symbol names."
    "special-form"  "\"true\" if the symbol is a special form."
    "spec"          "The spec definition, if a spec exists for the symbol."
+   "static"        "\"true\" if the symbol is a static Java member."
    "status"        "done"
+   "throws"        "The checked exceptions a Java method declares, as a list of class names."
+   "type"          "The kind of symbol (e.g. function, macro, special-form, var, class)."
    "url"           "URL to reference documentation, for special forms."
    "candidates"    "A map of class names to member info, for ambiguous Java member lookups."})
 
@@ -341,7 +349,8 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
                 {:doc "Return a map containing the inputs of the datomic query."
                  :requires {"sym" "The symbol to lookup"
                             "ns" "The current namespace"}
-                 :returns {"status" "done"}}})
+                 :returns {"status" "done"
+                           "inputs" "The query's `:in` clause inputs, as a list of argument-name vectors."}}})
              ;; `cider/classify-symbols` is newer and has no deprecated alias.
              {"cider/classify-symbols"
               {:doc "Classify the given symbols by what kind of operator each is in the given namespace."
@@ -541,7 +550,8 @@ if applicable, and re-render the updated value."
                 "appender" "The name of the appender."
                 "event" "The id of the event to inspect."}
      :returns {"status" "done"
-               "value" "The inspection result."}}
+               "value" "The inspection result."
+               "path" "The current position within the inspected structure, as a sequence of path segments."}}
 
     "cider/log-levels"
     {:doc "Return the log levels and their frequencies for the given framework and appender."
@@ -681,7 +691,8 @@ if applicable, and re-render the updated value."
              "cider/profile-summary"    {:doc      "Return profiling summary optimized for viewing through CIDER inspector."
                                          :requires {}
                                          :returns  {"status" "Done"
-                                                    "value"  "Profile summary as inspectable data structure."}}
+                                                    "value"  "Profile summary as inspectable data structure."
+                                                    "path"   "The current position within the inspected structure, as a sequence of path segments."}}
              "cider/profile-clear"      {:doc      "Clear profiling data."
                                          :requires {}
                                          :returns  {"status" "Done"}}}})
@@ -703,7 +714,10 @@ if applicable, and re-render the updated value."
                 :returns {"reloading" "List of namespaces that will be reloaded."
                           "status" "`:ok` if reloading was successful; otherwise `:error`."
                           "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."
+                          "before" "The name of the before-hook function, echoed when it is invoked."
+                          "after" "The name of the after-hook function, echoed when it is invoked."
+                          "out" "Output produced on stdout/stderr by the before/after hooks."}}
                "cider/refresh-all"
                {:doc "Reloads all files in dependency order."
                 :optional (merge wrap-print-optional-arguments
@@ -713,7 +727,10 @@ if applicable, and re-render the updated value."
                 :returns {"reloading" "List of namespaces that will be reloaded."
                           "status" "`:ok` if reloading was successful; otherwise `:error`."
                           "error" "A sequence of all causes of the thrown exception when `status` is `:error`."
-                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."}}
+                          "error-ns" "The namespace that caused reloading to fail when `status` is `:error`."
+                          "before" "The name of the before-hook function, echoed when it is invoked."
+                          "after" "The name of the after-hook function, echoed when it is invoked."
+                          "out" "Output produced on stdout/stderr by the before/after hooks."}}
                "cider/refresh-clear"
                {:doc "Clears the state of the refresh middleware. This can help recover from a failed load or a circular dependency error."}})})
 
@@ -733,11 +750,12 @@ those configured directories will be honored."
              "cider.clj-reload/reload-all"
              {:doc "Reloads all files in dependency order."
               :optional code-reloading-before-after-opts
-              :returns {"reloading" "Description of current namespace being unloaded/loaded."
+              :returns {"progress" "Description of current namespace being unloaded/loaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."
                         "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
              "cider.clj-reload/reload-clear"
-             {:doc "Clears the state of clj-reload. This can help recover from a failed load or a circular dependency error."}}})
+             {:doc "Clears the state of clj-reload. This can help recover from a failed load or a circular dependency error."
+              :returns {"progress" "Description of the clearing operation's progress."}}}})
 
 (def-wrapper wrap-resource cider.nrepl.middleware.resource/handle-resource
   {:doc "Middleware that provides the path to resource."
@@ -768,6 +786,14 @@ those configured directories will be honored."
                                      :returns {"status" "done"
                                                "example" "The pretty printed spec example string"}}})})
 
+(def stacktrace-returns
+  "Per-cause keys streamed by the stacktrace ops, one message per exception cause."
+  {"status" "\"done\", or \"no-error\" if `*e` is nil"
+   "class" "The class name of the exception cause."
+   "message" "The message of the exception cause, if any."
+   "phase" "The compilation phase of the cause, for compiler exceptions; otherwise absent."
+   "stacktrace" "The analyzed stack frames of the cause, as a list of frame maps."})
+
 (def-wrapper wrap-stacktrace cider.nrepl.middleware.stacktrace/handle-stacktrace
   {:doc "Middleware that handles stacktrace requests, sending
            cause and stack frame info for the most recent exception."
@@ -777,7 +803,7 @@ those configured directories will be honored."
              (with-deprecated-aliases
                {"cider/analyze-last-stacktrace" {:doc "Return messages describing each cause and stack frame of the most recent exception."
                                                  :optional wrap-print-optional-arguments
-                                                 :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}})
+                                                 :returns stacktrace-returns}})
              ;; `inspect-last-exception`'s alias body references the unnamespaced op
              ;; names, and the `stacktrace` ops are deprecated in favour of a
              ;; *different* op, so both stay hand-written.
@@ -786,7 +812,8 @@ Assumes that `cider/analyze-last-stacktrace` has been called first, returning \"
                                               :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
                                               :optional {"ex-data" "When equal to \"true\", inspect ex-data of the exception instead of full exception."}
                                               :returns {"status" "\"done\", or \"no-error\" if `cider/analyze-last-stacktrace` wasn't called beforehand (or the `index` was out of bounds)."
-                                                        "value" "A value, as produced by the Inspector middleware."}}
+                                                        "value" "A value, as produced by the Inspector middleware."
+                                                        "path" "The current position within the inspected structure, as a sequence of path segments."}}
               "inspect-last-exception" {:doc "Deprecated: use `cider/inspect-last-exception` instead. Returns an Inspector response for the last exception that has been processed through `analyze-last-stacktrace` for the current nrepl session.
 Assumes that `analyze-last-stacktrace` has been called first, returning \"no-error\" otherwise."
                                         :requires {"index" "0 for inspecting the top-level exception, 1 for its ex-cause, 2 for its ex-cause's ex-cause, and so on."}
@@ -796,18 +823,20 @@ Assumes that `analyze-last-stacktrace` has been called first, returning \"no-err
               "cider/stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
 stack frame of the most recent exception."
                                   :optional wrap-print-optional-arguments
-                                  :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}
+                                  :returns stacktrace-returns}
               "stacktrace" {:doc "Deprecated: use `cider/analyze-last-stacktrace` instead. Return messages describing each cause and
 stack frame of the most recent exception."
                             :optional wrap-print-optional-arguments
-                            :returns {"status" "\"done\", or \"no-error\" if `*e` is nil"}}})})
+                            :returns stacktrace-returns}})})
 
 (def timing-info-return-doc {"status" "Either done or indication of an error"
                              "elapsed-time" "a report of the elapsed time spent running all the given namespaces. The structure is `:elapsed-time {:ms <integer> :humanized <string>}`."
                              "ns-elapsed-time" "a report of the elapsed time spent running each namespace. The structure is `:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}`."
                              "var-elapsed-time" "a report of the elapsed time spent running each var. The structure is `:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}`."
                              "results" "A map of test results keyed by namespace and var name: `{<ns keyword> {<var keyword> [<assertion> ...]}}`. Each assertion map contains: `:type` (pass/fail/error), `:ns`, `:var`, `:index` (0-based assertion index within the var), `:context` (testing context string or nil), `:message`, `:file`, `:line`. For `:fail`: `:expected` and `:actual` (pretty-printed strings), and optionally `:diffs` and `:gen-input`. For `:error`: `:error` (the exception) and `:line`. Each assertion may also include `:elapsed-time {:ms <integer> :humanized <string>}` when it is the only assertion in its var."
-                             "summary" "A map of test run counts: `{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}`."})
+                             "summary" "A map of test run counts: `{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}`."
+                             "testing-ns" "Streamed while the run is in progress: the namespace currently being tested."
+                             "gen-input" "The minimal failing input found by a `test.check` property test, when a generative test fails."})
 
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
 
@@ -913,10 +942,12 @@ You can also request to compute the info directly by requesting the \"cider/get-
      {"cider/undef" {:doc "Undefine a symbol"
                      :requires {"sym" "The symbol to undefine"
                                 "ns" "The namespace is which to resolve sym (falls back to *ns* if not specified)"}
-                     :returns {"status" "done"}}
+                     :returns {"status" "done"
+                               "undef" "The symbol that was undefined."}}
       "cider/undef-all" {:doc "Undefine all aliases and symbols in a namespace"
                          :requires {"ns" "The namespace to operate on"}
-                         :returns {"status" "done"}}})})
+                         :returns {"status" "done"
+                                   "undef-all" "The namespace whose mappings were cleared."}}})})
 
 (def-wrapper wrap-version cider.nrepl.middleware.version/handle-version
   {:doc "Provides CIDER-nREPL version information."
