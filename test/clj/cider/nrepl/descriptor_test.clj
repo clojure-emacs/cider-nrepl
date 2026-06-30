@@ -12,14 +12,49 @@
       :nrepl.middleware/descriptor
       (get-in [:handles op])))
 
-(defn- all-handles
-  "The merged `:handles` maps of every middleware wrapper in `cider.nrepl`."
+(defn- all-descriptors
+  "The descriptor of every middleware wrapper in `cider.nrepl`."
   []
   (->> (ns-interns 'cider.nrepl)
        vals
-       (keep #(:nrepl.middleware/descriptor (meta %)))
-       (map :handles)
-       (apply merge)))
+       (keep #(:nrepl.middleware/descriptor (meta %)))))
+
+(defn- all-handles
+  "The merged `:handles` maps of every middleware wrapper in `cider.nrepl`."
+  []
+  (apply merge (map :handles (all-descriptors))))
+
+(defn- non-blank-string? [x]
+  (and (string? x) (not (str/blank? x))))
+
+(deftest every-op-documents-a-doc-test
+  ;; A blank :doc renders an empty entry in the generated op reference.
+  (doseq [[op desc] (all-handles)]
+    (testing op
+      (is (non-blank-string? (:doc desc))
+          (str op " is missing a non-blank :doc")))))
+
+(deftest param-and-return-docs-are-well-formed-test
+  ;; Every :returns/:requires/:optional entry maps a string key to a non-blank
+  ;; string - the shape clients render. Guards the blank/garbled docs #993 fixed.
+  (doseq [[op desc] (all-handles)
+          slot [:returns :requires :optional]
+          :let [m (get desc slot)]
+          :when m]
+    (testing (str op " " slot)
+      (is (map? m))
+      (doseq [[k v] m]
+        (is (string? k) (str op " " slot " has a non-string key " (pr-str k)))
+        (is (non-blank-string? v)
+            (str op " " slot " entry " (pr-str k) " has a blank description"))))))
+
+(deftest op-names-are-unique-test
+  ;; Two middleware claiming the same op would make dispatch ambiguous.
+  (let [dups (->> (all-descriptors)
+                  (mapcat (comp keys :handles))
+                  frequencies
+                  (keep (fn [[op n]] (when (> n 1) op))))]
+    (is (empty? dups) (str "duplicate op names across middleware: " (pr-str dups)))))
 
 (deftest get-state-descriptor-test
   ;; `cider/get-state` used to carry an empty descriptor with its `:returns`
