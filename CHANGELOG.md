@@ -2,6 +2,7 @@
 
 ## master (unreleased)
 
+* Harden the rich-content middleware ([#2825 in CIDER](https://github.com/clojure-emacs/cider/issues/2825)): only `file:`/`http:`/`https:` URIs and URLs are annotated as fetchable content (a `mailto:` URI no longer triggers a slurp attempt), `cider/slurp` reads at most 4MB (configurable via `cider.nrepl.middleware.slurp/*max-content-size*`) with buffered IO and connect/read timeouts instead of an unbounded byte-at-a-time loop, and a failed fetch replies with a plain-text explanation instead of crashing the nREPL handler.
 * [#1015](https://github.com/clojure-emacs/cider-nrepl/pull/1015): Document the response keys several ops actually return but didn't list in their descriptor (`cider/info`, `cider/refresh`, the `test` ops, the stacktrace ops, `cider/undef`, `cider/profile-summary`, and others), and fix `cider.clj-reload/reload-all` documenting the wrong return key. Adds a `make descriptor-contract` check that keeps the descriptors honest.
 * Simplify the deferred middleware-loading machinery to use `requiring-resolve` (which already serializes the `require` that the old hand-rolled lock guarded), removing the internal `delayed-handlers`, `require-lock`, and `run-deferred-handler` vars. No change in boot time or behavior.
 * [#980](https://github.com/clojure-emacs/cider-nrepl/pull/980): Migrate the build from Leiningen to tools.deps (the source-shading of cljfmt/tools.namespace/tools.reader is now driven by mranderson's Leiningen-free `inline-deps` entry point).

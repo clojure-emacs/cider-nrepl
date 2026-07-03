@@ -10,10 +10,20 @@
    [clojure.java.io :as io]
    [clojure.string :as str])
   (:import
-   (java.io ByteArrayOutputStream FileNotFoundException InputStream)
+   (java.io ByteArrayOutputStream InputStream)
    (java.net MalformedURLException URI URL URLConnection)
    (java.nio.file Files Path Paths)
    (java.util Base64)))
+
+(def ^:dynamic *max-content-size*
+  "Maximum number of bytes `cider/slurp` is willing to read.
+  Larger resources get a size-only placeholder reply instead of their
+  content, protecting both the JVM and the client from unbounded reads."
+  (* 4 1024 1024))
+
+(def connection-timeout-ms
+  "Connect/read timeout for slurping non-file URLs."
+  10000)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -78,8 +88,31 @@
        :content-transfer-encoding "base64"
        :body (base64-bytes buff)})))
 
+(defn- too-large-reply
+  "A size-only placeholder reply for content exceeding `*max-content-size*`."
+  [location size]
+  {:content-type (normalize-content-type "application/octet-stream")
+   :body (str "#binary[location=" location ",size=" size "]")})
+
+(defn- read-bounded
+  "Read IS into a byte array, up to `*max-content-size*` bytes.
+  Returns the bytes, or nil if the stream exceeds the limit."
+  [^InputStream is]
+  (let [os (ByteArrayOutputStream.)
+        buff (byte-array 8192)]
+    (loop [total 0]
+      (let [n (.read is buff)]
+        (cond
+          (neg? n) (.toByteArray os)
+          (> (+ total n) *max-content-size*) nil
+          :else (do (.write os buff 0 n)
+                    (recur (+ total n))))))))
+
 (defn slurp-url-to-content+body
-  "Attempts to parse and then to slurp a URL, producing a content-typed response."
+  "Attempts to parse and then to slurp a URL, producing a content-typed response.
+  Reads at most `*max-content-size*` bytes; larger resources produce a
+  size-only placeholder.  IO failures throw - `handle-slurp` turns them
+  into a graceful reply."
   [url-str]
   (when-let [^URL url (try (.toURL (URI. url-str))
                            (catch MalformedURLException _e nil))]
@@ -89,40 +122,39 @@
         (if dir?
           {:content-type (normalize-content-type "application/octet-stream")
            :body (str "#binary[location=" p ",size=0]")}
-          (let [content-type (normalize-content-type (get-file-content-type p))
-                buff (Files/readAllBytes p)]
-            (slurp-reply p content-type buff))))
+          (let [size (Files/size p)]
+            (if (> size *max-content-size*)
+              (too-large-reply p size)
+              (slurp-reply p (normalize-content-type (get-file-content-type p))
+                           (Files/readAllBytes p))))))
 
-      ;; It's not a file, so just try to open it on up
-      (let [^URLConnection conn (.openConnection url)
+      ;; It's not a file, so try to fetch it, within bounds
+      (let [^URLConnection conn (doto (.openConnection url)
+                                  (.setConnectTimeout connection-timeout-ms)
+                                  (.setReadTimeout connection-timeout-ms))
             content-type (normalize-content-type
-                          (or (try
-                                (.getContentType conn)
-                                (catch FileNotFoundException _))
-                              "application/octet-stream"))
-            ;; FIXME (arrdem 2018-04-03):
-            ;;   There's gotta be a better way here
-            ^InputStream is (try
-                              (.getInputStream conn)
-                              (catch FileNotFoundException _
-                                (proxy [InputStream] []
-                                  (read []
-                                    -1))))
-            os (ByteArrayOutputStream.)]
-        (loop []
-          (let [b (.read is)]
-            (when (<= 0 b)
-              (.write os b)
-              (recur))))
-        (slurp-reply url content-type (.toByteArray os))))))
+                          (or (.getContentType conn)
+                              "application/octet-stream"))]
+        (with-open [^InputStream is (.getInputStream conn)]
+          (if-let [buff (read-bounded is)]
+            (slurp-reply url content-type buff)
+            (too-large-reply url (str ">" *max-content-size*))))))))
 
 (defn handle-slurp
   "Message handler which just responds to slurp ops.
 
-  If the slurp is malformed, or fails, lets the rest of the stack keep going."
+  If the slurp is malformed, or fails, replies with a plain-text
+  explanation rather than letting the error take down the handler."
   [handler msg]
-  (let [{:keys [op url transport]} msg]
+  (let [{:keys [op url]} msg]
     (if (and (#{"cider/slurp" "slurp"} op) url)
-      (do (respond-to msg (slurp-url-to-content+body url))
+      (do (respond-to msg (try
+                            (or (slurp-url-to-content+body url)
+                                {:content-type ["text/plain" {}]
+                                 :body (str "Don't know how to slurp " url)})
+                            (catch Exception e
+                              {:content-type ["text/plain" {}]
+                               :body (str "Couldn't slurp " url ": "
+                                          (or (.getMessage e) (str (class e))))})))
           (respond-to msg :status :done))
       (handler msg))))
