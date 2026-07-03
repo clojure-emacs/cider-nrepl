@@ -1,6 +1,6 @@
 (ns cider.nrepl.middleware.slurp-test
   (:require
-   [cider.nrepl.middleware.slurp :refer [slurp-url-to-content+body]]
+   [cider.nrepl.middleware.slurp :as slurp :refer [slurp-url-to-content+body]]
    [clojure.java.io :as io]
    [clojure.test :as t]
    [clojure.string :as str]
@@ -39,3 +39,24 @@
     (t/is (= ["application/octet-stream" {}] (:content-type resp)))
     (t/is (str/starts-with? (:body resp) "#binary[location="))
     (t/is (str/ends-with? (:body resp) ",size=0]"))))
+
+(t/deftest test-oversized-content-is-not-slurped
+  (binding [slurp/*max-content-size* 100]
+    (t/testing "a local file over the limit yields a size-only placeholder"
+      (let [resp (-> "build/main.clj"
+                     io/file
+                     io/as-url
+                     .toString
+                     slurp-url-to-content+body)]
+        (t/is (= ["application/octet-stream" {}] (:content-type resp)))
+        (t/is (str/starts-with? (:body resp) "#binary[location="))
+        (t/is (nil? (:content-transfer-encoding resp)))))
+    (t/testing "a non-file resource over the limit yields a size-only placeholder"
+      ;; jar: resources go through the URLConnection (non-file) branch
+      (let [resp (slurp-url-to-content+body
+                  (.toString (io/resource "clojure/core.clj")))]
+        (t/is (str/starts-with? (:body resp) "#binary[location="))
+        (t/is (str/ends-with? (:body resp) (str ",size=>" slurp/*max-content-size* "]")))))))
+
+(t/deftest test-malformed-url-returns-nil
+  (t/is (nil? (slurp-url-to-content+body "no-such-scheme:borken"))))

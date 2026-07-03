@@ -167,7 +167,7 @@
    :handles {"content-type"
              {:doc "Enhances the `eval` op by adding `content-type` and `body` to certain `eval` responses. Not an op in itself.
 
-Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for `URI`, `URL`, `File`, and `java.awt.Image`. More type handlers can be provided by the user by extending the `cider.nrepl.middleware.content-type/content-type-response` multimethod. This dispatches using `clojure.core/type`, so `:type` metadata on plain Clojure values can be used to provide custom handling."
+Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for `URI`, `URL`, `File`, and `java.awt.Image`. URIs and URLs are only annotated when their scheme names fetchable content (`file`, `http` or `https`); other schemes (`mailto:`, `jar:`, ...) print as usual. More type handlers can be provided by the user by extending the `cider.nrepl.middleware.content-type/content-type-response` multimethod. This dispatches using `clojure.core/type`, so `:type` metadata on plain Clojure values can be used to provide custom handling."
               :returns {"body" "The rich response document, if applicable."
                         "content-type" "The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`."
                         "content-transfer-encoding" "The encoding of the response body (Optional, currently only one possible value: `\"base64\"`)."}
@@ -177,7 +177,7 @@ Depending on the type of the return value of the evaluation this middleware may 
   {:doc "Middleware that handles slurp requests."
    :handles (with-deprecated-aliases
               {"cider/slurp"
-               {:doc "Slurps a URL from the nREPL server, returning MIME data."
+               {:doc "Slurps a URL from the nREPL server, returning MIME data. Reads at most `cider.nrepl.middleware.slurp/*max-content-size*` bytes (4MB by default); larger resources yield a size-only placeholder. A failed fetch yields a plain-text explanation instead of an error."
                 :returns {"content-type" "A MIME type for the response, if one can be detected."
                           "content-transfer-encoding" "The encoding (if any) for the content."
                           "body" "The slurped content body."}}})})

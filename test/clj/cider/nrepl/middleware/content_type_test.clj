@@ -74,3 +74,26 @@
                                        {:name "foo"
                                         :edges [["a" "b"] ["b" "c"]]}))
                            :content-type "true"}))))
+
+(deftest non-fetchable-scheme-test
+  (testing "a URI whose scheme isn't fetchable content is not wrapped"
+    (let [resp (session/message {:op "eval"
+                                 :code "(java.net.URI. \"mailto:foo@bar.com\")"
+                                 :content-type "true"})]
+      (is (nil? (:content-type resp)))
+      (is (seq (:value resp)))
+      (is (contains? (:status resp) "done")))))
+
+(deftest slurp-error-handling-test
+  (testing "slurping a URL that can't provide content replies gracefully"
+    (is+ {:content-type ["text/plain" {}]
+          :body #"Couldn't slurp"
+          :status #{"done"}}
+         (session/message {:op "cider/slurp"
+                           :url "mailto:foo@bar.com"})))
+  (testing "slurping a malformed URL replies gracefully"
+    (is+ {:content-type ["text/plain" {}]
+          :body #"Don't know how to slurp"
+          :status #{"done"}}
+         (session/message {:op "cider/slurp"
+                           :url "no-such-scheme:borken"}))))

@@ -97,11 +97,22 @@
 (defmethod content-type-response :default [response]
   response)
 
-(defmethod content-type-response URI [{:keys [value] :as response}]
-  (merge response (external-body-response value)))
+(def external-body-schemes
+  "The URI/URL schemes that get advertised as slurpable external bodies.
+  Values with any other scheme (mailto:, jar:, data:, ...) are left alone
+  and print as usual - they don't name content a client could sensibly
+  fetch and render, and fetching them can have side effects."
+  #{"file" "http" "https"})
 
-(defmethod content-type-response URL [{:keys [value] :as response}]
-  (merge response (external-body-response value)))
+(defmethod content-type-response URI [{^URI value :value :as response}]
+  (if (contains? external-body-schemes (.getScheme value))
+    (merge response (external-body-response value))
+    response))
+
+(defmethod content-type-response URL [{^URL value :value :as response}]
+  (if (contains? external-body-schemes (.getProtocol value))
+    (merge response (external-body-response value))
+    response))
 
 (defmethod content-type-response File [{^File file :value :as response}]
   (if (.exists file)
