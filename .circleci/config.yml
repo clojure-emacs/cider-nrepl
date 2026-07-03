@@ -225,11 +225,11 @@ workflows:
               jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
-          # Quick tests for older Clojure versions and fringe JDKs.
+          # Quick tests for older and unreleased Clojure versions and fringe JDKs.
           matrix:
             alias: "test-older-clojure"
             parameters:
-              clojure_version: ["1.10", "1.11"]
+              clojure_version: ["1.10", "1.11", "1.13"]
               jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
