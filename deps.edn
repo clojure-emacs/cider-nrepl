@@ -95,7 +95,8 @@
    :ns-default build.main}
 
   :cljfmt
-  {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.15.6"}}
+  ;; Keep in sync with the :inlined-deps cljfmt version above.
+  {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.4"}}
    :main-opts ["-m" "cljfmt.main"]}
 
   :kondo
