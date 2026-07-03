@@ -135,7 +135,10 @@
   (if (map? *msg*)
     (do
       (respond-to *msg* :value 'QUIT)
-      (.stop ^Thread (:thread (meta (:session *msg*)))))
+      (when-let [t (:thread (meta (:session *msg*)))]
+        ;; n.u.threading namespace appeared in nREPL 1.3, don't fail when on
+        ;; earlier nREPL versions.
+        ((requiring-resolve 'nrepl.util.threading/interrupt-stop) t)))
     ;; We can't really abort if there's no *msg*, so we do our best
     ;; impression of that. This is only used in some panic situations,
     ;; the user won't be offered the :quit option if there's no *msg*.
