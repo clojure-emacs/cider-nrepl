@@ -14,23 +14,27 @@ defaults: &defaults
 executors:
   jdk8:
     docker:
-      - image: clojure:temurin-8-tools-deps-noble
+      - image: clojure:temurin-8-noble
     <<: *defaults
   jdk11:
     docker:
-      - image: clojure:temurin-11-tools-deps-noble
+      - image: clojure:temurin-11-noble
     <<: *defaults
   jdk17:
     docker:
-      - image: clojure:temurin-17-tools-deps-noble
+      - image: clojure:temurin-17-noble
     <<: *defaults
   jdk21:
     docker:
-      - image: clojure:temurin-21-tools-deps-noble
+      - image: clojure:temurin-21-noble
     <<: *defaults
   jdk25:
     docker:
-      - image: clojure:temurin-25-tools-deps-noble
+      - image: clojure:temurin-25-noble
+    <<: *defaults
+  jdk26:
+    docker:
+      - image: clojure:temurin-26-noble
     <<: *defaults
 
 # Runs a given set of steps, with some standard pre- and post-
@@ -81,6 +85,7 @@ commands:
             - base-src-jdk17.zip
             - base-src-jdk21.zip
             - base-src-jdk25.zip
+            - base-src-jdk26.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 jobs:
@@ -88,7 +93,7 @@ jobs:
   lint:
     description: |
       Running linters
-    executor: jdk25
+    executor: jdk26
     environment:
       CLOJURE_VERSION: "1.12"
     steps:
@@ -217,7 +222,7 @@ workflows:
             alias: "full-test"
             parameters:
               clojure_version: ["1.12"]
-              jdk_version: [jdk8, jdk25]
+              jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
           # Quick tests for older Clojure versions and fringe JDKs.
@@ -225,7 +230,7 @@ workflows:
             alias: "test-older-clojure"
             parameters:
               clojure_version: ["1.10", "1.11"]
-              jdk_version: [jdk8, jdk25]
+              jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
           # Quick tests for latest Clojure and interim JDK versions.
@@ -233,7 +238,7 @@ workflows:
             alias: "test-latest-clojure"
             parameters:
               clojure_version: ["1.12"]
-              jdk_version: [jdk11, jdk17, jdk21]
+              jdk_version: [jdk11, jdk17, jdk21, jdk25]
           <<: *run_always
       - test:
           # Test against multiple nREPL versions.
@@ -241,7 +246,7 @@ workflows:
             alias: "nrepl-test"
             parameters:
               clojure_version: ["1.12"]
-              jdk_version: [jdk25]
+              jdk_version: [jdk26]
               nrepl_version: ["1.0", "1.3", "1.4", "1.5", "1.6", "1.7"]
           <<: *run_always
       - cljs-test:
@@ -250,7 +255,7 @@ workflows:
             alias: "cljs-test"
             parameters:
               clojure_version: ["1.12"]
-              jdk_version: [jdk21, jdk25]
+              jdk_version: [jdk21, jdk25, jdk26]
           <<: *run_always
       - lint:
           <<: *run_always
