@@ -75,6 +75,19 @@
                                         :edges [["a" "b"] ["b" "c"]]}))
                            :content-type "true"}))))
 
+(deftest value-dropped-on-decorated-responses-test
+  (testing "a content-typed response does not also carry the printed value"
+    (let [resp (session/message {:op "eval"
+                                 :code "(java.net.URI. \"https://lambdaisland.com\")"
+                                 :content-type "true"})]
+      (is (nil? (:value resp)))
+      (is (some? (:content-type resp)))))
+  (testing "an undecorated response keeps its value"
+    (let [resp (session/message {:op "eval"
+                                 :code "42"
+                                 :content-type "true"})]
+      (is (= ["42"] (:value resp))))))
+
 (deftest non-fetchable-scheme-test
   (testing "a URI whose scheme isn't fetchable content is not wrapped"
     (let [resp (session/message {:op "eval"

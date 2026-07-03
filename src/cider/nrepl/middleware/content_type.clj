@@ -126,7 +126,12 @@
 
 (defn content-type-transport
   "Transport proxy which allows this middleware to intercept responses
-  and inspect / alter them."
+  and inspect / alter them.
+
+  When a response gets decorated with a `:content-type`, its `:value` is
+  dropped: the requester opted in to content types, so it renders the
+  body instead, and clients that would naively render both used to get
+  double output."
   [^Transport transport]
   (reify Transport
     (recv [_this]
@@ -136,7 +141,17 @@
       (.recv transport timeout))
 
     (send [_this response]
-      (.send transport (content-type-response response)))))
+      (let [response' (content-type-response response)]
+        (.send transport (if (and (:content-type response')
+                                  (not (:content-type response)))
+                           ;; Also drop `:value' from the print middleware's
+                           ;; key set - it runs above us and would otherwise
+                           ;; re-add a printed value for the missing slot.
+                           (-> response'
+                               (dissoc :value)
+                               (update :nrepl.middleware.print/keys
+                                       (fnil disj #{}) :value))
+                           response'))))))
 
 (defn handle-content-type
   "Handler for inspecting the results of the `eval` op, attempting to

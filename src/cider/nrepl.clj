@@ -169,7 +169,7 @@
 
 Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for `URI`, `URL`, `File`, and `java.awt.Image`. URIs and URLs are only annotated when their scheme names fetchable content (`file`, `http` or `https`); other schemes (`mailto:`, `jar:`, ...) print as usual. More type handlers can be provided by the user by extending the `cider.nrepl.middleware.content-type/content-type-response` multimethod. This dispatches using `clojure.core/type`, so `:type` metadata on plain Clojure values can be used to provide custom handling."
               :returns {"body" "The rich response document, if applicable."
-                        "content-type" "The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`."
+                        "content-type" "The Media type (MIME type) of the reponse, structured as a pair, `[type {:as attrs}]`. When present, the response carries no `value` - the body replaces it."
                         "content-transfer-encoding" "The encoding of the response body (Optional, currently only one possible value: `\"base64\"`)."}
               :optional {"content-type" "If present and non-nil, try to detect and handle content-types."}}}})
 
