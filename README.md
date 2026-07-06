@@ -79,14 +79,10 @@ make test
 make quick-test
 
 # Install the project in your local ~/.m2 directory, using mranderson (recommended)
-# The JVM flag is a temporary workaround.
-export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
 PROJECT_VERSION=X.Y.Z make install
 
 # Install the project in your local ~/.m2 directory, without using mranderson
 # (it's faster, but please only use when you repeatedly need to install cider-nrepl)
-# The JVM flag is a temporary workaround.
-export LEIN_JVM_OPTS="-Dmranderson.internal.no-parallelism=true"
 PROJECT_VERSION=X.Y.Z make fast-install
 
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
