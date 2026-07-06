@@ -4,7 +4,7 @@ This file was _generated_ with `make docs`
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v0.0.0)#
+[small]#generated from a verbose 'describe' response (cider-nrepl v1.7.0)#
 
 == Operations
 
@@ -25,6 +25,10 @@ Optional parameters::
 
 
 Returns::
+* `:class` The class name of the exception cause.
+* `:message` The message of the exception cause, if any.
+* `:phase` The compilation phase of the cause, for compiler exceptions; otherwise absent.
+* `:stacktrace` The analyzed stack frames of the cause, as a list of frame maps.
 * `:status` "done", or "no-error" if ``*e`` is nil
 
 
@@ -167,7 +171,7 @@ Returns::
 
 Enhances the ``eval`` op by adding ``content-type`` and ``body`` to certain ``eval`` responses. Not an op in itself.
 
-Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for ``URI``, ``URL``, ``File``, and ``java.awt.Image``. More type handlers can be provided by the user by extending the ``cider.nrepl.middleware.content-type/content-type-response`` multimethod. This dispatches using ``clojure.core/type``, so ``:type`` metadata on plain Clojure values can be used to provide custom handling.
+Depending on the type of the return value of the evaluation this middleware may kick in and include a representation of the result in the response, together with a MIME/Media type to indicate how it should be handled by the client. Comes with implementations for ``URI``, ``URL``, ``File``, and ``java.awt.Image``. URIs and URLs are only annotated when their scheme names fetchable content (``file``, ``http`` or ``https``); other schemes (``mailto:``, ``jar:``, ...) print as usual. More type handlers can be provided by the user by extending the ``cider.nrepl.middleware.content-type/content-type-response`` multimethod. This dispatches using ``clojure.core/type``, so ``:type`` metadata on plain Clojure values can be used to provide custom handling.
 
 Required parameters::
 {blank}
@@ -179,7 +183,7 @@ Optional parameters::
 Returns::
 * `:body` The rich response document, if applicable.
 * `:content-transfer-encoding` The encoding of the response body (Optional, currently only one possible value: ``"base64"``).
-* `:content-type` The Media type (MIME type) of the reponse, structured as a pair, ``[type {:as attrs}]``.
+* `:content-type` The Media type (MIME type) of the reponse, structured as a pair, ``[type {:as attrs}]``. When present, the response carries no ``value`` - the body replaces it.
 
 
 
@@ -285,6 +289,7 @@ Optional parameters::
 {blank}
 
 Returns::
+* `:inputs` The query's ``:in`` clause inputs, as a list of argument-name vectors.
 * `:status` done
 
 
@@ -327,14 +332,15 @@ Returns::
 
 === `format-code`
 
-Deprecated: use ``cider/format-code`` instead. Reformats the given Clojure code, returning the result as a string.
+Deprecated: use ``cider/format-code`` instead. Reformats the given Clojure code, returning the result as a string. The project's ``.cljfmt.edn``/``.cljfmt.clj`` (if any) is applied automatically, with the supplied ``options`` taking precedence.
 
 Required parameters::
 * `:code` The code to format.
 
 
 Optional parameters::
-* `:options` Configuration map for cljfmt.
+* `:formatter` The fully-qualified name of the formatting function to use, e.g. ``cider.nrepl.middleware.format/zprint``. Defaults to cljfmt. The function takes ``[code options]`` and returns the formatted code.
+* `:options` Configuration map passed to the formatter. For the default cljfmt formatter it is layered on top of the project's cljfmt configuration.
 
 
 Returns::
@@ -387,7 +393,9 @@ If specified, the value will be concatenated to that of ``orchard.meta/var-meta-
 
 Returns::
 * `:added` The Clojure version when the var was added, if available.
+* `:annotated-arglists` The argument lists annotated with parameter/return types, for Java members.
 * `:arglists-str` The argument list(s) as a formatted string, if applicable.
+* `:argtypes` The argument types of a Java method, as a list of class names.
 * `:candidates` A map of class names to member info, for ambiguous Java member lookups.
 * `:class` The Java class name, for Java members.
 * `:column` The column number where the symbol is defined.
@@ -396,6 +404,7 @@ Returns::
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:file` Either a URI or a relative path where the symbol is defined.
+* `:file-url` A URL (file:// or http(s)://) to the symbol's source location, if resolvable.
 * `:forms-str` The forms for special forms, as a formatted string.
 * `:javadoc` URL to Javadoc documentation, for Java members.
 * `:line` The line number where the symbol is defined.
@@ -404,12 +413,17 @@ Returns::
 * `:modifiers` Set of modifiers (e.g. public, static) for Java members.
 * `:name` The unqualified name of the symbol.
 * `:ns` The namespace the symbol belongs to.
+* `:parameter-types` The parameter types of a Java method, as a list of class names.
+* `:protocol` The protocol that declares the symbol, for protocol methods.
 * `:resource` Relative path to the resource file.
 * `:returns` The return type for Java methods.
 * `:see-also` A list of related symbol names.
 * `:spec` The spec definition, if a spec exists for the symbol.
 * `:special-form` "true" if the symbol is a special form.
+* `:static` "true" if the symbol is a static Java member.
 * `:status` done
+* `:throws` The checked exceptions a Java method declares, as a list of class names.
+* `:type` The kind of symbol (e.g. function, macro, special-form, var, class).
 * `:url` URL to reference documentation, for special forms.
 
 
@@ -1003,8 +1017,11 @@ Optional parameters::
 
 
 Returns::
+* `:after` The name of the after-hook function, echoed when it is invoked.
+* `:before` The name of the before-hook function, echoed when it is invoked.
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
 * `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:out` Output produced on stdout/stderr by the before/after hooks.
 * `:reloading` List of namespaces that will be reloaded.
 * `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
 
@@ -1030,8 +1047,11 @@ Optional parameters::
 
 
 Returns::
+* `:after` The name of the after-hook function, echoed when it is invoked.
+* `:before` The name of the before-hook function, echoed when it is invoked.
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
 * `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:out` Output produced on stdout/stderr by the before/after hooks.
 * `:reloading` List of namespaces that will be reloaded.
 * `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
 
@@ -1101,17 +1121,19 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
 
 === `slurp`
 
-Deprecated: use ``cider/slurp`` instead. Slurps a URL from the nREPL server, returning MIME data.
+Deprecated: use ``cider/slurp`` instead. Slurps a URL from the nREPL server, returning MIME data. Reads at most ``cider.nrepl.middleware.slurp/\*max-content-size*`` bytes (4MB by default); larger resources yield a size-only placeholder. A failed fetch yields a plain-text explanation instead of an error.
 
 Required parameters::
 {blank}
@@ -1195,6 +1217,10 @@ Optional parameters::
 
 
 Returns::
+* `:class` The class name of the exception cause.
+* `:message` The message of the exception cause, if any.
+* `:phase` The compilation phase of the cause, for compiler exceptions; otherwise absent.
+* `:stacktrace` The analyzed stack frames of the cause, as a list of frame maps.
 * `:status` "done", or "no-error" if ``*e`` is nil
 
 
@@ -1218,10 +1244,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -1245,10 +1273,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -1293,10 +1323,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -1349,6 +1381,7 @@ Optional parameters::
 
 Returns::
 * `:status` done
+* `:undef` The symbol that was undefined.
 
 
 
@@ -1365,6 +1398,7 @@ Optional parameters::
 
 Returns::
 * `:status` done
+* `:undef-all` The namespace whose mappings were cleared.
 
 
 
@@ -1385,6 +1419,10 @@ Optional parameters::
 
 
 Returns::
+* `:class` The class name of the exception cause.
+* `:message` The message of the exception cause, if any.
+* `:phase` The compilation phase of the cause, for compiler exceptions; otherwise absent.
+* `:stacktrace` The analyzed stack frames of the cause, as a list of frame maps.
 * `:status` "done", or "no-error" if ``*e`` is nil
 
 
@@ -1627,6 +1665,7 @@ Optional parameters::
 {blank}
 
 Returns::
+* `:inputs` The query's ``:in`` clause inputs, as a list of argument-name vectors.
 * `:status` done
 
 
@@ -1669,14 +1708,15 @@ Returns::
 
 === `cider/format-code`
 
-Reformats the given Clojure code, returning the result as a string.
+Reformats the given Clojure code, returning the result as a string. The project's ``.cljfmt.edn``/``.cljfmt.clj`` (if any) is applied automatically, with the supplied ``options`` taking precedence.
 
 Required parameters::
 * `:code` The code to format.
 
 
 Optional parameters::
-* `:options` Configuration map for cljfmt.
+* `:formatter` The fully-qualified name of the formatting function to use, e.g. ``cider.nrepl.middleware.format/zprint``. Defaults to cljfmt. The function takes ``[code options]`` and returns the formatted code.
+* `:options` Configuration map passed to the formatter. For the default cljfmt formatter it is layered on top of the project's cljfmt configuration.
 
 
 Returns::
@@ -1708,7 +1748,7 @@ Returns::
 
 === `cider/get-state`
 
-
+Return the current REPL state: its type and any namespaces changed since the last notification.
 
 Required parameters::
 {blank}
@@ -1717,7 +1757,10 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:changed-namespaces` A map of namespaces to ``{:aliases ,,, :interns ,,,}``
+* `:repl-type` ``:clj`` or ``:cljs``.
+* `:status` done
+
 
 
 === `cider/info`
@@ -1743,7 +1786,9 @@ If specified, the value will be concatenated to that of ``orchard.meta/var-meta-
 
 Returns::
 * `:added` The Clojure version when the var was added, if available.
+* `:annotated-arglists` The argument lists annotated with parameter/return types, for Java members.
 * `:arglists-str` The argument list(s) as a formatted string, if applicable.
+* `:argtypes` The argument types of a Java method, as a list of class names.
 * `:candidates` A map of class names to member info, for ambiguous Java member lookups.
 * `:class` The Java class name, for Java members.
 * `:column` The column number where the symbol is defined.
@@ -1752,6 +1797,7 @@ Returns::
 * `:doc-first-sentence-fragments` May be absent. Represents the first sentence of a Java doc comment. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:doc-fragments` May be absent. Represents the body of a Java doc comment, including the first sentence and excluding any block tags. It's a vector of fragments, where fragment is a map with ``:type`` ('text' or 'html') and ``:content`` plain text or html markup, respectively
 * `:file` Either a URI or a relative path where the symbol is defined.
+* `:file-url` A URL (file:// or http(s)://) to the symbol's source location, if resolvable.
 * `:forms-str` The forms for special forms, as a formatted string.
 * `:javadoc` URL to Javadoc documentation, for Java members.
 * `:line` The line number where the symbol is defined.
@@ -1760,12 +1806,17 @@ Returns::
 * `:modifiers` Set of modifiers (e.g. public, static) for Java members.
 * `:name` The unqualified name of the symbol.
 * `:ns` The namespace the symbol belongs to.
+* `:parameter-types` The parameter types of a Java method, as a list of class names.
+* `:protocol` The protocol that declares the symbol, for protocol methods.
 * `:resource` Relative path to the resource file.
 * `:returns` The return type for Java methods.
 * `:see-also` A list of related symbol names.
 * `:spec` The spec definition, if a spec exists for the symbol.
 * `:special-form` "true" if the symbol is a special form.
+* `:static` "true" if the symbol is a static Java member.
 * `:status` done
+* `:throws` The checked exceptions a Java method declares, as a list of class names.
+* `:type` The kind of symbol (e.g. function, macro, special-form, var, class).
 * `:url` URL to reference documentation, for special forms.
 
 
@@ -1855,6 +1906,7 @@ Optional parameters::
 
 
 Returns::
+* `:path` The current position within the inspected structure, as a sequence of path segments.
 * `:status` "done", or "no-error" if ``cider/analyze-last-stacktrace`` wasn't called beforehand (or the ``index`` was out of bounds).
 * `:value` A value, as produced by the Inspector middleware.
 
@@ -2318,6 +2370,7 @@ Optional parameters::
 {blank}
 
 Returns::
+* `:path` The current position within the inspected structure, as a sequence of path segments.
 * `:status` done
 * `:value` The inspection result.
 
@@ -2392,7 +2445,7 @@ Optional parameters::
 
 Returns::
 * `:status` done
-* `:cider/log-add-consumer` The removed consumer.
+* `:cider/log-remove-consumer` The removed consumer.
 
 
 
@@ -2670,6 +2723,7 @@ Optional parameters::
 {blank}
 
 Returns::
+* `:path` The current position within the inspected structure, as a sequence of path segments.
 * `:status` Done
 * `:value` Profile summary as inspectable data structure.
 
@@ -2710,6 +2764,23 @@ Returns::
 
 
 
+=== `cider/protocols-with-method`
+
+Look up the protocols that declare a method of a given name.
+
+Required parameters::
+* `:method` The method name to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:protocols-with-method` A list of protocols, with a ``:name :doc :file :file-url :line :column`` structure.
+* `:status` done
+
+
+
 === `cider/refresh`
 
 Reloads all changed files in dependency order.
@@ -2730,8 +2801,11 @@ Optional parameters::
 
 
 Returns::
+* `:after` The name of the after-hook function, echoed when it is invoked.
+* `:before` The name of the before-hook function, echoed when it is invoked.
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
 * `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:out` Output produced on stdout/stderr by the before/after hooks.
 * `:reloading` List of namespaces that will be reloaded.
 * `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
 
@@ -2757,8 +2831,11 @@ Optional parameters::
 
 
 Returns::
+* `:after` The name of the after-hook function, echoed when it is invoked.
+* `:before` The name of the before-hook function, echoed when it is invoked.
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
 * `:error-ns` The namespace that caused reloading to fail when ``status`` is ``:error``.
+* `:out` Output produced on stdout/stderr by the before/after hooks.
 * `:reloading` List of namespaces that will be reloaded.
 * `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
 
@@ -2828,17 +2905,19 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
 
 === `cider/slurp`
 
-Slurps a URL from the nREPL server, returning MIME data.
+Slurps a URL from the nREPL server, returning MIME data. Reads at most ``cider.nrepl.middleware.slurp/\*max-content-size*`` bytes (4MB by default); larger resources yield a size-only placeholder. A failed fetch yields a plain-text explanation instead of an error.
 
 Required parameters::
 {blank}
@@ -2922,7 +3001,59 @@ Optional parameters::
 
 
 Returns::
+* `:class` The class name of the exception cause.
+* `:message` The message of the exception cause, if any.
+* `:phase` The compilation phase of the cause, for compiler exceptions; otherwise absent.
+* `:stacktrace` The analyzed stack frames of the cause, as a list of frame maps.
 * `:status` "done", or "no-error" if ``*e`` is nil
+
+
+
+=== `cider/tap-inspect`
+
+Start an inspector session on a retained tapped value.
+
+Required parameters::
+* `:idx` The index of the tapped value to inspect
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:value` The inspector rendering of the tapped value
+
+
+
+=== `cider/tap-subscribe`
+
+Open a streaming subscription that delivers a summary of each value sent to ``tap>`` until ``cider/tap-unsubscribe``. Works in ClojureScript too (by polling the runtime), but cljs tapped values aren't inspectable.
+
+Required parameters::
+{blank}
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:cider/tap-subscribe` The id of the subscription, to be passed to ``cider/tap-unsubscribe``
+* `:cider/tap-value` A tapped value summary, with ``summary``, ``type``, when counted ``count``, and (Clojure only) an ``idx`` for ``cider/tap-inspect``
+
+
+
+=== `cider/tap-unsubscribe`
+
+Stop streaming tapped values for the given subscription.
+
+Required parameters::
+* `:subscription` The id of the subscription to remove
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:cider/tap-unsubscribe` The id of the removed subscription
 
 
 
@@ -2945,10 +3076,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -2972,10 +3105,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -3020,10 +3155,12 @@ Optional parameters::
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
+* `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
 
@@ -3094,6 +3231,24 @@ Returns::
 
 
 
+=== `cider/type-protocols`
+
+Look up the protocols a type implements.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The type to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:type-protocols` A list of protocols, with a ``:name :doc :file :file-url :line :column`` structure.
+
+
+
 === `cider/undef`
 
 Undefine a symbol
@@ -3108,6 +3263,7 @@ Optional parameters::
 
 Returns::
 * `:status` done
+* `:undef` The symbol that was undefined.
 
 
 
@@ -3124,6 +3280,7 @@ Optional parameters::
 
 Returns::
 * `:status` done
+* `:undef-all` The namespace whose mappings were cleared.
 
 
 
@@ -3139,6 +3296,24 @@ Optional parameters::
 
 Returns::
 * `:untraced-count` The number of vars that were untraced
+
+
+
+=== `cider/who-implements`
+
+Look up the implementations of a protocol or the dispatch values of a multimethod.
+
+Required parameters::
+* `:ns` The current namespace
+* `:sym` The symbol to lookup
+
+
+Optional parameters::
+{blank}
+
+Returns::
+* `:status` done
+* `:who-implements` A map with ``:kind`` ("protocol", "multimethod" or "other"); for a protocol an ``:impls`` list of ``:name :file :file-url :line :column`` maps, for a multimethod a ``:dispatch-values`` list.
 
 
 
@@ -3178,7 +3353,7 @@ Optional parameters::
 
 Returns::
 * `:error` A sequence of all causes of the thrown exception when ``status`` is ``:error``.
-* `:reloading` Description of current namespace being unloaded/loaded.
+* `:progress` Description of current namespace being unloaded/loaded.
 * `:status` ``:ok`` if reloading was successful; otherwise ``:error``.
 
 
@@ -3194,4 +3369,5 @@ Optional parameters::
 {blank}
 
 Returns::
-{blank}
+* `:progress` Description of the clearing operation's progress.
+
