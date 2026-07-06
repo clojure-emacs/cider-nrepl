@@ -393,7 +393,7 @@
   [s lines-to-skip]
   (try
     (let [matcher (re-matcher #"\r?\n" s)]
-      (dotimes [_ lines-to-skip] (re-find matcher))
+      (dotimes [_ lines-to-skip] (.find matcher))
       (.end matcher))
     (catch IllegalStateException _ 0)))
 

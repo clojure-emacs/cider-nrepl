@@ -5,10 +5,11 @@ SHELL = /bin/bash -Ee
 
 CLOJURE_VERSION ?= 1.12
 NREPL_VERSION ?= 1.7
+
 # The lein plugin tests call leiningen.core.main/leiningen-version, which reads
 # LEIN_VERSION from the env. Lein sets it automatically; under the clojure CLI
 # we have to provide it ourselves.
-LEIN_VERSION ?= 2.11.2
+export LEIN_VERSION := 2.11.2
 
 # Aliases shared by the base test targets: the Clojure + nREPL version under
 # test and the (non-inlined) shaded deps. ClojureScript is intentionally absent
@@ -17,30 +18,12 @@ LEIN_VERSION ?= 2.11.2
 TEST_ALIASES = :$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test
 
 # We need Java sources to test Java parsing functionality, but the Docker images
-# we use on CircleCI don't ship src.zip. So we download them from GitHub and
-# repackage them in a form resembling a normal distribution's src.zip. This is
-# only meant to run on CI; locally you already have a real src.zip.
-base-src-jdk8.zip:
-	# We don't parse sources on JDK8.
-	touch $@
+# we use on CircleCI doesn't include src.zip. So we have to download them from
+# Github and repackage in a form that is resemblant to src.zip from normal
+# distributions.
 
-base-src-jdk11.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk11u/archive/refs/tags/jdk-11.0.28+0.zip jdk11 $@
-
-base-src-jdk17.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk17u/archive/refs/tags/jdk-17.0.15+5.zip jdk17 $@
-
-base-src-jdk21.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk21u/archive/refs/tags/jdk-21.0.7+5.zip jdk21 $@
-
-base-src-jdk25.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk25u/archive/refs/tags/jdk-25.0.4+6.zip jdk25 $@
-
-base-src-jdk26.zip:
-	bash .circleci/download-jdk-sources.sh https://github.com/adoptium/jdk/archive/refs/tags/jdk-26+35.zip jdk26 $@
-
-copy-sources-to-jdk: base-src-$(JDK_SRC_VERSION).zip
-	mkdir -p $(JAVA_HOME)/lib && cp base-src-$(JDK_SRC_VERSION).zip $(JAVA_HOME)/lib/src.zip
+download-jdk-src:
+	clojure -T:build download-jdk-src
 
 javac:
 	clojure -T:build javac
@@ -51,8 +34,8 @@ javac-test:
 # Fast tests: run against the real (non-inlined) dependencies. The ClojureScript
 # tests are excluded here and run separately (see cljs-test); ClojureScript is
 # deliberately kept off the base classpath (see TEST_ALIASES above).
-quick-test: javac-test
-	LEIN_VERSION=$(LEIN_VERSION) clojure -X$(TEST_ALIASES)
+quick-test: javac-test download-jdk-src
+	clojure -X$(TEST_ALIASES)
 
 test: quick-test
 
@@ -60,12 +43,12 @@ test: quick-test
 # running the suite with the test session instrumented. Slower than the unit
 # tests (it runs the whole op suite), so it's a separate target.
 descriptor-contract: javac-test
-	LEIN_VERSION=$(LEIN_VERSION) clojure -M:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test -m cider.nrepl.descriptor-contract
+	clojure -M:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test -m cider.nrepl.descriptor-contract
 
 # ClojureScript middleware tests. Kept separate because the CLJS 1.12 Closure
 # compiler requires JDK21+, so CI only runs these on recent JDKs.
-cljs-test: javac-test
-	LEIN_VERSION=$(LEIN_VERSION) clojure -X$(TEST_ALIASES):cljs :dirs '["test/cljs"]'
+cljs-test: javac-test download-jdk-src
+	clojure -X:cljs$(TEST_ALIASES) :dirs '["test/cljs"]'
 
 inline-deps:
 	clojure -T:build inline-deps
@@ -73,7 +56,7 @@ inline-deps:
 # Full tests: run the suite against the inlined/shaded sources (the equivalent
 # of the old mranderson full-test job).
 inlined-test: inline-deps javac-test
-	LEIN_VERSION=$(LEIN_VERSION) clojure -X:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined:test
+	clojure -X:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined:test
 
 # PROJECT_VERSION=x.y.z make jar
 jar: check-version
@@ -114,7 +97,7 @@ eastwood: javac
 lint: cljfmt kondo eastwood
 
 docs:
-	clojure -M:maint -m cider.nrepl.impl.docs --file doc/modules/ROOT/pages/nrepl-api/ops.adoc
+	clojure -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"1.7.0"'
 
 # Prepare a release: roll the changelog, bump the docs version, commit and tag.
 # Pushing the tag (which triggers the deploy below) is left to you.

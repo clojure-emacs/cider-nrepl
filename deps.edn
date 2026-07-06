@@ -83,9 +83,8 @@
                :patterns [".*"]}}
 
   ;; Documentation generation (ops.adoc).
-  :maint
-  {:extra-paths ["maint"]
-   :extra-deps {org.clojure/tools.cli {:mvn/version "1.2.245"}}}
+  :docs {:extra-paths ["."]
+         :exec-fn build.docs/docs}
 
   ;; Build/inline/deploy tooling. mranderson 0.6 is the first release with the
   ;; Leiningen-free mranderson.core/inline-deps entry point.
@@ -106,7 +105,5 @@
 
   :eastwood
   {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
-   ;; The debug middleware deliberately calls the deprecated Thread.stop in its
-   ;; abort path, so that deprecation is ignored.
    :main-opts ["-m" "eastwood.lint"
-               "{:source-paths [\"src\"] :ignored-faults {:unused-ret-vals {cider.nrepl.middleware.util.instrument {:line 396}} :deprecations {cider.nrepl.middleware.debug true}}}"]}}}
+               {:source-paths ["src"]}]}}}

@@ -63,10 +63,6 @@ commands:
         default: "1"
     steps:
       - run:
-          name: Install packages
-          command: |
-            apt-get update && apt-get install -y wget nodejs unzip zip
-      - run:
           name: Generate Cache Checksum
           command: |
             for file in << parameters.files >>
@@ -81,11 +77,7 @@ commands:
             - ~/.m2
             - ~/.gitlibs
             - .cpcache
-            - base-src-jdk11.zip
-            - base-src-jdk17.zip
-            - base-src-jdk21.zip
-            - base-src-jdk25.zip
-            - base-src-jdk26.zip
+            - base-jdk-src.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
 jobs:
@@ -167,6 +159,7 @@ jobs:
       JDK_SRC_VERSION: << parameters.jdk_version >>
     steps:
       - checkout
+      - run: apt-get update && apt-get install -y nodejs
       - with_cache:
           cache_version: "cljs_test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
           steps:

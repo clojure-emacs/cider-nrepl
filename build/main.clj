@@ -1,6 +1,7 @@
 (ns build.main
   (:refer-clojure :exclude [test])
-  (:require [clojure.java.io :as io]
+  (:require [build.download-jdk-sources :as download-src]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.build.api :as b]
             [clojure.tools.build.tasks.write-pom]
@@ -34,15 +35,8 @@
                   [:name "Eclipse Public License"]
                   [:url "http://www.eclipse.org/legal/epl-v10.html"]]]]
 
-     ;; Build section. The pom basis intentionally excludes the inlined deps:
-     ;; only the plain :deps end up declared as dependencies. ClojureScript is
-     ;; added here (provided, so non-transitive) purely so it shows up in the
-     ;; pom like the historical Leiningen build; it is not on the base classpath
-     ;; (it would make the macroexpand middleware load Closure on old JDKs) and
-     ;; the jar is assembled from explicit dirs, so it is not bundled either.
-     :basis (b/create-basis
-             {:extra {:deps {'org.clojure/clojurescript {:mvn/version "1.12.145"
-                                                         :mvn/scope "provided"}}}})
+     ;; Build section
+     :basis (b/create-basis)
      :target target
      :class-dir (str target "/classes")
      :srcdeps (str target "/srcdeps")
@@ -120,6 +114,14 @@
   (jar opts)
   (log "Installing %s to local Maven repository..." version)
   (b/install opts))
+
+(defcmd download-jdk-src [opts]
+  (let [base-file (io/file "base-jdk-src.zip")
+        java-home (System/getenv "JAVA_HOME")
+        dest-file (io/file java-home "lib" "src.zip")]
+    (download-src/download-and-repackage-sources "base-jdk-src.zip")
+    (when (.exists base-file)
+      (b/copy-file {:src "base-jdk-src.zip", :target (str dest-file)}))))
 
 ;;; Release preparation
 
