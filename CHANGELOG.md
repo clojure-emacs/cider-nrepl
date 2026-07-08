@@ -2,6 +2,8 @@
 
 ## master (unreleased)
 
+## 0.62.0 (2026-07-08)
+
 * Bump `orchard` to [0.44.0](https://github.com/clojure-emacs/orchard/blob/v0.44.0/CHANGELOG.md) (inspector: the Datafy section is gone, `ARef` contents render fully, and wide columns are truncated in table mode).
 * [debug] Abort a debug session via nREPL's `interrupt-stop` instead of the deprecated `Thread.stop`, so quitting the debugger keeps working on JDKs where `Thread.stop` was removed.
 * Drop `value` from responses the content-type middleware decorates: the requester opted in to content types and renders the `body` instead, and clients that naively rendered both slots used to show results twice. Responses the middleware leaves alone (unrecognized types, non-fetchable URI schemes) keep their `value` as before.
