@@ -7,7 +7,7 @@
         ;; nREPL ships as a regular (compile) dependency, matching the
         ;; historical Leiningen-built pom, so cider-nrepl pulls it in for users.
         nrepl/nrepl                 {:mvn/version "1.7.0"}
-        cider/orchard               {:mvn/version "0.43.0" :exclusions [org.clojure/clojure]}
+        cider/orchard               {:mvn/version "0.44.0" :exclusions [org.clojure/clojure]}
         compliment/compliment       {:mvn/version "0.8.0"}
         io.github.tonsky/clj-reload {:mvn/version "1.0.0" :exclusions [org.clojure/clojure]}
         mx.cider/logjam             {:mvn/version "0.3.0" :exclusions [org.clojure/clojure]}
