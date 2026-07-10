@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.middleware.util.instrument :as ins]
    [cider.nrepl.middleware.debug  :as d]
+   [cider.nrepl.middleware.enlighten :as e]
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
    [clojure.walk :as walk]
@@ -238,6 +239,49 @@
                            {:coor []}
                            nil))))
                '{x 10}))))))
+
+(defn- read-with-debug-readers
+  "Read `code` with cider's debug/enlighten reader macros active, the way the
+  eval op does before handing the form to `instrument-and-eval`."
+  [code]
+  (binding [*data-readers* (merge *data-readers*
+                                  {'dbg   #'d/debug-reader
+                                   'break #'d/breakpoint-reader
+                                   'light #'e/light-reader})]
+    (read-string {:read-cond :allow} code)))
+
+(deftest dbg-on-bare-collection-literal-test
+  ;; #1016: `#dbg` on a bare collection literal that closes over a local (or a
+  ;; qualified, non-core name) used to throw "Unable to resolve symbol: STATE__".
+  ;; Only the collection's interior received a breakpoint, while the wrapper that
+  ;; binds the STATE__ anaphor - applied to the tagged top-level form - was
+  ;; skipped for collection literals (which aren't "interesting" on their own),
+  ;; so the interior breakpoint referenced an unbound STATE__.
+  (testing "instrumenting and compiling no longer throws"
+    (are [code] (var? (d/instrument-and-eval (read-with-debug-readers code)))
+      "(defn i1016-vec [x] #dbg [x])"
+      "(defn i1016-nested [x] #dbg [(inc x)])"
+      "(defn i1016-map [x] #dbg {:k x})"
+      "(defn i1016-qualified [x] #dbg [clojure.string/upper-case])"))
+  (testing "the instrumented fn runs, with a fresh (per-call) debug session"
+    (let [v (d/instrument-and-eval (read-with-debug-readers "(defn i1016-run [x] #dbg [x])"))]
+      (binding [d/*skip-breaks* (atom {:mode :all})]
+        (is (= [5] (v 5)))
+        (is (= [6] (v 6)))))))
+
+(deftest light-reader-binds-state-test
+  ;; #1017: the `#light` reader routes through `instrument-and-eval` (rather than
+  ;; the `:enlighten` flag path), which didn't establish the STATE__ bindings, so
+  ;; `light-form` - which references STATE__ directly - threw "Unable to resolve
+  ;; symbol: STATE__".
+  (testing "instrumenting and compiling no longer throws"
+    (are [code] (var? (d/instrument-and-eval (read-with-debug-readers code)))
+      "#light (defn l1017-simple [x] (+ x 1))"
+      "#light (defn l1017-vec [x] [x])"))
+  (testing "the enlightened fn runs and computes correctly"
+    (with-redefs [d/debugger-send (fn [& _] nil)]
+      (let [v (d/instrument-and-eval (read-with-debug-readers "#light (defn l1017-run [x] (+ x 1))"))]
+        (is (= 42 (v 41)))))))
 
 (deftest instrumentation-stress-test
   (testing "able to compile this function full of locals"

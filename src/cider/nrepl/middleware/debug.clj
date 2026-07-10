@@ -669,7 +669,12 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form]
   (found-debugger-tag)
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-interesting)
-                #'breakpoint-if-interesting-with-initial-debug-bindings))
+                #'breakpoint-if-interesting-with-initial-debug-bindings
+                ;; Force the top-level form to be wrapped even when it's a bare
+                ;; collection literal (which isn't "interesting" on its own):
+                ;; otherwise its interior breakpoints reference the STATE__
+                ;; anaphor that only the top-level wrapper binds (#1016).
+                true))
 
 (defn break-on-exception-reader
   "#exn reader. Wrap `form` in try-catch and break only on exception"
@@ -683,11 +688,19 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   [form]
   (found-debugger-tag)
   (ins/tag-form (ins/tag-form-recursively form #'breakpoint-if-exception)
-                #'breakpoint-if-exception-with-initial-debug-bindings))
+                #'breakpoint-if-exception-with-initial-debug-bindings
+                ;; See `debug-reader` (#1016).
+                true))
 
 (defn instrument-and-eval [form]
   (with-bindings (if nrepl-1-5+? {#'*top-level-form-meta* (meta form)} {})
-    (let [form1 (ins/instrument-tagged-code form)]
+    ;; Always establish the STATE__ bindings around the whole instrumented form.
+    ;; `#dbg`/`#break` also bind STATE__ per-call via their top-level breakfunction
+    ;; (which shadows this one), but forms that don't - notably the `#light`
+    ;; enlighten reader, whose `light-form` references STATE__ directly - would
+    ;; otherwise hit an unbound STATE__ (#1017). Mirrors `eval-with-enlighten`.
+    (let [form1 `(with-initial-debug-bindings
+                   ~(ins/instrument-tagged-code form))]
       (try
         (binding [*tmp-forms* (atom {})]
           (eval form1))

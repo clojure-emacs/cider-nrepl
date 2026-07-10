@@ -2,6 +2,9 @@
 
 ## master (unreleased)
 
+* [#1016](https://github.com/clojure-emacs/cider-nrepl/issues/1016): Fix a debugger crash (`Unable to resolve symbol: STATE__`) when `#dbg` is placed on a bare collection literal that closes over a local or a qualified name (e.g. `#dbg [x]`).
+* [#1017](https://github.com/clojure-emacs/cider-nrepl/issues/1017): Fix the same `STATE__` error for the `#light` enlighten reader.
+
 ## 0.62.0 (2026-07-08)
 
 * Bump `orchard` to [0.44.0](https://github.com/clojure-emacs/orchard/blob/v0.44.0/CHANGELOG.md) (inspector: the Datafy section is gone, `ARef` contents render fully, and wide columns are truncated in table mode).
