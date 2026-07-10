@@ -240,6 +240,20 @@
                            nil))))
                '{x 10}))))))
 
+(deftest abort-without-session-thread-test
+  ;; #1018: quitting a debug session (`q`) calls `abort!`, which stops the eval
+  ;; thread read from the session metadata. In some setups that metadata carries
+  ;; no `:thread`, and `abort!` used to NPE trying to `.stop` nil. It must quit
+  ;; cleanly (reply with QUIT) instead.
+  (let [sent (atom [])]
+    (with-redefs [t/send (fn [_ msg] (swap! sent conj msg))]
+      (binding [*msg* {:transport :fake
+                       :id "id"
+                       ;; a session atom with no :thread in its metadata
+                       :session (atom {})}]
+        (is (nil? (#'d/abort!)) "returns without throwing")
+        (is (= 'QUIT (:value (first @sent))) "replies with QUIT")))))
+
 (defn- read-with-debug-readers
   "Read `code` with cider's debug/enlighten reader macros active, the way the
   eval op does before handing the form to `instrument-and-eval`."
