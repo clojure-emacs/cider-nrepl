@@ -280,11 +280,19 @@
                            (:clojure.test/each-fixtures (meta ns)))
                    (keep #(stack-frame e %))
                    (first))
-        fixture (resolve (symbol (:var frame)))]
+        ;; When no fixture frame matches, the throwable didn't originate in a
+        ;; fixture - it escaped the test body itself (e.g. interrupting a test
+        ;; that isn't wrapped in `is`, #1020). Guard against that so we report
+        ;; the error instead of crashing on `(symbol nil)`.
+        fixture (some-> frame :var symbol resolve)]
     (swap! current-report update-in [:summary :test] dec)
-    (binding [test/*testing-vars* (list fixture)]
+    (binding [test/*testing-vars* (if fixture
+                                    (list fixture)
+                                    test/*testing-vars*)]
       (report {:type :error, :fault true, :expected nil, :actual e
-               :message "Uncaught exception in test fixture"}))))
+               :message (if fixture
+                          "Uncaught exception in test fixture"
+                          "Uncaught exception during test run")}))))
 
 (defmacro ^:private timing
   "Executes `body`, reporting the time it took by persisting it to `time-atom`."
