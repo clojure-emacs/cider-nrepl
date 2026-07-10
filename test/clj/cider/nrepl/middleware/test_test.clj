@@ -126,6 +126,21 @@
              (session/message {:op "cider/test"
                                :ns "cider.nrepl.middleware.test-with-throwing-fixtures"}))))))
 
+(deftest report-fixture-error-handles-non-fixture-throwable
+  ;; #1020: interrupting a test that isn't wrapped in `is` (e.g. `(while true)`)
+  ;; lets a throwable escape the test body with no fixture frame in its trace.
+  ;; report-fixture-error used to crash on `(symbol nil)`; it must report the
+  ;; error gracefully instead.
+  (with-redefs [test/current-report (atom {:summary {:test 1} :results {}
+                                           :testing-ns 'cider.nrepl.middleware.test-test})]
+    ;; Empty stack trace so no fixture frame can match - the escaped-throwable case.
+    (let [e (doto (InterruptedException. "interrupted")
+              (.setStackTrace (make-array StackTraceElement 0)))]
+      ;; Must not throw (the crash was here). Reaching the assertion is the guard.
+      (test/report-fixture-error (the-ns 'cider.nrepl.middleware.test-test) e)
+      (is (= 1 (get-in @test/current-report [:summary :error]))
+          "the escaped throwable is reported as an error"))))
+
 (deftest run-test-with-map-as-documentation-message
   (testing "documentation message map is returned as string"
     (is+ {:results
