@@ -264,7 +264,17 @@
                   (map? form) (if (<= (count form) 8)
                                 (into {} (walk-indexed-map form))
                                 (try
-                                  (into (sorted-map) (walk-indexed-map (into (sorted-map) form)))
+                                  ;; Walk in sorted order for stable, version-
+                                  ;; independent breakpoint coordinates, but rebuild
+                                  ;; an *array-map* (which keeps that order) rather
+                                  ;; than a sorted-map: a sorted-map result breaks
+                                  ;; associative destructuring with >8 keys, because
+                                  ;; `destructure` does `(:as m)`/`(:or m)` keyword
+                                  ;; lookups and a sorted-map with symbol keys can't
+                                  ;; compare a keyword to a symbol (#1022).
+                                  (apply array-map
+                                         (mapcat identity
+                                                 (walk-indexed-map (into (sorted-map) form))))
                                   (catch Exception _e
                                     form)))
                   ;; Order of sets is unpredictable, unfortunately.
