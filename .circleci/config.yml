@@ -5,8 +5,13 @@ version: 2.1
 defaults: &defaults
   working_directory: ~/repo
   environment:
-    JVM_OPTS: >
-      -Xmx3200m
+    # NOTE: the Clojure CLI honors JAVA_OPTS, not JVM_OPTS (a Leiningen
+    # convention), so the previous JVM_OPTS was silently ignored. With no heap
+    # cap, JDK 11 - which lacks the cgroup memory-limit detection that JDK 17+
+    # have - sized its heap off the host's RAM and got OOM-killed inside the
+    # container. An explicit -Xmx applies regardless of cgroup detection.
+    JAVA_OPTS: >
+      -Xmx2500m
       -Dclojure.main.report=stderr
 
 # Runners for various OpenJDK versions, using the tools-deps (clojure CLI) images.
