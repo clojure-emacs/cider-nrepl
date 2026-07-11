@@ -5,6 +5,7 @@
 * [#1016](https://github.com/clojure-emacs/cider-nrepl/issues/1016): Fix a debugger crash (`Unable to resolve symbol: STATE__`) when `#dbg` is placed on a bare collection literal that closes over a local or a qualified name (e.g. `#dbg [x]`).
 * [#1017](https://github.com/clojure-emacs/cider-nrepl/issues/1017): Fix the same `STATE__` error for the `#light` enlighten reader.
 * [#1020](https://github.com/clojure-emacs/cider-nrepl/issues/1020): Fix a test-reporter crash (`no conversion to symbol`) when a test is interrupted (or otherwise throws outside both an `is` assertion and a fixture); the escaped exception is now reported as an error instead.
+* [#750](https://github.com/clojure-emacs/cider-nrepl/issues/750): A form too large to instrument for debugging no longer fails with a raw `Method code too large!` compiler error. It's first retried without local capture (with a warning; breakpoints still work), and if it still won't fit, cider-nrepl reports a clear error and leaves it unevaluated rather than silently evaluating it without instrumentation.
 
 ## 0.62.0 (2026-07-08)
 

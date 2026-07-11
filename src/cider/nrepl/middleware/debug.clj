@@ -692,6 +692,15 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                 ;; See `debug-reader` (#1016).
                 true))
 
+(defn- method-too-large?
+  "True if `e` (or its cause) is the JVM's \"Method code too large!\" error, which
+  the instrumented code can trip when a form is big enough to blow the 64KB method
+  limit once breakpoints are woven in."
+  [^Throwable e]
+  (boolean
+   (some #(some->> ^Throwable % .getMessage (re-matches #".*Method code too large!.*"))
+         [e (.getCause e)])))
+
 (defn instrument-and-eval [form]
   (with-bindings (if nrepl-1-5+? {#'*top-level-form-meta* (meta form)} {})
     ;; Always establish the STATE__ bindings around the whole instrumented form.
@@ -705,18 +714,31 @@ this map (identified by a key), and will `dissoc` it afterwards."}
         (binding [*tmp-forms* (atom {})]
           (eval form1))
         (catch java.lang.RuntimeException e
-          (if (some #(when %
-                       (re-matches #".*Method code too large!.*"
-                                   (.getMessage ^Throwable %)))
-                    [e (.getCause e)])
+          (if (method-too-large? e)
             (do (notify-client *msg*
                                (str "Method code too large!\n"
                                     "Locals and evaluation in local context won't be available.")
                                :warning)
-                ;; re-try without locals
-                (binding [*tmp-forms* (atom {})
-                          *do-locals* false]
-                  (eval form1)))
+                ;; Re-try without locals, which produces smaller code.
+                (try
+                  (binding [*tmp-forms* (atom {})
+                            *do-locals* false]
+                    (eval form1))
+                  (catch java.lang.RuntimeException e2
+                    ;; Still too large even without locals: we can't instrument
+                    ;; it at all. Report a clear error and leave the form
+                    ;; unevaluated - better than a raw compiler stacktrace, and
+                    ;; better than silently evaluating it uninstrumented, which
+                    ;; looks like debugging is on when it isn't (#750).
+                    (if (method-too-large? e2)
+                      (do (notify-client *msg*
+                                         (str "This form is too large to instrument for debugging - "
+                                              "it exceeds the JVM's per-method bytecode limit even "
+                                              "without local capture. It was not evaluated; break it "
+                                              "into smaller functions to debug it.")
+                                         :error)
+                          nil)
+                      (throw e2)))))
             (throw e)))))))
 
 (def ^:dynamic *debug-data-readers*
