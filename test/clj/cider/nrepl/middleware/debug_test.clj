@@ -1,6 +1,7 @@
 (ns ^:debugger cider.nrepl.middleware.debug-test
   (:require
    [cider.nrepl.middleware.util.instrument :as ins]
+   [cider.nrepl.middleware.util.nrepl]
    [cider.nrepl.middleware.debug  :as d]
    [cider.nrepl.middleware.enlighten :as e]
    [cider.test-helpers :refer :all]
@@ -296,6 +297,53 @@
     (with-redefs [d/debugger-send (fn [& _] nil)]
       (let [v (d/instrument-and-eval (read-with-debug-readers "#light (defn l1017-run [x] (+ x 1))"))]
         (is (= 42 (v 41)))))))
+
+(deftest method-too-large?-test
+  (are [msg] (#'d/method-too-large? msg)
+    (RuntimeException. "blah Method code too large! blah")
+    (RuntimeException. "wrapper" (RuntimeException. "Method code too large!")))
+  (are [msg] (not (#'d/method-too-large? msg))
+    (RuntimeException. "some other error")
+    (RuntimeException.)))
+
+(deftest large-instrumented-form-retries-without-locals-test
+  ;; #750: a form too large to instrument WITH locals is retried WITHOUT them
+  ;; (which produces smaller code), with a warning; breakpoints still work, just
+  ;; without local inspection, and the result is returned. Forced here by making
+  ;; the instrumented form throw the method-size error only while local capture
+  ;; is on, so the first attempt fails and the retry succeeds - avoids compiling
+  ;; a real ~64KB-method form, which needlessly bloats the test JVM.
+  (let [notes (atom [])]
+    (with-redefs [ins/instrument-tagged-code
+                  (fn [_] '(if cider.nrepl.middleware.debug/*do-locals*
+                             (throw (java.lang.RuntimeException. "Method code too large!"))
+                             :retried-without-locals))
+                  cider.nrepl.middleware.util.nrepl/notify-client
+                  (fn [_ _ type] (swap! notes conj type))]
+      (binding [*msg* {:transport :fake}]
+        (is (= :retried-without-locals (d/instrument-and-eval '(def i750-unused)))
+            "retried without locals and returned the result")
+        (is (= [:warning] @notes)
+            "warned once and did not escalate to an error")))))
+
+(deftest too-large-to-instrument-reports-error-test
+  ;; #750: when a form is too large to instrument even without locals, report a
+  ;; clear error and leave it unevaluated - rather than a raw compiler stacktrace
+  ;; or a silent uninstrumented eval that looks like debugging is on. Forced here
+  ;; by making instrumentation produce a form that throws the method-size error,
+  ;; so both the with-locals attempt and the without-locals retry fail.
+  (let [notes (atom [])]
+    (with-redefs [ins/instrument-tagged-code
+                  (fn [_] '(throw (java.lang.RuntimeException. "Method code too large!")))
+                  cider.nrepl.middleware.util.nrepl/notify-client
+                  (fn [_ _ type] (swap! notes conj type))]
+      (binding [*msg* {:transport :fake}]
+        (is (nil? (d/instrument-and-eval '(def i750-unreachable :defined)))
+            "returns nil without evaluating the form")
+        (is (nil? (resolve 'i750-unreachable))
+            "the form was not evaluated")
+        (is (= :error (last @notes))
+            "the final notification is a clear error")))))
 
 (deftest instrumentation-stress-test
   (testing "able to compile this function full of locals"
