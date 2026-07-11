@@ -204,3 +204,15 @@
     (binding [*ns* an-ns]
       (is (some? (t/breakpoint-tester '(let [x (cider.nrepl.middleware.util.instrument-test/ns-embedding-macro)] x)))
           "Does not throw-exceptions"))))
+
+(deftest instrument-large-associative-destructuring-test
+  ;; #1022: instrumenting a fn whose argument is destructured with more than
+  ;; eight explicit key/val pairs used to throw "Symbol cannot be cast to
+  ;; Keyword". Maps larger than eight entries were rebuilt as sorted-maps, and
+  ;; `clojure.core/destructure`'s `:as`/`:or` keyword lookups can't compare a
+  ;; keyword to the destructuring form's symbol keys.
+  (are [form] (set? (t/breakpoint-tester form))
+    ;; nine explicit pairs (the boundary where Clojure switches to a hash-map)
+    '(fn [{a :a b :b c :c d :d e :e f :f g :g h :h i :i}] a)
+    ;; with :as/:or present, which is what actually triggers the bad lookup
+    '(fn [{a :a b :b c :c d :d e :e f :f g :g h :h i :i :or {a 0} :as m}] [a m])))

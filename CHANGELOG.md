@@ -6,6 +6,7 @@
 * [#1017](https://github.com/clojure-emacs/cider-nrepl/issues/1017): Fix the same `STATE__` error for the `#light` enlighten reader.
 * [#1020](https://github.com/clojure-emacs/cider-nrepl/issues/1020): Fix a test-reporter crash (`no conversion to symbol`) when a test is interrupted (or otherwise throws outside both an `is` assertion and a fixture); the escaped exception is now reported as an error instead.
 * [#750](https://github.com/clojure-emacs/cider-nrepl/issues/750): A form too large to instrument for debugging no longer fails with a raw `Method code too large!` compiler error. It's first retried without local capture (with a warning; breakpoints still work), and if it still won't fit, cider-nrepl reports a clear error and leaves it unevaluated rather than silently evaluating it without instrumentation.
+* [#1022](https://github.com/clojure-emacs/cider-nrepl/issues/1022): Fix a debugger instrumentation crash (`Symbol cannot be cast to Keyword`) when a function argument is destructured with more than eight explicit key/val pairs.
 
 ## 0.62.0 (2026-07-08)
 
