@@ -64,3 +64,14 @@
       "try/catch")
   (is (= :ok (survives? '(defn f [xs] (map inc xs)) [1 2 3]))
       "lazy seq / higher-order"))
+
+(deftest enlightens-deftest-bodies
+  ;; #382: `deftest` stores its body in the var's `:test` metadata (the def value
+  ;; just calls `test-var`), so enlightening it has to reach the metadata. The
+  ;; body lights up when the test runs. (A minor gap remains: the innermost
+  ;; local binding isn't reported inside a deftest the way it is in a plain defn.)
+  (let [values (enlighten-values
+                '(clojure.test/deftest enl-deftest-sample
+                   (let [a 42] (clojure.test/is (= 43 (+ a 1))))))]
+    (is (contains? values "43")
+        "a sub-expression inside the deftest body lights up")))
