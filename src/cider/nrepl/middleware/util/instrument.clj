@@ -261,6 +261,12 @@
                                             (walk-indexed (conj coor (inc (* 2 i))) f v)])
                                          map))
          result (cond
+                  ;; Records are `map?`, but rebuilding them like a map (below)
+                  ;; would strip their type and turn them into plain maps -
+                  ;; breaking protocol dispatch on record literals embedded in
+                  ;; the (macroexpanded) code, e.g. compojure's compiled routes
+                  ;; under enlighten (#764). Leave them untouched.
+                  (record? form) form
                   (map? form) (if (<= (count form) 8)
                                 (into {} (walk-indexed-map form))
                                 (try

@@ -216,3 +216,19 @@
     '(fn [{a :a b :b c :c d :d e :e f :f g :g h :h i :i}] a)
     ;; with :as/:or present, which is what actually triggers the bad lookup
     '(fn [{a :a b :b c :c d :d e :e f :f g :g h :h i :i :or {a 0} :as m}] [a m])))
+
+(defrecord InstrumentTestRecord [x])
+
+(deftest instrument-preserves-record-literals-test
+  ;; #764: a record literal embedded in the (macroexpanded) code - e.g.
+  ;; compojure's compiled routes, when instrumented under enlighten - must keep
+  ;; its type. Records are `map?`, so rebuilding them like a map stripped the
+  ;; type and turned them into plain maps, breaking protocol dispatch on them.
+  (let [rec    (->InstrumentTestRecord 1)
+        result (-> (list 'clojure.core/identity rec)
+                   (t/tag-form-recursively #'t/bp)
+                   t/instrument-tagged-code
+                   eval)]
+    (is (instance? InstrumentTestRecord result)
+        "the record survives instrumentation as a record, not a plain map")
+    (is (= rec result))))
