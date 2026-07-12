@@ -16,15 +16,29 @@
     '(inc 2)
     '(case i nil {:foo :bar} :default)))
 
-(deftest instrument-defrecord-and-new-test
-  (are [exp res] (set/subset? res (t/breakpoint-tester exp))
-    '(defrecord TestRec [arg arg2]
-       java.lang.Iterable
-       (iterator [this] (inc 1)))
-    '#{[(inc 1) [4 2]]}
+(deftest instrument-new-test
+  (is (set/subset? '#{[(new java.lang.Integer 1) []]}
+                   (t/breakpoint-tester '(new java.lang.Integer 1)))))
 
-    '(new java.lang.Integer 1)
-    '#{[(new java.lang.Integer 1) []]}))
+(deftest deftype-method-bodies-not-instrumented-test
+  ;; `deftype*`/`defrecord` method bodies compile to real class methods that
+  ;; can't close over the debugger's STATE__ local, so instrumenting them throws
+  ;; "Unable to resolve symbol: STATE__" at runtime. They must be left alone -
+  ;; unlike `reify*`, which captures its environment and stays instrumentable.
+  (let [values #(set (map first (t/breakpoint-tester %)))]
+    (is (not (contains? (values '(defrecord TestRec [arg arg2]
+                                   java.lang.Iterable
+                                   (iterator [this] (inc 1))))
+                        '(inc 1)))
+        "defrecord method body is not instrumented")
+    (is (not (contains? (values '(deftype TestType [arg]
+                                   java.lang.Iterable
+                                   (iterator [this] (inc 1))))
+                        '(inc 1)))
+        "deftype method body is not instrumented")
+    (is (contains? (values '(reify java.lang.Iterable (iterator [this] (inc 1))))
+                   '(inc 1))
+        "reify method body is still instrumented")))
 
 (deftest instrument-clauses-test
   (are [exp res] (set/subset? res (t/breakpoint-tester exp))

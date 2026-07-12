@@ -298,6 +298,19 @@
       (let [v (d/instrument-and-eval (read-with-debug-readers "#light (defn l1017-run [x] (+ x 1))"))]
         (is (= 42 (v 41)))))))
 
+(deftest instrument-defrecord-with-methods-test
+  ;; A `defrecord`/`deftype` with inline protocol methods used to throw "Unable
+  ;; to resolve symbol: STATE__" under instrumentation, because the method bodies
+  ;; compile to real class methods that can't close over the STATE__ local. The
+  ;; bodies are now left uninstrumented, so the form compiles and its methods run.
+  (binding [d/*skip-breaks* (atom {:mode :all})]
+    (is (some? (d/instrument-and-eval
+                (read-with-debug-readers
+                 "#dbg (defrecord DbgRec [x] clojure.lang.IDeref (deref [_] (inc x)))")))
+        "compiles without an unresolved STATE__")
+    (is (= 6 (eval '(deref (->DbgRec 5))))
+        "the record's instrumented method still works")))
+
 (deftest method-too-large?-test
   (are [msg] (#'d/method-too-large? msg)
     (RuntimeException. "blah Method code too large! blah")

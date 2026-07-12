@@ -98,12 +98,17 @@
                                             (map-indexed (first args))
                                             vec)
                                         (instrument-coll (rest args)))
-            '#{reify* deftype*} (map #(if (seq? %)
-                                        (let [[a1 a2 & ar] %]
-                                          (m/merge-meta (list* a1 a2 (instrument-coll ar))
-                                            (meta %)))
-                                        %)
-                                     args)
+            '#{reify*} (map #(if (seq? %)
+                               (let [[a1 a2 & ar] %]
+                                 (m/merge-meta (list* a1 a2 (instrument-coll ar))
+                                   (meta %)))
+                               %)
+                            args)
+            ;; `deftype*` method bodies compile to real class methods that
+            ;; can't close over the enclosing `STATE__` local (unlike `reify*`,
+            ;; which captures its environment), so instrumenting them yields an
+            ;; unresolvable `STATE__`. Leave them untouched.
+            '#{deftype*} args
             ;; `fn*` has several possible syntaxes.
             '#{fn*} (let [[a1 & [a2 & ar :as a1r]] args]
                       (cond
