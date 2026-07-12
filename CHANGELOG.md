@@ -8,6 +8,7 @@
 * [#750](https://github.com/clojure-emacs/cider-nrepl/issues/750): A form too large to instrument for debugging no longer fails with a raw `Method code too large!` compiler error. It's first retried without local capture (with a warning; breakpoints still work), and if it still won't fit, cider-nrepl reports a clear error and leaves it unevaluated rather than silently evaluating it without instrumentation.
 * [#1022](https://github.com/clojure-emacs/cider-nrepl/issues/1022): Fix a debugger instrumentation crash (`Symbol cannot be cast to Keyword`) when a function argument is destructured with more than eight explicit key/val pairs.
 * [#764](https://github.com/clojure-emacs/cider-nrepl/issues/764): Fix enlighten (and the debugger) corrupting record literals embedded in the code - e.g. compojure's compiled routes - into plain maps, which broke protocol dispatch on them (`No implementation of method ... found for class ... PersistentArrayMap`).
+* [#1032](https://github.com/clojure-emacs/cider-nrepl/pull/1032): Fix enlighten (and the debugger) throwing `Unable to resolve symbol: STATE__` on a `defrecord`/`deftype` with inline protocol methods: those bodies compile to real class methods that can't close over the debugger's state, so they are now left uninstrumented (`reify` bodies, which capture their environment, remain instrumentable).
 
 ## 0.62.0 (2026-07-08)
 
