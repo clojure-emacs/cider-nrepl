@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- * Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
+
 ## 0.62.2 (2026-07-18)
 
 - [#1038](https://github.com/clojure-emacs/cider-nrepl/pull/1038): Fix `enlighten` evaluations being silently ignored on nREPL 1.5+: the debug middleware's eval function shadowed the one the enlighten middleware installs, so code never lit up.
