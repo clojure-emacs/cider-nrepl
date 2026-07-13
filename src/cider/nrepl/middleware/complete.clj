@@ -24,6 +24,7 @@
    :compliment.sources.classes/classes
    :compliment.sources.class-members/members
    :compliment.sources.class-members/static-members
+   :compliment.sources.data-readers/data-readers
    :compliment.sources.keywords/keywords
    :compliment.sources.local-bindings/local-bindings
    :compliment.sources.resources/resources
