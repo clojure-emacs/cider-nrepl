@@ -25,37 +25,22 @@ A minimal `profiles.clj` for CIDER would be:
 ----
 
 Or (if you know what you're doing) add `cider-nrepl` to your `:dev
-:dependencies` vector plus specific middleware to `:nrepl-middleware`
-under `:repl-options`.
+:dependencies` vector plus the specific middleware you need to
+`:nrepl-middleware` under `:repl-options`:
 
 [source,clojure]
 ----
 :dependencies [[cider/cider-nrepl "0.62.1"]]
 :repl-options {:nrepl-middleware
-                 [cider.nrepl/wrap-apropos
-                  cider.nrepl/wrap-classpath
-                  cider.nrepl/wrap-clojuredocs
-                  cider.nrepl/wrap-complete
+                 [cider.nrepl/wrap-complete
                   cider.nrepl/wrap-debug
-                  cider.nrepl/wrap-format
                   cider.nrepl/wrap-info
-                  cider.nrepl/wrap-inspect
-                  cider.nrepl/wrap-log
-                  cider.nrepl/wrap-macroexpand
-                  cider.nrepl/wrap-ns
-                  cider.nrepl/wrap-spec
-                  cider.nrepl/wrap-profile
-                  cider.nrepl/wrap-refresh
-                  cider.nrepl/wrap-reload
-                  cider.nrepl/wrap-resource
-                  cider.nrepl/wrap-stacktrace
-                  cider.nrepl/wrap-test
-                  cider.nrepl/wrap-trace
-                  cider.nrepl/wrap-out
-                  cider.nrepl/wrap-undef
-                  cider.nrepl/wrap-version
-                  cider.nrepl/wrap-xref]}
+                  cider.nrepl/wrap-test]}
 ----
+
+The full list of available middleware lives in the
+`cider.nrepl.middleware/cider-middleware` var and is described in
+xref:nrepl-api/supplied_middleware.adoc[Supplied Middleware].
 
 == Via clj
 
@@ -72,17 +57,21 @@ There are also two convenient aliases you can employ:
 ----
 {...
  :aliases
- {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
+ {:cider-clj {:extra-deps {org.clojure/clojure {:mvn/version "1.12.1"}
                            cider/cider-nrepl {:mvn/version "0.62.1"}}
               :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
 
-  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.10.3"}
-                            org.clojure/clojurescript {:mvn/version "1.10.339"}
+  :cider-cljs {:extra-deps {org.clojure/clojure {:mvn/version "1.12.1"}
+                            org.clojure/clojurescript {:mvn/version "1.11.132"}
                             cider/cider-nrepl {:mvn/version "0.62.1"}
-                            cider/piggieback {:mvn/version "0.5.2"}}
+                            cider/piggieback {:mvn/version "0.6.2"}}
                :main-opts ["-m" "nrepl.cmdline" "--middleware"
                            "[cider.nrepl/cider-middleware,cider.piggieback/wrap-cljs-repl]"]}}}
 ----
+
+NOTE: ClojureScript 1.12.42 and newer require Java 21+, as they bundle a
+Google Closure compiler built for it. Stick to the 1.11.x line if you're on an
+older JDK.
 
 Which then allow you to simply run:
 
