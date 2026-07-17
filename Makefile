@@ -97,12 +97,14 @@ eastwood: javac
 lint: cljfmt kondo eastwood
 
 docs:
-	clojure -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"1.7.0"'
+	clojure -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"$(NREPL_VERSION)"'
 
 # Prepare a release: roll the changelog, bump the docs version, commit and tag.
 # Pushing the tag (which triggers the deploy below) is left to you.
 # PROJECT_VERSION=x.y.z make release
-release: check-version
+# Regenerating the ops docs first keeps the generated API reference honest -
+# it gets committed as part of the release commit if it changed.
+release: check-version docs
 	clojure -T:build release :version '"$(PROJECT_VERSION)"'
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
