@@ -7,6 +7,12 @@
   ["nREPL API" {}
    ["Supplied Middleware" {:file "doc/modules/ROOT/pages/nrepl-api/supplied_middleware.adoc"}]
    ["Supplied Ops" {:file "doc/modules/ROOT/pages/nrepl-api/ops.adoc"}]]
+  ["For Tool Authors" {}
+   ["Integrating cider-nrepl" {:file "doc/modules/ROOT/pages/tool-authors/index.adoc"}]
+   ["The Debugger Protocol" {:file "doc/modules/ROOT/pages/tool-authors/debugger.adoc"}]
+   ["The Inspector Protocol" {:file "doc/modules/ROOT/pages/tool-authors/inspector.adoc"}]
+   ["The Test Protocol" {:file "doc/modules/ROOT/pages/tool-authors/testing.adoc"}]
+   ["State Tracking" {:file "doc/modules/ROOT/pages/tool-authors/state-tracking.adoc"}]]
   ["Hacking on CIDER nREPL" {:file "doc/modules/ROOT/pages/hacking.adoc"}]
   ["Compatibility" {:file "doc/modules/ROOT/pages/compatibility.adoc"}]
   ["Release Policy" {:file "doc/modules/ROOT/pages/release_policy.adoc"}]

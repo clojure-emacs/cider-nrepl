@@ -1,0 +1,99 @@
+= The Test Protocol
+
+The test middleware runs `clojure.test` (and `cljs.test`) tests on the
+server and returns structured results, so clients can build rich test
+reporting UIs without parsing printed output.
+
+== Running Tests
+
+The primary op is `cider/test-var-query`. It takes a `var-query` map
+describing which vars to run:
+
+----
+{"op"        "cider/test-var-query"
+ "var-query" {"ns-query" {"exactly" ["my.app.core-test"]}}}
+----
+
+Useful `var-query` shapes:
+
+* `{:ns-query {:exactly [ns1 ns2]}}` - all tests in the given namespaces;
+* `{:ns-query {:project? true, :load-project-ns? true}}` - all project
+  tests (this is what `cider/test-all` builds internally);
+* `{:exactly ["my.app.core-test/my-test"]}` - specific test vars;
+* `:include-meta-key` / `:exclude-meta-key` - select by var metadata (e.g.
+  `^:integration`).
+
+An optional `fail-fast "true"` stops the run at the first failure or error.
+
+Two convenience ops build the query for you: `cider/test-all` (all project
+tests, with optional `include`/`exclude` metadata filters and `load?`) and
+`cider/retest` (re-run everything that failed or errored in the previous
+run, using state cached on the server). The older `cider/test` op (per-ns
+with `tests` list) is deprecated in favor of `cider/test-var-query`.
+
+If a namespace in the query doesn't exist, the response has status
+`namespace-not-found`.
+
+== The Report
+
+While tests run, the client receives progress messages carrying
+`testing-ns`. The final response contains:
+
+|===
+| Key | Meaning
+
+| `results`
+| Nested map: namespace → var name → vector of assertion result maps (see
+  below).
+
+| `summary`
+| Counts: `ns`, `var`, `test`, `pass`, `fail`, `error`.
+
+| `elapsed-time`
+| `{:ms ..., :humanized "..."}` for the whole run; per-ns and per-var
+  variants arrive under `ns-elapsed-time` and `var-elapsed-time`.
+
+| `gen-input`
+| For `test.check`-style tests: the (shrunk) failing input, when available.
+|===
+
+Each assertion result map contains:
+
+* `type` - `pass`, `fail` or `error`;
+* `index` - 0-based position of the assertion within its var, used to
+  reference it later (see below);
+* `context` - the enclosing `testing` context string;
+* `message` - the assertion's message;
+* `expected` / `actual` - pretty-printed forms (`actual` for failures);
+* `diffs` - structured expected/actual diffs, when available;
+* `file` / `line` - source location;
+* `fault` - `true` for errors that escaped an assertion (e.g. a fixture
+  blowing up); such entries have no `expected`;
+* `error` - printed representation of the throwable, for `error` results.
+
+== Follow-up Ops
+
+The middleware caches the last run's results per session, which enables:
+
+* `cider/retest` - re-run only the vars that had failures or errors.
+* `cider/test-stacktrace` - takes `ns`, `var` and `index` identifying an
+  erring assertion from the last run and returns the analyzed exception
+  behind it, one message per cause (the same format the stacktrace
+  middleware uses), then `done`. Responds with status `no-error` if that
+  assertion has no stored exception.
+
+== ClojureScript
+
+The same ops work in a ClojureScript session (Piggieback or shadow-cljs) and
+return the same report shape. A few differences to be aware of:
+
+* Tests execute in the JS runtime via `cljs.test`, so `:out`/`:err` output
+  from the tests is forwarded as ordinary output messages.
+* Asynchronous tests (`cljs.test/async`) are awaited: the server polls the
+  runtime until the run completes or a deadline passes. The optional
+  `timeout` request param (milliseconds, default 30000) controls the
+  deadline; on timeout the response carries partial results plus a
+  `test-timeout` status.
+* `fail-fast` is ignored.
+* Running specific vars still executes their whole namespace (fixtures are
+  namespace-scoped); the report is filtered to the requested vars.

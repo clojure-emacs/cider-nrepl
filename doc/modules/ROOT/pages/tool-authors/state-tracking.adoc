@@ -1,0 +1,65 @@
+= State Tracking
+
+The `wrap-tracker` middleware keeps clients informed about the vars and
+namespaces of the project, so they can drive things like syntax
+highlighting of known vars, completion caches and namespace browsers
+without polling. CIDER uses it for its dynamic font-locking, for example.
+
+== How State Reaches the Client
+
+After every op that can change the runtime's state (`eval`, `load-file`,
+the refresh/reload ops, tracing, undef, ...) finishes, the middleware
+computes what changed and - when something did - sends *one additional
+message* on the same request, after the `done` response:
+
+|===
+| Key | Meaning
+
+| `status`
+| `state` - this is how the client recognizes the message.
+
+| `repl-type`
+| `clj` or `cljs`.
+
+| `changed-namespaces`
+| Map of namespace name → namespace state (see below). Only namespaces that
+  changed since the last update are included; an empty map means nothing
+  changed.
+|===
+
+There's also an explicit `cider/get-state` op returning the same payload
+on demand.
+
+== The Namespace State
+
+Each entry of `changed-namespaces` has the shape:
+
+----
+{"aliases" {"str" "clojure.string", ...}
+ "interns" {"my-fn" {"fn" "true", "arglists" ...}, ...}}
+----
+
+`interns` maps var names to a *filtered* metadata map. Only tooling-relevant
+keys are transmitted (things like `macro`, `deprecated`, `test`, `indent`,
+`style/indent`, `fn`, plus markers for instrumented/traced/profiled vars),
+and all values are strings produced by `pr-str` - read them if you need the
+data rather than a display string. Macros without an explicit
+`style/indent` may get an inferred one.
+
+== What the Client Should Do
+
+* Maintain an accumulated picture per session, applying each
+  `changed-namespaces` delta on top. A namespace absent from a delta is
+  unchanged - not removed.
+* The first update in a session is a full snapshot of the project's
+  namespaces and also includes `clojure.core` (or `cljs.core`), so clients
+  get the core vars without special-casing.
+* Library (jar) namespaces are excluded from the project state, except those
+  the project's namespaces alias directly.
+
+== Caveats
+
+State computation runs asynchronously after each eval, so a client that
+evaluates rapidly may want to debounce its processing. The payloads can be
+large on the first sync of a big project; everything after that is
+incremental.
