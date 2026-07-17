@@ -790,10 +790,14 @@ this map (identified by a key), and will `dissoc` it afterwards."}
                                         :file (:file msg)
                                         :original-id (:id msg)})
                 form))))]
-    (assoc msg
-           ::ieval/read-fn read-fn
-           ::ieval/eval-fn (cider.nrepl.middleware.util.eval/eval-dispatcher
-                            instrument-and-eval ::form-info))))
+    (cond-> (assoc msg ::ieval/read-fn read-fn)
+      ;; Install the debugger's eval function only when the message doesn't
+      ;; carry one already. nREPL ignores the `:eval` slot (which the
+      ;; enlighten middleware uses) whenever `::ieval/eval-fn` is set, so
+      ;; setting ours unconditionally would disable the other middleware.
+      (not (or (::ieval/eval-fn msg) (:eval msg)))
+      (assoc ::ieval/eval-fn (cider.nrepl.middleware.util.eval/eval-dispatcher
+                              instrument-and-eval ::form-info)))))
 
 (defn- initialize
   "Initialize the channel used for debug-input requests."

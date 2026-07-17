@@ -734,3 +734,43 @@
     (<-- {:debug-value "9" :coor [3]})
     (--> :next)
     (<-- {:value "9"})))
+
+;;; Enlighten routing through the full middleware stack
+
+(defn- with-enlighten-session*
+  "Run `f` against a server whose stack has both `wrap-debug` and `wrap-enlighten`."
+  [f]
+  (with-open [^nrepl.server.Server
+              server    (nrepl.server/start-server
+                         :handler (nrepl.server/default-handler
+                                   #'wrap-debug
+                                   #'cider.nrepl/wrap-enlighten))
+              ^nrepl.transport.FnTransport
+              transport (nrepl/connect :port (:port server))]
+    (transport/send transport {:op "clone" :id (next-id)})
+    (binding [*transport*  transport
+              *session-id* (:new-session (transport/recv transport 1000))]
+      (with-redefs [d/debugger-message (atom nil)]
+        (nrepl-send {:op "init-debugger"})
+        (f)))))
+
+(deftest enlighten-flag-reaches-the-evaluator-test
+  ;; wrap-debug used to shadow the eval fn that wrap-enlighten picks (its
+  ;; ::ieval/eval-fn takes precedence over the public `:eval` slot), which
+  ;; silently disabled `enlighten` evals on nREPL 1.5+.
+  (when @#'d/nrepl-1-5+?
+    (with-enlighten-session*
+      (fn []
+        (nrepl-send {:op "eval" :enlighten "true"
+                     :code "(defn enl-routing-check [x] (inc x))"})
+        (Thread/sleep 500)
+        (nrepl-send {:op "eval" :code "(enl-routing-check 41)"})
+        (is (loop [nils 0]
+              (if-let [m (nrepl-recv)]
+                (if (and (some #{"enlighten" :enlighten} (:status m))
+                         (:debug-value m))
+                  true
+                  (recur 0))
+                ;; several consecutive quiet reads => nothing more is coming
+                (if (< nils 6) (recur (inc nils)) false)))
+            "an enlighten event reaches the debug channel")))))
