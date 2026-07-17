@@ -19,7 +19,7 @@ The ultimate goal of `cider-nrepl` is to provide a solid foundation for nREPL cl
 so they don't have to reinvent the wheel all the time.
 
 Despite its name, `cider-nrepl` is editor-agnostic and is leveraged by several other
-Clojure editors, besides CIDER (e.g. `vim-fireplace`, `iced-vim`, Calva, CCW).
+Clojure editors, besides CIDER (e.g. `vim-fireplace`, `vim-iced`, Calva, Conjure).
 While the project is officially a part of CIDER, its development is a joint
 venture between all interested tool authors.
 
@@ -43,8 +43,9 @@ be a REPL-first tool.
 Although those middleware were created for use with CIDER almost all
 of them are extremely generic and can be leveraged from other editors.
 
-Projects like https://github.com/tpope/vim-fireplace[vim-fireplace] and https://github.com/SevereOverfl0w/vim-replant[vim-replant] are making use of
-cider-nrepl already.
+Projects like https://github.com/tpope/vim-fireplace[vim-fireplace],
+https://github.com/liquidz/vim-iced[vim-iced], https://calva.io/[Calva] and
+https://github.com/Olical/conjure[Conjure] are making use of cider-nrepl already.
 
 === Reusable Core Logic
 
@@ -76,13 +77,13 @@ hackers to make this a reality.
 Most of cider-nrepl's dependencies are processed with
 https://github.com/benedekfazekas/mranderson[mranderson], so that
 they won't collide with the dependencies of your own projects. This
-basically means that cider-nrepl has almost no  runtime dependencies in
+basically means that cider-nrepl has almost no runtime dependencies in
 the production artifact - just copies of the deps inlined with changed
 namespaces/packages. It's a bit ugly and painful, but it gets the job
 done.
 
-The exclusion to this rule are the artifacts that are themselves part of the
-CIDER ecosystem and have to runtime dependencies of their own:
+The exception to this rule are the artifacts that are themselves part of the
+CIDER ecosystem and are kept as regular runtime dependencies:
 
 - https://github.com/clojure-emacs/orchard[Orchard]
 - https://github.com/clojure-emacs/logjam[Logjam]
