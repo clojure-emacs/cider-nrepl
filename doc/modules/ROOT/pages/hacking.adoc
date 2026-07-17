@@ -37,10 +37,13 @@ the most recent Clojure version that's supported.
 
 == Linting
 
-cider-nrepl uses eastwood and cljfmt. Make sure your changes conform to the project's baseline by doing:
+cider-nrepl uses clj-kondo, eastwood and cljfmt. Make sure your changes conform
+to the project's baseline by doing:
 
-  $ make eastwood
-  $ make cljfmt
+  $ make lint
+
+You can also run the individual linters via `make kondo`, `make eastwood` and
+`make cljfmt` (and `make cljfmt-fix` to fix formatting automatically).
 
 == Releasing
 
