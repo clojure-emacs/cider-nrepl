@@ -1,0 +1,223 @@
+= The Debugger Protocol
+
+The interactive debugger is the most involved protocol in cider-nrepl. It
+consists of two dedicated ops (`cider/init-debugger` and
+`cider/debug-input`), a hook into the regular `eval` op, and a small
+command language. This page describes the wire protocol; CIDER's own
+debugger UI is just one possible client of it.
+
+== Big Picture
+
+1. The client sends *one* `cider/init-debugger` message per connection. It
+   never receives a normal reply; instead the server holds on to it and uses
+   it as a *channel*: every debugger-initiated message (a hit breakpoint, a
+   stacktrace, a notification) is sent as a response to this message, i.e.
+   carrying its `id` and `session`.
+2. The client instruments code by including reader tags (`#break`, `#dbg`,
+   ...) in the code it sends to the plain `eval` op. No special op is needed.
+3. When instrumented code hits a breakpoint, the *evaluating thread blocks*
+   and the client receives a message with status `need-debug-input` on the
+   init-debugger channel.
+4. The client answers with a `cider/debug-input` message. Its `key` param
+   pairs the answer to the blocked breakpoint (concurrent breakpoints on
+   different threads are disambiguated this way). The thread wakes up, acts
+   on the command and either resumes or breaks again.
+
+== Instrumenting Code
+
+The following reader tags trigger instrumentation when they appear in code
+sent to `eval` (or `load-file`):
+
+|===
+| Tag | Effect
+
+| `#break`
+| Pause when execution reaches this form (after it's evaluated).
+
+| `#dbg`
+| Instrument the whole form: pause at every "interesting" sub-form
+  (function calls, loop iterations, etc.).
+
+| `#break!` / `#exn`
+| Like `#break`, but pause only if the form throws.
+
+| `#dbg!` / `#dbgexn`
+| Like `#dbg`, but pause only on exceptions.
+
+| `#light`
+| Enlighten mode - no pauses; see
+  xref:tool-authors/debugger.adoc#enlighten[Enlighten] below.
+|===
+
+The op remains an ordinary `eval`; the value of the instrumented form is
+returned as usual once execution completes. The `cider/debug-instrumented-defs`
+op returns the vars currently believed to be instrumented, grouped by
+namespace (it can contain false positives, but no false negatives).
+
+== The Breakpoint Message
+
+When a breakpoint is hit, the init-debugger channel receives a message with
+`status` `need-debug-input` and these keys:
+
+|===
+| Key | Meaning
+
+| `key`
+| Unique token for this pause; echo it back in `cider/debug-input`.
+
+| `input-type`
+| Either a list of currently allowed command keywords, or `expression` when
+  the debugger expects a code snippet (e.g. after an `eval` command without
+  inline code).
+
+| `prompt`
+| Optional prompt string accompanying an `expression` request.
+
+| `debug-value`
+| Printed value of the form we're paused on (truncated for display).
+
+| `coor`
+| Coordinate of the paused form within the top-level form (see below).
+
+| `locals`
+| List of `[name value]` string pairs for the local bindings in scope.
+  Absent when local capture isn't available.
+
+| `code`, `file`, `line`, `column`, `original-ns`
+| Source context of the instrumented top-level form. `column` is 1-based.
+
+| `original-id`
+| The `id` of the eval message that instrumented this code, so the client
+  can correlate the pause with the evaluation that caused it.
+
+| `inspect`
+| Present only right after an `inspect`-style command: the rendered
+  inspector output for the requested value.
+
+| `caught-msg`
+| Present only for exception breakpoints: the exception's message.
+|===
+
+== Coordinates
+
+`coor` is a vector of integers addressing a sub-form inside the top-level
+form, one index per nesting level. `[3 2 0]` means: take the 3rd element of
+the top-level form, then that element's 2nd element, then that one's 0th.
+A few special rules:
+
+* In maps, the key at entry `i` has index `2*i` and its value `2*i+1`. Maps
+  with more than eight entries are addressed in sorted-key order (so
+  coordinates are stable across Clojure versions); maps whose keys can't be
+  sorted, and sets, are not instrumented at all.
+* Record literals are never instrumented.
+
+Clients typically use `coor` plus `line`/`column` of the top-level form to
+compute where to display the "paused here" overlay.
+
+== Debug Commands
+
+The client answers a `need-debug-input` message with:
+
+----
+{"op"    "cider/debug-input"
+ "key"   "<the key from the breakpoint message>"
+ "input" "<a command>"}
+----
+
+`input` is read as EDN. It's either a bare keyword (e.g. `:next`) or a map
+`{:response :here, :coord [3 1]}` when the command takes arguments. The
+available commands are advertised in the breakpoint message's `input-type`
+(commands that need locals disappear when locals aren't available; `:quit`
+disappears when the eval can't be aborted):
+
+|===
+| Command | Effect
+
+| `:next`
+| Continue to the next breakpoint.
+
+| `:in`
+| Step into the function call the debugger is paused on.
+
+| `:out`
+| Skip the remaining breakpoints in the current sexp. With `:force? true`,
+  breakpoints in other instrumented code reached along the way are skipped
+  too.
+
+| `:here`
+| Run until the given position; takes `:coord` (a coordinate vector) and
+  optionally `:force?` (as with `:out`).
+
+| `:continue`
+| Skip the remaining breakpoints for the current invocation of the
+  instrumented form (they fire again on the next invocation).
+
+| `:continue-all`
+| Disable all breakpoints for the rest of this evaluation.
+
+| `:trace`
+| Continue, reporting each intermediate form and value along the way.
+
+| `:eval`
+| Evaluate an expression in the context of the paused frame (with locals in
+  scope). Takes `:code`; without it the debugger asks for the expression via
+  an `input-type` = `expression` round-trip. The result arrives as an updated
+  `debug-value`.
+
+| `:inject`
+| Like `:eval`, but the result *replaces* the value of the paused form and
+  execution continues with it.
+
+| `:inspect`
+| Render the current value with the inspector; arrives in the `inspect` key
+  of the next prompt.
+
+| `:inspect-prompt`
+| Prompt for an expression, evaluate and inspect its result.
+
+| `:locals`
+| Inspect the map of local bindings.
+
+| `:stacktrace`
+| Sends a message with status `stack` and analyzed `causes` (same format as
+  the stacktrace middleware), then re-prompts.
+
+| `:quit`
+| Abort the evaluation (the eval returns the value `QUIT` and its thread is
+  interrupted).
+|===
+
+Errors during `:eval`/`:inject` produce a message with status `eval-error`
+and analyzed `causes` on the debugger channel; the breakpoint remains
+paused and re-prompts.
+
+== Other Messages on the Debugger Channel
+
+* `{:status :notification, :msg ..., :type ...}` - informational messages
+  the client should surface (e.g. a form too large to instrument with
+  locals).
+* `{:status :done}` - the channel was released, typically because a new
+  `init-debugger` message replaced it. Re-initialize if you didn't cause it.
+
+[#enlighten]
+== Enlighten
+
+The `#light` reader tag (or an `enlighten` flag on the `eval` message)
+enables enlighten mode: execution is *not* paused, but every instrumented
+sub-form reports its value as it runs, as messages with status `enlighten`
+on the debugger channel. Each carries `coor` and `debug-value` (very
+aggressively truncated), plus `erase-previous` when the client should clear
+overlays from a previous run of the same form (e.g. re-invoked functions).
+Enlighten requires an initialized debugger channel, since it reuses it.
+
+== Caveats
+
+* The debugger channel is currently *global to the middleware instance*, not
+  per-session: the most recent `init-debugger` wins and any previous channel
+  receives `done`. Send exactly one `init-debugger` per connection.
+* Debugging is JVM-only; ClojureScript can't block a JS runtime waiting for
+  debug input.
+* Instrumentation can push a big function over the JVM's 64KB method-size
+  limit. The debugger automatically retries without local capture (with a
+  `notification` warning); if the form still doesn't fit, it reports an
+  error and leaves the form unevaluated.

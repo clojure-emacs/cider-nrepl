@@ -1,0 +1,75 @@
+= Integrating cider-nrepl into Your Tool
+
+This section is aimed at people building editor plugins and other nREPL
+clients on top of `cider-nrepl`. It complements the generated
+xref:nrepl-api/ops.adoc[ops reference] (which documents the request/response
+keys of every op) with the things that aren't visible there - conventions,
+cross-cutting behaviors and the multi-message protocols of the more complex
+middleware:
+
+* xref:tool-authors/debugger.adoc[The Debugger Protocol]
+* xref:tool-authors/inspector.adoc[The Inspector Protocol]
+* xref:tool-authors/testing.adoc[The Test Protocol]
+* xref:tool-authors/state-tracking.adoc[State Tracking]
+
+== Op Naming
+
+Historically all cider-nrepl ops had plain names like `complete` or
+`test-var-query`. Those names live in a flat namespace shared with nREPL
+itself and every other middleware, so newer ops are namespaced with a
+`cider/` prefix (`cider/complete`, `cider/test-var-query`), and the old
+names are kept as deprecated aliases.
+
+New client code should always use the `cider/`-prefixed names. The
+deprecated aliases won't be removed lightly (see
+xref:compatibility.adoc[Compatibility]), but they no longer appear in new
+functionality - some recent ops (e.g. `cider/tap-subscribe`,
+`cider/get-state`) have no unprefixed alias at all.
+
+== Discovering Capabilities
+
+Don't assume a particular cider-nrepl version - probe for it:
+
+* nREPL's built-in `describe` op returns the full op list; check for the ops
+  you need. With `:verbose? "true"` it also returns each op's documented
+  request/response keys (that's what the xref:nrepl-api/ops.adoc[ops
+  reference] is generated from).
+* The `cider-version` op returns cider-nrepl's own version map.
+
+Because cider-nrepl's middleware is loaded lazily (see
+xref:internals.adoc[Understanding the Internals]), the first use of an op may
+take noticeably longer than subsequent ones - budget your timeouts
+accordingly.
+
+== ClojureScript Sessions
+
+Many ops are ClojureScript-aware and transparently operate on the cljs
+compiler environment when the session is a ClojureScript REPL (via
+Piggieback or shadow-cljs). Ops that only make sense on the JVM reply with a
+`clojure-only` status in a ClojureScript session, so your client can show a
+meaningful message instead of confusing JVM results. Handle that status
+generically and you're covered for all of them.
+
+== Bypassing the Middleware
+
+Any message carrying a truthy `inhibit-cider-middleware` key skips all of
+cider-nrepl's middleware and is handled as if only stock nREPL were present.
+This is occasionally useful for tooling-internal evals that shouldn't
+trigger side effects like state tracking or debugger instrumentation.
+
+== Printing
+
+cider-nrepl requires nREPL 1.0+ and builds on nREPL's `print` middleware.
+Ops that return printed values (`eval` and friends, but also e.g. the
+debugger and the test ops) accept the standard
+`nrepl.middleware.print/*` options (`print`, `quota`, `stream?`, ...);
+see the https://nrepl.org/nrepl/design/middleware.html[nREPL documentation]
+for details.
+
+== Errors
+
+cider-nrepl wraps its handlers in a "safe transport": if an op's handler
+throws, the client receives a response with an error status (typically
+`<op-name>-error`) and exception details instead of silence. Your client
+should still apply timeouts, but it doesn't need to guard against requests
+that never complete simply because a handler blew up.
