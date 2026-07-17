@@ -53,3 +53,19 @@
         (reset! sent [])
         (tap> {:ignored true})
         (is (nil? (wait-for #(seq (keep :cider/tap-value @sent)))))))))
+
+(deftest tap-subscribe-dead-transport-test
+  (testing "a subscription whose transport fails is pruned"
+    (let [transport (reify transport/Transport
+                      (send [_this _msg]
+                        (throw (java.net.SocketException. "Socket closed")))
+                      (recv [_this] nil)
+                      (recv [_this _timeout] nil))
+          {id :cider/tap-subscribe} (tap-subscribe {:transport transport
+                                                    :id "1" :session "s"})]
+      (try
+        (tap> :doomed)
+        (is (wait-for #(not (contains? @@#'cider.nrepl.middleware.tap/subscriptions id)))
+            "the dead subscription was pruned")
+        (finally
+          (tap-unsubscribe {:subscription id}))))))

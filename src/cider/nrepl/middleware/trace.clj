@@ -51,6 +51,16 @@
   [event]
   (update event :phase name))
 
+(defn- unsubscribe!
+  "Drop the trace subscription with the given id, if it still exists.
+  Restores REPL trace output once the last subscription is gone."
+  [id]
+  (when-let [listener (get @subscriptions id)]
+    (trace/remove-trace-listener listener)
+    (swap! subscriptions dissoc id))
+  (when (empty? @subscriptions)
+    (trace/set-output-mode! :repl)))
+
 (defn trace-subscribe
   "Stream trace events to the client until `cider/trace-unsubscribe`.
   Registers an orchard trace listener that forwards each event on this
@@ -58,9 +68,17 @@
   [msg]
   (let [id (str (UUID/randomUUID))
         listener (fn [event]
-                   (respond-to msg
-                               :cider/trace-event (serialize-event event)
-                               :status :cider/trace-event))]
+                   (try
+                     (respond-to msg
+                                 :cider/trace-event (serialize-event event)
+                                 :status :cider/trace-event)
+                     (catch Exception _
+                       ;; The listener runs inside the traced call, so a write
+                       ;; failure (e.g. the client vanished without
+                       ;; unsubscribing, leaving a closed transport) would
+                       ;; otherwise propagate into - and break - the user's
+                       ;; own evaluation. Drop the dead subscription instead.
+                       (unsubscribe! id))))]
     (swap! subscriptions assoc id listener)
     (trace/add-trace-listener listener)
     (trace/set-output-mode! :listeners)
@@ -70,11 +88,7 @@
   "Stop streaming trace events for the given subscription.
   Restores REPL trace output once the last subscription is gone."
   [{:keys [subscription]}]
-  (when-let [listener (get @subscriptions subscription)]
-    (trace/remove-trace-listener listener)
-    (swap! subscriptions dissoc subscription))
-  (when (empty? @subscriptions)
-    (trace/set-output-mode! :repl))
+  (unsubscribe! subscription)
   {:cider/trace-unsubscribe subscription})
 
 (defn handle-trace [handler msg]
