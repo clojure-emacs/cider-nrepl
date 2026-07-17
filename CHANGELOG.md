@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+* [#1037](https://github.com/clojure-emacs/cider-nrepl/pull/1037): Drop trace and tap subscriptions whose client connection has died; a stale trace subscription used to break every traced evaluation with a `SocketException` until the server was restarted.
+
 ## 0.62.1 (2026-07-15)
 
 - [#1016](https://github.com/clojure-emacs/cider-nrepl/issues/1016): Fix a debugger crash (`Unable to resolve symbol: STATE__`) when `#dbg` is placed on a bare collection literal that closes over a local or a qualified name (e.g. `#dbg [x]`).

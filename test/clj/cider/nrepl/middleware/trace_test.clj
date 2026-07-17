@@ -146,6 +146,30 @@
       (is (empty? (keep :cider/trace-event @sent)))
       (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"}))))
 
+(deftest trace-subscribe-dead-transport-test
+  (testing "a subscription whose transport fails is pruned instead of breaking the traced call"
+    (let [transport (reify transport/Transport
+                      (send [_this _msg]
+                        (throw (java.net.SocketException. "Socket closed")))
+                      (recv [_this] nil)
+                      (recv [_this _timeout] nil))
+          {id :cider/trace-subscribe} (trace-subscribe {:transport transport
+                                                        :id "42" :session "s"})]
+      (try
+        (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"})
+        ;; The listener runs inside the traced call, so before the fix the
+        ;; write failure escaped into the user's own evaluation.
+        (let [result (volatile! nil)]
+          ;; Pruning the last subscription flips trace output back to the
+          ;; REPL, so the same call's return event prints; swallow it.
+          (with-out-str (vreset! result (traced-sample 1)))
+          (is (= 2 @result) "the traced call is unaffected by the dead subscriber"))
+        (is (not (contains? @@#'cider.nrepl.middleware.trace/subscriptions id))
+            "the dead subscription was pruned")
+        (finally
+          (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"})
+          (trace-unsubscribe {:subscription id}))))))
+
 (deftest deprecated-ops-test
   (testing "Deprecated 'toggle-trace-var' op still works"
     (let [on  (session/message {:op "toggle-trace-var"

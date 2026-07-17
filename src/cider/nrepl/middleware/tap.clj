@@ -54,6 +54,13 @@
   "Map of subscription id -> the `add-tap' handler registered for it."
   (atom {}))
 
+(defn- unsubscribe!
+  "Drop the tap subscription with the given id, if it still exists."
+  [id]
+  (when-let [tap-fn (get @subscriptions id)]
+    (remove-tap tap-fn)
+    (swap! subscriptions dissoc id)))
+
 (defn tap-subscribe
   "Stream a summary of every tapped value to the client until
   `cider/tap-unsubscribe'.  Registers an `add-tap' handler that forwards each
@@ -62,9 +69,15 @@
   (let [id     (str (UUID/randomUUID))
         tap-fn (fn [value]
                  (let [idx (retain! value)]
-                   (respond-to msg
-                               :cider/tap-value (assoc (summarize value) :idx idx)
-                               :status :cider/tap-value)))]
+                   (try
+                     (respond-to msg
+                                 :cider/tap-value (assoc (summarize value) :idx idx)
+                                 :status :cider/tap-value)
+                     (catch Exception _
+                       ;; The client vanished without unsubscribing (its
+                       ;; transport is closed), so this handler would fail on
+                       ;; every future `tap>`. Drop the dead subscription.
+                       (unsubscribe! id)))))]
     (swap! subscriptions assoc id tap-fn)
     (add-tap tap-fn)
     {:cider/tap-subscribe id}))
@@ -72,9 +85,7 @@
 (defn tap-unsubscribe
   "Stop streaming tapped values for the given subscription."
   [{:keys [subscription]}]
-  (when-let [tap-fn (get @subscriptions subscription)]
-    (remove-tap tap-fn)
-    (swap! subscriptions dissoc subscription))
+  (unsubscribe! subscription)
   {:cider/tap-unsubscribe subscription})
 
 (defn tap-inspect
