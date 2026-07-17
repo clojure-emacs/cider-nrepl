@@ -1,143 +1,165 @@
 = Supplied nREPL middleware
 
+All the functionality of `cider-nrepl` is provided as a collection of nREPL
+middleware, each contributing one or more nREPL ops.
+
+A few things to keep in mind about the table below:
+
+* Ops are listed by their canonical `cider/`-prefixed names (e.g.
+  `cider/complete`). Most ops are still available under their historical
+  unprefixed names (e.g. `complete`) as deprecated aliases - see
+  xref:nrepl-api/ops.adoc[Supplied Ops] for the full list, including the
+  deprecated ones.
+* Middleware marked with "No*" in the ClojureScript column reply with a
+  `clojure-only` status when invoked in a ClojureScript session, so clients can
+  present a meaningful message instead of misleading JVM-only results.
+* Some middleware don't add ops of their own - they enhance the built-in
+  `eval` op (e.g. `wrap-content-type`, `wrap-enlighten`).
+
 |===
-| Middleware | Version Added | Supports ClojureScript | Op(s) | Description
+| Middleware | Supports ClojureScript | Op(s) | Description
 
 | `wrap-apropos`
-| -
-| No
-| `apropos`
+| No*
+| `cider/apropos`
 | Pattern search for symbols and documentation.
 
 | `wrap-classpath`
-| -
 | No
-| `classpath`
+| `cider/classpath`
 | Java classpath.
 
 | `wrap-clojuredocs`
-| 0.22.0
 | No
-| `clojuredocs-lookup/clojuredocs-refresh-cache`
-| Look up ClojureDocs.
+| `cider/clojuredocs-lookup`, `cider/clojuredocs-refresh-cache`
+| Look up documentation and examples on https://clojuredocs.org/[ClojureDocs].
 
 | `wrap-complete`
-| -
 | Yes
-| `complete`
+| `cider/complete`, `cider/complete-doc`, `cider/complete-flush-caches`
 | Code completion.
 
 | `wrap-content-type`
-| -
 | No
-| `eval`
-| Rich content handling, return multimedia results beyond plain text from `eval`.
+| enhances `eval`
+| Rich content handling; return multimedia results beyond plain text from `eval` (as `content-type` and `body`).
 
 | `wrap-debug`
-| -
 | No
-| `init-debugger/debug-input`
-| Establish a channel for `cider-debug` commands, use it to get debug input, and also wrap the eval op.
+| `cider/init-debugger`, `cider/debug-input`, `cider/debug-instrumented-defs`, `cider/debug-middleware` (also wraps `eval`)
+| The interactive debugger: instrument code via the `#break`/`#dbg` reader tags and step through it.
+
+| `wrap-enlighten`
+| No
+| enhances `eval`
+| Enlighten mode: display the value of locals inline as the code runs.
 
 | `wrap-format`
-| -
 | Yes
-| `format-(code/edn)`
+| `cider/format-code`, `cider/format-edn`
 | Code and data formatting.
 
 | `wrap-info`
-| -
 | Yes
-| `info/eldoc`
+| `cider/info`, `cider/eldoc`, `cider/eldoc-datomic-query`, `cider/classify-symbols`
 | File/line, arglists, docstrings and other metadata for vars.
 
 | `wrap-inspect`
-| -
-| No
-| `inspect-(start/refresh/pop/push)`
-| Inspect a Clojure expression.
+| Partial
+| `cider/inspect-refresh`, `cider/inspect-push`, `cider/inspect-pop`, `cider/inspect-next-page`, `cider/inspect-prev-page`, `cider/inspect-next-sibling`, `cider/inspect-previous-sibling`, `cider/inspect-toggle-view-mode`, `cider/inspect-toggle-pretty-print`, `cider/inspect-display-analytics`, `cider/inspect-def-current-value`, `cider/inspect-print-current-value`, `cider/inspect-tap-current-value`, `cider/inspect-tap-indexed`, `cider/inspect-clear` and more (also enhances `eval` via its `inspect` flag)
+| Inspect any Clojure value, navigating its structure page by page.
 
 | `wrap-log`
-| 0.30.1
 | No
-| `cider/log-add-appender`, `cider/log-add-consumer`, `cider/log-analyze-stacktrace`, `cider/log-clear-appender`, `cider/log-exceptions`, `cider/log-format-event`, `cider/log-frameworks`, `cider/log-inspect-event`, `cider/log-levels`, `cider/log-loggers`, `cider/log-remove-appender`, `cider/log-remove-consumer`, `cider/log-search`, `cider/log-update-appender`, `cider/log-update-consumer`, `cider/log-threads`
+| `cider/log-frameworks`, `cider/log-add-appender`, `cider/log-remove-appender`, `cider/log-update-appender`, `cider/log-add-consumer`, `cider/log-remove-consumer`, `cider/log-update-consumer`, `cider/log-search`, `cider/log-inspect-event`, `cider/log-format-event`, `cider/log-exceptions`, `cider/log-levels`, `cider/log-loggers`, `cider/log-threads`, `cider/log-clear-appender`
 | Capture, debug, inspect and view log events emitted by Java logging frameworks.
 
 | `wrap-macroexpand`
-| -
 | Yes
-| `macroexpand/macroexpand-1/macroexpand-all/macroexpand-step`
-| Macroexpand a Clojure form.
+| `cider/macroexpand`
+| Macroexpand a Clojure form (the expander - `macroexpand-1`, `macroexpand`, `macroexpand-all` - is selected via a parameter).
 
 | `wrap-ns`
-| -
-| No
-| `ns-list/ns-vars/ns-path/ns-load-all/ns-aliases`
+| Yes
+| `cider/ns-list`, `cider/ns-vars`, `cider/ns-vars-with-meta`, `cider/ns-list-vars-by-name`, `cider/ns-path`, `cider/ns-load-all`, `cider/ns-aliases`
 | Namespace browsing & loading.
 
-| `wrap-spec`
-| -
-| No
-| `spec-list/spec-form/spec-example`
-| Spec browsing.
+| `wrap-out`
+| Yes
+| `cider/out-subscribe`, `cider/out-unsubscribe`
+| Echo the server's output stream to client sessions.
 
 | `wrap-profile`
-| -
-| No
+| No*
 | `cider/profile-toggle-var`, `cider/profile-toggle-ns`, `cider/profile-summary`, `cider/profile-clear`
-| Middleware for manual profiling.
+| Manual profiling of functions.
 
 | `wrap-refresh`
-| -
-| No
-| `refresh/refresh-all/refresh-clear`
-| Code reloading.
+| No*
+| `cider/refresh`, `cider/refresh-all`, `cider/refresh-clear`
+| Code reloading, powered by `tools.namespace`.
+
+| `wrap-reload`
+| No*
+| `cider.clj-reload/reload`, `cider.clj-reload/reload-all`, `cider.clj-reload/reload-clear`
+| Code reloading, powered by `clj-reload`.
 
 | `wrap-resource`
-| 0.22
 | No
-| `resource`
-| Return resource path.
+| `cider/resource`, `cider/resources-list`
+| Return resource paths.
+
+| `wrap-slurp`
+| No
+| `cider/slurp`
+| Slurp a URL from the nREPL server, returning MIME data.
+
+| `wrap-spec`
+| No*
+| `cider/spec-list`, `cider/spec-form`, `cider/spec-example`
+| Spec browsing.
 
 | `wrap-stacktrace`
-| -
 | No
-| `stacktrace`
+| `cider/analyze-last-stacktrace`, `cider/inspect-last-exception`
 | Cause and stacktrace analysis for exceptions.
 
+| `wrap-tap`
+| Partial
+| `cider/tap-subscribe`, `cider/tap-unsubscribe`, `cider/tap-inspect`
+| Subscribe to `tap>` values and inspect them.
+
 | `wrap-test`
-| -
-| No
-| `test-var-query/retest/test-stacktrace`
+| Yes
+| `cider/test-var-query`, `cider/test`, `cider/test-all`, `cider/retest`, `cider/test-stacktrace`
 | Test execution, reporting, and inspection.
 
 | `wrap-trace`
-| -
-| No
-| `toggle-trace-var`/`toggle-trace-ns`
-| Toggle tracing of a given var or ns.
+| No*
+| `cider/toggle-trace-var`, `cider/toggle-trace-ns`, `cider/list-traced`, `cider/untrace-all`, `cider/trace-subscribe`, `cider/trace-unsubscribe`
+| Toggle tracing of vars and namespaces.
 
-| `wrap-out`
-| -
+| `wrap-tracker`
 | Yes
-| `out-subscribe`/`out-unsubscribe`
-| Echo the server's output stream to client sessions.
+| `cider/get-state` (also enhances `eval` and `load-file`)
+| Track server-side namespace/var state, so clients can keep their local caches (e.g. for font-locking and completion) in sync.
 
 | `wrap-undef`
-| -
-| No
-| `undef`
+| No*
+| `cider/undef`, `cider/undef-all`
 | Undefine a var.
 
 | `wrap-version`
-| -
 | Yes
 | `cider-version`
 | The CIDER-nREPL version map.
 
 | `wrap-xref`
-| 0.22
-| No
-| `fn-refs`/`fn-deps`
-| Function references and dependencies (other functions).
+| No*
+| `cider/fn-refs`, `cider/fn-deps`, `cider/who-implements`, `cider/protocols-with-method`, `cider/type-protocols`
+| Function references, dependencies and protocol implementation lookup.
 |===
+
+NOTE: The authoritative list of middleware lives in the
+`cider.nrepl.middleware/cider-middleware` var, and the authoritative op
+documentation is generated from it (see xref:nrepl-api/ops.adoc[Supplied Ops]).
