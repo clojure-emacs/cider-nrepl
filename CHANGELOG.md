@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+* Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
 * [#1037](https://github.com/clojure-emacs/cider-nrepl/pull/1037): Drop trace and tap subscriptions whose client connection has died; a stale trace subscription used to break every traced evaluation with a `SocketException` until the server was restarted.
 
 ## 0.62.1 (2026-07-15)
