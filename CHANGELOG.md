@@ -6,9 +6,8 @@
 
 ## master (unreleased)
 
-* [#1038](https://github.com/clojure-emacs/cider-nrepl/pull/1038): Fix `enlighten` evaluations being silently ignored on nREPL 1.5+: the debug middleware's eval function shadowed the one the enlighten middleware installs, so code never lit up.
-
-* [#1037](https://github.com/clojure-emacs/cider-nrepl/pull/1037): Drop trace and tap subscriptions whose client connection has died; a stale trace subscription used to break every traced evaluation with a `SocketException` until the server was restarted.
+- [#1038](https://github.com/clojure-emacs/cider-nrepl/pull/1038): Fix `enlighten` evaluations being silently ignored on nREPL 1.5+: the debug middleware's eval function shadowed the one the enlighten middleware installs, so code never lit up.
+- [#1037](https://github.com/clojure-emacs/cider-nrepl/pull/1037): Drop trace and tap subscriptions whose client connection has died; a stale trace subscription used to break every traced evaluation with a `SocketException` until the server was restarted.
 
 ## 0.62.1 (2026-07-15)
 
