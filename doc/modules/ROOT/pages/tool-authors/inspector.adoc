@@ -1,0 +1,134 @@
+= The Inspector Protocol
+
+The inspector renders any value as a navigable, paginated tree. Its state
+lives on the server, in the nREPL session; the client only ever holds the
+latest rendering and issues navigation commands against the server-side
+state. One inspector exists per session.
+
+== Starting an Inspection
+
+There is no `inspect-start` op. An inspection starts by riding along another
+op:
+
+* *eval* - send a normal `eval` message with a truthy `inspect` flag. The
+  eval's value is loaded into the session's inspector and the response's
+  `value` contains the rendering (described below) instead of the printed
+  value.
+* *exceptions* - `cider/inspect-last-exception` (after
+  `cider/analyze-last-stacktrace`) loads the exception cause at `index`
+  (with `ex-data "true"`, its ex-data) into the inspector.
+* *tap* - `cider/tap-inspect` loads a previously tapped value by its `idx`.
+* *logs* - `cider/log-inspect-event` loads a captured log event.
+
+== The Rendering Format
+
+Every inspector op responds with:
+
+|===
+| Key | Meaning
+
+| `value`
+| The rendering: a *string* containing an EDN sequence the client must read.
+
+| `path`
+| A string describing the navigation path from the root value to the
+  currently inspected one, e.g. `"((nth 2) :users)"`.
+
+| `status`
+| `done`.
+|===
+
+The `value` string, once read, is a flat sequence of rendering directives:
+
+* a plain string - literal text to display;
+* `[:newline]` - a line break;
+* `[:value "printed-representation" idx]` - a nested value the user can
+  navigate into. `idx` is the integer to send back with
+  `cider/inspect-push` (or `cider/inspect-tap-indexed`).
+
+Rendering is thus entirely server-driven: the client displays the directives
+in order, makes the `[:value ...]` elements interactive, and never needs to
+understand the inspected object itself.
+
+== Navigation and Actions
+
+All ops below operate on the session's current inspector and return the new
+rendering in the same format:
+
+|===
+| Op | Params | Effect
+
+| `cider/inspect-push`
+| `idx`
+| Descend into the nested value with that index.
+
+| `cider/inspect-pop`
+|
+| Go back up one level.
+
+| `cider/inspect-next-sibling` / `cider/inspect-previous-sibling`
+|
+| Move to the next/previous element of the parent collection.
+
+| `cider/inspect-next-page` / `cider/inspect-prev-page`
+|
+| Page through long collections.
+
+| `cider/inspect-refresh`
+| config (see below)
+| Re-render the current value, optionally changing configuration.
+
+| `cider/inspect-toggle-view-mode`
+|
+| Cycle the view mode (`normal` / `table` / `object`). Table mode works for
+  sequences of maps or tuples; object mode shows raw Java fields. The mode
+  resets to normal when navigating into a child.
+
+| `cider/inspect-toggle-pretty-print`
+|
+| Toggle pretty-printing of rendered values.
+
+| `cider/inspect-display-analytics`
+|
+| Compute and include an analytics section for the current object.
+
+| `cider/inspect-def-current-value`
+| `ns`, `var-name`
+| Def the currently inspected value into a var.
+
+| `cider/inspect-print-current-value`
+| print options
+| Stream the full printed value (as regular `value` responses, honoring the
+  nREPL print middleware options), then `done`.
+
+| `cider/inspect-tap-current-value`
+|
+| Send the current value to `tap>`.
+
+| `cider/inspect-tap-indexed`
+| `idx`
+| Send the nested value with that index to `tap>`.
+
+| `cider/inspect-clear`
+|
+| Reset the inspector state.
+|===
+
+== Configuration
+
+`cider/inspect-refresh` (and the initial `eval` + `inspect` message) accept
+configuration keys that persist in the session's inspector: `page-size`,
+`max-atom-length`, `max-coll-size`, `max-value-length`, `max-nested-depth`,
+`pretty-print`, `sort-maps`, `only-diff`, and `view-mode`. Boolean-ish
+options are transmitted as the string `"true"`.
+
+The older `cider/inspect-set-page-size`, `cider/inspect-set-max-atom-length`,
+`cider/inspect-set-max-coll-size` and `cider/inspect-set-max-nested-depth`
+ops still work but are deprecated in favor of passing the corresponding
+key to `cider/inspect-refresh`.
+
+== ClojureScript
+
+The inspector has partial ClojureScript support: values are round-tripped
+through the printer, so plain data inspects fine but live JS objects can't
+be navigated the way JVM objects can.

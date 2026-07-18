@@ -4,7 +4,7 @@ This file was _generated_ with `make docs`
 ////
 = Supported nREPL operations
 
-[small]#generated from a verbose 'describe' response (cider-nrepl v1.7.0)#
+[small]#generated from a verbose 'describe' response (nREPL v1.7)#
 
 == Operations
 

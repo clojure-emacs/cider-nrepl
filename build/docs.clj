@@ -82,7 +82,7 @@ use in e.g. wiki pages, github, etc."
   use in e.g. wiki pages, github, etc."
   [{:keys [ops]} version]
   (apply str "= Supported nREPL operations\n\n"
-         "[small]#generated from a verbose 'describe' response (cider-nrepl v"
+         "[small]#generated from a verbose 'describe' response (nREPL v"
          version
          ")#\n\n== Operations"
          (for [[op {:keys [doc optional requires returns]}] (sort (relevant-ops ops))]

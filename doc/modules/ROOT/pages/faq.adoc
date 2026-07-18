@@ -10,8 +10,9 @@ If we were naming the project today we would have gone with `orchard-nrepl`. Nam
 
 == Does `cider-nrepl` support ClojureScript?
 
-Yes, it does. The support, however, is partial and not all of the functionality if available
-for ClojureScript.
+Yes, it does. The support, however, is partial and not all of the functionality is available
+for ClojureScript. Ops that only make sense on the JVM reply with a `clojure-only`
+status when invoked in a ClojureScript session.
 
 == Does `cider-nrepl` support ClojureCLR?
 

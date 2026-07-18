@@ -52,8 +52,8 @@ never contain new features.
 
 Report issues and suggest features and improvements on the
 [GitHub issue tracker](https://github.com/clojure-emacs/cider-nrepl/issues). Don't
-ask questions on the issue tracker - the mailing list and the IRC
-channel are the places for questions.
+ask questions on the issue tracker - use the `#cider` channel on the
+[Clojurians Slack](https://clojurians.slack.com/) instead.
 
 ### Patches
 
@@ -97,19 +97,18 @@ make docs
 
 ## Releasing to Clojars
 
-> [!IMPORTANT]
->
-> Make sure you've updated the changelog, `docs/antora.yml`, etc
-> before cutting a new release.
-
-Release to [clojars](https://clojars.org/) by tagging a new release:
+The release process is scripted:
 
 ```shell
-git tag -a vX.Y.Z -m "Release X.Y.Z"
-git push --tags
+PROJECT_VERSION=X.Y.Z make release
+git push origin master vX.Y.Z
 ```
 
-The CI will take it from there.
+This rolls the changelog, bumps the version in the docs, commits, tags and
+pushes; the CI takes it from there and deploys to
+[Clojars](https://clojars.org/cider/cider-nrepl). See the
+["Hacking on cider-nrepl"](https://docs.cider.mx/cider-nrepl/hacking.html)
+section of the manual for details.
 
 ## Hall of Fame
 
@@ -138,7 +137,7 @@ Let's also acknowledge some of the projects leveraged by cider-nrepl:
 
 ## License
 
-Copyright © 2013-2025 Bozhidar Batsov
+Copyright © 2013-2026 Bozhidar Batsov
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
