@@ -149,7 +149,7 @@ jobs:
                 name: Running quick tests
                 command: make quick-test
 
-  cljs-test:
+  test-cljs:
     description: |
       Run the ClojureScript middleware tests (JDK21+ only, since CLJS 1.12's
       Closure compiler requires a recent JDK)
@@ -223,34 +223,41 @@ workflows:
               jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
-          # Quick tests for older and unreleased Clojure versions and fringe JDKs.
           matrix:
-            alias: "test-older-clojure"
-            parameters:
-              clojure_version: ["1.10", "1.11", "1.13"]
-              jdk_version: [jdk8, jdk26]
-          <<: *run_always
-      - test:
-          # Quick tests for latest Clojure and interim JDK versions.
-          matrix:
-            alias: "test-latest-clojure"
+            alias: "test-1.12"
             parameters:
               clojure_version: ["1.12"]
-              jdk_version: [jdk11, jdk17, jdk21, jdk25]
+              jdk_version: [jdk8, jdk11, jdk17, jdk21, jdk25, jdk26]
+          <<: *run_always
+      - test:
+          matrix:
+            alias: "test-1.13"
+            parameters:
+              # Clojure 1.13 bumped min JDK requirement to 17
+              clojure_version: ["1.13"]
+              jdk_version: [jdk17, jdk21, jdk25, jdk26]
+          <<: *run_always
+      - test:
+          # Test older Clojure versions only against fringe JDK versions.
+          matrix:
+            alias: "test-older"
+            parameters:
+              clojure_version: ["1.10", "1.11"]
+              jdk_version: [jdk8, jdk26]
           <<: *run_always
       - test:
           # Test against multiple nREPL versions.
           matrix:
-            alias: "nrepl-test"
+            alias: "test-nrepl"
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk26]
               nrepl_version: ["1.0", "1.3", "1.4", "1.5", "1.6", "1.7"]
           <<: *run_always
-      - cljs-test:
+      - test-cljs:
           # ClojureScript tests only run on JDK21+ (CLJS 1.12 Closure needs it).
           matrix:
-            alias: "cljs-test"
+            alias: "test-cljs"
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk21, jdk25, jdk26]
@@ -260,10 +267,11 @@ workflows:
       - deploy:
           requires:
             - full-test
-            - test-older-clojure
-            - test-latest-clojure
-            - nrepl-test
-            - cljs-test
+            - test-1.12
+            - test-1.13
+            - test-older
+            - test-nrepl
+            - test-cljs
             - lint
           filters:
             branches:
