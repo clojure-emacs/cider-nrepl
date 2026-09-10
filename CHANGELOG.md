@@ -6,7 +6,8 @@
 
 ## master (unreleased)
 
-- * Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
+- Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
+- [#1041](https://github.com/clojure-emacs/cider-nrepl/pull/1041): Bump `cljfmt` to [0.16.5](https://github.com/weavejester/cljfmt/blob/master/CHANGELOG.md#0165-2026-07-14).
 
 ## 0.62.2 (2026-07-18)
 
