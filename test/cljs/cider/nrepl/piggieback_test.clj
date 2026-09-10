@@ -8,8 +8,20 @@
    [nrepl.core :as nrepl]
    [nrepl.server :as server]))
 
-(def repl-env
-  (delay (node/repl-env)))
+(defn- start-cljs-repl!
+  "Start a ClojureScript REPL in the current test session, on a fresh node
+  repl-env. Fresh because a node repl-env can't be set up again once it has
+  been torn down (its socket stays closed), and every `:cljs/quit` tears the
+  runtime down. Fails loudly, so a broken REPL doesn't just leave the tests
+  running against a Clojure session."
+  []
+  (let [response (session/message
+                  {:op "eval"
+                   :code (nrepl/code (require '[cider.piggieback :as piggieback]
+                                              '[cljs.repl.node :as node])
+                                     (piggieback/cljs-repl (node/repl-env)))})]
+    (when-not (= #{"done"} (:status response))
+      (throw (ex-info "Failed to start the ClojureScript REPL" response)))))
 
 (def piggieback-fixture
   (compose-fixtures
@@ -18,11 +30,7 @@
      (binding [session/*handler* (apply server/default-handler
                                         (conj (map resolve cider-middleware)
                                               #'piggieback/wrap-cljs-repl))]
-       ;; TODO check the result of this; we shouldn't run any tests if it fails
-       (dorun (session/message
-               {:op "eval"
-                :code (nrepl/code (require '[cider.piggieback :as piggieback])
-                                  (piggieback/cljs-repl @cider.nrepl.piggieback-test/repl-env))}))
+       (start-cljs-repl!)
        (dorun (session/message {:op "eval"
                                 :code (nrepl/code (require 'clojure.data))}))
        (f)
