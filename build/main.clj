@@ -12,7 +12,7 @@
 ;; versions in the user's project. Keep in sync with the :inlined-deps alias in
 ;; deps.edn (which puts the same libs on the classpath for non-inlined runs).
 (def inlined-deps
-  '[[dev.weavejester/cljfmt "0.16.4" :exclusions [org.clojure/clojure
+  '[[dev.weavejester/cljfmt "0.16.5" :exclusions [org.clojure/clojure
                                                   org.clojure/clojurescript
                                                   org.clojure/tools.cli]]
     [org.clojure/tools.namespace "1.5.1"]
