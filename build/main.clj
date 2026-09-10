@@ -27,7 +27,12 @@
     {;; Pom section
      :lib lib
      :version version
-     :scm {:url url, :tag version}
+     ;; Releases are tagged vX.Y.Z, so point the pom's scm tag at the real tag
+     ;; rather than the bare version.
+     :scm {:url url
+           :tag (str "v" version)
+           :connection (str "scm:git:" url ".git")
+           :developerConnection (str "scm:git:ssh://git@github.com/clojure-emacs/cider-nrepl.git")}
      :pom-data [[:description "A collection of nREPL middleware designed to enhance Clojure editors."]
                 [:url url]
                 [:licenses
