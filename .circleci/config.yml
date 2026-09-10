@@ -54,14 +54,17 @@ commands:
       files cached.
       This command restores ~/.m2, ~/.gitlibs and .cpcache if they were
       previously cached, then runs the provided steps, and finally saves the
-      cache. The cache-key is generated based on the contents of `deps.edn`.
+      cache. The cache key is generated from the contents of the dependency
+      files; when no cache matches it exactly, the most recent cache for the
+      same cache_version is restored instead, so only the changed deps get
+      downloaded.
     parameters:
       steps:
         type: steps
       files:
         description: Files to consider when creating the cache key
         type: string
-        default: "deps.edn build/main.clj"
+        default: "deps.edn build/main.clj test/smoketest/deps.edn"
       cache_version:
         type: string
         description: "Change this value to force a cache update"
@@ -69,13 +72,11 @@ commands:
     steps:
       - run:
           name: Generate Cache Checksum
-          command: |
-            for file in << parameters.files >>
-            do
-              find . -name $file -exec cat {} +
-            done | sha256sum | awk '{print $1}' > /tmp/clojure_cache_seed
+          command: cat << parameters.files >> | sha256sum | awk '{print $1}' > /tmp/clojure_cache_seed
       - restore_cache:
-          key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
+          keys:
+            - clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
+            - clojure-<< parameters.cache_version >>-
       - steps: << parameters.steps >>
       - save_cache:
           paths:
