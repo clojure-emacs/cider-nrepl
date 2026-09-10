@@ -16,12 +16,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create GitHub Release with Auto-Generated Notes
+      # The release commit rolls the changelog before the tag is cut, so the
+      # tag always carries a "## X.Y.Z (date)" section for its own version.
+      - name: Extract the release notes from the changelog
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## ${version} " '
+            !found && index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "No changelog section found for ${version}" >&2
+            exit 1
+          fi
+          cat release-notes.md
+
+      - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
           name: cider-nrepl ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
-          generateReleaseNotes: true  # Auto-generate release notes based on PRs and commits
-          # TODO: Use bodyFile to get the contents from changelog
+          bodyFile: release-notes.md
           token: ${{ secrets.GITHUB_TOKEN }}
