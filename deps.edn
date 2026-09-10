@@ -87,11 +87,13 @@
          :exec-fn build.docs/docs}
 
   ;; Build/inline/deploy tooling. mranderson 0.6 is the first release with the
-  ;; Leiningen-free mranderson.core/inline-deps entry point.
+  ;; Leiningen-free mranderson.core/inline-deps entry point, and 0.7.2 the first
+  ;; whose jar no longer bundles its own (unshaded) aether classes, which is what
+  ;; lets it share a classpath with tools.deps 0.31+ / tools.build 0.10.11+.
   :build
-  {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}
-          slipset/deps-deploy           {:mvn/version "0.2.2"}
-          thomasa/mranderson            {:mvn/version "0.7.0"}}
+  {:deps {io.github.clojure/tools.build {:mvn/version "0.10.14"}
+          slipset/deps-deploy           {:mvn/version "0.2.5"}
+          thomasa/mranderson            {:mvn/version "0.7.2"}}
    :ns-default build.main}
 
   :cljfmt
