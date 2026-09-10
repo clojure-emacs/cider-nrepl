@@ -60,3 +60,8 @@ cider-nrepl version in the usage docs, commits the result and creates the
 Pushing the tag triggers CI, which runs `make deploy` to inline the shaded
 dependencies and publish the artifact to Clojars. Don't deploy locally; doing
 so skips the checks CI performs.
+
+The same tag push also runs a GitHub Actions workflow that waits for the
+artifact to appear on Clojars and then creates the GitHub release, using the
+tag's section of the changelog as the release notes. If the Clojars deploy
+fails, that workflow fails too; re-run it once the deploy has gone through.

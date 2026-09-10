@@ -32,6 +32,24 @@ jobs:
           fi
           cat release-notes.md
 
+      # CircleCI deploys to Clojars on the same tag push, after the full test
+      # matrix passes. Don't announce a release that isn't there to depend on:
+      # wait for the artifact to show up, and fail if it never does (re-run
+      # this workflow once the deploy has been fixed).
+      - name: Wait for the artifact to land on Clojars
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          pom="https://repo.clojars.org/cider/cider-nrepl/${version}/cider-nrepl-${version}.pom"
+          for _ in $(seq 1 90); do
+            if curl -sfIo /dev/null "$pom"; then
+              echo "Found ${pom}"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Gave up waiting for ${pom}" >&2
+          exit 1
+
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
