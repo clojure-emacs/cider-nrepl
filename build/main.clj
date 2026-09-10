@@ -176,14 +176,18 @@
   Pushing the tag is what triggers the Clojars deploy on CI, so that step is
   deliberately left to you.
 
+  Pre-releases (`0.63.0-alpha1`, `-beta1`, `-rc1`) are accepted too; CI deploys
+  those tags as well and marks the GitHub release as a pre-release.
+
     clojure -T:build release :version '\"0.62.0\"'"
   [{:keys [version]}]
   (let [version (str version)
         tag (str "v" version)
-        ;; Antora wants major.minor only (e.g. 0.62), never the patch.
-        minor-version (second (re-matches #"(\d+\.\d+)\.\d+" version))]
-    (assert (re-matches #"\d+\.\d+\.\d+" version)
-            (str "Expected a release version like 0.62.0, got: " version))
+        ;; Antora wants major.minor only (e.g. 0.62), never the patch or a
+        ;; pre-release suffix.
+        minor-version (second (re-matches #"(\d+\.\d+)\.\d+.*" version))]
+    (assert (re-matches #"\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?" version)
+            (str "Expected a release version like 0.62.0 or 0.63.0-rc1, got: " version))
     (let [date (str (java.time.LocalDate/now))]
       (spit changelog-file (roll-changelog (slurp changelog-file) version date))
       (spit usage-file (bump-usage-version (slurp usage-file) version))
