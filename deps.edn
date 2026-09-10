@@ -11,7 +11,7 @@
         compliment/compliment       {:mvn/version "0.8.1"}
         io.github.tonsky/clj-reload {:mvn/version "1.0.0" :exclusions [org.clojure/clojure]}
         mx.cider/logjam             {:mvn/version "0.3.0" :exclusions [org.clojure/clojure]}
-        org.rksm/suitable           {:mvn/version "0.6.2"
+        org.rksm/suitable           {:mvn/version "0.8.0"
                                      :exclusions [org.clojure/clojure
                                                   org.clojure/clojurescript
                                                   compliment/compliment]}}

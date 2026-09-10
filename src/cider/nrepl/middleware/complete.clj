@@ -32,14 +32,12 @@
    :compliment.sources.special-forms/literals])
 
 (def cljs-sources
-  "A list of ClojureScript completion sources for compliment."
-  [::suitable-sources/cljs-source
-   ;; The local binding analysis done by
-   ;; :compliment.sources.local-bindings/local-bindings doesn't perform any
-   ;; evaluation or execution of the context form. Thus, it is independent of
-   ;; the actual host platform differences. Given that, we can use that same
-   ;; source for ClojureScript completion.
-   :compliment.sources.local-bindings/local-bindings])
+  "A list of ClojureScript completion sources for compliment.
+
+  Local bindings are covered by suitable's source itself (since 0.8.0 it runs
+  compliment's local-bindings analysis over the context form), so it isn't
+  added here separately - that would list every local twice."
+  [::suitable-sources/cljs-source])
 
 (defn complete
   [{:keys [ns prefix symbol context extra-metadata enhanced-cljs-completion? sort-order]
