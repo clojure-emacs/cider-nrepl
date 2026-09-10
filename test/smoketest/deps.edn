@@ -5,5 +5,5 @@
  ;; (see the smoketest target in the top-level Makefile), so that the smoke test
  ;; exercises the real, freshly built artifact.
  :aliases
- {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}}
+ {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.14"}}
           :ns-default build}}}
