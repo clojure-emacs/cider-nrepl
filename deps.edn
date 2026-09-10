@@ -41,7 +41,7 @@
   ;; don't pin one (CLJS 1.12 needs JDK21+, so the cljs tests only run there).
   :cljs
   {:extra-deps {org.clojure/clojurescript {:mvn/version "1.12.145" :mvn/scope "provided"}
-                cider/piggieback          {:mvn/version "0.6.2"}}}
+                cider/piggieback          {:mvn/version "0.7.0"}}}
 
   ;; Clojure version matrix (use with -M:1.10:test etc.).
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
