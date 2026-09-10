@@ -180,7 +180,7 @@
   (is (= '[a :b 10 "ok"]
          (remove #(bfkey (meta %)) (d/breakpoint-reader '[a :b 10 "ok"]))))
   ;; Just don't error
-  (is (map d/breakpoint-reader '[a :b 10 "ok"])))
+  (is (= 4 (count (mapv d/breakpoint-reader '[a :b 10 "ok"])))))
 
 (deftest reader-macros-test
   (binding [*data-readers* {'dbg d/debug-reader}]
