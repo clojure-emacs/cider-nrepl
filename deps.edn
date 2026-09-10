@@ -100,7 +100,7 @@
    :main-opts ["-m" "cljfmt.main"]}
 
   :kondo
-  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.01.19"}}
+  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.08.04"}}
    :main-opts ["-m" "clj-kondo.main"]}
 
   :eastwood

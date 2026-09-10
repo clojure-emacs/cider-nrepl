@@ -29,7 +29,7 @@
     (session/message {:op  "cider/profile-toggle-var"
                       :ns  "clojure.core"
                       :sym "zipmap"})
-    (is (zipmap [:a :b :c] [1 2 3]))
+    (is (= {:a 1 :b 2 :c 3} (zipmap [:a :b :c] [1 2 3])))
     (is+ {:status #{"done"}
           :value [(mc/via read-string
                           (mc/prefix ["Class: " [:value "clojure.lang.ArraySeq" 0] [:newline]
