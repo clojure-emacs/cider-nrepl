@@ -78,12 +78,9 @@ make test
 # Run tests, without using mranderson (considerably faster)
 make quick-test
 
-# Install the project in your local ~/.m2 directory, using mranderson (recommended)
-PROJECT_VERSION=X.Y.Z make install
-
-# Install the project in your local ~/.m2 directory, without using mranderson
-# (it's faster, but please only use when you repeatedly need to install cider-nrepl)
-PROJECT_VERSION=X.Y.Z make fast-install
+# Install the project in your local ~/.m2 directory, as version 99.99
+# (set PROJECT_VERSION to pick another one)
+make install
 
 # Runs clj-kondo, cljfmt and Eastwood (in that order, with fail-fast).
 # Please try to run this before pushing commits.
