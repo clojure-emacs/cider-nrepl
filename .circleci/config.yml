@@ -308,8 +308,13 @@ workflows:
             - test-nrepl
             - test-cljs
             - lint
+          # Releases, prereleases and snapshots all go through the same gate: the
+          # whole matrix has to be green first. A vX.Y.Z-SNAPSHOT tag is the way
+          # to exercise the full release path without cutting a release.
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/
+              only:
+                - /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/
+                - /^v\d+\.\d+\.\d+-SNAPSHOT$/
