@@ -86,6 +86,41 @@ commands:
             - base-jdk-src.zip
           key: clojure-<< parameters.cache_version >>-{{ checksum "/tmp/clojure_cache_seed" }}
 
+  prepare_deps:
+    description: |
+      Resolve the dependencies for the build tooling and the given alias specs
+      up front, retrying on failure. Computing a classpath occasionally dies
+      with a ClassCastException from HashMap internals: Maven's model validator
+      caches the coordinates it has validated in an unsynchronized HashSet,
+      and tools.deps resolves on several threads at once. It strikes whenever
+      .cpcache misses, and a retry is all it takes. The specs carry their
+      -M/-X, because the CLI keys its classpath cache on that as well.
+    parameters:
+      aliases:
+        description: |
+          Space-separated alias specs to prepare, e.g. "-X:1.12:test -M:kondo"
+        type: string
+    steps:
+      - run:
+          name: Preparing dependencies
+          command: |
+            prepare() {
+              clojure -P -T:build || return 1
+              for spec in << parameters.aliases >>; do
+                clojure -P "$spec" || return 1
+              done
+            }
+            attempt=1
+            until prepare; do
+              if [ "$attempt" -ge 3 ]; then
+                echo "Giving up after $attempt attempts."
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+              echo "Resolving dependencies failed, retrying..."
+              sleep 5
+            done
+
 jobs:
 
   lint:
@@ -99,6 +134,8 @@ jobs:
       - with_cache:
           cache_version: "lint_v1"
           steps:
+            - prepare_deps:
+                aliases: "-M:cljfmt -M:kondo -M:inlined-deps:cljs:test:eastwood -M:1.12:nrepl-1.7:inlined-deps:test"
             - run:
                 name: Running cljfmt
                 command: make cljfmt
@@ -143,9 +180,8 @@ jobs:
       - with_cache:
           cache_version: "test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>_<< parameters.nrepl_version >>"
           steps:
-            - run:
-                name: Setting up JDK sources
-                command: make copy-sources-to-jdk
+            - prepare_deps:
+                aliases: "-X:<< parameters.clojure_version >>:nrepl-<< parameters.nrepl_version >>:inlined-deps:test"
             - run:
                 name: Running quick tests
                 command: make quick-test
@@ -169,9 +205,8 @@ jobs:
       - with_cache:
           cache_version: "cljs_test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
           steps:
-            - run:
-                name: Setting up JDK sources
-                command: make copy-sources-to-jdk
+            - prepare_deps:
+                aliases: "-X:cljs:<< parameters.clojure_version >>:nrepl-1.7:inlined-deps:test"
             - run:
                 name: Running ClojureScript tests
                 command: make cljs-test
@@ -194,9 +229,8 @@ jobs:
       - with_cache:
           cache_version: "full_test_v1_<< parameters.clojure_version >>_<< parameters.jdk_version >>"
           steps:
-            - run:
-                name: Setting up JDK sources
-                command: make copy-sources-to-jdk
+            - prepare_deps:
+                aliases: "-X:<< parameters.clojure_version >>:nrepl-1.7:inlined:test"
             - run:
                 name: Running tests with inlined deps
                 command: make inlined-test
@@ -274,8 +308,13 @@ workflows:
             - test-nrepl
             - test-cljs
             - lint
+          # Releases, prereleases and snapshots all go through the same gate: the
+          # whole matrix has to be green first. A vX.Y.Z-SNAPSHOT tag is the way
+          # to exercise the full release path without cutting a release.
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/
+              only:
+                - /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/
+                - /^v\d+\.\d+\.\d+-SNAPSHOT$/

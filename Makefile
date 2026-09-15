@@ -1,10 +1,12 @@
-.PHONY: test quick-test cljs-test inlined-test descriptor-contract smoketest copy-sources-to-jdk javac javac-test inline-deps jar install release deploy clean lint cljfmt cljfmt-fix kondo eastwood docs
+.PHONY: test quick-test cljs-test inlined-test descriptor-contract smoketest download-jdk-src javac javac-test inline-deps jar install release deploy clean lint cljfmt cljfmt-fix kondo eastwood docs check-version check-env
 .DEFAULT_GOAL := quick-test
 
 SHELL = /bin/bash -Ee
 
 CLOJURE_VERSION ?= 1.12
 NREPL_VERSION ?= 1.7
+# The version local installs get. Releases take theirs from the git tag.
+PROJECT_VERSION ?= 99.99
 
 # The lein plugin tests call leiningen.core.main/leiningen-version, which reads
 # LEIN_VERSION from the env. Lein sets it automatically; under the clojure CLI
@@ -58,12 +60,12 @@ inline-deps:
 inlined-test: inline-deps javac-test
 	clojure -X:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined:test
 
-# PROJECT_VERSION=x.y.z make jar
-jar: check-version
+# make jar (or PROJECT_VERSION=x.y.z make jar)
+jar:
 	clojure -T:build jar :version '"$(PROJECT_VERSION)"'
 
-# PROJECT_VERSION=x.y.z make install
-install: check-version
+# make install (or PROJECT_VERSION=x.y.z make install)
+install:
 	clojure -T:build install :version '"$(PROJECT_VERSION)"'
 
 # Build a standalone uberjar with the freshly installed cider-nrepl and run it,
@@ -117,9 +119,10 @@ deploy: check-env
 	clojure -T:build deploy :version "\"$$PROJECT_VERSION\""
 
 check-version:
-ifndef PROJECT_VERSION
-	$(error Please set PROJECT_VERSION as an env var beforehand.)
-endif
+	@if [ "$(PROJECT_VERSION)" = "99.99" ]; then \
+		echo "[Error] Set PROJECT_VERSION to the version to release, e.g. PROJECT_VERSION=1.2.3 make release."; \
+		exit 1; \
+	fi
 
 check-env:
 ifndef CLOJARS_USERNAME
