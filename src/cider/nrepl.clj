@@ -1021,4 +1021,10 @@ You can also request to compute the info directly by requesting the \"cider/get-
 
 (def cider-nrepl-handler
   "CIDER's nREPL handler."
-  (apply nrepl-server/default-handler (mapv resolve-or-fail mw/cider-middleware)))
+  ;; Automatically adding Piggieback middleware here because there is no way for
+  ;; the user to specify it in this particular handler construction, and thus
+  ;; the warnings get printed. Servers started through nrepl.cmdline should
+  ;; still specify Piggieback explicitly.
+  (->> (cljs/maybe-add-piggieback-mware-sym mw/cider-middleware)
+       (mapv resolve-or-fail)
+       (apply nrepl-server/default-handler)))

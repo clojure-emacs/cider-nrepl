@@ -2,6 +2,8 @@
   (:require
    [cider.nrepl.middleware.util :as util]))
 
+(def ^:private piggieback-mw-sym 'cider.piggieback/wrap-cljs-repl)
+
 (defn try-resolve-piggieback
   "If piggieback is loaded, return `#'cider.piggieback/wrap-cljs-repl`, nil
   otherwise."
@@ -10,7 +12,7 @@
   ;; ClojureScript, whose recent closure-compiler is Java-21 bytecode, so on an
   ;; older JDK the require fails with an `UnsupportedClassVersionError` (an
   ;; Error). We want to degrade to a Clojure-only setup, not crash at startup.
-  (try (requiring-resolve 'cider.piggieback/wrap-cljs-repl)
+  (try (requiring-resolve piggieback-mw-sym)
        (catch Throwable _)))
 
 (defn expects-piggieback
@@ -30,6 +32,13 @@
   [coll]
   (if-some [pb (try-resolve-piggieback)]
     (conj coll pb)
+    coll))
+
+(defn maybe-add-piggieback-mware-sym
+  "If piggieback is loaded, conj `cider.piggieback/wrap-cljs-repl` symbol to the provided collection."
+  [coll]
+  (if (try-resolve-piggieback)
+    (conj coll piggieback-mw-sym)
     coll))
 
 (defn- maybe-deref
