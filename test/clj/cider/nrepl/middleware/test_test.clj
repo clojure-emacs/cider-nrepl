@@ -262,3 +262,25 @@
         (finally
           (alter-var-root #'test/*test-error-handler* (constantly orig))))
       (is (= [42] (map (comp :data ex-data) @proof))))))
+
+(deftest stream-test
+  (require 'failing-test-ns)
+  (let [request {:op "cider/test-var-query"
+                 :var-query {:ns-query {:exactly ["failing-test-ns"]}}
+                 :fail-fast "false"}
+        events (fn [responses] (keep :test-event responses))]
+    (testing "progress is streamed ahead of the report when asked for"
+      (let [responses (session/message (assoc request :stream "true") false)
+            evts (events responses)]
+        (is+ [{:type "begin-ns" :ns "failing-test-ns"}
+              {:type "end-var" :ns "failing-test-ns"
+               :summary {:fail pos?}
+               :results [{:type "fail" :expected string?}]}
+              {:type "end-var" :results [{:type "fail"}]}
+              {:type "end-ns" :ns "failing-test-ns" :elapsed-time {:ms int?}}]
+             evts)
+        (testing "before the final report"
+          (is (< (.indexOf ^java.util.List responses (last (filter :test-event responses)))
+                 (.indexOf ^java.util.List responses (first (filter :results responses))))))))
+    (testing "nothing is streamed otherwise"
+      (is (empty? (events (session/message request false)))))))

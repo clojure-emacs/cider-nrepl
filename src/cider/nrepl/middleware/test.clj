@@ -25,6 +25,10 @@
 ;; Non-passing tests may be re-run for any namespace using the `retest` op.
 ;; Whenever a var's tests are run, their previous results are overwritten, so
 ;; the session always holds the most recent test result for each var.
+;;
+;; When a request sets `stream` to "true", progress is sent while the tests
+;; run, as `test-event` messages on the request's id, ahead of the final
+;; report.
 
 (def ^:dynamic *test-error-handler*
   "A function you can override via `binding`, or safely via `alter-var-root`.
@@ -69,8 +73,24 @@
                      x))
                  report))
 
-(defn- run-opts [{:keys [fail-fast]}]
-  {:fail-fast? (= "true" fail-fast)})
+(defn- non-passing [results]
+  (filterv (comp #{:fail :error} :type) results))
+
+(defn- event-responder
+  "Return an `orchard.test` `:on-event` function that streams the events to
+  `msg`'s client. Passing assertions are left out: the counts are in the
+  summary and the final report carries every result."
+  [msg]
+  (fn [event]
+    (respond-to msg {:test-event
+                     (util/transform-value
+                      (stringify-messages
+                       (cond-> event
+                         (:results event) (update :results non-passing))))})))
+
+(defn- run-opts [{:keys [fail-fast stream] :as msg}]
+  (cond-> {:fail-fast? (= "true" fail-fast)}
+    (= "true" stream) (assoc :on-event (event-responder msg))))
 
 (defn- run-tests
   "Run the tests with `run-fn`, given the options for `msg`, and return the
