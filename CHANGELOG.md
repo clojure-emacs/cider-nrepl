@@ -7,6 +7,7 @@
 ## master (unreleased)
 
 - [#1051](https://github.com/clojure-emacs/cider-nrepl/pull/1051): Bump `orchard` to [0.45.0](https://github.com/clojure-emacs/orchard/blob/v0.45.0/CHANGELOG.md) (adds the `orchard.test` runner, printing honors a custom `print-method` for records and collections, and the inspector gains string analytics).
+- [#1051](https://github.com/clojure-emacs/cider-nrepl/pull/1051): Run tests with `orchard.test` and stream their progress as `test-event` messages when `stream` is set; the old runner vars are deprecated aliases, `test-ns` and `test-vars` are gone, and unresolvable fixture results are keyed by `orchard.test/unknown`.
 - Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
 - [#1041](https://github.com/clojure-emacs/cider-nrepl/pull/1041): Bump `cljfmt` to [0.16.5](https://github.com/weavejester/cljfmt/blob/master/CHANGELOG.md#0165-2026-07-14).
 - [#1046](https://github.com/clojure-emacs/cider-nrepl/pull/1046): Bump `suitable` to [0.8.0](https://github.com/clojure-emacs/clj-suitable/blob/master/CHANGELOG.md#080-2026-07-18), which brings fuzzy matching, compliment-style ranking and local-binding completion to ClojureScript.
