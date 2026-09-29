@@ -840,6 +840,14 @@ stack frame of the most recent exception."
 
 (def fail-fast-doc {"fail-fast" "If equals to the string \"true\", the tests will be considered complete after the first test has failed or errored."})
 
+(def stream-optional-doc {"stream" "If equals to the string \"true\", progress is sent as `test-event` messages while the tests run, ahead of the final report."})
+
+(def stream-return-doc {"test-event" "Only sent when `stream` is \"true\". A map with a `:type` of `begin-ns` (with `:ns`), `end-var` (with `:ns`, `:var`, the var's non-passing `:results` in the same shape as the final report's, and the running `:summary`) or `end-ns` (with `:ns` and `:elapsed-time`)."})
+
+(def test-run-optional-doc (merge wrap-print-optional-arguments stream-optional-doc))
+
+(def test-run-return-doc (merge fail-fast-doc timing-info-return-doc stream-return-doc))
+
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
    ;; Expect piggieback so that, for ClojureScript, the `eval` op we synthesize
@@ -851,29 +859,29 @@ stack frame of the most recent exception."
                {"cider/test-var-query"
                 {:doc "Run tests specified by the `var-query` and return results. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
                  :requires {"var-query" "A search query specifying the test vars to execute. See Orchard's var query documentation for more details."}
-                 :optional (merge wrap-print-optional-arguments)
-                 :returns (merge fail-fast-doc timing-info-return-doc)}
+                 :optional test-run-optional-doc
+                 :returns test-run-return-doc}
                 "cider/test-all"
                 {:doc "Run all tests in the project. If `load?` is truthy, all project namespaces are loaded; otherwise, only tests in presently loaded namespaces are run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-                 :optional wrap-print-optional-arguments
-                 :returns (merge fail-fast-doc timing-info-return-doc)}
+                 :optional test-run-optional-doc
+                 :returns test-run-return-doc}
                 "cider/test-stacktrace"
                 {:doc "Return exception cause and stack frame info for an erring test via the `stacktrace` middleware. The error to be retrieved is referenced by namespace, var name, and assertion index within the var."
                  :optional wrap-print-optional-arguments}
                 "cider/retest"
                 {:doc "Rerun all tests that did not pass when last run. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-                 :optional wrap-print-optional-arguments
-                 :returns (merge fail-fast-doc timing-info-return-doc)}})
+                 :optional test-run-optional-doc
+                 :returns test-run-return-doc}})
              ;; `cider/test` is deprecated in favour of a *different* op
              ;; (`cider/test-var-query`), so it keeps its bespoke notice.
              {"cider/test"
               {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-               :optional wrap-print-optional-arguments
-               :returns (merge fail-fast-doc timing-info-return-doc)}
+               :optional test-run-optional-doc
+               :returns test-run-return-doc}
               "test"
               {:doc "[DEPRECATED - use `cider/test-var-query` instead] Run tests in the specified namespace and return results. This accepts a set of `tests` to be run; if nil, runs all tests. Results are cached for exception retrieval and to enable re-running of failed/erring tests."
-               :optional wrap-print-optional-arguments
-               :returns (merge fail-fast-doc timing-info-return-doc)}})})
+               :optional test-run-optional-doc
+               :returns test-run-return-doc}})})
 
 (def-wrapper wrap-trace cider.nrepl.middleware.trace/handle-trace
   {:clojure-only? true

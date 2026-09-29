@@ -1110,6 +1110,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -1126,6 +1127,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -1233,6 +1235,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -1249,6 +1252,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -1262,6 +1266,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -1278,6 +1283,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -1312,6 +1318,7 @@ Required parameters::
 
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -1328,6 +1335,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -2894,6 +2902,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -2910,6 +2919,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -3065,6 +3075,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -3081,6 +3092,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -3094,6 +3106,7 @@ Required parameters::
 {blank}
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -3110,6 +3123,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
@@ -3144,6 +3158,7 @@ Required parameters::
 
 
 Optional parameters::
+* `:stream` If equals to the string "true", progress is sent as ``test-event`` messages while the tests run, ahead of the final report.
 * `:nrepl.middleware.print/buffer-size` The size of the buffer to use when streaming results. Defaults to 1024.
 * `:nrepl.middleware.print/keys` A seq of the keys in the response whose values should be printed.
 * `:nrepl.middleware.print/options` A map of options to pass to the printing function. Defaults to ``nil``.
@@ -3160,6 +3175,7 @@ Returns::
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
+* `:test-event` Only sent when ``stream`` is "true". A map with a ``:type`` of ``begin-ns`` (with ``:ns``), ``end-var`` (with ``:ns``, ``:var``, the var's non-passing ``:results`` in the same shape as the final report's, and the running ``:summary``) or ``end-ns`` (with ``:ns`` and ``:elapsed-time``).
 * `:testing-ns` Streamed while the run is in progress: the namespace currently being tested.
 * `:var-elapsed-time` a report of the elapsed time spent running each var. The structure is ``:var-elapsed-time {<ns as keyword> {<var as keyword> {:ms <integer> :humanized <string>}}}``.
 
