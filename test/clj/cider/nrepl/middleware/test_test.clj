@@ -6,9 +6,7 @@
    [clojure.test :refer :all]
    [matcher-combinators.clj-test]
    [matcher-combinators.matchers :as matchers]
-   [matcher-combinators.model])
-  (:import
-   (clojure.lang ExceptionInfo)))
+   [orchard.test]))
 
 ;; Ensure tested tests are loaded:
 (require 'cider.nrepl.middleware.test-filter-tests)
@@ -110,8 +108,8 @@
 (deftest handling-of-tests-with-throwing-fixtures
   (require 'cider.nrepl.middleware.test-with-throwing-fixtures)
   (testing "If a given deftest's fixture throw an exception, those are gracefully handled"
-    (let [orig-fn cider.nrepl.middleware.test/report-fixture-error]
-      (with-redefs [cider.nrepl.middleware.test/report-fixture-error
+    (let [orig-fn orchard.test/report-fixture-error]
+      (with-redefs [orchard.test/report-fixture-error
                     (fn [ns ^Throwable e]
                       (when-not (= (:data (ex-data e)) 42)
                         ;; Caught wrong exception here, print stacktrace to
@@ -121,25 +119,10 @@
         (is+ {:status #{"done"}
               :summary {:error 1, :fail 0, :ns 1, :pass 0, :test 0, :var 0}
               :results {:cider.nrepl.middleware.test-with-throwing-fixtures
-                        {:cider.nrepl.middleware.test/unknown
+                        {:orchard.test/unknown
                          [{:error "clojure.lang.ExceptionInfo: I'm an exception inside a fixture! {:data 42}"}]}}}
              (session/message {:op "cider/test"
                                :ns "cider.nrepl.middleware.test-with-throwing-fixtures"}))))))
-
-(deftest report-fixture-error-handles-non-fixture-throwable
-  ;; #1020: interrupting a test that isn't wrapped in `is` (e.g. `(while true)`)
-  ;; lets a throwable escape the test body with no fixture frame in its trace.
-  ;; report-fixture-error used to crash on `(symbol nil)`; it must report the
-  ;; error gracefully instead.
-  (with-redefs [test/current-report (atom {:summary {:test 1} :results {}
-                                           :testing-ns 'cider.nrepl.middleware.test-test})]
-    ;; Empty stack trace so no fixture frame can match - the escaped-throwable case.
-    (let [e (doto (InterruptedException. "interrupted")
-              (.setStackTrace (make-array StackTraceElement 0)))]
-      ;; Must not throw (the crash was here). Reaching the assertion is the guard.
-      (test/report-fixture-error (the-ns 'cider.nrepl.middleware.test-test) e)
-      (is (= 1 (get-in @test/current-report [:summary :error]))
-          "the escaped throwable is reported as an error"))))
 
 (deftest run-test-with-map-as-documentation-message
   (testing "documentation message map is returned as string"
@@ -223,69 +206,6 @@
     (is (= 1
            (count (:failing-test-ns (:results test-result)))))))
 
-(deftest print-object-test
-  (testing "uses println for matcher-combinators results, otherwise invokes pprint"
-    (is (= "(mismatch (expected [33m\"1\"[0m) (actual [31m\"2\"[0m))\n"
-           (#'test/print-object (matcher-combinators.clj-test/tagged-for-pretty-printing
-                                 '(not (match? "1" "2"))
-                                 {:matcher-combinators.result/value (matcher-combinators.model/->Mismatch "1" "2")}))))
-    (is (= "{:a\n (\"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\"\n  \"a-sufficiently-long-string\")}\n"
-           (#'test/print-object {:a (repeat 3 "a-sufficiently-long-string")}))
-        "pprint is chosen, as indicated by quoted strings and newlines")
-    (is (= "{:a \"b\", :c \"42\"}\n"
-           (#'test/print-object (with-meta {:a "b" :c "42"} {:type ::mismatch})))
-        "pprint is chosen, because :type does not match matchers-combinators keyword"))
-  (testing "maps are printed with sorted keys"
-    (is (= "{:a 1, :b 2, :c 3, :d {x 1, y 2, z 3}}\n"
-           (#'test/print-object {:b 2 :c 3 :a 1 :d {'z 3 'y 2 'x 1}})))))
-
-(deftest test-result-test
-  (testing "It passes `:error`s to `test/*test-error-handler*`"
-    (let [proof (atom [])
-          exception (ex-info "." {::unique (rand)})]
-      (binding [test/*test-error-handler* (fn [e]
-                                            (swap! proof conj e))]
-        (with-out-str
-          (test/test-result 'some-ns
-                            #'+
-                            {:type :error
-                             :actual exception}))
-        (is (= [exception]
-               @proof))))))
-
-(defn throws []
-  (throw (ex-info "." {})))
-
-(deftest stack-frame-test
-  (let [e (try
-            (throws)
-            (catch ExceptionInfo e
-              e))]
-    (is+ {:fn "throws"
-          :method "invokeStatic"
-          :ns "cider.nrepl.middleware.test-test"
-          :name "cider.nrepl.middleware.test_test$throws/invokeStatic"
-          :file "test_test.clj"
-          :type :clj
-          :var "cider.nrepl.middleware.test-test/throws"
-          :class "cider.nrepl.middleware.test_test$throws"
-          :flags #{:project :clj :tooling}}
-         (test/stack-frame e throws)
-         "Returns a map representing the stack frame of the precise function
-that threw the exception")))
-
-(deftest stack-frame-line-test
-  (let [e (try
-            (throws)
-            (catch ExceptionInfo e
-              e))]
-    ;; NOTE this offset is subject to formatting of this test
-    (is (= (+ 2 (:line (meta #'stack-frame-line-test)))
-           (:line (test/stack-frame
-                   e
-                   (-> #'stack-frame-line-test meta :test))))
-        "Returns the line of the exception")))
-
 (deftest report-counters-bound-test
   (testing "*report-counters* is bound during test execution (see #686)"
     (is+ {:summary {:pass 1, :fail 0, :error 0}}
@@ -319,3 +239,26 @@ that threw the exception")))
                       :var-query {:ns-query {:exactly ["failing-test-ns"]}}})
     (is+ {:results {:failing-test-ns some?}}
          (session/message {:op "retest"}))))
+
+;; This spec exercises the deprecated vars on purpose.
+#_{:clj-kondo/ignore [:deprecated-var]}
+(deftest deprecated-runner-vars-test
+  (testing "code extending the old `report` multimethod extends the one in use"
+    (is (identical? orchard.test/report test/report)))
+  (testing "the old entry points still run tests"
+    (require 'failing-test-ns)
+    (is+ {:summary {:fail 1}}
+         (test/test-nss {'failing-test-ns ['fast-failing-test]}))))
+
+(deftest test-error-handler-test
+  (testing "errors are passed to `*test-error-handler*`"
+    (require 'cider.nrepl.middleware.test-with-throwing-fixtures)
+    (let [proof (atom [])
+          orig test/*test-error-handler*]
+      (alter-var-root #'test/*test-error-handler* (constantly #(swap! proof conj %)))
+      (try
+        (session/message {:op "cider/test"
+                          :ns "cider.nrepl.middleware.test-with-throwing-fixtures"})
+        (finally
+          (alter-var-root #'test/*test-error-handler* (constantly orig))))
+      (is (= [42] (map (comp :data ex-data) @proof))))))

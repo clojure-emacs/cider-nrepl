@@ -3,106 +3,28 @@
   {:author "Jeff Valk"}
   (:require
    [cider.nrepl.middleware.test.cljs :as test-cljs]
-   [cider.nrepl.middleware.test.extensions :as extensions]
+   [cider.nrepl.middleware.test.extensions]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
-   [clojure.pprint :as pp]
-   [clojure.string :as str]
-   [clojure.test :as test]
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
    [orchard.misc :as misc]
-   [orchard.query :as query]
-   [orchard.stacktrace :as stacktrace]))
+   [orchard.stacktrace :as stacktrace]
+   [orchard.test]))
 
 ;;; ## Overview
 ;;
 ;; This middleware provides test execution and reporting support for the
-;; `clojure.test` machinery. In this model, the smallest unit of execution is
-;; the var (as created by `deftest`); which runs all the tests defined within
-;; that function.
-;;
-;; Report results are stored in the session, indexed by namespace, var, and
-;; assertion index within the var. This enables individual test failures/errors
-;; to be inspected on demand, including cause and stacktrace detail for errors.
+;; `clojure.test` machinery, on top of `orchard.test`, which does the running
+;; and collects the results. Results are indexed by namespace, var, and
+;; assertion index within the var. This enables individual test
+;; failures/errors to be inspected on demand, including cause and stacktrace
+;; detail for errors.
 ;;
 ;; Non-passing tests may be re-run for any namespace using the `retest` op.
 ;; Whenever a var's tests are run, their previous results are overwritten, so
 ;; the session always holds the most recent test result for each var.
-
-;;; ## Test Results
-;;
-;; `clojure.test` allows extensible test reporting by rebinding the `report`
-;; function. The implementation below does this to capture report events in the
-;; `current-report` atom.
-
-(def current-report
-  "An atom holding the results of the test run in progress"
-  (atom nil))
-
-(defn report-reset! []
-  (reset! current-report {:summary {:ns 0
-                                    :var 0
-                                    :test 0
-                                    :pass 0
-                                    :fail 0
-                                    :error 0}
-                          :results {}
-                          :testing-ns nil
-                          :gen-input nil}))
-
-;; In the case of test errors, line number is obtained by searching the
-;; stacktrace for the originating function. The search target will be the
-;; current test var's `:test` metadata (which holds the actual test function) if
-;; present, or the deref'ed var function otherwise (i.e. test fixture errors).
-;;
-;; This approach is similar in use to `clojure.test/file-position`, but doesn't
-;; assume a fixed position in the stacktrace, and therefore resolves the correct
-;; frame when the error occurs outside of an `is` form.
-
-(defn stack-frame
-  "Search the stacktrace of exception `e` for the function `f` and return info
-  describing the stack frame, including var, class, and line."
-  [^Exception e f]
-  (when-let [class-name (some-> f class .getName)]
-    (when-let [analyzed-trace (:stacktrace (first (stacktrace/analyze e)))]
-      (some #(when-let [frame-cname (:class %)]
-               (when (and (string? frame-cname)
-                          (str/starts-with? frame-cname class-name))
-                 %))
-            analyzed-trace))))
-
-(defn deep-sorted-maps
-  "Recursively converts all nested maps to sorted maps."
-  [m]
-  (try
-    (walk/postwalk
-     (fn [x]
-       (if (and (map? x) (not (record? x))) ;; Prevent records turning into maps
-         (with-meta (into (sorted-map) x) (meta x))
-         x))
-     m)
-    (catch Throwable _
-      ;; Some objects can't be walked or sorted (e.g. non-comparable keys,
-      ;; Datomic entities that throw AbstractMethodError). Return as-is.
-      m)))
-
-(defn- print-object
-  "Print `object` using println for matcher-combinators results and pprint
-   otherwise. The matcher-combinators library uses a custom print-method
-   which doesn't get picked up by pprint since it uses a different dispatch
-   mechanism."
-  [object]
-  (let [matcher-combinators-result? (= (:type (meta object))
-                                       :matcher-combinators.clj-test/mismatch)
-        print-fn (if matcher-combinators-result?
-                   prn
-                   pp/pprint)
-        ;; The output will contain sorted maps for better readability and diff comparisons.
-        result (with-out-str (print-fn (deep-sorted-maps object)))]
-    ;; Replace extra newlines at the end, as sometimes returned by matchers-combinators:
-    (str/replace result #"\n\n+$" "\n")))
 
 (def ^:dynamic *test-error-handler*
   "A function you can override via `binding`, or safely via `alter-var-root`.
@@ -112,339 +34,50 @@
   for pretty-printing Spec failures. Remember to `flush` if doing so."
   identity)
 
-(def ^:private fallback-var-name
-  "The pseudo var name which will be used when no var name can be found
-  for a given test report."
-  ::unknown)
-
-(defn test-result
-  "Transform the result of a test assertion. Append ns, var, assertion index,
-  and 'testing' context. Retain any exception. Pretty-print expected/actual or
-  use its `print-method`, if applicable."
-  [ns v m]
-  (let [{:keys [actual diffs expected fault]
-         t :type} m
-        v-name (or (:name (meta v)) fallback-var-name)
-        c (when (seq test/*testing-contexts*) (test/testing-contexts-str))
-        i (count (get-in (:results @current-report {}) [ns v-name]))
-        gen-input (:gen-input @current-report)]
-
-    ;; Errors outside assertions (faults) do not return an :expected value.
-    ;; Type :fail returns :actual value. Type :error returns :error and :line.
-    (merge (dissoc m :expected :actual)
-           {:ns ns, :var v-name, :index i, :context c}
-           (when (and (#{:fail :error} t) (not fault))
-             {:expected (print-object expected)})
-           (when (and (#{:fail} t) gen-input)
-             {:gen-input (print-object gen-input)})
-           (when (#{:fail} t)
-             {:actual (print-object actual)})
-           (when diffs
-             {:diffs (extensions/diffs-result diffs)})
-           (when (#{:error} t)
-             (let [e actual
-                   f (or (:test (meta v)) (some-> v deref))] ; test fn or deref'ed fixture
-               (*test-error-handler* e)
-               {:error e
-                :line (:line (stack-frame e f))})))))
-
-;;; ## test.check integration
+;;; ## Deprecated
 ;;
-;; `test.check` generates random test inputs for property testing. We make the
-;; inputs part of the report by parsing the respective calls to `report`:
-;; `test.chuck`'s `checking` creates events of type
-;; `:com.gfredericks.test.chuck.clojure-test/shrunk` with the minimal failing
-;; input as determined by `test.check`. `test.check`'s own `defspec` does report
-;; minimal inputs in recent versions, but for compatibility we also parse events
-;; of type `:clojure.test.check.clojure-test/shrinking`, which `defspec`
-;; produces to report failing input before shrinking it.
+;; The runner moved to `orchard.test`. These keep code that used it from here
+;; working, including `defmethod`s on `report`, which is the same multimethod.
 
-(defmulti report
-  "Handle reporting for test events.
+(def ^{:deprecated "0.63.0"} current-report orchard.test/current-report)
+(def ^{:deprecated "0.63.0"} report orchard.test/report)
+(def ^{:deprecated "0.63.0"} stack-frame orchard.test/stack-frame)
+(def ^{:deprecated "0.63.0"} test-result orchard.test/test-result)
+(def ^{:deprecated "0.63.0"} test-var orchard.test/test-var)
+(def ^{:deprecated "0.63.0"} report-fixture-error orchard.test/report-fixture-error)
 
-  This takes a test event map as an argument and updates the `current-report`
-  atom to reflect test results and summary statistics."
-  :type)
-
-(defmethod report :default [_m])
-
-(defmethod report :begin-test-ns
-  [m]
-  (let [ns (ns-name (get m :ns (:testing-ns @current-report)))]
-    (swap! current-report
-           #(-> %
-                (assoc :testing-ns ns)
-                (update-in [:summary :ns] inc)))))
-
-(defmethod report :begin-test-var
-  [_m]
-  (swap! current-report update-in [:summary :var] inc))
-
-(defn- in-checking-block?
-  "Determine whether the report being generated is for a test.chuck `checking` block."
-  [m]
-  (boolean (:com.gfredericks.test.chuck.clojure-test/testing-contexts m)))
-
-(defn- report-final-status
-  [{:keys [type] :as m}]
-  (let [ns (ns-name (get m :ns (:testing-ns @current-report)))
-        v (last test/*testing-vars*)
-        gen-input (when (in-checking-block? m)
-                    (:gen-input @current-report))]
-    (swap! current-report
-           #(-> %
-                (update-in [:summary :test] inc)
-                (update-in [:summary type] (fnil inc 0))
-                (assoc :gen-input gen-input)
-                (update-in [:results ns (or (:name (meta v))
-                                            fallback-var-name)]
-                           (fnil conj [])
-                           (test-result ns v m))))))
-
-(defmethod report :end-test-var
-  [{:keys [var-elapsed-time]
-    var-ref :var}]
-  (let [n (or (some-> var-ref meta :ns ns-name)
-              (:testing-ns @current-report))
-        v (or (-> var-ref meta :name)
-              fallback-var-name)
-        contexts-count (-> @current-report
-                           (get-in [:results n v])
-                           count)]
-    ;; Store the per-timing-context timing, when possible
-    (when (= 1 contexts-count)
-      ;; The timing info is only valid when the test var contained a single `is` assertion.
-      ;; This is because timing works at var (`deftest`) granularity, not at `is` granularity.
-      (swap! current-report
-             assoc-in
-             [:results n v 0 :elapsed-time]
-             var-elapsed-time))
-
-    ;; Store the per-var timing.
-    ;; Note that cider-test.el does not currently report test failures on a per-var manner,
-    ;; however this data could be useful in a future or for other clients.
-    (swap! current-report
-           assoc-in
-           [:var-elapsed-time n v :elapsed-time]
-           var-elapsed-time)))
-
-(defmethod report :end-test-ns
-  [{:keys [ns-ref ns-elapsed-time]}]
-  (let [n (or (some-> ns-ref ns-name)
-              (:testing-ns @current-report))]
-    (swap! current-report
-           assoc-in
-           [:ns-elapsed-time n]
-           ns-elapsed-time)))
-
-(defmethod report :pass
-  [m]
-  (report-final-status m))
-
-(defmethod report :fail
-  [m]
-  (report-final-status m))
-
-(defmethod report :error
-  [m]
-  (report-final-status m))
-
-(defmethod report :com.gfredericks.test.chuck.clojure-test/shrunk
-  [m]
-  (swap! current-report assoc :gen-input (-> m :shrunk :smallest)))
-
-(defn- report-shrinking
-  [{:keys [clojure.test.check.clojure-test/params]}]
-  (swap! current-report assoc :gen-input params))
-
-(defmethod report :clojure.test.check.clojure-test/shrinking
-  [m]
-  (report-shrinking m))
-
-(defmethod report :clojure.test.check.clojure-test/shrunk
-  [m]
-  (report-shrinking m))
-
-(defmethod report :matcher-combinators/mismatch
-  [m]
-  (report-final-status (assoc m
-                              :type :fail
-                              :actual (:markup m))))
-
-(defn report-fixture-error
-  "Delegate reporting for test fixture errors to the `report` function. This
-  finds the erring test fixture in the stacktrace and binds it as the current
-  test var. Test count is decremented to indicate that no tests were run."
-  [ns e]
-  (let [frame (->> (concat (:clojure.test/once-fixtures (meta ns))
-                           (:clojure.test/each-fixtures (meta ns)))
-                   (keep #(stack-frame e %))
-                   (first))
-        ;; When no fixture frame matches, the throwable didn't originate in a
-        ;; fixture - it escaped the test body itself (e.g. interrupting a test
-        ;; that isn't wrapped in `is`, #1020). Guard against that so we report
-        ;; the error instead of crashing on `(symbol nil)`.
-        fixture (some-> frame :var symbol resolve)]
-    (swap! current-report update-in [:summary :test] dec)
-    (binding [test/*testing-vars* (if fixture
-                                    (list fixture)
-                                    test/*testing-vars*)]
-      (report {:type :error, :fault true, :expected nil, :actual e
-               :message (if fixture
-                          "Uncaught exception in test fixture"
-                          "Uncaught exception during test run")}))))
-
-(defmacro ^:private timing
-  "Executes `body`, reporting the time it took by persisting it to `time-atom`."
-  {:style/indent 1}
-  [time-atom & body]
-  {:pre [(seq body)]}
-  `(let [then# (System/currentTimeMillis)
-         v# (do
-              ~@body)
-         took# (- (System/currentTimeMillis)
-                  then#)]
-     (reset! ~time-atom {:ms took#
-                         :humanized (str "Completed in " took# " ms")})
-     v#))
-
-;;; ## Test Execution
-;;
-;; These functions are based on the ones in `clojure.test`, updated to accept
-;; a list of vars to test, use the report implementation above, and distinguish
-;; between test errors and faults outside of assertions.
-
-(defn test-var
-  "If var `v` has a function in its `:test` metadata, call that function,
-  with `clojure.test/*testing-vars*` bound to append `v`."
-  [v]
-  (when-let [t (:test (meta v))]
-    (binding [test/*testing-vars* (conj test/*testing-vars* v)]
-      (test/do-report {:type :begin-test-var :var v})
-      (test/inc-report-counter :test)
-      (let [time-info (atom nil)
-            result (timing time-info
-                     (try
-                       (t)
-                       ::ok
-                       (catch Throwable e
-                         e)))
-            report (if (= ::ok result)
-                     {:type :end-test-var
-                      :var v}
-                     {:type :error
-                      :fault true
-                      :expected nil
-                      :actual result
-                      :message "Uncaught exception, not in assertion"})]
-        (test/do-report (assoc report :var-elapsed-time @time-info))))))
-
-(defn- current-test-run-failed? []
-  (or (some-> @current-report :summary :fail pos?)
-      (some-> @current-report :summary :error pos?)))
-
-(defn test-vars
-  "Call `test-var` on each var, with the fixtures defined for namespace object
-  `ns`."
-  ([ns vars]
-   (test-vars ns vars false))
-
-  ([ns vars fail-fast?]
-   (let [once-fixture-fn (test/join-fixtures (::test/once-fixtures (meta ns)))
-         each-fixture-fn (test/join-fixtures (::test/each-fixtures (meta ns)))]
-     (try
-       (once-fixture-fn
-        (fn []
-          (reduce (fn [_ v]
-                    (cond-> (each-fixture-fn (fn []
-                                               (test-var v)))
-                      (and fail-fast? (current-test-run-failed?))
-                      reduced))
-                  nil
-                  vars)))
-       (catch Throwable e
-         (report-fixture-error ns e))))))
-
-(defn test-ns
-  "If the namespace object defines a function named `test-ns-hook`, call that.
-  Otherwise, test the specified vars. On completion, return a map of test
-  results."
-  ([ns vars]
-   (test-ns ns vars false))
-
-  ([ns vars fail-fast?]
-   (binding [test/report report
-             test/*report-counters* (ref test/*initial-report-counters*)]
-     (test/do-report {:type :begin-test-ns, :ns ns})
-     (let [time-info (atom nil)]
-       (timing time-info
-         (if-let [test-hook (ns-resolve ns 'test-ns-hook)]
-           (test-hook)
-           (test-vars ns vars fail-fast?)))
-       (test/do-report {:type :end-test-ns
-                        :ns ns
-                        :ns-elapsed-time @time-info})
-       @current-report))))
-
-(defn- with-test-ns-hook-namespaces
-  "Augment `corpus` (a map of namespace -> test vars) with namespaces matching
-  `ns-query` that define a `test-ns-hook` but contribute no vars of their own.
-  `clojure.test` runs such a namespace's tests entirely through the hook, so
-  without this they would be silently skipped (reported as \"No assertions\").
-  `:has-tests?` is cleared because a hook-only namespace has no test vars and
-  would otherwise be filtered out. See #680."
-  [corpus ns-query]
-  (let [already-tested (set (keys corpus))]
-    (into corpus
-          (comp (remove already-tested)
-                (filter #(ns-resolve % 'test-ns-hook))
-                (map (fn [ns] [ns nil])))
-          (query/namespaces (assoc ns-query :has-tests? false)))))
-
-(defn test-var-query
-  "Call `test-ns` for each var found via var-query."
+(defn ^{:deprecated "0.63.0"} test-var-query
+  "Use `orchard.test/run-var-query` instead."
   ([var-query]
-   (test-var-query var-query false))
-
+   (orchard.test/run-var-query var-query))
   ([var-query fail-fast?]
-   (report-reset!)
-   (let [elapsed-time (atom nil)
-         corpus (-> (group-by
-                     (comp :ns meta)
-                     (query/vars var-query))
-                    (with-test-ns-hook-namespaces (:ns-query var-query)))]
-     (timing elapsed-time
-       (reduce (fn [_ [ns vars]]
-                 (cond-> (test-ns ns vars fail-fast?)
-                   (and fail-fast? (current-test-run-failed?))
-                   reduced))
-               nil
-               corpus))
-     (assoc @current-report :elapsed-time @elapsed-time))))
+   (orchard.test/run-var-query var-query {:fail-fast? fail-fast?})))
 
-(defn test-nss
-  "Call `test-ns` for each entry in map `m`, in which keys are namespace
-  symbols and values are var symbols to be tested in that namespace (or `nil`
-  to test all vars). Symbols are first resolved to their corresponding
-  objects."
+(defn ^{:deprecated "0.63.0"} test-nss
+  "Use `orchard.test/run-namespaces` instead."
   ([m]
-   (test-nss m false))
-
+   (orchard.test/run-namespaces m))
   ([m fail-fast?]
-   (report-reset!)
-   (let [elapsed-time (atom nil)
-         corpus (mapv (fn [[ns vars]]
-                        [(the-ns ns)
-                         (keep (partial ns-resolve ns) vars)])
-                      m)]
-     (timing elapsed-time
-       (reduce (fn [_ [ns vars]]
-                 (cond-> (test-ns ns vars fail-fast?)
-                   (and fail-fast? (current-test-run-failed?))
-                   reduced))
-               nil
-               corpus))
-     (assoc @current-report :elapsed-time @elapsed-time))))
+   (orchard.test/run-namespaces m {:fail-fast? fail-fast?})))
+
+(defn- stringify-messages
+  "`clojure.test` allows any object as an assertion message; send them as strings."
+  [report]
+  (walk/postwalk (fn [x]
+                   (if (and (map? x) (contains? x :message))
+                     (update x :message str)
+                     x))
+                 report))
+
+(defn- run-opts [{:keys [fail-fast]}]
+  {:fail-fast? (= "true" fail-fast)})
+
+(defn- run-tests
+  "Run the tests with `run-fn`, given the options for `msg`, and return the
+  report ready to be sent."
+  [msg run-fn]
+  (binding [orchard.test/*test-error-handler* *test-error-handler*]
+    (stringify-messages (run-fn (run-opts msg)))))
 
 ;;; ## Middleware
 
@@ -456,25 +89,17 @@
   (atom {}))
 
 (defn handle-test-var-query-op
-  [{:keys [fail-fast var-query session id] :as msg}]
-  (let [fail-fast? (= "true" fail-fast)
-        {:keys [exec]} (meta session)]
+  [{:keys [var-query session id] :as msg}]
+  (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
             (with-bindings (assoc @session #'ie/*msg* msg)
               (try
-                (let [stringify-msg (fn [report]
-                                      (walk/postwalk (fn [x] (if (and (map? x)
-                                                                      (contains? x :message))
-                                                               (update x :message str)
-                                                               x))
-                                                     report))
-                      report (-> var-query
-                                 (assoc-in [:ns-query :has-tests?] true)
-                                 (assoc :test? true)
-                                 (util.coerce/var-query)
-                                 (test-var-query fail-fast?)
-                                 stringify-msg)]
+                (let [var-query (-> var-query
+                                    (assoc-in [:ns-query :has-tests?] true)
+                                    (assoc :test? true)
+                                    (util.coerce/var-query))
+                      report (run-tests msg #(orchard.test/run-var-query var-query %))]
                   (reset! results (:results report))
                   (respond-to msg (util/transform-value report)))
                 (catch clojure.lang.ExceptionInfo e
@@ -503,7 +128,7 @@
                            :exclude-meta-key exclude}})))
 
 (defn handle-retest-op
-  [{:keys [session id fail-fast] :as msg}]
+  [{:keys [session id] :as msg}]
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
@@ -516,7 +141,7 @@
                                       (assoc ret ns vars)
                                       ret)))
                                 {} @results)
-                    report (test-nss nss (= "true" fail-fast))]
+                    report (run-tests msg #(orchard.test/run-namespaces nss %))]
                 (reset! results (:results report))
                 (respond-to msg (util/transform-value report)))))
           (fn []
