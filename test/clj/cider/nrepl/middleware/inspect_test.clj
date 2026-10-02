@@ -46,7 +46,10 @@
 
 (def code "(sorted-map :a {:b 1} :c \"a\" :d 'e :f [2 3])")
 
-(def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol \"very long key to avoid stack overflow before limit reaches\") m) m)")
+;; Orchard prints at most 100 levels of a self-referential value, so the key
+;; has to be long enough for those to go past the default :max-value-length
+;; (but stay under :max-atom-length).
+(def infinite-map-code "(let [m (java.util.HashMap.)] (.put m (symbol (apply str (repeat 110 \"k\"))) m) m)")
 
 (def inspect-contents
   ["--- Contents:" [:newline]
