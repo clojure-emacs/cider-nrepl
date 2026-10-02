@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+## 0.63.0 (2026-10-02)
+
 - [#1051](https://github.com/clojure-emacs/cider-nrepl/pull/1051): Bump `orchard` to [0.45.0](https://github.com/clojure-emacs/orchard/blob/v0.45.0/CHANGELOG.md) (adds the `orchard.test` runner, printing honors a custom `print-method` for records and collections, and the inspector gains string analytics).
 - [#1051](https://github.com/clojure-emacs/cider-nrepl/pull/1051): Run tests with `orchard.test` and stream their progress as `test-event` messages when `stream` is set; the old runner vars are deprecated aliases, `test-ns` and `test-vars` are gone, and unresolvable fixture results are keyed by `orchard.test/unknown`.
 - Bump `compliment` to [0.8.1](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#081-2026-07-13).
