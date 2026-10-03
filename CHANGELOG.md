@@ -4,7 +4,9 @@
      so the line-length and duplicate-heading rules don't fit this file. -->
 <!-- markdownlint-disable MD013 MD024 -->
 
-## master (unreleased)
+## 0.63.1 (2026-10-03)
+
+- Bump `compliment` to [0.8.2](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#082-2026-10-03).
 
 ## 0.63.0 (2026-10-02)
 
