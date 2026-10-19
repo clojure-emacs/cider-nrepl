@@ -1,4 +1,6 @@
 {:paths ["src" "resources" "target/classes"]
+ ;; A Maven central with more generous request limits.
+ :mvn/repos {"central" {:url "https://maven-central.storage.googleapis.com/maven2/"}}
 
  ;; Only the *non-inlined* runtime deps live here, so they (and only they) end
  ;; up in the published pom. The deps that get source-shaded into the jar are
@@ -47,7 +49,7 @@
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
   :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}}
-  :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha6"}}}
+  :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha9"}}}
 
   ;; nREPL version matrix.
   :nrepl-1.0 {:override-deps {nrepl/nrepl {:mvn/version "1.0.0"}}}
@@ -56,6 +58,7 @@
   :nrepl-1.5 {:override-deps {nrepl/nrepl {:mvn/version "1.5.2"}}}
   :nrepl-1.6 {:override-deps {nrepl/nrepl {:mvn/version "1.6.0"}}}
   :nrepl-1.7 {:override-deps {nrepl/nrepl {:mvn/version "1.7.0"}}}
+  :nrepl-1.8 {:override-deps {nrepl/nrepl {:mvn/version "1.8.0"}}}
 
   :test
   {:extra-paths ["test/clj" "test/cljs" "test/common" "test/src"
