@@ -3,6 +3,7 @@
 
 SHELL = /bin/bash -Ee
 
+CLOJURE ?= clojure
 CLOJURE_VERSION ?= 1.12
 NREPL_VERSION ?= 1.7
 # The version local installs get. Releases take theirs from the git tag.
@@ -25,19 +26,19 @@ TEST_ALIASES = :$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test
 # distributions.
 
 download-jdk-src:
-	clojure -T:build download-jdk-src
+	$(CLOJURE) -T:build download-jdk-src
 
 javac:
-	clojure -T:build javac
+	$(CLOJURE) -T:build javac
 
 javac-test:
-	clojure -T:build javac :with-tests true
+	$(CLOJURE) -T:build javac :with-tests true
 
 # Fast tests: run against the real (non-inlined) dependencies. The ClojureScript
 # tests are excluded here and run separately (see cljs-test); ClojureScript is
 # deliberately kept off the base classpath (see TEST_ALIASES above).
 quick-test: javac-test download-jdk-src
-	clojure -X$(TEST_ALIASES)
+	$(CLOJURE) -X$(TEST_ALIASES)
 
 test: quick-test
 
@@ -45,61 +46,61 @@ test: quick-test
 # running the suite with the test session instrumented. Slower than the unit
 # tests (it runs the whole op suite), so it's a separate target.
 descriptor-contract: javac-test
-	clojure -M:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test -m cider.nrepl.descriptor-contract
+	$(CLOJURE) -M:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined-deps:test -m cider.nrepl.descriptor-contract
 
 # ClojureScript middleware tests. Kept separate because the CLJS 1.12 Closure
 # compiler requires JDK21+, so CI only runs these on recent JDKs.
 cljs-test: javac-test download-jdk-src
-	clojure -X:cljs$(TEST_ALIASES) :dirs '["test/cljs"]'
+	$(CLOJURE) -X:cljs$(TEST_ALIASES) :dirs '["test/cljs"]'
 
 inline-deps:
-	clojure -T:build inline-deps
+	$(CLOJURE) -T:build inline-deps
 
 # Full tests: run the suite against the inlined/shaded sources (the equivalent
 # of the old mranderson full-test job).
 inlined-test: inline-deps javac-test
-	clojure -X:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined:test
+	$(CLOJURE) -X:$(CLOJURE_VERSION):nrepl-$(NREPL_VERSION):inlined:test
 
 # make jar (or PROJECT_VERSION=x.y.z make jar)
 jar:
-	clojure -T:build jar :version '"$(PROJECT_VERSION)"'
+	$(CLOJURE) -T:build jar :version '"$(PROJECT_VERSION)"'
 
 # make install (or PROJECT_VERSION=x.y.z make install)
 install:
-	clojure -T:build install :version '"$(PROJECT_VERSION)"'
+	$(CLOJURE) -T:build install :version '"$(PROJECT_VERSION)"'
 
 # Build a standalone uberjar with the freshly installed cider-nrepl and run it,
 # confirming the artifact loads and works outside this project's build.
 smoketest: install
 	cd test/smoketest && \
-		clojure -T:build uber :cider-nrepl-version '"$(PROJECT_VERSION)"' && \
+		$(CLOJURE) -T:build uber :cider-nrepl-version '"$(PROJECT_VERSION)"' && \
 		java -jar target/smoketest-0.1.0-standalone.jar
 
 clean:
-	clojure -T:build clean
+	$(CLOJURE) -T:build clean
 
 # Explicit paths so we don't recurse into the smoketest subproject or target dirs.
 LINT_PATHS = src test/clj test/cljs test/common test/src build
 
 cljfmt:
-	clojure -M:cljfmt check $(LINT_PATHS)
+	$(CLOJURE) -M:cljfmt check $(LINT_PATHS)
 
 cljfmt-fix:
-	clojure -M:cljfmt fix $(LINT_PATHS)
+	$(CLOJURE) -M:cljfmt fix $(LINT_PATHS)
 
 kondo:
-	clojure -M:kondo --lint src test/clj test/cljs test/common test/src
+	$(CLOJURE) -M:kondo --lint src test/clj test/cljs test/common test/src
 
 # Eastwood needs the shaded deps, ClojureScript and leiningen-core (for the lein
 # plugin ns) on the classpath so the src namespaces can be analyzed, plus the
 # compiled Java. Linting itself stays scoped to src (see the :eastwood alias).
 eastwood: javac
-	clojure -M:inlined-deps:cljs:test:eastwood
+	$(CLOJURE) -M:inlined-deps:cljs:test:eastwood
 
 lint: cljfmt kondo eastwood
 
 docs:
-	clojure -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"$(NREPL_VERSION)"'
+	$(CLOJURE) -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"$(NREPL_VERSION)"'
 
 # Prepare a release: roll the changelog, bump the docs version, commit and tag.
 # Pushing the tag (which triggers the deploy below) is left to you.
@@ -107,7 +108,7 @@ docs:
 # Regenerating the ops docs first keeps the generated API reference honest -
 # it gets committed as part of the release commit if it changed.
 release: check-version docs
-	clojure -T:build release :version '"$(PROJECT_VERSION)"'
+	$(CLOJURE) -T:build release :version '"$(PROJECT_VERSION)"'
 
 # Deployment is performed via CI by creating a git tag prefixed with "v".
 deploy: check-env
@@ -116,7 +117,7 @@ deploy: check-env
 		exit 1; \
 	fi
 	export PROJECT_VERSION=$$(echo "$(CIRCLE_TAG)" | sed 's/^v//'); \
-	clojure -T:build deploy :version "\"$$PROJECT_VERSION\""
+	$(CLOJURE) -T:build deploy :version "\"$$PROJECT_VERSION\""
 
 check-version:
 	@if [ "$(PROJECT_VERSION)" = "99.99" ]; then \
