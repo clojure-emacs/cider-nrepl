@@ -2863,6 +2863,24 @@ Returns::
 {blank}
 
 
+=== `cider/resolve-missing`
+
+Return the namespaces and classes that could provide a symbol the namespace can't resolve yet: loaded namespaces with a public var of that name, to require, and classes of that name, to import. There are none when the namespace can already use the symbol, and a fully qualified symbol gets only its own namespace.
+
+Required parameters::
+* `:symbol` The symbol to resolve, as written (e.g. ``join``, ``str/join``, ``Date``, ``Date.`` or ``Instant/now``).
+
+
+Optional parameters::
+* `:ns` The namespace the symbol is used in.
+
+
+Returns::
+* `:candidates` A list of maps with the candidate's ``name`` and ``type``: ``ns`` or (ClojureScript only) ``macro`` for a namespace to require, ``class`` for a class to import, and ``type`` for a ``deftype`` or ``defrecord`` class, which also has the ``ns`` that defines it.
+* `:status` done
+
+
+
 === `cider/resource`
 
 Obtain the path to a resource.

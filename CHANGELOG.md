@@ -4,6 +4,10 @@
      so the line-length and duplicate-heading rules don't fit this file. -->
 <!-- markdownlint-disable MD013 MD024 -->
 
+## master (unreleased)
+
+- [#1056](https://github.com/clojure-emacs/cider-nrepl/pull/1056): Add the `cider/resolve-missing` op, returning the loaded namespaces and the classes that could provide a symbol the namespace can't resolve yet, for both Clojure and ClojureScript.
+
 ## 0.63.1 (2026-10-03)
 
 - Bump `compliment` to [0.8.2](https://github.com/alexander-yakushev/compliment/blob/master/CHANGELOG.md#082-2026-10-03).
