@@ -2,6 +2,7 @@
   (:require
    [cider.nrepl.piggieback-test :refer [piggieback-fixture]]
    [cider.nrepl.test-session :as session]
+   [clojure.set :as set]
    [clojure.test :refer :all]))
 
 (use-fixtures :once piggieback-fixture)
@@ -56,3 +57,39 @@
     (let [{:keys [^String path]} (session/message {:op "cider/ns-path"
                                                    :ns "cljs.repl"})]
       (is (.endsWith path "cljs/repl.cljs")))))
+
+(deftest cljs-resolve-missing-test
+  (let [resolve-missing (fn [msg]
+                          (let [{:keys [candidates status]}
+                                (session/message (merge {:op "cider/resolve-missing"} msg))]
+                            (is (= #{"done"} status))
+                            (set candidates)))]
+    (testing "Namespaces with a public var of that name"
+      (is (set/subset? #{{:name "clojure.set" :type "ns"}
+                         {:name "clojure.string" :type "ns"}}
+                       (resolve-missing {:symbol "join"})))
+      (is (contains? (resolve-missing {:symbol "str/join"})
+                     {:name "clojure.string" :type "ns"})))
+
+    (testing "cljs.core is left out"
+      (is (not-any? #(= "cljs.core" (:name %)) (resolve-missing {:symbol "map"}))))
+
+    (testing "Macros"
+      (is (contains? (resolve-missing {:symbol "doc"})
+                     {:name "cljs.repl" :type "macro"})))
+
+    (testing "A symbol the namespace can already use gets nothing"
+      (is (empty? (resolve-missing {:symbol "doc" :ns "cljs.user"})))
+      (is (empty? (resolve-missing {:symbol "string/join" :ns "cljs.pprint"})))
+      (is (empty? (resolve-missing {:symbol "map" :ns "cljs.pprint"})))
+      (is (empty? (resolve-missing {:symbol "cljs.core/map" :ns "cljs.user"})))
+      (is (empty? (resolve-missing {:symbol "clojure.core/map" :ns "cljs.user"})))
+      (is (empty? (resolve-missing {:symbol "pprint" :ns "cljs.pprint"})))
+      (is (contains? (resolve-missing {:symbol "str/join" :ns "cljs.pprint"})
+                     {:name "clojure.string" :type "ns"})))
+
+    (testing "A fully qualified symbol leaves no choice"
+      (is (= #{{:name "clojure.string" :type "ns"}}
+             (resolve-missing {:symbol "clojure.string/join"})))
+      ;; Not even when the namespace lacks the var
+      (is (empty? (resolve-missing {:symbol "cljs.user/join" :ns "cljs.user"}))))))

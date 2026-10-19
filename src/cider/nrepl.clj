@@ -634,38 +634,47 @@ if applicable, and re-render the updated value."
 (def-wrapper wrap-ns cider.nrepl.middleware.ns/handle-ns
   {:doc "Provide ns listing and browsing functionality."
    :requires (cljs/maybe-add-piggieback #{#'session})
-   :handles (with-deprecated-aliases
-              {"cider/ns-list"
-               {:doc "Return a sorted list of all namespaces."
-                :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-                :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
-               "cider/ns-list-vars-by-name"
-               {:doc "Return a list of vars named `name` amongst all namespaces."
-                :requires {"name" "The name to use."}
-                :returns {"status" "done" "var-list" "The list obtained."}}
-               "cider/ns-vars"
-               {:doc "Returns a sorted list of public vars in a namespace."
-                :requires {"ns" "The namespace to browse."}
-                :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-                :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
-               "cider/ns-vars-with-meta"
-               {:doc "Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
-                :requires {"ns" "The namespace to use."}
-                :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
-                :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
-               "cider/ns-path"
-               {:doc "Returns the path to the file containing ns."
-                :requires {"ns" "The namespace to find."}
-                :returns {"status" "done"
-                          "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
-                          "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
-               "cider/ns-load-all"
-               {:doc "Loads all project namespaces."
-                :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
-               "cider/ns-aliases"
-               {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
-                :requires {"ns" "The namespace to use."}
-                :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}})})
+   :handles (merge
+             (with-deprecated-aliases
+               {"cider/ns-list"
+                {:doc "Return a sorted list of all namespaces."
+                 :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
+                 :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
+                "cider/ns-list-vars-by-name"
+                {:doc "Return a list of vars named `name` amongst all namespaces."
+                 :requires {"name" "The name to use."}
+                 :returns {"status" "done" "var-list" "The list obtained."}}
+                "cider/ns-vars"
+                {:doc "Returns a sorted list of public vars in a namespace."
+                 :requires {"ns" "The namespace to browse."}
+                 :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+                 :returns {"status" "done" "ns-vars" "The sorted list of public vars in a namespace."}}
+                "cider/ns-vars-with-meta"
+                {:doc "Returns a map of [var-name] to [var-metadata] for public vars in a namespace."
+                 :requires {"ns" "The namespace to use."}
+                 :optional {"var-query" "The search query for vars. Only \"private?\" is supported for ClojureScript."}
+                 :returns {"status" "done" "ns-vars-with-meta" "The map of [var-name] to [var-metadata] for public vars in a namespace."}}
+                "cider/ns-path"
+                {:doc "Returns the path to the file containing ns."
+                 :requires {"ns" "The namespace to find."}
+                 :returns {"status" "done"
+                           "path" "The path to the file containing ns. Please favor `:url` in ClojureScript, but fall back to `:path`."
+                           "url" "The Java URL indicating the file containing ns. Please favor this attribute over `:path` when possible. If this value is nil, you can fall back to `:path`."}}
+                "cider/ns-load-all"
+                {:doc "Loads all project namespaces."
+                 :returns {"status" "done" "loaded-ns" "The list of ns that were loaded."}}
+                "cider/ns-aliases"
+                {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
+                 :requires {"ns" "The namespace to use."}
+                 :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}})
+             ;; `cider/resolve-missing` is newer and has no deprecated alias,
+             ;; which would shadow refactor-nrepl's `resolve-missing`.
+             {"cider/resolve-missing"
+              {:doc "Return the namespaces and classes that could provide a symbol the namespace can't resolve yet: loaded namespaces with a public var of that name, to require, and classes of that name, to import. There are none when the namespace can already use the symbol, and a fully qualified symbol gets only its own namespace."
+               :requires {"symbol" "The symbol to resolve, as written (e.g. `join`, `str/join`, `Date`, `Date.` or `Instant/now`)."}
+               :optional {"ns" "The namespace the symbol is used in."}
+               :returns {"status" "done"
+                         "candidates" "A list of maps with the candidate's `name` and `type`: `ns` or (ClojureScript only) `macro` for a namespace to require, `class` for a class to import, and `type` for a `deftype` or `defrecord` class, which also has the `ns` that defines it."}}})})
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   {:requires #{#'session}

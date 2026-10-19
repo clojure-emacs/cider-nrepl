@@ -2,7 +2,8 @@
   (:require
    [cider.nrepl.middleware.ns :refer [ns-vars-clj ns-list-vars-by-name] :as cider-ns]
    [cider.nrepl.test-session :as session]
-   [cider.test-ns first-test-ns second-test-ns third-test-ns]
+   [cider.test-ns first-test-ns second-test-ns third-test-ns resolve-missing-ns]
+   [clojure.set :as set]
    [clojure.test :refer :all]))
 
 (deftest toogle-ns-vars-test
@@ -189,3 +190,142 @@
     (let [aliases (:ns-aliases (session/message {:op "ns-aliases"
                                                  :ns "cider.nrepl.middleware.ns-test"}))]
       (is (map? aliases)))))
+
+(defn- resolve-missing [sym & [ns]]
+  (set (cider-ns/resolve-missing {:symbol sym :ns ns})))
+
+(deftest resolve-missing-test
+  (testing "Namespaces with a public var of that name"
+    (is (set/subset? #{{:name "cider.test-ns.first-test-ns" :type "ns"}
+                       {:name "cider.test-ns.second-test-ns" :type "ns"}}
+                     (resolve-missing "same-name-testing-function")))
+    (is (contains? (resolve-missing "some-alias/same-name-testing-function")
+                   {:name "cider.test-ns.first-test-ns" :type "ns"}))
+    (is (not-any? #(= "cider.test-ns.resolve-missing-ns" (:name %))
+                  (resolve-missing "private-function"))))
+
+  (testing "Classes of that name"
+    (is (set/subset? #{{:name "java.util.Date" :type "class"}
+                       {:name "java.sql.Date" :type "class"}}
+                     (resolve-missing "Date")))
+    (is (= (resolve-missing "Date") (resolve-missing "Date.")))
+    (is (contains? (resolve-missing "Instant/now")
+                   {:name "java.time.Instant" :type "class"}))
+    (is (empty? (resolve-missing "java.util.Date")))
+    (is (not-any? #(= "class" (:type %)) (resolve-missing "some-alias/Date"))))
+
+  (testing "Types and records come with the namespace that defines them"
+    (is (contains? (resolve-missing "ResolvableType")
+                   {:name "cider.test_ns.resolve_missing_ns.ResolvableType"
+                    :type "type"
+                    :ns "cider.test-ns.resolve-missing-ns"}))
+    (is (contains? (resolve-missing "ResolvableRecord.")
+                   {:name "cider.test_ns.resolve_missing_ns.ResolvableRecord"
+                    :type "type"
+                    :ns "cider.test-ns.resolve-missing-ns"})))
+
+  (testing "A symbol the namespace can already use gets nothing"
+    (let [in-ns #(resolve-missing % "cider.test-ns.resolve-missing-ns")]
+      ;; Offering the other namespaces would only change what it means.
+      (is (empty? (in-ns "same-name-testing-function")))
+      (is (empty? (in-ns "first-ns/some-test-var")))
+      (is (empty? (in-ns "cider.test-ns.resolve-missing-ns/local-function")))
+      ;; It only resolves because something else loaded the namespace.
+      (is (= #{{:name "cider.test-ns.third-test-ns" :type "ns"}}
+             (in-ns "cider.test-ns.third-test-ns/same-name-testing-function")))
+      (is (contains? (in-ns "other/some-test-var")
+                     {:name "cider.test-ns.first-test-ns" :type "ns"}))
+      (is (empty? (in-ns "Date")))
+      (is (empty? (in-ns "Date.")))
+      (is (empty? (in-ns "Date/from")))
+      (is (empty? (in-ns "java.time.Instant/now")))
+      (is (empty? (in-ns "map")))
+      (is (empty? (in-ns "local-function")))
+      (is (empty? (in-ns "ResolvableType")))))
+
+  (testing "A namespace that isn't loaded filters nothing"
+    (is (= (resolve-missing "Date") (resolve-missing "Date" "not.a.loaded.ns")))
+    (is (= (resolve-missing "Date") (resolve-missing "Date" ""))))
+
+  (testing "A fully qualified symbol leaves no choice"
+    (is (= #{{:name "cider.test-ns.first-test-ns" :type "ns"}}
+           (resolve-missing "cider.test-ns.first-test-ns/same-name-testing-function")))
+    ;; Even when the namespace lacks the var: another namespace with that name
+    ;; as its alias would change what the name means.
+    (is (empty? (resolve-missing "clojure.walk/same-name-testing-function")))
+    (is (empty? (resolve-missing "clojure.core/map" "cider.test-ns.resolve-missing-ns"))))
+
+  (testing "Special forms resolve"
+    (let [temp 'cider.nrepl.resolve-missing-special-test]
+      (try
+        (intern (create-ns temp) 'catch identity)
+        (is (contains? (resolve-missing "catch") {:name (str temp) :type "ns"}))
+        (is (empty? (resolve-missing "catch" "cider.test-ns.resolve-missing-ns")))
+        (finally
+          (remove-ns temp)))))
+
+  (testing "Looking up a class doesn't initialize it"
+    (is (empty? (resolve-missing "cider.nrepl.test.StaticInitTestClass/now"
+                                 "cider.test-ns.resolve-missing-ns")))
+    (is (nil? (System/getProperty "cider.nrepl.test.StaticInitTestClass"))))
+
+  (testing "A class before the slash makes it a static member, not an alias"
+    (is (every? #(= "class" (:type %)) (resolve-missing "Instant/now")))
+    (is (empty? (resolve-missing "String/join" "cider.test-ns.resolve-missing-ns"))))
+
+  (testing "The JDK's internal classes are left out"
+    (let [candidates (resolve-missing "StringReader")]
+      (is (contains? candidates {:name "java.io.StringReader" :type "class"}))
+      (is (not-any? #(re-find #"^(jdk\.internal|sun)\.|\.internal\." (:name %)) candidates))))
+
+  (testing "Inlined dependencies are left out"
+    (let [inlined 'cider.nrepl.inlined.deps.resolve-missing-test]
+      (try
+        (binding [*ns* (create-ns inlined)]
+          (eval '(do (clojure.core/refer-clojure)
+                     (defn same-name-testing-function [])
+                     (deftype InlinedResolvableType []))))
+        (is (not-any? #(= (str inlined) (:name %))
+                      (resolve-missing "same-name-testing-function")))
+        (is (empty? (resolve-missing "InlinedResolvableType")))
+        (finally
+          (remove-ns inlined)))))
+
+  (testing "A blank symbol is an error"
+    (is (thrown? IllegalArgumentException (resolve-missing " ")))))
+
+(deftest resolve-missing-cljs-env-test
+  (testing "A namespace without a name in the compiler env gets skipped"
+    (is (= [{:name "a.b" :type "ns"}]
+           (#'cider-ns/resolve-missing-cljs
+            {:cljs.analyzer/namespaces {nil {:defs {}}
+                                        'a.b {:defs {'join {:name 'a.b/join}}}}}
+            nil nil "join"))))
+
+  (testing "A renamed refer resolves"
+    (let [env {:cljs.analyzer/namespaces
+               {'foo.ren {:renames {'union 'clojure.string/join}}
+                'clojure.set {:defs {'union {:name 'clojure.set/union}}}}}]
+      (is (empty? (#'cider-ns/resolve-missing-cljs env 'foo.ren nil "union")))
+      (is (= [{:name "clojure.set" :type "ns"}]
+             (#'cider-ns/resolve-missing-cljs
+              (update-in env [:cljs.analyzer/namespaces 'foo.ren] dissoc :renames)
+              'foo.ren nil "union"))))))
+
+(deftest resolve-missing-integration-test
+  (let [{:keys [candidates status]} (session/message {:op "cider/resolve-missing"
+                                                      :symbol "other/same-name-testing-function"
+                                                      :ns "cider.test-ns.resolve-missing-ns"})]
+    (is (= #{"done"} status))
+    (is (= [{:name "cider.test-ns.first-test-ns" :type "ns"}
+            {:name "cider.test-ns.second-test-ns" :type "ns"}
+            {:name "cider.test-ns.third-test-ns" :type "ns"}]
+           candidates)))
+
+  (testing "A blank symbol is an error"
+    (is (= #{"cider/resolve-missing-error" "done"}
+           (:status (session/message {:op "cider/resolve-missing" :symbol ""})))))
+
+  (testing "There's no unqualified alias, which would shadow refactor-nrepl's op"
+    (is (contains? (:status (session/message {:op "resolve-missing" :symbol "Date"}))
+                   "unknown-op"))))
