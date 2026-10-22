@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+## 0.64.0-alpha1 (2026-10-22)
+
 - [#1056](https://github.com/clojure-emacs/cider-nrepl/pull/1056): Add the `cider/resolve-missing` op, returning the loaded namespaces and the classes that could provide a symbol the namespace can't resolve yet, for both Clojure and ClojureScript.
 
 ## 0.63.1 (2026-10-03)
