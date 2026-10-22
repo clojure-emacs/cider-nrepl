@@ -11,11 +11,17 @@
    [clojure.string :as str]
    [compliment.utils :as compliment.utils]
    [orchard.info :as info]
+   [orchard.java.classpath :as cp]
    [orchard.misc :as misc]
    [orchard.namespace :as ns]
-   [orchard.query :as query])
+   [orchard.ns-form :as ns-form]
+   [orchard.query :as query]
+   [orchard.util.io :as util.io])
   (:import
-   (clojure.lang Compiler IRecord IType Namespace RT Var)))
+   (clojure.lang Compiler IRecord IType Namespace RT Var)
+   (java.io File)
+   (java.net URL)
+   (java.nio.file Files)))
 
 (defn ns-list-vars-by-name
   "Return a list of vars named `name` amongst all namespaces.
@@ -335,6 +341,240 @@
 (defn- resolve-missing-reply [msg]
   {:candidates (resolve-missing msg)})
 
+;;; Resolving aliases
+;;
+;; `cider/resolve-alias` lists the namespaces an alias could stand for, so that
+;; typing `str/` can add the require it needs.  The project's own source files
+;; decide: the namespaces they give that alias, the most used first.  Only when
+;; they don't use the alias at all do the client's preferred namespaces and the
+;; project namespaces named after it come in.
+
+(def ^:private ns-forms-cache
+  "Source file path to the file's last modified time and length, and what
+  `read-file-aliases` got from it."
+  (atom {}))
+
+(defn- under-target?
+  "Whether the directory `f` is in a `target` directory of the project."
+  [^File f]
+  (some #{"target"} (str/split (util.io/relativize-project-path f) #"[/\\]")))
+
+(defn- project-source-dirs
+  "The directories on the classpath with the project's own sources.  Resources
+  and build output are left out, as copies of library sources end up there."
+  []
+  (for [^URL url (cp/classpath)
+        :when (= "file" (.getProtocol url))
+        :let [f (io/as-file url)]
+        :when (and (.isDirectory f)
+                   (util.io/file-in-project? f)
+                   (not (re-find #"(^|-)resources$" (.getName f)))
+                   (not (str/includes? (.getPath f) ".gitlibs"))
+                   (not (under-target? f)))]
+    f))
+
+(defn- skipped-dir?
+  "Whether the search for source files leaves out the directory `f`: a hidden
+  one, build output, npm packages, or a symbolic link, which can loop."
+  [^File f]
+  (let [dir-name (.getName f)]
+    (or (.startsWith dir-name ".")
+        (contains? #{"target" "node_modules"} dir-name)
+        (Files/isSymbolicLink (.toPath f)))))
+
+(defn- source-files
+  "The Clojure source files under `dir`."
+  [^File dir]
+  (filter (fn [^File f]
+            (and (.isFile f) (re-find #"\.clj[cs]?$" (.getName f))))
+          (tree-seq (fn [^File f]
+                      (and (.isDirectory f)
+                           (or (= dir f) (not (skipped-dir? f)))))
+                    (fn [^File f] (seq (.listFiles f)))
+                    dir)))
+
+(defn- file-platforms [^File f]
+  (let [file-name (.getName f)]
+    (cond
+      (.endsWith file-name ".cljc") [:clj :cljs]
+      (.endsWith file-name ".cljs") [:cljs]
+      :else [:clj])))
+
+(defn- read-file-aliases
+  "The ns name and the aliases of the source file `f`, for each platform it's
+  for.  A file that doesn't read gets nothing."
+  [^File f]
+  (into {}
+        (for [platform (file-platforms f)
+              ;; Read for each platform, as a .cljc file can have a separate
+              ;; ns form in a reader conditional for each.
+              :let [form (ns-form/read-ns-form f platform)
+                    ns-name (second form)]
+              :when (symbol? ns-name)]
+          [platform {:ns ns-name
+                     :aliases (try (ns-form/aliases form)
+                                   (catch Exception _ {}))}])))
+
+(defn- project-aliases
+  "The ns name and the aliases of each of the project's source files, for each
+  platform the file is for.  Only the files that changed since the last call
+  get read again."
+  []
+  ;; Two calls at once would both read every file that changed.
+  (locking ns-forms-cache
+    (let [cached @ns-forms-cache
+          fresh (into {}
+                      (for [dir (project-source-dirs)
+                            ^File f (source-files dir)
+                            :let [path (.getPath f)
+                                  ;; The length catches a change within the
+                                  ;; time resolution of the file system.
+                                  stamp [(.lastModified f) (.length f)]
+                                  [cached-stamp info] (get cached path)]]
+                        [path [stamp (if (= stamp cached-stamp)
+                                       info
+                                       (read-file-aliases f))]]))]
+      ;; Only the files there are now, so that deleted ones drop out.
+      (reset! ns-forms-cache fresh)
+      (map second (vals fresh)))))
+
+(defn- has-source?
+  "Whether the classpath has a file for the namespace `ns-str` with one of the
+  `extensions`."
+  [^String ns-str extensions]
+  (let [path (-> ns-str (str/replace "-" "_") (str/replace "." "/"))]
+    (some #(io/resource (str path %)) extensions)))
+
+(defn- cljs-on-classpath? []
+  (some? (io/resource "cljs/core.cljs")))
+
+(defn- available?
+  "Whether the namespace `ns` (a symbol, or a string for a JavaScript module)
+  can be required on `platform`.  `cljs-env` is the ClojureScript compiler
+  environment, when there's one."
+  [ns platform cljs-env]
+  (if (string? ns)
+    (= :cljs platform)
+    (let [ns-str (str ns)]
+      (case platform
+        :clj (or (find-ns ns)
+                 (has-source? ns-str [".clj" ".cljc" "__init.class"]))
+        :cljs (or (some-> cljs-env (cljs-analysis/find-ns ns))
+                  (has-source? ns-str [".cljs" ".cljc"])
+                  ;; ClojureScript takes a missing clojure.x for cljs.x.
+                  (and (.startsWith ns-str "clojure.")
+                       (has-source? (str "cljs" (subs ns-str (count "clojure"))) [".cljs" ".cljc"]))
+                  ;; The Closure Library's JavaScript files aren't named after
+                  ;; their namespaces.
+                  (.startsWith ns-str "goog.")
+                  ;; Without ClojureScript on the classpath there's no telling.
+                  (not (cljs-on-classpath?)))))))
+
+(defn- suggested-alias
+  "The alias a namespace named `ns-sym` would usually get: the last segment of
+  its name that isn't `core` or the like, e.g. `billing` for `acme.billing.core`.
+  None for test namespaces."
+  [ns-sym]
+  (let [segments (remove #{"core" "api" "alpha"} (str/split (str ns-sym) #"\."))]
+    (when-not (some #{"test"} segments)
+      (last segments))))
+
+(defn- has-alias?
+  "Whether the namespace `ns-sym` already has `alias`, or `alias` names a
+  namespace or a class rather than standing for a namespace."
+  [cljs-env ns-sym alias]
+  (if cljs-env
+    (or (cljs-analysis/find-ns cljs-env alias)
+        (when-let [ns-info (some->> ns-sym (cljs-analysis/find-ns cljs-env))]
+          (some #(contains? (get ns-info %) alias)
+                [:requires :require-macros :as-aliases :imports])))
+    (or (find-ns alias)
+        (let [the-ns (some-> ns-sym find-ns)
+              ;; Every namespace has java.lang's classes.
+              ^Namespace mappings (or the-ns (find-ns 'clojure.core))]
+          (or (some-> the-ns clojure.core/ns-aliases (contains? alias))
+              (class? (.getMapping mappings alias)))))))
+
+(defn- preferred-ns
+  "The namespace an entry of the `:preferred` list names: a symbol, or a
+  string for a JavaScript module, written quoted as in a libspec."
+  [x]
+  (let [s (str/trim (str x))]
+    (if (and (> (count s) 1) (str/starts-with? s "\"") (str/ends-with? s "\""))
+      (subs s 1 (dec (count s)))
+      (symbol s))))
+
+(defn- distinct-ns [candidates]
+  (->> candidates
+       (reduce (fn [[seen acc] {:keys [ns] :as c}]
+                 (if (seen ns) [seen acc] [(conj seen ns) (conj acc c)]))
+               [#{} []])
+       second))
+
+(defn resolve-alias
+  "The namespaces the `:alias` of `msg` could stand for in its `:ns`, as maps
+  with the `:ns` as written in a libspec and the `:source` of the candidate:
+  `project`, with the `:count` of the source files that give the namespace this
+  alias, `preferred` (from the `:preferred` namespaces) or `suggested`.
+  `:platform` is `clj`, `cljs`, or `cljc`, where a candidate has to work for
+  both, and defaults to the session's."
+  [{alias-str :alias ns-str :ns platform :platform preferred :preferred :as msg}]
+  (when (str/blank? alias-str)
+    (throw (IllegalArgumentException. "No alias to resolve")))
+  (let [alias (symbol (str/trim alias-str))
+        current (some-> ns-str not-empty symbol)
+        cljs-env (cljs/grab-cljs-env msg)
+        platforms (case (or platform (if cljs-env "cljs" "clj"))
+                    "cljs" [:cljs]
+                    "cljc" [:clj :cljs]
+                    [:clj])]
+    (when-not (or (and (= 'js alias) (some #{:cljs} platforms))
+                  (has-alias? cljs-env current alias))
+      (let [files (project-aliases)
+            ;; The current namespace's own file only tells what it has already.
+            others (if current
+                     (remove (fn [info] (some #(= current (get-in info [% :ns])) platforms))
+                             files)
+                     files)
+            aliased-as (fn [info platform] (get-in info [platform :aliases alias]))
+            used-on? (fn [ns platform] (some #(= ns (aliased-as % platform)) others))
+            ;; What the project uses or defines on a platform is there for it.
+            usable? (fn [ns]
+                      (and (not= ns current)
+                           (every? (fn [platform]
+                                     (or (used-on? ns platform)
+                                         (some #(= ns (get-in % [platform :ns])) files)
+                                         (available? ns platform cljs-env)))
+                                   platforms)))
+            candidate (fn [ns source] {:ns (pr-str ns) :source source})
+            used (->> others
+                      (mapcat (fn [info] (distinct (keep #(aliased-as info %) platforms))))
+                      frequencies
+                      (filter (comp usable? key))
+                      ;; For cljc, what the project uses on both platforms
+                      ;; comes first.
+                      (sort-by (fn [[ns n]]
+                                 [(if (every? #(used-on? ns %) platforms) 0 1) (- n) (str ns)])))]
+        (if (seq used)
+          (for [[ns n] used]
+            (assoc (candidate ns "project") :count n))
+          (distinct-ns
+           (concat
+            (for [x (if (sequential? preferred) preferred [preferred])
+                  :when (some? x)
+                  :let [ns (preferred-ns x)]
+                  :when (usable? ns)]
+              (candidate ns "preferred"))
+            (for [ns (sort (distinct (for [info files, platform platforms
+                                           :let [ns (get-in info [platform :ns])]
+                                           :when ns]
+                                       ns)))
+                  :when (and (= (str alias) (suggested-alias ns)) (usable? ns))]
+              (candidate ns "suggested")))))))))
+
+(defn- resolve-alias-reply [msg]
+  {:candidates (resolve-alias msg)})
+
 (defn handle-ns [handler msg]
   (with-safe-transport handler msg
     (merge
@@ -345,6 +585,7 @@
                        "cider/ns-path" ns-path-reply
                        "cider/ns-load-all" ns-load-all-reply
                        "cider/ns-aliases" ns-aliases-reply})
-     ;; Newer, with no unqualified alias, which would shadow refactor-nrepl's
-     ;; `resolve-missing`.
-     {"cider/resolve-missing" resolve-missing-reply})))
+     ;; Newer, with no unqualified aliases, one of which would shadow
+     ;; refactor-nrepl's `resolve-missing`.
+     {"cider/resolve-missing" resolve-missing-reply
+      "cider/resolve-alias" resolve-alias-reply})))

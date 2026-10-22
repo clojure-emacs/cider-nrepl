@@ -7,6 +7,7 @@
 ## master (unreleased)
 
 - [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Bump `orchard` to [0.46.0](https://github.com/clojure-emacs/orchard/blob/v0.46.0/CHANGELOG.md) (adds `orchard.ns-form`).
+- [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Add the `cider/resolve-alias` op, returning the namespaces an alias could stand for, ranked by how often the project's source files require them under it, for both Clojure and ClojureScript.
 
 ## 0.64.0-alpha1 (2026-10-22)
 

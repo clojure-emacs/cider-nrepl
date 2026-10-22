@@ -329,3 +329,162 @@
   (testing "There's no unqualified alias, which would shadow refactor-nrepl's op"
     (is (contains? (:status (session/message {:op "resolve-missing" :symbol "Date"}))
                    "unknown-op"))))
+
+(defn- write-file [^java.io.File dir path content]
+  (let [f (java.io.File. dir ^String path)]
+    (.mkdirs (.getParentFile f))
+    (spit f content)
+    f))
+
+(defn- call-with-project
+  "Call `f` with a temporary directory holding `files`, which `resolve-alias`
+  takes for the project's sources."
+  [files f]
+  (let [dir (.toFile (java.nio.file.Files/createTempDirectory
+                      "resolve-alias" (make-array java.nio.file.attribute.FileAttribute 0)))]
+    (try
+      (doseq [[path content] files]
+        (write-file dir path content))
+      (with-redefs [cider-ns/project-source-dirs (constantly [dir])]
+        (f dir))
+      (finally
+        (doseq [^java.io.File file (reverse (file-seq dir))]
+          (.delete file))))))
+
+(def ^:private project-files
+  {"proj/a.clj" "(ns proj.a (:require [clojure.walk :as rawk] [clojure.set :as zset]))"
+   "proj/b.clj" "(ns proj.b (:require [clojure.walk :as rawk]))"
+   "proj/c.clj" "(ns proj.c (:require [clojure.zip :as rawk]))"
+   "proj/d.cljs" "(ns proj.d (:require [goog.string :as gstr] [\"react\" :as react] [clojure.walk :as rawk]))"
+   "proj/e.cljc" "(ns proj.e (:require [clojure.set :as zset] #?(:clj [clojure.java.io :as jio] :cljs [goog.string :as jio])))"
+   "proj/server.clj" "(ns proj.server)"
+   "proj/f.clj" "(ns proj.f (:require [proj.server :as srv]))"
+   "proj/billing/core.clj" "(ns proj.billing.core)"
+   "proj/test/util.clj" "(ns proj.test.util)"
+   "proj/h.cljc" "#?(:clj (ns proj.h (:require [clojure.set :as hset])))\n#?(:cljs (ns proj.h (:require [clojure.set :as hset])))"
+   "proj/l1.clj" "(ns proj.l1 (:require [clojure.walk :as lg]))"
+   "proj/l2.clj" "(ns proj.l2 (:require [clojure.walk :as lg]))"
+   "proj/l3.cljc" "(ns proj.l3 (:require [clojure.set :as lg]))"
+   "proj/bad_splice.clj" "(ns proj.bad-splice (:require #?@(:clj foo)))"
+   "proj/bad_name.clj" "(ns \"proj.bad\" (:require [clojure.walk :as rawk]))"
+   ".hidden/proj/g.clj" "(ns proj.g (:require [clojure.walk :as rawk]))"
+   "proj/node_modules/n.clj" "(ns proj.n (:require [clojure.walk :as rawk]))"
+   "proj/target/t.clj" "(ns proj.t (:require [clojure.walk :as rawk]))"
+   "proj/notes.txt" "(ns proj.notes (:require [clojure.walk :as rawk]))"})
+
+(defn- resolve-alias
+  ([alias] (resolve-alias alias {}))
+  ([alias msg] (cider-ns/resolve-alias (assoc msg :alias alias))))
+
+(deftest resolve-alias-test
+  (call-with-project
+   project-files
+   (fn [dir]
+     (testing "The namespaces the project gives the alias, the most used first"
+       (is (= [{:ns "clojure.walk" :source "project" :count 2}
+               {:ns "clojure.zip" :source "project" :count 1}]
+              (resolve-alias "rawk"))))
+
+     (testing "Only the files for the platform count"
+       (is (= [{:ns "clojure.walk" :source "project" :count 1}]
+              (resolve-alias "rawk" {:platform "cljs"})))
+       (is (= [{:ns "goog.string" :source "project" :count 1}]
+              (resolve-alias "gstr" {:platform "cljs"})))
+       (is (= [{:ns "clojure.java.io" :source "project" :count 1}]
+              (resolve-alias "jio")))
+       (is (= [{:ns "goog.string" :source "project" :count 1}]
+              (resolve-alias "jio" {:platform "cljs"}))))
+
+     (testing "A JavaScript module comes quoted, and only for ClojureScript"
+       (is (= [{:ns "\"react\"" :source "project" :count 1}]
+              (resolve-alias "react" {:platform "cljs"})))
+       (is (empty? (resolve-alias "react"))))
+
+     (testing "For cljc, a candidate has to work for both platforms"
+       (is (= [{:ns "clojure.walk" :source "project" :count 3}
+               {:ns "clojure.zip" :source "project" :count 1}]
+              (resolve-alias "rawk" {:platform "cljc"})))
+       (is (= [{:ns "clojure.set" :source "project" :count 2}]
+              (resolve-alias "zset" {:platform "cljc"}))
+           "a .cljc file counts once, though it's read for each platform")
+       (with-redefs [cider-ns/cljs-on-classpath? (constantly true)]
+         (is (empty? (resolve-alias "srv" {:platform "cljc"}))
+             "proj.server is only defined for Clojure"))
+       (with-redefs [cider-ns/cljs-on-classpath? (constantly false)]
+         (is (= [{:ns "proj.server" :source "project" :count 1}]
+                (resolve-alias "srv" {:platform "cljc"}))
+             "without ClojureScript there's no telling")))
+
+     (testing "A .cljc file can have a separate ns form for each platform"
+       (is (= [{:ns "clojure.set" :source "project" :count 1}]
+              (resolve-alias "hset" {:platform "cljs"}))))
+
+     (testing "For cljc, what the project uses on both platforms comes first"
+       (with-redefs [cider-ns/cljs-on-classpath? (constantly false)]
+         (is (= [{:ns "clojure.set" :source "project" :count 1}
+                 {:ns "clojure.walk" :source "project" :count 2}]
+                (resolve-alias "lg" {:platform "cljc"})))))
+
+     (testing "The current namespace's own file doesn't count"
+       (is (= [{:ns "clojure.set" :source "project" :count 1}]
+              (resolve-alias "zset" {:ns "proj.a"}))))
+
+     (testing "An alias the project doesn't use gets the preferred namespaces that are there"
+       (is (= [{:ns "clojure.data" :source "preferred"}]
+              (resolve-alias "zzz" {:preferred ["clojure.data" "no.such.ns"]})))
+       (is (= [{:ns "clojure.data" :source "preferred"}]
+              (resolve-alias "zzz" {:preferred "clojure.data"})))
+       (is (= [{:ns "\"react\"" :source "preferred"}
+               {:ns "goog.object" :source "preferred"}]
+              (resolve-alias "zzz" {:platform "cljs" :preferred ["\"react\"" "goog.object"]}))
+           "a JavaScript module comes quoted, and the Closure Library is there")
+       (is (empty? (resolve-alias "zzz" {:preferred [1]}))))
+
+     (testing "and the project namespaces named after it"
+       (is (= [{:ns "proj.billing.core" :source "suggested"}]
+              (resolve-alias "billing")))
+       (is (= [{:ns "clojure.data" :source "preferred"}
+               {:ns "proj.billing.core" :source "suggested"}]
+              (resolve-alias "billing" {:preferred ["clojure.data"]})))
+       (is (empty? (resolve-alias "billing" {:ns "proj.billing.core"}))
+           "but not the namespace itself")
+       (is (empty? (resolve-alias "util"))
+           "nor a test namespace"))
+
+     (testing "What the project uses wins over the preferred namespaces"
+       (is (= ["clojure.walk" "clojure.zip"]
+              (map :ns (resolve-alias "rawk" {:preferred ["clojure.data"]})))))
+
+     (testing "An alias the namespace has already, or that's something else, gets nothing"
+       (is (empty? (resolve-alias "str" {:ns "cider.nrepl.middleware.ns"})))
+       (is (empty? (resolve-alias "clojure.walk")))
+       (is (empty? (resolve-alias "Math")))
+       (is (empty? (resolve-alias "js" {:platform "cljs"}))))
+
+     (testing "Changed and deleted files are read again"
+       (let [a (java.io.File. dir "proj/a.clj")]
+         (spit a "(ns proj.a (:require [clojure.zip :as rawk]))")
+         (.setLastModified a (+ (.lastModified a) 2000)))
+       (.delete (java.io.File. dir "proj/b.clj"))
+       (is (= [{:ns "clojure.zip" :source "project" :count 2}]
+              (resolve-alias "rawk"))))))
+
+  (testing "A blank alias is an error"
+    (is (thrown? IllegalArgumentException (resolve-alias " ")))))
+
+(deftest project-source-dirs-test
+  (let [dirs (map #(.getName ^java.io.File %) (#'cider-ns/project-source-dirs))]
+    (is (some #{"src"} dirs))
+    (is (not-any? #{"resources" "test-resources"} dirs))))
+
+(deftest resolve-alias-integration-test
+  (let [{:keys [candidates status]} (session/message {:op "cider/resolve-alias"
+                                                      :alias "str"
+                                                      :ns "user"})]
+    (is (= #{"done"} status))
+    (is (= {:ns "clojure.string" :source "project"}
+           (dissoc (first candidates) :count))))
+
+  (testing "A blank alias is an error"
+    (is (= #{"cider/resolve-alias-error" "done"}
+           (:status (session/message {:op "cider/resolve-alias" :alias ""}))))))
