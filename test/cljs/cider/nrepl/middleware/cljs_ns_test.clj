@@ -93,3 +93,27 @@
              (resolve-missing {:symbol "clojure.string/join"})))
       ;; Not even when the namespace lacks the var
       (is (empty? (resolve-missing {:symbol "cljs.user/join" :ns "cljs.user"}))))))
+
+(deftest cljs-resolve-alias-test
+  (let [resolve-alias (fn [msg]
+                        (:candidates
+                         (session/message (merge {:op "cider/resolve-alias" :platform "cljs"} msg))))]
+    (testing "An alias the namespace has already, or that's something else, gets nothing"
+      (is (empty? (resolve-alias {:alias "string" :ns "cljs.pprint"})))
+      (is (empty? (resolve-alias {:alias "cljs.pprint" :ns "cljs.user"})))
+      (is (empty? (resolve-alias {:alias "js" :preferred ["clojure.string"]}))))
+
+    (testing "An :as-alias or a macro alias counts"
+      (session/message {:op "eval"
+                        :code "(ns cider.resolve-alias-test (:require [clojure.string :as-alias zs]) (:require-macros [cljs.test :as zt]))"})
+      (is (empty? (resolve-alias {:alias "zs" :ns "cider.resolve-alias-test" :preferred ["clojure.string"]})))
+      (is (empty? (resolve-alias {:alias "zt" :ns "cider.resolve-alias-test" :preferred ["cljs.test"]})))
+      (is (= [{:ns "clojure.string" :source "preferred"}]
+             (resolve-alias {:alias "zq" :ns "cider.resolve-alias-test" :preferred ["clojure.string"]}))
+          "unlike an alias it doesn't have"))
+
+    (testing "A namespace that isn't there for ClojureScript isn't offered"
+      (is (empty? (resolve-alias {:alias "zzjio" :preferred ["clojure.java.io"]})))
+      (is (= [{:ns "clojure.pprint" :source "preferred"}]
+             (resolve-alias {:alias "zzpp" :preferred ["clojure.pprint"]}))
+          "clojure.pprint is cljs.pprint in ClojureScript"))))

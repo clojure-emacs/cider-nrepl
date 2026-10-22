@@ -667,14 +667,22 @@ if applicable, and re-render the updated value."
                 {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
                  :requires {"ns" "The namespace to use."}
                  :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}})
-             ;; `cider/resolve-missing` is newer and has no deprecated alias,
-             ;; which would shadow refactor-nrepl's `resolve-missing`.
+             ;; These are newer and have no deprecated aliases, one of which
+             ;; would shadow refactor-nrepl's `resolve-missing`.
              {"cider/resolve-missing"
               {:doc "Return the namespaces and classes that could provide a symbol the namespace can't resolve yet: loaded namespaces with a public var of that name, to require, and classes of that name, to import. There are none when the namespace can already use the symbol, and a fully qualified symbol gets only its own namespace."
                :requires {"symbol" "The symbol to resolve, as written (e.g. `join`, `str/join`, `Date`, `Date.` or `Instant/now`)."}
                :optional {"ns" "The namespace the symbol is used in."}
                :returns {"status" "done"
-                         "candidates" "A list of maps with the candidate's `name` and `type`: `ns` or (ClojureScript only) `macro` for a namespace to require, `class` for a class to import, and `type` for a `deftype` or `defrecord` class, which also has the `ns` that defines it."}}})})
+                         "candidates" "A list of maps with the candidate's `name` and `type`: `ns` or (ClojureScript only) `macro` for a namespace to require, `class` for a class to import, and `type` for a `deftype` or `defrecord` class, which also has the `ns` that defines it."}}
+              "cider/resolve-alias"
+              {:doc "Return the namespaces an alias could stand for, judging by the project's source files: the namespaces they give that alias, the most used first. Only when none of those works on the platform do the preferred namespaces and the project namespaces named after the alias count. There are none when the namespace already has the alias, or the alias names a namespace or a class, or it's `js` in ClojureScript."
+               :requires {"alias" "The alias, e.g. `str` for `str/join`."}
+               :optional {"ns" "The namespace the alias is used in."
+                          "platform" "`clj`, `cljs`, or `cljc`, where a candidate has to work for both. Defaults to `cljs` in a ClojureScript session and to `clj` otherwise."
+                          "preferred" "A list of namespaces to offer when the project's source files don't give the alias to one, as long as they're there to require. A JavaScript module comes quoted, as in a libspec."}
+               :returns {"status" "done"
+                         "candidates" "A list of maps with the candidate's `ns`, as written in a libspec (so a JavaScript module comes quoted), and its `source`: `project`, with the `count` of the source files that give the namespace this alias, `preferred` or `suggested`."}}})})
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   {:requires #{#'session}

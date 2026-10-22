@@ -2863,6 +2863,26 @@ Returns::
 {blank}
 
 
+=== `cider/resolve-alias`
+
+Return the namespaces an alias could stand for, judging by the project's source files: the namespaces they give that alias, the most used first. Only when none of those works on the platform do the preferred namespaces and the project namespaces named after the alias count. There are none when the namespace already has the alias, or the alias names a namespace or a class, or it's ``js`` in ClojureScript.
+
+Required parameters::
+* `:alias` The alias, e.g. ``str`` for ``str/join``.
+
+
+Optional parameters::
+* `:ns` The namespace the alias is used in.
+* `:platform` ``clj``, ``cljs``, or ``cljc``, where a candidate has to work for both. Defaults to ``cljs`` in a ClojureScript session and to ``clj`` otherwise.
+* `:preferred` A list of namespaces to offer when the project's source files don't give the alias to one, as long as they're there to require. A JavaScript module comes quoted, as in a libspec.
+
+
+Returns::
+* `:candidates` A list of maps with the candidate's ``ns``, as written in a libspec (so a JavaScript module comes quoted), and its ``source``: ``project``, with the ``count`` of the source files that give the namespace this alias, ``preferred`` or ``suggested``.
+* `:status` done
+
+
+
 === `cider/resolve-missing`
 
 Return the namespaces and classes that could provide a symbol the namespace can't resolve yet: loaded namespaces with a public var of that name, to require, and classes of that name, to import. There are none when the namespace can already use the symbol, and a fully qualified symbol gets only its own namespace.
