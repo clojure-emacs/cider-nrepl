@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Bump `orchard` to [0.46.0](https://github.com/clojure-emacs/orchard/blob/v0.46.0/CHANGELOG.md) (adds `orchard.ns-form`).
+
 ## 0.64.0-alpha1 (2026-10-22)
 
 - [#1056](https://github.com/clojure-emacs/cider-nrepl/pull/1056): Add the `cider/resolve-missing` op, returning the loaded namespaces and the classes that could provide a symbol the namespace can't resolve yet, for both Clojure and ClojureScript.
