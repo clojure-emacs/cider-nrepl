@@ -1485,6 +1485,28 @@ Returns::
 
 
 
+=== `cider/clean-ns`
+
+Return what the ns form at the start of ``code`` requires, refers and imports that the rest of ``code`` doesn't use, going by reading it, without loading anything. A name counts as used wherever it comes up. Requires with no alias or names to refer, ``:refer :all``, ``:rename``, prefix lists and whatever is in a reader conditional count as used. A libspec whose alias goes unused, but whose namespace is used fully qualified or defines a class that gets imported, only loses the alias.
+
+Required parameters::
+* `:code` The code, from the ns form on, e.g. the rest of a source file.
+
+
+Optional parameters::
+* `:line` The line ``code`` starts on, 1 by default, so that a read error tells the line in the file.
+* `:platform` ``clj``, ``cljs``, or ``cljc`` for both. Without it, less goes, as the code might be ClojureScript, where the alias of a JavaScript module is also a value, and a class used fully qualified still needs its import.
+
+
+Returns::
+* `:error` Why ``code`` couldn't be cleaned.
+* `:imports` A list of the fully qualified names of the imported classes that can go.
+* `:libspecs` A list of maps with a libspec's ``ns``, as written (so a JavaScript module comes quoted), its ``clause`` (``require`` or ``require-macros``), and either ``remove`` (``true``) when the whole libspec can go, or the parts of it that can: its ``as`` or ``as-alias`` alias, and the names in its ``refer`` or ``refer-macros`` list.
+* `:line` The line where reading ``code`` failed.
+* `:status` done, with ``cider/clean-ns-error`` when ``code`` doesn't read or has no ns form
+
+
+
 === `cider/clojuredocs-lookup`
 
 Return a map of information in ClojureDocs.
