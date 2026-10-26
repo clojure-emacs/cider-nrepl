@@ -667,8 +667,8 @@ if applicable, and re-render the updated value."
                 {:doc "Returns a map of [ns-alias] to [ns-name] in a namespace."
                  :requires {"ns" "The namespace to use."}
                  :returns {"status" "done" "ns-aliases" "The map of [ns-alias] to [ns-name] in a namespace."}}})
-             ;; These are newer and have no deprecated aliases, one of which
-             ;; would shadow refactor-nrepl's `resolve-missing`.
+             ;; These are newer and have no deprecated aliases, which would
+             ;; shadow refactor-nrepl's `resolve-missing` and `clean-ns`.
              {"cider/resolve-missing"
               {:doc "Return the namespaces and classes that could provide a symbol the namespace can't resolve yet: loaded namespaces with a public var of that name, to require, and classes of that name, to import. There are none when the namespace can already use the symbol, and a fully qualified symbol gets only its own namespace."
                :requires {"symbol" "The symbol to resolve, as written (e.g. `join`, `str/join`, `Date`, `Date.` or `Instant/now`)."}
@@ -682,7 +682,17 @@ if applicable, and re-render the updated value."
                           "platform" "`clj`, `cljs`, or `cljc`, where a candidate has to work for both. Defaults to `cljs` in a ClojureScript session and to `clj` otherwise."
                           "preferred" "A list of namespaces to offer when the project's source files don't give the alias to one, as long as they're there to require. A JavaScript module comes quoted, as in a libspec."}
                :returns {"status" "done"
-                         "candidates" "A list of maps with the candidate's `ns`, as written in a libspec (so a JavaScript module comes quoted), and its `source`: `project`, with the `count` of the source files that give the namespace this alias, `preferred` or `suggested`."}}})})
+                         "candidates" "A list of maps with the candidate's `ns`, as written in a libspec (so a JavaScript module comes quoted), and its `source`: `project`, with the `count` of the source files that give the namespace this alias, `preferred` or `suggested`."}}
+              "cider/clean-ns"
+              {:doc "Return what the ns form at the start of `code` requires, refers and imports that the rest of `code` doesn't use, going by reading it, without loading anything. A name counts as used wherever it comes up. Requires with no alias or names to refer, `:refer :all`, `:rename`, prefix lists and whatever is in a reader conditional count as used. A libspec whose alias goes unused, but whose namespace is used fully qualified or defines a class that gets imported, only loses the alias."
+               :requires {"code" "The code, from the ns form on, e.g. the rest of a source file."}
+               :optional {"line" "The line `code` starts on, 1 by default, so that a read error tells the line in the file."
+                          "platform" "`clj`, `cljs`, or `cljc` for both. Without it, less goes, as the code might be ClojureScript, where the alias of a JavaScript module is also a value, and a class used fully qualified still needs its import."}
+               :returns {"status" "done, with `cider/clean-ns-error` when `code` doesn't read or has no ns form"
+                         "libspecs" "A list of maps with a libspec's `ns`, as written (so a JavaScript module comes quoted), its `clause` (`require` or `require-macros`), and either `remove` (`true`) when the whole libspec can go, or the parts of it that can: its `as` or `as-alias` alias, and the names in its `refer` or `refer-macros` list."
+                         "imports" "A list of the fully qualified names of the imported classes that can go."
+                         "error" "Why `code` couldn't be cleaned."
+                         "line" "The line where reading `code` failed."}}})})
 
 (def-wrapper wrap-out cider.nrepl.middleware.out/handle-out
   {:requires #{#'session}

@@ -488,3 +488,48 @@
   (testing "A blank alias is an error"
     (is (= #{"cider/resolve-alias-error" "done"}
            (:status (session/message {:op "cider/resolve-alias" :alias ""}))))))
+
+(deftest clean-ns-integration-test
+  (let [clean-ns #(session/message (merge {:op "cider/clean-ns"} %))]
+    (testing "what can go"
+      (let [{:keys [libspecs imports status]}
+            (clean-ns {:platform "clj"
+                       :code (str "(ns foo\n"
+                                  "  (:require [clojure.set :as set]\n"
+                                  "            [clojure.string :as str :refer [join split]]\n"
+                                  "            [clojure.walk :as walk]\n"
+                                  "            [\"react\" :as react])\n"
+                                  "  (:import (java.util Date List)))\n"
+                                  "(join (clojure.walk/postwalk identity []) (Date.))")})]
+        (is (= #{"done"} status))
+        (is (= [{:ns "clojure.set" :clause "require" :remove "true"}
+                {:ns "clojure.string" :clause "require" :as "str" :refer ["split"]}
+                {:ns "clojure.walk" :clause "require" :as "walk"}
+                {:ns "\"react\"" :clause "require" :remove "true"}]
+               libspecs))
+        (is (= ["java.util.List"] imports))))
+
+    (testing "the platform"
+      (let [code "(ns foo (:require [react :as react])) (.createElement react \"div\")"]
+        (is (= [{:ns "react" :clause "require" :remove "true"}]
+               (:libspecs (clean-ns {:code code :platform "clj"}))))
+        (is (empty? (:libspecs (clean-ns {:code code :platform "cljs"}))))
+        (is (empty? (:libspecs (clean-ns {:code code}))))))
+
+    (testing "nothing to remove"
+      (let [{:keys [libspecs imports status]} (clean-ns {:code "(ns foo (:require [clojure.set :as set])) set/union"})]
+        (is (= #{"done"} status))
+        (is (empty? libspecs))
+        (is (empty? imports))))
+
+    (testing "code that doesn't read"
+      (is (= {:status #{"cider/clean-ns-error" "done"}
+              :error "Unmatched delimiter: )"
+              :line 12}
+             (select-keys (clean-ns {:code "(ns foo)\n\n(str/join []))" :line 10})
+                          [:status :error :line]))))
+
+    (testing "no ns form"
+      (is (= {:status #{"cider/clean-ns-error" "done"}
+              :error "No ns form to clean"}
+             (select-keys (clean-ns {:code "(defn foo [])"}) [:status :error :line]))))))

@@ -18,8 +18,8 @@
    [orchard.query :as query]
    [orchard.util.io :as util.io])
   (:import
-   (clojure.lang Compiler IRecord IType Namespace RT Var)
-   (java.io File)
+   (clojure.lang Compiler IRecord IType LineNumberingPushbackReader Namespace RT Var)
+   (java.io File StringReader)
    (java.net URL)
    (java.nio.file Files)))
 
@@ -575,6 +575,43 @@
 (defn- resolve-alias-reply [msg]
   {:candidates (resolve-alias msg)})
 
+;;; Cleaning the ns form
+;;
+;; `cider/clean-ns` tells what the ns form requires, refers and imports that
+;; the code after it doesn't use, by reading the code rather than loading
+;; it. The client removes those parts itself, keeping the rest of the ns
+;; form as it's written.
+
+(defn clean-ns
+  "What the ns form at the start of the `:code` of `msg` requires, refers and
+  imports that the rest of it doesn't use, as `orchard.ns-form/unused` tells.
+  `:line` is the line the code starts on, 1 by default, and `:platform` is
+  `clj`, `cljs` or `cljc`."
+  [{:keys [code line platform]}]
+  (ns-form/unused (doto (LineNumberingPushbackReader. (StringReader. (str code)))
+                    (.setLineNumber (int (or line 1))))
+                  (#{:clj :cljs :cljc} (some-> platform keyword))))
+
+(defn- clean-ns-reply [msg]
+  (try
+    (if-let [{:keys [libspecs imports]} (clean-ns msg)]
+      {:libspecs (for [{:keys [ns clause as as-alias refer refer-macros] remove? :remove} libspecs]
+                   (cond-> {:ns (pr-str ns), :clause (name clause)}
+                     remove? (assoc :remove "true")
+                     as (assoc :as (str as))
+                     as-alias (assoc :as-alias (str as-alias))
+                     refer (assoc :refer (map str refer))
+                     refer-macros (assoc :refer-macros (map str refer-macros))))
+       :imports (map str imports)}
+      {:status :cider/clean-ns-error
+       :error "No ns form to clean"})
+    ;; The code doesn't read.
+    (catch Exception e
+      (let [line (:clojure.error/line (ex-data e))]
+        (cond-> {:status :cider/clean-ns-error
+                 :error (ex-message (or (ex-cause e) e))}
+          line (assoc :line line))))))
+
 (defn handle-ns [handler msg]
   (with-safe-transport handler msg
     (merge
@@ -585,7 +622,8 @@
                        "cider/ns-path" ns-path-reply
                        "cider/ns-load-all" ns-load-all-reply
                        "cider/ns-aliases" ns-aliases-reply})
-     ;; Newer, with no unqualified aliases, one of which would shadow
-     ;; refactor-nrepl's `resolve-missing`.
+     ;; Newer, with no unqualified aliases, which would shadow
+     ;; refactor-nrepl's `resolve-missing` and `clean-ns`.
      {"cider/resolve-missing" resolve-missing-reply
-      "cider/resolve-alias" resolve-alias-reply})))
+      "cider/resolve-alias" resolve-alias-reply
+      "cider/clean-ns" clean-ns-reply})))
