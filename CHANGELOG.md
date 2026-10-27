@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- [#1063](https://github.com/clojure-emacs/cider-nrepl/pull/1063): Bump `orchard` to [0.47.0](https://github.com/clojure-emacs/orchard/blob/v0.47.0/CHANGELOG.md) (adds `orchard.ns-form/unused`, and fixes Java doc fragments that split words at entities and lost the type parameters of `{@code}` and `{@link}`).
+
 ## 0.64.0-alpha2 (2026-10-24)
 
 - [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Bump `orchard` to [0.46.0](https://github.com/clojure-emacs/orchard/blob/v0.46.0/CHANGELOG.md) (adds `orchard.ns-form`).
