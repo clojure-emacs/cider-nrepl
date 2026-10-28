@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+## 0.64.0 (2026-10-28)
+
 - [#1071](https://github.com/clojure-emacs/cider-nrepl/pull/1071): Bump `orchard` to [0.48.0](https://github.com/clojure-emacs/orchard/blob/v0.48.0/CHANGELOG.md) (a traced call that throws gets a `throw` trace event, tracing a fn tracing itself calls no longer takes the server down, and a project namespace that doesn't load no longer breaks the namespace query).
 - [#1059](https://github.com/clojure-emacs/cider-nrepl/issues/1059): Send what tests print with the test op's responses on nREPL 1.3+, where it went out with the session's previous message, and what they print without a newline at the end at all.
 - [#1058](https://github.com/clojure-emacs/cider-nrepl/issues/1058): Run nothing for a test var query naming tests that aren't there, where it ran every test in the namespace, or every loaded one.
@@ -15,19 +17,10 @@
 - [#1066](https://github.com/clojure-emacs/cider-nrepl/pull/1066): Bump `cljfmt` to [0.16.6](https://github.com/weavejester/cljfmt/blob/master/CHANGELOG.md#0166-2026-09-24).
 - [#1065](https://github.com/clojure-emacs/cider-nrepl/pull/1065): Leave the Maven Central mirror the build uses out of the published pom, where 0.64.0-alpha3 listed it.
 - [#1053](https://github.com/clojure-emacs/cider-nrepl/issues/1053): Fix the warning loading cider-nrepl gives on Clojure 1.13, which added a `clojure.core/selector`.
-
-## 0.64.0-alpha3 (2026-10-27)
-
 - [#1063](https://github.com/clojure-emacs/cider-nrepl/pull/1063): Bump `orchard` to [0.47.0](https://github.com/clojure-emacs/orchard/blob/v0.47.0/CHANGELOG.md) (adds `orchard.ns-form/unused`, and fixes Java doc fragments that split words at entities and lost the type parameters of `{@code}` and `{@link}`).
 - [#1063](https://github.com/clojure-emacs/cider-nrepl/pull/1063): Add the `cider/clean-ns` op, returning the libspecs, aliases, referred names and imports an `ns` form doesn't need, going by the code it's given rather than by loading the namespace.
-
-## 0.64.0-alpha2 (2026-10-24)
-
 - [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Bump `orchard` to [0.46.0](https://github.com/clojure-emacs/orchard/blob/v0.46.0/CHANGELOG.md) (adds `orchard.ns-form`).
 - [#1062](https://github.com/clojure-emacs/cider-nrepl/pull/1062): Add the `cider/resolve-alias` op, returning the namespaces an alias could stand for, ranked by how often the project's source files require them under it, for both Clojure and ClojureScript.
-
-## 0.64.0-alpha1 (2026-10-22)
-
 - [#1056](https://github.com/clojure-emacs/cider-nrepl/pull/1056): Add the `cider/resolve-missing` op, returning the loaded namespaces and the classes that could provide a symbol the namespace can't resolve yet, for both Clojure and ClojureScript.
 
 ## 0.63.1 (2026-10-03)
