@@ -38,6 +38,24 @@
       [:a-puff-of-smoke-test :a-smokey-test]
       [:a-puff-of-smoke-test :a-smokey-test :yet-an-other-test])))
 
+(defn- message-within
+  "Like `session/message`, or ::timeout when no `done` comes within 10 seconds."
+  [msg]
+  (deref (future (session/message msg)) 10000 ::timeout))
+
+(deftest missing-tests-test
+  (testing "a test whose namespace isn't loaded"
+    (is+ {:status #{"namespace-not-found" "done"}}
+         (message-within {:op "cider/test-var-query"
+                          :var-query {:exactly ["cider.nrepl.middleware.no-such-tests/a"]}}))))
+
+(deftest test-error-test
+  (testing "an error answers with it, and done"
+    (is+ {:status #{"cider/test-var-query-error" "done"}
+          :ex "class java.util.regex.PatternSyntaxException"}
+         (message-within {:op "cider/test-var-query"
+                          :var-query {:search "["}}))))
+
 (deftest test-ns-hook-test
   ;; #680: a namespace whose assertions run only through `test-ns-hook` (with no
   ;; standalone `deftest` vars for the var query to find) must still be
