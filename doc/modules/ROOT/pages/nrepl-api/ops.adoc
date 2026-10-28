@@ -3302,7 +3302,7 @@ Optional parameters::
 {blank}
 
 Returns::
-* `:cider/trace-event` A trace event, with ``id``, ``phase`` ("call" or "return"), ``name``, ``depth``, and ``args`` (on a call) or ``value`` (on a return)
+* `:cider/trace-event` A trace event, with ``id``, ``phase`` ("call", "return" or "throw"), ``name``, ``depth``, and ``args`` (on a call), ``value`` (on a return) or ``error``, the class and message of what the call threw (on a throw)
 * `:cider/trace-subscribe` The id of the subscription, to be passed to ``cider/trace-unsubscribe``
 
 
