@@ -875,7 +875,10 @@ stack frame of the most recent exception."
 
 (def test-run-optional-doc (merge wrap-print-optional-arguments stream-optional-doc))
 
-(def test-run-return-doc (merge fail-fast-doc timing-info-return-doc stream-return-doc))
+(def test-output-return-doc {"out" "What the tests print to `*out*`, as they run (on nREPL 1.3 and later)."
+                             "err" "What the tests print to `*err*`, as they run (on nREPL 1.3 and later)."})
+
+(def test-run-return-doc (merge fail-fast-doc timing-info-return-doc stream-return-doc test-output-return-doc))
 
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."

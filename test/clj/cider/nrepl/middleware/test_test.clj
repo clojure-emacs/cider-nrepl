@@ -1,6 +1,7 @@
 (ns cider.nrepl.middleware.test-test
   (:require
    [cider.nrepl.middleware.test :as test]
+   [cider.nrepl.middleware.util.nrepl :as util.nrepl]
    [cider.nrepl.test-session :as session]
    [cider.test-helpers :refer :all]
    [clojure.test :refer :all]
@@ -70,6 +71,28 @@
           :ex "class java.util.regex.PatternSyntaxException"}
          (message-within {:op "cider/test-var-query"
                           :var-query {:search "["}}))))
+
+(deftest test-output-test
+  ;; nREPL binds the output streams for each message since 1.3. Before that, a
+  ;; session's are the last evaluation's, and that's where the output goes.
+  (when (util.nrepl/satisfies-version? 1 3)
+    (testing "what a test prints goes out with the test op's responses"
+      ;; Its evaluation leaves its output streams in the session's bindings.
+      (session/message {:op "eval"
+                        :code "(ns cider.nrepl.middleware.printing-tests
+                                 (:require [clojure.test :refer [deftest is]]))
+                               (deftest prints
+                                 (println \"Printed by the test,\")
+                                 (print \"and without a newline\")
+                                 (binding [*out* *err*] (print \"to *err* too\"))
+                                 (is true))"})
+      (try
+        (is+ {:out #"Printed by the test,\nand without a newline"
+              :err #"to \*err\* too"}
+             (message-within {:op "cider/test-var-query"
+                              :var-query {:ns-query {:exactly ["cider.nrepl.middleware.printing-tests"]}}}))
+        (finally
+          (remove-ns 'cider.nrepl.middleware.printing-tests))))))
 
 (deftest test-ns-hook-test
   ;; #680: a namespace whose assertions run only through `test-ns-hook` (with no
