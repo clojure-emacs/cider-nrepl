@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- [#1053](https://github.com/clojure-emacs/cider-nrepl/issues/1053): Fix the warning loading cider-nrepl gives on Clojure 1.13, which added a `clojure.core/selector`.
+
 ## 0.64.0-alpha3 (2026-10-27)
 
 - [#1063](https://github.com/clojure-emacs/cider-nrepl/pull/1063): Bump `orchard` to [0.47.0](https://github.com/clojure-emacs/orchard/blob/v0.47.0/CHANGELOG.md) (adds `orchard.ns-form/unused`, and fixes Java doc fragments that split words at entities and lost the type parameters of `{@code}` and `{@link}`).
