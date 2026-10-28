@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1065](https://github.com/clojure-emacs/cider-nrepl/pull/1065): Leave the Maven Central mirror the build uses out of the published pom, where 0.64.0-alpha3 listed it.
 - [#1053](https://github.com/clojure-emacs/cider-nrepl/issues/1053): Fix the warning loading cider-nrepl gives on Clojure 1.13, which added a `clojure.core/selector`.
 
 ## 0.64.0-alpha3 (2026-10-27)
