@@ -14,6 +14,11 @@
   [x]
   (inc x))
 
+(defn traced-thrower
+  "A sample fn to trace that throws."
+  [x]
+  (throw (ex-info "Boom" {:x x})))
+
 (deftest toggle-trace-var-test
   (testing "toggling"
     (is (= {:var-name "#'clojure.core/zipmap" :var-status "traced"}
@@ -145,6 +150,26 @@
       (with-out-str (traced-sample 1)) ; output mode is back to :repl, swallow its print
       (is (empty? (keep :cider/trace-event @sent)))
       (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-sample"}))))
+
+(deftest trace-subscribe-throw-test
+  (testing "a traced call that throws streams a throw event, with what it threw"
+    (let [sent      (atom [])
+          transport (reify transport/Transport
+                      (send [this msg] (swap! sent conj msg) this)
+                      (recv [_this] nil)
+                      (recv [_this _timeout] nil))
+          {id :cider/trace-subscribe} (trace-subscribe {:transport transport
+                                                        :id "42" :session "s"})]
+      (try
+        (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-thrower"})
+        (is (thrown? clojure.lang.ExceptionInfo (traced-thrower 1)))
+        (let [events (keep :cider/trace-event @sent)]
+          (is (= ["call" "throw"] (map :phase events)))
+          (is (= "clojure.lang.ExceptionInfo: Boom" (:error (last events))))
+          (is (= (:id (first events)) (:id (last events))) "call and throw share an id"))
+        (finally
+          (toggle-trace-var {:ns "cider.nrepl.middleware.trace-test" :sym "traced-thrower"})
+          (trace-unsubscribe {:subscription id}))))))
 
 (deftest trace-subscribe-dead-transport-test
   (testing "a subscription whose transport fails is pruned instead of breaking the traced call"
