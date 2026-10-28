@@ -1121,9 +1121,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -1246,9 +1248,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -1277,9 +1281,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -1329,9 +1335,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -2973,9 +2981,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -3146,9 +3156,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -3177,9 +3189,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.
@@ -3229,9 +3243,11 @@ Optional parameters::
 
 Returns::
 * `:elapsed-time` a report of the elapsed time spent running all the given namespaces. The structure is ``:elapsed-time {:ms <integer> :humanized <string>}``.
+* `:err` What the tests print to ``\*err*``, as they run (on nREPL 1.3 and later).
 * `:fail-fast` If equals to the string "true", the tests will be considered complete after the first test has failed or errored.
 * `:gen-input` The minimal failing input found by a ``test.check`` property test, when a generative test fails.
 * `:ns-elapsed-time` a report of the elapsed time spent running each namespace. The structure is ``:ns-elapsed-time {<ns as keyword> {:ms <integer> :humanized <string>}}``.
+* `:out` What the tests print to ``\*out*``, as they run (on nREPL 1.3 and later).
 * `:results` A map of test results keyed by namespace and var name: ``{<ns keyword> {<var keyword> [<assertion> ...]}}``. Each assertion map contains: ``:type`` (pass/fail/error), ``:ns``, ``:var``, ``:index`` (0-based assertion index within the var), ``:context`` (testing context string or nil), ``:message``, ``:file``, ``:line``. For ``:fail``: ``:expected`` and ``:actual`` (pretty-printed strings), and optionally ``:diffs`` and ``:gen-input``. For ``:error``: ``:error`` (the exception) and ``:line``. Each assertion may also include ``:elapsed-time {:ms <integer> :humanized <string>}`` when it is the only assertion in its var.
 * `:status` Either done or indication of an error
 * `:summary` A map of test run counts: ``{:ns <int> :var <int> :test <int> :pass <int> :fail <int> :error <int>}``.

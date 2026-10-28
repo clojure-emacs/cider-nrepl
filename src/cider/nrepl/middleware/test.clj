@@ -8,6 +8,7 @@
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.coerce :as util.coerce]
    [cider.nrepl.middleware.util.error-handling :as err]
+   [cider.nrepl.middleware.util.nrepl :as util.nrepl]
    [clojure.walk :as walk]
    [nrepl.middleware.interruptible-eval :as ie]
    [orchard.misc :as misc]
@@ -95,10 +96,15 @@
 
 (defn- run-tests
   "Run the tests with `run-fn`, given the options for `msg`, and return the
-  report ready to be sent."
+  report ready to be sent, after what the tests printed."
   [msg run-fn]
   (binding [orchard.test/*test-error-handler* *test-error-handler*]
-    (stringify-messages (run-fn (run-opts msg)))))
+    (try
+      (stringify-messages (run-fn (run-opts msg)))
+      ;; What doesn't end in a newline would wait here.
+      (finally
+        (flush)
+        (.flush ^java.io.Writer *err*)))))
 
 ;;; ## Middleware
 
@@ -108,6 +114,18 @@
   namespace) that did not pass previously. The var itself will be bound from
   the nREPL session."
   (atom {}))
+
+(def ^:private nrepl-1-3+?
+  (util.nrepl/satisfies-version? 1 3))
+
+(defn- session-bindings
+  "The bindings to run `msg` with. Since nREPL 1.3, the session's thread has
+  the session's own already, with fresh output streams for `msg`, which the
+  session's, its previous message's, would replace."
+  [session msg]
+  (if nrepl-1-3+?
+    {#'ie/*msg* msg}
+    (assoc @session #'ie/*msg* msg)))
 
 (defn- respond-error
   "Answer `msg` with `e`, which got out of the op's handler: namespace-not-found
@@ -125,7 +143,7 @@
   (let [{:keys [exec]} (meta session)]
     (exec id
           (fn []
-            (with-bindings (assoc @session #'ie/*msg* msg)
+            (with-bindings (session-bindings session msg)
               (try (f)
                    (catch Throwable e
                      ;; Nor from answering, with the connection gone.

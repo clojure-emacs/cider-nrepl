@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1059](https://github.com/clojure-emacs/cider-nrepl/issues/1059): Send what tests print with the test op's responses on nREPL 1.3+, where it went out with the session's previous message, and what they print without a newline at the end at all.
 - [#1058](https://github.com/clojure-emacs/cider-nrepl/issues/1058): Run nothing for a test var query naming tests that aren't there, where it ran every test in the namespace, or every loaded one.
 - [#1057](https://github.com/clojure-emacs/cider-nrepl/issues/1057): Answer `namespace-not-found` to a test var query for a test whose namespace isn't loaded, and an error to the test ops when anything else goes wrong, where they never answered.
 - [#1069](https://github.com/clojure-emacs/cider-nrepl/pull/1069): Inspect ClojureScript expressions on shadow-cljs, where the inspector came below shadow-cljs's middleware and got their plain value.
