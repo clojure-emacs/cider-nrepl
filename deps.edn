@@ -25,7 +25,7 @@
   ;; sources still refer to them by their original namespaces.
   ;; NOTE: keep these versions in sync with build.main/inlined-deps.
   :inlined-deps
-  {:extra-deps {dev.weavejester/cljfmt      {:mvn/version "0.16.5"
+  {:extra-deps {dev.weavejester/cljfmt      {:mvn/version "0.16.6"
                                              :exclusions [org.clojure/clojure
                                                           org.clojure/clojurescript
                                                           org.clojure/tools.cli]}
@@ -101,7 +101,7 @@
 
   :cljfmt
   ;; Keep in sync with the :inlined-deps cljfmt version above.
-  {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.5"}}
+  {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.6"}}
    :main-opts ["-m" "cljfmt.main"]}
 
   :kondo
