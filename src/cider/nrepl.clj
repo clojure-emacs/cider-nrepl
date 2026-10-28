@@ -878,8 +878,10 @@ stack frame of the most recent exception."
 (def-wrapper wrap-test cider.nrepl.middleware.test/handle-test
   {:doc "Middleware that handles testing requests."
    ;; Expect piggieback so that, for ClojureScript, the `eval` op we synthesize
-   ;; to run the tests flows down into the piggieback middleware.
-   :expects (cljs/maybe-add-piggieback #{})
+   ;; to run the tests flows down into the piggieback middleware, and
+   ;; shadow-cljs's, named by an op it handles, so that this does nothing
+   ;; without shadow-cljs. Its var would get its middleware added to any stack.
+   :expects (cljs/maybe-add-piggieback #{"shadow-remote-init"})
    :requires #{#'session #'wrap-print}
    :handles (merge
              (with-deprecated-aliases
