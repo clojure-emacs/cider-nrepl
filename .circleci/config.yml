@@ -249,7 +249,7 @@ workflows:
             parameters:
               clojure_version: ["1.12"]
               jdk_version: [jdk27]
-              nrepl_version: ["1.0", "1.3", "1.4", "1.5", "1.6", "1.7"]
+              nrepl_version: ["1.0", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8"]
           <<: *run_always
       - test-cljs:
           # ClojureScript tests only run on JDK21+ (CLJS 1.12 Closure needs it).
