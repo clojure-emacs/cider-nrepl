@@ -48,7 +48,8 @@
   [var-query]
   (-> var-query
       (update :ns-query ns-query)
-      (update-some :exactly #(seq (keep find-var-named %)))
+      ;; Empty when none of them are vars, since nil would mean every var.
+      (update-some :exactly #(doall (keep find-var-named %)))
       (update :test? some?)
       (update :private? some?)
       (update-some :include-meta-key #(map keyword %))

@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1058](https://github.com/clojure-emacs/cider-nrepl/issues/1058): Run nothing for a test var query naming tests that aren't there, where it ran every test in the namespace, or every loaded one.
 - [#1057](https://github.com/clojure-emacs/cider-nrepl/issues/1057): Answer `namespace-not-found` to a test var query for a test whose namespace isn't loaded, and an error to the test ops when anything else goes wrong, where they never answered.
 - [#1069](https://github.com/clojure-emacs/cider-nrepl/pull/1069): Inspect ClojureScript expressions on shadow-cljs, where the inspector came below shadow-cljs's middleware and got their plain value.
 - [#1054](https://github.com/clojure-emacs/cider-nrepl/issues/1054): Run ClojureScript tests on shadow-cljs reliably, where whether the test middleware came above shadow-cljs's, which its evaluations have to go through, depended on how the stack happened to sort.

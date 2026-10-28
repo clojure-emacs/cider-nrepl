@@ -150,10 +150,11 @@
 (defn handle-test-op
   [{:keys [ns tests include exclude] :as msg}]
   (handle-test-var-query-op
-   (merge msg {:var-query {:ns-query {:exactly [ns]}
-                           :include-meta-key include
-                           :exclude-meta-key exclude
-                           :exactly (map #(str ns "/" %) tests)}})))
+   (merge msg {:var-query (cond-> {:ns-query {:exactly [ns]}
+                                   :include-meta-key include
+                                   :exclude-meta-key exclude}
+                            ;; Without tests, the whole namespace.
+                            (seq tests) (assoc :exactly (map #(str ns "/" %) tests)))})))
 
 (defn handle-test-all-op
   [{:keys [load? include exclude] :as msg}]

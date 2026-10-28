@@ -47,7 +47,22 @@
   (testing "a test whose namespace isn't loaded"
     (is+ {:status #{"namespace-not-found" "done"}}
          (message-within {:op "cider/test-var-query"
-                          :var-query {:exactly ["cider.nrepl.middleware.no-such-tests/a"]}}))))
+                          :var-query {:exactly ["cider.nrepl.middleware.no-such-tests/a"]}})))
+
+  (testing "tests that aren't there run nothing"
+    (is+ {:summary {:test 0}}
+         (message-within {:op "cider/test-var-query"
+                          :var-query {:exactly ["cider.nrepl.middleware.test-filter-tests/nope"]}}))
+    (is+ {:summary {:test 0}}
+         (message-within {:op "cider/test"
+                          :ns "cider.nrepl.middleware.test-filter-tests"
+                          :tests ["nope"]})))
+
+  (testing "no tests, as CIDER asks for a namespace's, run all of them"
+    (is+ {:results {:cider.nrepl.middleware.test-filter-tests #(> (count %) 1)}}
+         (message-within {:op "cider/test"
+                          :ns "cider.nrepl.middleware.test-filter-tests"
+                          :tests []}))))
 
 (deftest test-error-test
   (testing "an error answers with it, and done"
