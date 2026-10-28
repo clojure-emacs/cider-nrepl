@@ -23,7 +23,8 @@
 (defn default-opts [{:keys [version] :or {version "99.99"}}]
   (let [lib 'cider/cider-nrepl
         url "https://github.com/clojure-emacs/cider-nrepl"
-        target "target"]
+        target "target"
+        basis (b/create-basis)]
     {;; Pom section
      :lib lib
      :version version
@@ -39,9 +40,12 @@
                  [:license
                   [:name "Eclipse Public License"]
                   [:url "http://www.eclipse.org/legal/epl-v10.html"]]]]
+     ;; The pom would list the basis's repos, where deps.edn swaps Maven
+     ;; Central for a mirror the build needs and the jar's users don't.
+     :repos (dissoc (:mvn/repos basis) "central")
 
      ;; Build section
-     :basis (b/create-basis)
+     :basis basis
      :target target
      :class-dir (str target "/classes")
      :srcdeps (str target "/srcdeps")
