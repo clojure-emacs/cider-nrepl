@@ -371,7 +371,9 @@ If specified, the value will be concatenated to that of `orchard.meta/var-meta-a
            be inspected. Returns a string representation of the resulting
            inspector's state in the `:value` slot."
    :requires #{"clone" #'wrap-caught #'wrap-print}
-   :expects (cljs/maybe-add-piggieback #{"eval"})
+   ;; shadow-cljs's middleware, by an op it handles, as in `wrap-test`, so that
+   ;; its ClojureScript evaluations come back through here.
+   :expects (cljs/maybe-add-piggieback #{"eval" "shadow-remote-init"})
    :handles (merge
              (with-deprecated-aliases
                {"cider/inspect-print-current-value"
