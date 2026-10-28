@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1069](https://github.com/clojure-emacs/cider-nrepl/pull/1069): Inspect ClojureScript expressions on shadow-cljs, where the inspector came below shadow-cljs's middleware and got their plain value.
 - [#1054](https://github.com/clojure-emacs/cider-nrepl/issues/1054): Run ClojureScript tests on shadow-cljs reliably, where whether the test middleware came above shadow-cljs's, which its evaluations have to go through, depended on how the stack happened to sort.
 - [#1066](https://github.com/clojure-emacs/cider-nrepl/pull/1066): Bump `cljfmt` to [0.16.6](https://github.com/weavejester/cljfmt/blob/master/CHANGELOG.md#0166-2026-09-24).
 - [#1065](https://github.com/clojure-emacs/cider-nrepl/pull/1065): Leave the Maven Central mirror the build uses out of the published pom, where 0.64.0-alpha3 listed it.
