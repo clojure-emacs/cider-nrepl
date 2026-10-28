@@ -28,5 +28,7 @@ out
 /.test-classpath
 .cpcache
 .eastwood
-# JDK sources repackaged by `clojure -T:build download-jdk-src` (cached on CI)
+# JDK sources repackaged by `clojure -T:build download-jdk-src` (cached on CI),
+# and the directory it downloads them to
 /base-jdk-src.zip
+/tmp
