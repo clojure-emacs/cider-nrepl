@@ -1,7 +1,13 @@
 name: cider-nrepl
 title: CIDER nREPL
-# The version should be in the format major.minor (e.g. 0.28).
-# Don't include patch in the version (e.g. 0.28.7).
-version: ~
+# The docs version comes from the git ref: a release tag like v0.65.0 becomes
+# 0.65 (patch versions never appear in the docs), anything else is
+# unversioned, which makes master the site's default version. So a release
+# doesn't have to touch this. docs.cider.mx names the unversioned docs "master"
+# in its version menu; doing that here with display_version would stick to
+# every release.
+version:
+  v(?<major>+({0..9})).(?<minor>+({0..9})).*: $<major>.$<minor>
+  '*': ~
 nav:
 - modules/ROOT/nav.adoc

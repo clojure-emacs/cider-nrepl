@@ -102,7 +102,7 @@ lint: cljfmt kondo eastwood
 docs:
 	$(CLOJURE) -X:docs :file '"doc/modules/ROOT/pages/nrepl-api/ops.adoc"' :version '"$(NREPL_VERSION)"'
 
-# Prepare a release: roll the changelog, bump the docs version, commit and tag.
+# Prepare a release: roll the changelog, bump the usage docs, commit and tag.
 # Pushing the tag (which triggers the deploy below) is left to you.
 # PROJECT_VERSION=x.y.z make release
 # Regenerating the ops docs first keeps the generated API reference honest -
