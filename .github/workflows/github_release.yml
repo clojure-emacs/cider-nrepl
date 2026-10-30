@@ -7,12 +7,19 @@ on:
 
 jobs:
   create-release:
-    # Snapshot tags only exist to exercise the deploy pipeline.
-    if: ${{ !endsWith(github.ref_name, '-SNAPSHOT') }}
+    # Snapshot tags only exist to exercise the deploy pipeline, and -antora
+    # tags only exist to give the docs site a corrected copy of a release.
+    if: ${{ !endsWith(github.ref_name, '-SNAPSHOT') && !endsWith(github.ref_name, '-antora') }}
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
+
+    env:
+      # A fine-grained token with contents write access to
+      # clojure-emacs/docs.cider.mx, which sending it a repository dispatch
+      # requires. The docs step is skipped until the secret exists.
+      DISPATCH_TOKEN: ${{ secrets.DOCS_DISPATCH_TOKEN }}
 
     steps:
       - name: Checkout Code
@@ -60,3 +67,14 @@ jobs:
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
           bodyFile: release-notes.md
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Adds the tag to docs.cider.mx's playbook, which publishes the docs of
+      # the release. Prereleases leave the docs alone.
+      - name: Publish the docs
+        if: ${{ env.DISPATCH_TOKEN != '' && !contains(github.ref_name, '-') }}
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
+        with:
+          token: ${{ env.DISPATCH_TOKEN }}
+          repository: clojure-emacs/docs.cider.mx
+          event-type: release
+          client-payload: '{"project": "cider-nrepl", "tag": "${{ github.ref_name }}"}'

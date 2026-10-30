@@ -69,3 +69,10 @@ The same tag push also runs a GitHub Actions workflow that waits for the
 artifact to appear on Clojars and then creates the GitHub release, using the
 tag's section of the changelog as the release notes. If the Clojars deploy
 fails, that workflow fails too; re-run it once the deploy has gone through.
+For a final release, the workflow then adds the tag to the
+https://github.com/clojure-emacs/docs.cider.mx/blob/master/antora-playbook.yml[docs.cider.mx
+playbook], which publishes the release's docs, provided the repository has a
+`DOCS_DISPATCH_TOKEN` secret. Re-running the workflow can't redo that step once
+the GitHub release exists, so if it fails, run the docs.cider.mx publish
+workflow by hand with the project and the tag. The docs version comes from the
+tag (`v0.65.0` becomes `0.65`), so a release doesn't touch `doc/antora.yml`.
