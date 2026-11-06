@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- [#1077](https://github.com/clojure-emacs/cider-nrepl/pull/1077): Point the aliases and refers of the namespaces a reload leaves alone, like the REPL's, at the namespaces it made anew, where a function added since didn't resolve through them and the alias couldn't be made again.
+
 ## 0.64.0 (2026-10-28)
 
 - [#1071](https://github.com/clojure-emacs/cider-nrepl/pull/1071): Bump `orchard` to [0.48.0](https://github.com/clojure-emacs/orchard/blob/v0.48.0/CHANGELOG.md) (a traced call that throws gets a `throw` trace event, tracing a fn tracing itself calls no longer takes the server down, and a project namespace that doesn't load no longer breaks the namespace query).

@@ -7,7 +7,9 @@
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
    [orchard.misc :as misc]
-   [orchard.stacktrace :as stacktrace]))
+   [orchard.stacktrace :as stacktrace])
+  (:import
+   (clojure.lang Namespace Var)))
 
 (defn error-reply [{:keys [error error-ns]} msg]
   (respond-to msg (cond-> {:status :error}
@@ -54,18 +56,49 @@
                                  :invoked-not-resolved)
                        :before before}))))
 
+(defn- remade
+  "The namespace called what ns is called, when a reload made it anew. nil
+  for no ns, as an anonymous var from `Var/create` has."
+  ^Namespace [ns]
+  (when-let [current (some-> ns ns-name find-ns)]
+    (when-not (identical? ns current)
+      current)))
+
+(defn relink
+  "Points the aliases and refers on namespaces a reload made anew with
+  `remove-ns` at the new ones, and their vars by the same names, which the
+  namespaces it left alone, like the REPL's, would keep on the old ones.
+  What has nothing new to point at stays as it was. Refers go by the var's
+  own namespace and name, not its metadata, which potemkin's `import-vars`
+  copies from another var."
+  []
+  (doseq [^Namespace n (all-ns)]
+    (doseq [[alias-sym target] (.getAliases n)
+            :let [current (remade target)]
+            :when current]
+      (.removeAlias n alias-sym)
+      (.addAlias n alias-sym current))
+    (doseq [[sym v] (.getMappings n)
+            :when (var? v)
+            :let [^Var fresh (some-> (remade (.ns ^Var v)) (.findInternedVar (.sym ^Var v)))]
+            :when (and fresh (.isPublic fresh))]
+      (.unmap n sym)
+      (.refer n sym fresh))))
+
 (defn after-reply [error
                    {:keys [after] :as msg}]
-  (when (and (not error) after)
+  (when-not error
     (try
-      (respond-to msg {:status :invoking-after
-                       :after after})
+      (relink)
+      (when after
+        (respond-to msg {:status :invoking-after
+                         :after after})
 
-      (let [resolved? (resolve-and-invoke after msg)]
-        (respond-to msg {:status (if resolved?
-                                   :invoked-after
-                                   :invoked-not-resolved)
-                         :after after}))
+        (let [resolved? (resolve-and-invoke after msg)]
+          (respond-to msg {:status (if resolved?
+                                     :invoked-after
+                                     :invoked-not-resolved)
+                           :after after})))
 
       (catch Exception e
         (error-reply {:error e} msg)))))

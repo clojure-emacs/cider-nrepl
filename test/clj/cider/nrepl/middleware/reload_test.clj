@@ -46,3 +46,16 @@
     (is+ {:progress "Reloading 0 namespaces..."
           :status #{"done" "ok"}}
          (session/message {:op "cider.clj-reload/reload-clear"}))))
+
+(deftest reload-relinks-test
+  (testing "aliases in a namespace it doesn't reload point at the one it reloaded"
+    (require 'cider.nrepl.middleware.util.meta-test)
+    (let [user (create-ns 'cider.nrepl.reload-relinking)]
+      (try
+        (.addAlias user 'm (the-ns 'cider.nrepl.middleware.util.meta-test))
+        (is+ {:status #{"done" "ok"}}
+             (session/message {:op "cider.clj-reload/reload-all"}))
+        (is (identical? (find-ns 'cider.nrepl.middleware.util.meta-test)
+                        (get (ns-aliases user) 'm)))
+        (finally
+          (remove-ns 'cider.nrepl.reload-relinking))))))
