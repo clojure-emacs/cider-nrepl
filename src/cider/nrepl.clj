@@ -730,13 +730,16 @@ if applicable, and re-render the updated value."
   {"before" "The namespace-qualified name of a zero-arity function to call before reloading."
    "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
 
+(def code-reloading-relink-doc
+  "After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.")
+
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:clojure-only? true
    :doc "Refresh middleware."
    :requires #{"clone" #'wrap-print}
    :handles (with-deprecated-aliases
               {"cider/refresh"
-               {:doc "Reloads all changed files in dependency order."
+               {:doc (str "Reloads all changed files in dependency order. " code-reloading-relink-doc)
                 :optional (merge wrap-print-optional-arguments
                                  {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."}
                                  code-reloading-before-after-opts)
@@ -748,7 +751,7 @@ if applicable, and re-render the updated value."
                           "after" "The name of the after-hook function, echoed when it is invoked."
                           "out" "Output produced on stdout/stderr by the before/after hooks."}}
                "cider/refresh-all"
-               {:doc "Reloads all files in dependency order."
+               {:doc (str "Reloads all files in dependency order. " code-reloading-relink-doc)
                 :optional (merge wrap-print-optional-arguments
                                  {"dirs" "List of directories to scan. If no directories given, defaults to all directories on the classpath."
                                   "before" "The namespace-qualified name of a zero-arity function to call before reloading."
@@ -768,16 +771,16 @@ if applicable, and re-render the updated value."
    :doc "Reload middleware."
    :requires #{"clone" #'wrap-print}
    :handles {"cider.clj-reload/reload"
-             {:doc "Reloads all changed files in dependency order,
+             {:doc (str "Reloads all changed files in dependency order,
 using the io.github.tonsky/clj-reload library. It is bundled with cider-nrepl.
 If that dependency is already in present your project and clj-reload.core/init has been invoked beforehand,
-those configured directories will be honored."
+those configured directories will be honored. " code-reloading-relink-doc)
               :optional code-reloading-before-after-opts
               :returns {"progress" "Description of current namespace being unloaded/loaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."
                         "error" "A sequence of all causes of the thrown exception when `status` is `:error`."}}
              "cider.clj-reload/reload-all"
-             {:doc "Reloads all files in dependency order."
+             {:doc (str "Reloads all files in dependency order. " code-reloading-relink-doc)
               :optional code-reloading-before-after-opts
               :returns {"progress" "Description of current namespace being unloaded/loaded."
                         "status" "`:ok` if reloading was successful; otherwise `:error`."

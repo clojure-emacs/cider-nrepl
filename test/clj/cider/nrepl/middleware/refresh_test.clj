@@ -187,3 +187,52 @@
   (testing "Deprecated 'refresh-clear' op still works"
     (is+ {:status #{"done"}}
          (session/message {:op "refresh-clear"}))))
+
+(deftest relink-test
+  (let [user (create-ns 'cider.nrepl.relinking)
+        old (create-ns 'cider.nrepl.relinked)
+        gone (create-ns 'cider.nrepl.relinked-gone)]
+    (try
+      (.addAlias user 'r old)
+      (.addAlias user 'g gone)
+      (.refer user 'kept (intern old 'kept :old))
+      (.refer user 'removed (intern old 'removed :removed))
+      (.refer user 'hidden (intern old 'hidden :old))
+      (.refer user 'renamed (intern old 'original :old))
+      (.refer user 'anonymous (clojure.lang.Var/create :anonymous))
+      ;; As potemkin's import-vars makes them.
+      (alter-meta! (intern user 'imported :imported) assoc :ns old :name 'kept)
+      (run! remove-ns '[cider.nrepl.relinked cider.nrepl.relinked-gone])
+      (let [fresh (create-ns 'cider.nrepl.relinked)]
+        (intern fresh 'kept :new)
+        (intern fresh 'original :new)
+        (alter-meta! (intern fresh 'hidden :new) assoc :private true)
+        (reload-utils/relink)
+        (testing "points aliases at the namespace made anew"
+          (is (identical? fresh (get (ns-aliases user) 'r))))
+        (testing "and refers at its var by the same name, renamed ones too"
+          (is (= :new @(ns-resolve user 'kept)))
+          (is (= :new @(ns-resolve user 'renamed))))
+        (testing "but leaves what has nothing new to point at"
+          (is (= :removed @(ns-resolve user 'removed)))
+          (is (= :old @(ns-resolve user 'hidden)))
+          (is (= :anonymous @(ns-resolve user 'anonymous)))
+          (is (identical? gone (get (ns-aliases user) 'g))))
+        (testing "and a var whose metadata says it's another's"
+          (is (= :imported @(ns-resolve user 'imported)))))
+      (finally
+        (run! remove-ns '[cider.nrepl.relinking cider.nrepl.relinked cider.nrepl.relinked-gone])))))
+
+(deftest refresh-relinks-test
+  (testing "aliases in a namespace it doesn't reload point at the one it reloaded"
+    (require 'cider.nrepl.middleware.util.meta-test)
+    (let [user (create-ns 'cider.nrepl.refresh-relinking)]
+      (try
+        (.addAlias user 'm (the-ns 'cider.nrepl.middleware.util.meta-test))
+        (is+ {:status #{"done" "ok"}}
+             (session/message {:op "cider/refresh-all"
+                               :dirs dirs-to-reload}))
+        (is (identical? (find-ns 'cider.nrepl.middleware.util.meta-test)
+                        (get (ns-aliases user) 'm)))
+        (finally
+          (remove-ns 'cider.nrepl.refresh-relinking))))))
