@@ -236,3 +236,14 @@
                         (get (ns-aliases user) 'm)))
         (finally
           (remove-ns 'cider.nrepl.refresh-relinking))))))
+
+(deftest refresh-reenters-test
+  (testing "the session is in the namespace it reloaded, not the one before"
+    (require 'cider.nrepl.middleware.util.meta-test)
+    (session/message {:op "eval" :code "(in-ns 'cider.nrepl.middleware.util.meta-test)"})
+    (is+ {:status #{"done" "ok"}}
+         (session/message {:op "cider/refresh-all"
+                           :dirs dirs-to-reload}))
+    (is+ {:value ["true"]}
+         (session/message {:op "eval"
+                           :code "(identical? *ns* (find-ns 'cider.nrepl.middleware.util.meta-test))"}))))

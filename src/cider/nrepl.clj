@@ -731,7 +731,7 @@ if applicable, and re-render the updated value."
    "after" "The namespace-qualified name of a zero-arity function to call after reloading."})
 
 (def code-reloading-relink-doc
-  "After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.")
+  "After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.")
 
 (def-wrapper wrap-refresh cider.nrepl.middleware.refresh/handle-refresh
   {:clojure-only? true

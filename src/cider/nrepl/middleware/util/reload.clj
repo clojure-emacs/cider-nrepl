@@ -3,6 +3,7 @@
   {:added "0.47.0"}
   (:require
    [cider.nrepl.middleware.util :refer [respond-to]]
+   [cider.nrepl.middleware.util.nrepl :as util.nrepl]
    [clojure.main :refer [repl-caught]]
    [nrepl.middleware.interruptible-eval :refer [*msg*]]
    [nrepl.middleware.print :as print]
@@ -85,11 +86,27 @@
       (.unmap n sym)
       (.refer n sym fresh))))
 
+(def ^:private nrepl-1-3+?
+  (util.nrepl/satisfies-version? 1 3))
+
+(defn- reenter
+  "Puts the session in the namespace it was in, when a reload made that anew,
+  as `in-ns` by its name would. Since nREPL 1.3, an op runs with the session's
+  bindings and keeps them after it, so it's the binding that changes. Before,
+  only what's in the session counts."
+  [session]
+  (if nrepl-1-3+?
+    (when-let [current (remade *ns*)]
+      (set! *ns* current))
+    (when-let [current (remade (get @session #'*ns*))]
+      (swap! session assoc #'*ns* current))))
+
 (defn after-reply [error
-                   {:keys [after] :as msg}]
+                   {:keys [after session] :as msg}]
   (when-not error
     (try
       (relink)
+      (reenter session)
       (when after
         (respond-to msg {:status :invoking-after
                          :after after})

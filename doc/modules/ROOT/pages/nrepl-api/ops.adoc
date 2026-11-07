@@ -999,7 +999,7 @@ Returns::
 
 === `refresh`
 
-Deprecated: use ``cider/refresh`` instead. Reloads all changed files in dependency order. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+Deprecated: use ``cider/refresh`` instead. Reloads all changed files in dependency order. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
@@ -1029,7 +1029,7 @@ Returns::
 
 === `refresh-all`
 
-Deprecated: use ``cider/refresh-all`` instead. Reloads all files in dependency order. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+Deprecated: use ``cider/refresh-all`` instead. Reloads all files in dependency order. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
@@ -2821,7 +2821,7 @@ Returns::
 
 === `cider/refresh`
 
-Reloads all changed files in dependency order. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+Reloads all changed files in dependency order. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
@@ -2851,7 +2851,7 @@ Returns::
 
 === `cider/refresh-all`
 
-Reloads all files in dependency order. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+Reloads all files in dependency order. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
@@ -3414,7 +3414,7 @@ Returns::
 Reloads all changed files in dependency order,
 using the io.github.tonsky/clj-reload library. It is bundled with cider-nrepl.
 If that dependency is already in present your project and clj-reload.core/init has been invoked beforehand,
-those configured directories will be honored. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+those configured directories will be honored. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
@@ -3433,7 +3433,7 @@ Returns::
 
 === `cider.clj-reload/reload-all`
 
-Reloads all files in dependency order. After a reload, the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
+Reloads all files in dependency order. After a reload, the session stays in its namespace, as the reload made it anew, and the aliases and refers of the namespaces it didn't reload, like the REPL's, point at the namespaces it made anew and their vars.
 
 Required parameters::
 {blank}
