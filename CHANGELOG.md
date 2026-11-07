@@ -7,6 +7,7 @@
 ## master (unreleased)
 
 - [#1077](https://github.com/clojure-emacs/cider-nrepl/pull/1077): Point the aliases and refers of the namespaces a reload leaves alone, like the REPL's, at the namespaces it made anew, where a function added since didn't resolve through them and the alias couldn't be made again.
+- [#1078](https://github.com/clojure-emacs/cider-nrepl/pull/1078): Keep the session in its namespace as a reload makes it anew, where it stayed in the old one and a function added since didn't resolve.
 
 ## 0.64.0 (2026-10-28)
 
