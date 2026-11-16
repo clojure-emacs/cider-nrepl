@@ -13,6 +13,16 @@
       (is (sequential? ns-list))
       (is (every? string? ns-list))))
 
+  (testing "ns-list op with exclude-regexps and filter-regexps"
+    (let [all (:ns-list (session/message {:op "cider/ns-list"}))
+          ns-list (:ns-list (session/message {:op "cider/ns-list"
+                                              :exclude-regexps ["^cljs\\."]
+                                              :filter-regexps ["^clojure\\."]}))]
+      (is (some #(re-find #"^cljs\." %) all))
+      (is (some #(re-find #"^clojure\." %) all))
+      (is (seq ns-list))
+      (is (not-any? #(re-find #"^(cljs|clojure)\." %) ns-list))))
+
   (testing "ns-vars op"
     (let [{:keys [ns-vars]} (session/message {:op "cider/ns-vars"
                                               :ns "cljs.core"})]

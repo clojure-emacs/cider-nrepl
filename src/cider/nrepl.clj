@@ -189,7 +189,8 @@ Depending on the type of the return value of the evaluation this middleware may 
               {"cider/apropos"
                {:doc "Return a sequence of vars whose name matches the query pattern, or if specified, having the pattern in their docstring."
                 :requires {"query" "The search query."}
-                :optional {"filter-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."}
+                :optional {"exclude-regexps" "All vars from namespaces matching any regexp from this list would be dropped from the result."
+                           "filter-regexps" "An older name for `exclude-regexps`."}
                 :returns {"apropos-matches" "A list of matching symbols."}}})})
 
 (def-wrapper wrap-classpath cider.nrepl.middleware.classpath/handle-classpath
@@ -641,7 +642,8 @@ if applicable, and re-render the updated value."
                {"cider/ns-list"
                 {:doc "Return a sorted list of all namespaces."
                  :returns {"status" "done" "ns-list" "The sorted list of all namespaces."}
-                 :optional {"filter-regexps" "All namespaces matching any regexp from this list would be dropped from the result."}}
+                 :optional {"exclude-regexps" "All namespaces matching any regexp from this list would be dropped from the result."
+                            "filter-regexps" "An older name for `exclude-regexps`."}}
                 "cider/ns-list-vars-by-name"
                 {:doc "Return a list of vars named `name` amongst all namespaces."
                  :requires {"name" "The name to use."}

@@ -27,7 +27,13 @@
                          (.startsWith ^String % "eastwood.copieddeps"))
                     ns-list))))
 
-  (testing "Removal of namespaces with `filter-regexps`"
+  (testing "Removal of namespaces with `exclude-regexps`"
+    (let [ns-list (:ns-list (session/message {:op "cider/ns-list"
+                                              :exclude-regexps ["^cider.nrepl" "^nrepl"]}))]
+      (is (some #(.startsWith ^String % "clojure.") ns-list))
+      (is (not-any? #(re-find #"^(cider\.)?nrepl" %) ns-list))))
+
+  (testing "Removal of namespaces with `filter-regexps`, their older name"
     (let [ns-list (:ns-list (session/message {:op "cider/ns-list"
                                               :filter-regexps [".*nrepl"]}))]
       (is (not-any? #(re-find #".*nrepl" %) ns-list)))))

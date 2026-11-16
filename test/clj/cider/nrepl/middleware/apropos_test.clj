@@ -16,6 +16,12 @@
          (#'apropos/msg->var-query-map {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]
                                         :query "spelling"})))
 
+  (testing "Takes :filter-regexps for :exclude-regexps"
+    (is+ {:var-query {:ns-query {:exclude-regexps #(= (count %) 2)}}}
+         (#'apropos/msg->var-query-map {:exclude-regexps ["^cider.nrepl"]
+                                        :filter-regexps ["^nrepl"]
+                                        :query "spelling"})))
+
   (testing "No :search key in the query-map if no :query in message"
     (is+ {:var-query {:search mc/absent}}
          (#'apropos/msg->var-query-map {:exclude-regexps ["^cider.nrepl" "^refactor-nrepl" "^nrepl"]}))))
@@ -32,6 +38,12 @@
           :apropos-matches []}
          (session/message {:op "cider/apropos" :query "handle-apropos"
                            :exclude-regexps ["cider.nrepl.middleware.apropos"]})))
+
+  (testing "Exclude namespaces with filter-regexps, the older name"
+    (is+ {:status #{"done"}
+          :apropos-matches []}
+         (session/message {:op "cider/apropos" :query "handle-apropos"
+                           :filter-regexps ["cider.nrepl.middleware.apropos"]})))
 
   (testing "Apropos op, but specialized cases (invoked with prefix argument)"
     (testing "Fails to get a private var because private? unset"
