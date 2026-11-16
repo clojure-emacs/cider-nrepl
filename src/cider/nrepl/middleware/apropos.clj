@@ -9,8 +9,10 @@
 ;;; ## Middleware
 
 (defn- msg->var-query-map [msg]
-  (let [ns-query (select-keys msg [:exactly :project? :load-project-ns? :has-tests?
-                                   :include-regexps :exclude-regexps])]
+  (let [ns-query (cond-> (select-keys msg [:exactly :project? :load-project-ns? :has-tests?
+                                           :include-regexps :exclude-regexps])
+                   ;; An older name for :exclude-regexps, which the op's docs gave.
+                   (:filter-regexps msg) (update :exclude-regexps concat (:filter-regexps msg)))]
     (cond-> msg
       ;; Compatibility for the pre-var-query API
       (:privates? msg)

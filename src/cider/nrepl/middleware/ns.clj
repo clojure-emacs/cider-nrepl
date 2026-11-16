@@ -74,10 +74,16 @@
          (misc/update-keys name)
          (into (sorted-map)))))
 
-(defn ns-list [{:keys [filter-regexps] :as msg}]
-  (if-let [cljs-env (cljs/grab-cljs-env msg)]
-    (ns-list-cljs cljs-env)
-    (ns/loaded-namespaces filter-regexps)))
+(defn ns-list
+  "The names of the loaded namespaces, but for those that match one of the
+  `exclude-regexps`, as apropos takes them. `filter-regexps` is the name
+  they had here before."
+  [{:keys [exclude-regexps filter-regexps] :as msg}]
+  (let [regexps (concat exclude-regexps filter-regexps)]
+    (if-let [cljs-env (cljs/grab-cljs-env msg)]
+      (let [patterns (map re-pattern regexps)]
+        (remove (fn [ns] (some #(re-find % ns) patterns)) (ns-list-cljs cljs-env)))
+      (ns/loaded-namespaces regexps))))
 
 (defn ns-vars [{:keys [ns var-query] :as msg}]
   (if-let [cljs-env (cljs/grab-cljs-env msg)]

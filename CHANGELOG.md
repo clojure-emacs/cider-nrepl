@@ -6,6 +6,8 @@
 
 ## master (unreleased)
 
+- [#1080](https://github.com/clojure-emacs/cider-nrepl/pull/1080): Leave the namespaces matching `exclude-regexps` out of `ns-list`, ClojureScript's too, as CIDER asks and `apropos` does, where it only took `filter-regexps`, and take `filter-regexps` in `apropos`, which documented it but ignored it.
+
 ## 0.64.1 (2026-11-07)
 
 - [#1077](https://github.com/clojure-emacs/cider-nrepl/pull/1077): Point the aliases and refers of the namespaces a reload leaves alone, like the REPL's, at the namespaces it made anew, where a function added since didn't resolve through them and the alias couldn't be made again.

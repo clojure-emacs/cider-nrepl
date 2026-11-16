@@ -42,7 +42,8 @@ Required parameters::
 
 
 Optional parameters::
-* `:filter-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+* `:exclude-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+* `:filter-regexps` An older name for ``exclude-regexps``.
 
 
 Returns::
@@ -873,7 +874,8 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+* `:exclude-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+* `:filter-regexps` An older name for ``exclude-regexps``.
 
 
 Returns::
@@ -1452,7 +1454,8 @@ Required parameters::
 
 
 Optional parameters::
-* `:filter-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+* `:exclude-regexps` All vars from namespaces matching any regexp from this list would be dropped from the result.
+* `:filter-regexps` An older name for ``exclude-regexps``.
 
 
 Returns::
@@ -2611,7 +2614,8 @@ Required parameters::
 {blank}
 
 Optional parameters::
-* `:filter-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+* `:exclude-regexps` All namespaces matching any regexp from this list would be dropped from the result.
+* `:filter-regexps` An older name for ``exclude-regexps``.
 
 
 Returns::
