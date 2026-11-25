@@ -180,6 +180,30 @@
              (session/message {:op "cider/test"
                                :ns "cider.nrepl.middleware.test-with-throwing-fixtures"}))))))
 
+(deftest retest-after-throwing-fixture-test
+  (session/message {:op "eval"
+                    :code "(ns cider.nrepl.middleware.fixture-tests
+                             (:require [clojure.test :refer [deftest is use-fixtures]]))
+                           (def broken? (atom true))
+                           (defn fixture [f]
+                             (when @broken? (throw (ex-info \"Thrown by the fixture\" {})))
+                             (f))
+                           (use-fixtures :once fixture)
+                           (deftest passes (is true))"})
+  (try
+    (is+ {:summary {:error 1, :test 0}
+          :results {:cider.nrepl.middleware.fixture-tests {:fixture [{:type "error"}]}}}
+         (session/message {:op "cider/test-var-query"
+                           :var-query {:ns-query {:exactly ["cider.nrepl.middleware.fixture-tests"]}}}))
+    (testing "the tests the fixture kept from running are run again"
+      (session/message {:op "eval"
+                        :code "(reset! cider.nrepl.middleware.fixture-tests/broken? false)"})
+      (is+ {:summary {:error 0, :pass 1, :test 1}
+            :results {:cider.nrepl.middleware.fixture-tests {:passes [{:type "pass"}]}}}
+           (session/message {:op "cider/retest"})))
+    (finally
+      (remove-ns 'cider.nrepl.middleware.fixture-tests))))
+
 (deftest run-test-with-map-as-documentation-message
   (testing "documentation message map is returned as string"
     (is+ {:results

@@ -182,6 +182,14 @@
                            :include-meta-key include
                            :exclude-meta-key exclude}})))
 
+(defn- outside-any-test?
+  "Whether the results filed under `var-name` in namespace `ns` are for a
+  problem outside any one test, like a fixture that threw."
+  [ns var-name]
+  (or (= var-name orchard.test/fallback-var-name)
+      (when-let [v (some-> (find-ns ns) (ns-resolve var-name))]
+        (not (:test (meta v))))))
+
 (defn handle-retest-op
   [msg]
   (run-in-session
@@ -191,9 +199,12 @@
                          (let [problems (filter (comp #{:fail :error} :type)
                                                 (mapcat val tests))
                                vars (distinct (map :var problems))]
-                           (if (seq vars)
-                             (assoc ret ns vars)
-                             ret)))
+                           (cond
+                             (empty? vars) ret
+                             ;; Such a problem kept the namespace's tests from
+                             ;; running, so all of them run again.
+                             (some #(outside-any-test? ns %) vars) (assoc ret ns nil)
+                             :else (assoc ret ns vars))))
                        {} @results)
            report (run-tests msg #(orchard.test/run-namespaces nss %))]
        (reset! results (:results report))
