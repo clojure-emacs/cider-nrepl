@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1084](https://github.com/clojure-emacs/cider-nrepl/pull/1084): Run all the tests of a namespace again in `cider/retest` after its fixture threw, where it ran nothing and dropped the error.
 - [#1080](https://github.com/clojure-emacs/cider-nrepl/pull/1080): Leave the namespaces matching `exclude-regexps` out of `ns-list`, ClojureScript's too, as CIDER asks and `apropos` does, where it only took `filter-regexps`, and take `filter-regexps` in `apropos`, which documented it but ignored it.
 
 ## 0.64.1 (2026-11-07)
