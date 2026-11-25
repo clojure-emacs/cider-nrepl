@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1086](https://github.com/clojure-emacs/cider-nrepl/pull/1086): Fix `cider/complete` failing with a bencode error when asked for the `private` or `deprecated` metadata of a candidate that has the flag set; the flags go out as the string `"true"`.
 - [#1080](https://github.com/clojure-emacs/cider-nrepl/pull/1080): Leave the namespaces matching `exclude-regexps` out of `ns-list`, ClojureScript's too, as CIDER asks and `apropos` does, where it only took `filter-regexps`, and take `filter-regexps` in `apropos`, which documented it but ignored it.
 
 ## 0.64.1 (2026-11-07)

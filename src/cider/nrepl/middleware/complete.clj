@@ -70,8 +70,16 @@
         (complete/documentation sym ns {:sources cljs-sources}))
       (complete/documentation sym ns {:sources clj-sources}))))
 
+(defn- stringify-flags
+  "Turn the boolean flags compliment puts on a candidate into strings, as
+  bencode has no booleans and refuses to write them."
+  [candidate]
+  (cond-> candidate
+    (contains? candidate :private) (update :private str)
+    (contains? candidate :deprecated) (update :deprecated str)))
+
 (defn complete-reply [msg]
-  {:completions (complete msg)})
+  {:completions (map stringify-flags (complete msg))})
 
 (defn doc-reply
   [msg]
