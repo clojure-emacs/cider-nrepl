@@ -152,6 +152,19 @@
         (#'d/initialize {:hi true}))
       (is (:status @resp)))))
 
+(deftest debug-stacktrace-test
+  (let [session (atom {})
+        analyzed #(:cider.nrepl.middleware.stacktrace/analyzed-exception (meta session))
+        exception (ex-info "Thrown in the debugged code" {})]
+    (with-redefs [d/debugger-message (atom {:session session})
+                  d/debugger-send (fn [& _] nil)]
+      (testing "an exception is the one the client gets to inspect"
+        (#'d/debug-stacktrace exception)
+        (is (identical? exception (analyzed))))
+      (testing "there's nothing to inspect in the stack of a plain value"
+        (#'d/debug-stacktrace 42)
+        (is (nil? (analyzed)))))))
+
 (deftest locals-for-message-test
   (let [x 1
         to__ignore 0]

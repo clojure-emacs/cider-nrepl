@@ -6,6 +6,7 @@
 
 ## master (unreleased)
 
+- [#1083](https://github.com/clojure-emacs/cider-nrepl/pull/1083): Inspect the exception of a test's error or of the debugger's stacktrace with `cider/inspect-last-exception` once its stacktrace was sent, where it inspected the last one `cider/analyze-last-stacktrace` analyzed.
 - [#1080](https://github.com/clojure-emacs/cider-nrepl/pull/1080): Leave the namespaces matching `exclude-regexps` out of `ns-list`, ClojureScript's too, as CIDER asks and `apropos` does, where it only took `filter-regexps`, and take `filter-regexps` in `apropos`, which documented it but ignored it.
 
 ## 0.64.1 (2026-11-07)

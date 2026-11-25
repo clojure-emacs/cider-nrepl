@@ -94,6 +94,31 @@
         (finally
           (remove-ns 'cider.nrepl.middleware.printing-tests))))))
 
+(deftest test-stacktrace-test
+  (session/message {:op "eval"
+                    :code "(ns cider.nrepl.middleware.erroring-tests
+                             (:require [clojure.test :refer [deftest is]]))
+                           (deftest errors
+                             (is (throw (ex-info \"Thrown by the test\" {}))))"})
+  (try
+    (session/message {:op "cider/test-var-query"
+                      :var-query {:ns-query {:exactly ["cider.nrepl.middleware.erroring-tests"]}}})
+    ;; An exception of the REPL's, analyzed after the tests ran.
+    (session/message {:op "eval" :code "(first 1)"})
+    (session/message {:op "cider/analyze-last-stacktrace"})
+    (is+ {:class "clojure.lang.ExceptionInfo"
+          :message "Thrown by the test"}
+         (session/message {:op "cider/test-stacktrace"
+                           :ns "cider.nrepl.middleware.erroring-tests"
+                           :var "errors"
+                           :index 0}))
+    (testing "the exception of the test is the one to inspect, not the REPL's"
+      (let [{[^String first-value] :value} (session/message {:op "cider/inspect-last-exception"
+                                                             :index 0})]
+        (is (.startsWith first-value "(\"Class: \" (:value \"clojure.lang.ExceptionInfo"))))
+    (finally
+      (remove-ns 'cider.nrepl.middleware.erroring-tests))))
+
 (deftest test-ns-hook-test
   ;; #680: a namespace whose assertions run only through `test-ns-hook` (with no
   ;; standalone `deftest` vars for the var query to find) must still be

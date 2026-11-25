@@ -17,13 +17,20 @@
 
 ;; Analyze the last stacktrace
 
+(defn remember-analyzed-exception!
+  "Make `exception` the one that the `cider/inspect-last-exception` op of
+  `session` inspects. Anything that sends a client the analysis of an exception
+  has to call this, or the client ends up inspecting the one analyzed before it."
+  [session exception]
+  (alter-meta! session assoc ::analyzed-exception exception))
+
 (defn- analyze-last-stacktrace
   "Analyze the last exception."
   [{:keys [session] :as msg}]
   (let [last-exception (@session #'*e)]
     ;; We need to remember the analyzed exception separately because we need to
     ;; provide a way to inspect it while *e can change.
-    (alter-meta! session assoc ::analyzed-exception last-exception)
+    (remember-analyzed-exception! session last-exception)
     (send-analysis msg (stacktrace/analyze last-exception))))
 
 (defn- handle-analyze-last-stacktrace-op

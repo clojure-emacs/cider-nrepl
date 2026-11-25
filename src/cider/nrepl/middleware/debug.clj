@@ -3,6 +3,7 @@
   {:author "Artur Malabarba"}
   (:require
    [cider.nrepl.middleware.inspect :refer [swap-inspector!]]
+   [cider.nrepl.middleware.stacktrace :as middleware.stacktrace]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
    [cider.nrepl.middleware.util.cljs :as cljs]
    [cider.nrepl.middleware.util.eval]
@@ -293,6 +294,11 @@ this map (identified by a key), and will `dissoc` it afterwards."}
   "Send the stacktrace of `value` if it is an exception.
   Otherwise, create a dummy exception to view the call stack at the current location."
   [value]
+  ;; The client can ask to inspect what it's shown. There's nothing to inspect
+  ;; in the dummy exception, and it mustn't get an earlier one in its place.
+  (some-> (:session @debugger-message)
+          (middleware.stacktrace/remember-analyzed-exception!
+           (when (instance? Throwable value) value)))
   (debugger-send
    {:status :stack
     :causes (if (instance? Throwable value)

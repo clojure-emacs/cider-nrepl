@@ -2,6 +2,7 @@
   "Test execution, reporting, and inspection"
   {:author "Jeff Valk"}
   (:require
+   [cider.nrepl.middleware.stacktrace :as middleware.stacktrace]
    [cider.nrepl.middleware.test.cljs :as test-cljs]
    [cider.nrepl.middleware.test.extensions]
    [cider.nrepl.middleware.util :as util :refer [respond-to]]
@@ -200,14 +201,15 @@
        (respond-to msg (util/transform-value report))))))
 
 (defn handle-stacktrace-op
-  [{:keys [ns var index] :as msg}]
+  [{:keys [ns var index session] :as msg}]
   (run-in-session
    msg
    (fn []
      (let [[ns var] (map misc/as-sym [ns var])]
        (if-let [e (get-in @results [ns var index :error])]
-         (doseq [cause (stacktrace/analyze e)]
-           (respond-to msg cause))
+         (do (middleware.stacktrace/remember-analyzed-exception! session e)
+             (doseq [cause (stacktrace/analyze e)]
+               (respond-to msg cause)))
          (respond-to msg :status :no-error))))))
 
 (defn handle-test [handler msg & _configuration]
