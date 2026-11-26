@@ -40,6 +40,18 @@
                                                 :prefix "assoc"
                                                 :extra-metadata ["arglists" "doc"]})))))
 
+  (testing "deprecated and private flags"
+    (is+ {:candidate "replicate" :deprecated "true"}
+         (first (:completions (session/message {:op "cider/complete"
+                                                :ns "user"
+                                                :prefix "replic"
+                                                :extra-metadata ["deprecated"]}))))
+    (is+ {:candidate "#'clojure.core/spread" :private "true"}
+         (first (:completions (session/message {:op "cider/complete"
+                                                :ns "user"
+                                                :prefix "#'clojure.core/sprea"
+                                                :extra-metadata ["private"]})))))
+
   (testing "default sorting"
     (is+ (mc/prefix [{:candidate "map"}
                      {:candidate "map?"}
